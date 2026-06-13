@@ -7,21 +7,23 @@ import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import 'auth_controller.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class SignupScreen extends ConsumerStatefulWidget {
+  const SignupScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController(text: 'demo@questra.app');
-  final _passwordController = TextEditingController(text: 'password');
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nicknameController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _nicknameController.dispose();
     super.dispose();
   }
 
@@ -30,7 +32,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: const Text('Signup')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -40,10 +42,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Welcome back',
+                    'Create your profile',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 20),
+                  TextField(
+                    controller: _nicknameController,
+                    decoration: const InputDecoration(labelText: 'Nickname'),
+                  ),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _emailController,
                     decoration: const InputDecoration(labelText: 'Email'),
@@ -57,12 +64,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
                   QuestraPrimaryButton(
-                    label: auth.isLoading ? 'Logging in...' : 'Login',
+                    label: auth.isLoading ? 'Creating...' : 'Signup',
                     onPressed: auth.isLoading ? null : _submit,
                   ),
                   TextButton(
-                    onPressed: () => context.go(AppRoutes.signup),
-                    child: const Text('Create an account'),
+                    onPressed: () => context.go(AppRoutes.login),
+                    child: const Text('Already have an account? Login'),
                   ),
                   if (auth.errorMessage != null) ...[
                     const SizedBox(height: 8),
@@ -85,13 +92,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     await ref
         .read(authControllerProvider.notifier)
-        .login(
+        .signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text,
+          nickname: _nicknameController.text.trim().isEmpty
+              ? 'Adventurer'
+              : _nicknameController.text.trim(),
         );
 
     if (mounted && ref.read(authControllerProvider).isAuthenticated) {
-      context.go(AppRoutes.home);
+      context.go(AppRoutes.onboarding);
     }
   }
 }

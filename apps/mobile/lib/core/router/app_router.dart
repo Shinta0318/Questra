@@ -3,9 +3,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/arc/arc_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/auth/signup_screen.dart';
 import '../../features/guild/guild_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
+import '../../features/quest/quest_detail_screen.dart';
+import '../../features/quest/quest_form_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/quest/quest_screen.dart';
 import '../../features/settings/settings_screen.dart';
@@ -25,6 +28,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.signup,
+        builder: (context, state) => const SignupScreen(),
       ),
       GoRoute(
         path: AppRoutes.onboarding,
@@ -47,6 +54,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.quest,
                 builder: (context, state) => const QuestScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (context, state) => const QuestFormScreen(),
+                  ),
+                  GoRoute(
+                    path: ':questId',
+                    builder: (context, state) => QuestDetailScreen(
+                      questId: state.pathParameters['questId']!,
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (context, state) => QuestFormScreen(
+                          questId: state.pathParameters['questId']!,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
