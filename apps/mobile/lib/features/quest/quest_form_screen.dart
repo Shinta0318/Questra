@@ -7,6 +7,7 @@ import '../../core/router/app_routes.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import 'quest_controller.dart';
+import 'quest_guide_controller.dart';
 import 'quest_model.dart';
 
 class QuestFormScreen extends ConsumerStatefulWidget {
@@ -172,6 +173,7 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
       targetDate: _targetDate,
     );
     controller.add(quest);
+    ref.read(questGuideControllerProvider.notifier).generateForQuest(quest);
     context.go('${AppRoutes.quest}/${quest.id}');
   }
 }

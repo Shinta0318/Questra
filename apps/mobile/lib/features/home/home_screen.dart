@@ -8,7 +8,10 @@ import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_emotion.dart';
 import '../arc/arc_widget.dart';
 import '../auth/auth_controller.dart';
+import '../mission/mission_controller.dart';
+import '../mission/mission_model.dart';
 import '../quest/quest_controller.dart';
+import '../quest/quest_guide_model.dart';
 import '../quest/quest_model.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -21,6 +24,13 @@ class HomeScreen extends ConsumerWidget {
     final activeQuests = quests
         .where((quest) => quest.status == QuestStatus.active)
         .toList();
+    final missions = ref.watch(missionControllerProvider);
+    final openMissions =
+        missions
+            .where((mission) => mission.status == MissionStatus.todo)
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final todaysMission = openMissions.isEmpty ? null : openMissions.first;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Home')),
@@ -46,12 +56,39 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _HomeSection(
-              title: "Today's Mission",
-              body: activeQuests.isEmpty
-                  ? 'Create a quest and choose one next action.'
-                  : 'Advance "${activeQuests.first.title}".',
-            ),
+            if (todaysMission == null)
+              _HomeSection(
+                title: "Today's Mission",
+                body: activeQuests.isEmpty
+                    ? 'Create a quest and choose one next action.'
+                    : 'Open a Quest Detail and generate a Mission.',
+              )
+            else
+              QuestraCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Today's Mission",
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(todaysMission.title),
+                    const SizedBox(height: 6),
+                    Text('Quest: ${todaysMission.questTitle}'),
+                    Text('Guide: ${todaysMission.guideType.label}'),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => ref
+                          .read(missionControllerProvider.notifier)
+                          .completeMission(todaysMission.id),
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text('Complete'),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 12),
             _HomeSection(
               title: 'Quest Progress',
