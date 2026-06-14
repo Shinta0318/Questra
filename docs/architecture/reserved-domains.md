@@ -7,8 +7,9 @@ extend the system without introducing new product vocabulary.
 ## Arc
 
 - `arc_memories`: Long-lived Arc observations and user preference memory.
-- `arc_journals`: Future reflective journal entries generated with or by Arc.
+- `journal_entries`: Future reflective journal entries generated with or by Arc.
 - `arc_letters`: Future letter-style Arc messages to the user.
+- `generation_logs`: Future audit trail for generated Arc output.
 
 ## Trail
 
@@ -20,7 +21,8 @@ extend the system without introducing new product vocabulary.
 
 - `guild_follows`: Future lightweight follow relationship between users or
   Guilds.
-- `guild_memberships`: Future membership and role records.
+- `guild_members`: Membership and role records.
+- `sponsor_guilds`: Future sponsor-managed Guild domain.
 
 ## Direct Messages
 
@@ -32,9 +34,15 @@ extend the system without introducing new product vocabulary.
 
 - `subscriptions`: Future premium entitlement records.
 - `premium_entitlements`: Future feature-level access flags.
+- `business_accounts`: Future Business Account and Enterprise Plan ownership.
+- `business_account_members`: Future multi-user business membership.
 
 ## Corporate Quest
 
 - `corporate_quests`: Future organization-created Quest templates.
 - `quest_offers`: Future offer records. These must stay distinct from Star Map
   recommendations and Opportunity Guide content.
+
+## Social Graph
+
+- `constellations`: Future grouping and reputation layer for Navigator Rank.
