@@ -638,7 +638,7 @@ String _guideDescription(Quest quest, GuideType guideType) {
     GuideType.route => '目的地までの航路を描き、最初のチェックポイントを決めます。',
     GuideType.knowledge => '達成に必要な知識と、最初に調べるテーマを整理します。',
     GuideType.training => '初心者でも今日から練習できる小さな型に分けます。',
-    GuideType.community => '相談できる仲間、参加できる場所、質問の入口を探します。',
+    GuideType.guild => '相談できるGuildの仲間、参加できる場所、質問の入口を探します。',
     GuideType.resource => '必要な道具、素材、時間、環境を準備します。',
     GuideType.opportunity => '広告や企業オファーではなく、学びや挑戦の機会を見つけます。',
   };
@@ -649,7 +649,7 @@ List<String> _guideActions(GuideType guideType) {
     GuideType.route => ['ゴールを書く', '3つの通過点を決める', '次の一歩を選ぶ'],
     GuideType.knowledge => ['知らないことを列挙', '1つ読む', 'Arcに質問する'],
     GuideType.training => ['10分練習', '1回だけ試す', '難所をメモする'],
-    GuideType.community => ['相談相手を探す', '場を見つける', '小さく質問する'],
+    GuideType.guild => ['相談相手を探す', 'Guildの場を見つける', '小さく質問する'],
     GuideType.resource => ['道具を1つ準備', '作業場所を整える', '詰まりを1つ消す'],
     GuideType.opportunity => ['イベントを探す', '挑戦枠を見る', '次の入口を保存する'],
   };
@@ -660,7 +660,7 @@ Color _guideColor(GuideType guideType) {
     GuideType.route => QuestraColors.cosmicBlue,
     GuideType.knowledge => const Color(0xFF2FBF71),
     GuideType.training => QuestraColors.gold,
-    GuideType.community => const Color(0xFF7B61FF),
+    GuideType.guild => const Color(0xFF7B61FF),
     GuideType.resource => const Color(0xFF1CB5E0),
     GuideType.opportunity => const Color(0xFFFF8A5B),
   };
@@ -671,7 +671,7 @@ IconData _guideIcon(GuideType guideType) {
     GuideType.route => Icons.route_outlined,
     GuideType.knowledge => Icons.menu_book_outlined,
     GuideType.training => Icons.fitness_center_outlined,
-    GuideType.community => Icons.groups_outlined,
+    GuideType.guild => Icons.groups_outlined,
     GuideType.resource => Icons.inventory_2_outlined,
     GuideType.opportunity => Icons.auto_awesome_outlined,
   };
@@ -683,7 +683,7 @@ extension _GuideTypeJapaneseLabel on GuideType {
       GuideType.route => '航路',
       GuideType.knowledge => '知識',
       GuideType.training => '鍛錬',
-      GuideType.community => '仲間',
+      GuideType.guild => '仲間',
       GuideType.resource => '準備',
       GuideType.opportunity => '機会',
     };

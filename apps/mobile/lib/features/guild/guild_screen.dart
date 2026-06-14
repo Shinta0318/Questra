@@ -9,7 +9,8 @@ class GuildScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const PlaceholderScreen(
       title: 'Guild',
-      subtitle: 'Party, community, and guild activity will live here.',
+      subtitle:
+          'Guild members, follows, and shared Quest activity will live here.',
     );
   }
 }

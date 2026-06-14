@@ -13,7 +13,7 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/quest/quest_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
-import '../../features/story/story_screen.dart';
+import '../../features/trail/trail_screen.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
 
@@ -80,8 +80,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.story,
-                builder: (context, state) => const StoryScreen(),
+                path: AppRoutes.trail,
+                builder: (context, state) => const TrailScreen(),
               ),
             ],
           ),

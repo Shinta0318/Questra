@@ -59,7 +59,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           const Center(
             child: ArcWidget(
               emotion: ArcEmotion.excited,
-              message: 'I am Arc. I will help turn your goals into quests.',
+              message:
+                  'I am Arc. I will help turn your first wish into a Quest.',
             ),
           ),
           const SizedBox(height: 20),

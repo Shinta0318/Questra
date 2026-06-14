@@ -45,9 +45,9 @@ class QuestraBottomNavigation extends StatelessWidget {
                   onTap: () => onDestinationSelected(0),
                 ),
                 _NavItem(
-                  icon: Icons.auto_stories_outlined,
-                  selectedIcon: Icons.auto_stories,
-                  label: 'ストーリー',
+                  icon: Icons.timeline_outlined,
+                  selectedIcon: Icons.timeline,
+                  label: 'トレイル',
                   selected: currentIndex == 1,
                   onTap: () => onDestinationSelected(1),
                 ),

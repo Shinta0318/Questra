@@ -4,7 +4,7 @@ import '../arc/arc_emotion.dart';
 
 const _uuid = Uuid();
 
-enum GuideType { route, knowledge, training, community, resource, opportunity }
+enum GuideType { route, knowledge, training, guild, resource, opportunity }
 
 class QuestGuide {
   QuestGuide({
@@ -70,7 +70,7 @@ extension GuideTypeLabel on GuideType {
       GuideType.route => 'Route Guide',
       GuideType.knowledge => 'Knowledge Guide',
       GuideType.training => 'Training Guide',
-      GuideType.community => 'Community Guide',
+      GuideType.guild => 'Guild Guide',
       GuideType.resource => 'Resource Guide',
       GuideType.opportunity => 'Opportunity Guide',
     };
