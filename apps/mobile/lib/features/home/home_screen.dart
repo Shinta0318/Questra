@@ -45,11 +45,11 @@ class HomeScreen extends ConsumerWidget {
                   ArcWidget(
                     emotion: ArcEmotion.support,
                     message:
-                        'Welcome ${profile?.nickname ?? 'Adventurer'}. Your Quest is moving.',
+                        '${profile?.nickname ?? '旅人'}、君の航路を覚えているよ。このQuestは大切な星になりそうだね。',
                   ),
                   const SizedBox(height: 20),
                   QuestraPrimaryButton(
-                    label: 'Open Quests',
+                    label: 'Questへ進む',
                     onPressed: () => context.go(AppRoutes.quest),
                   ),
                 ],
@@ -58,10 +58,10 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             if (todaysMission == null)
               _HomeSection(
-                title: "Today’s Mission",
+                title: '今日のMission',
                 body: activeQuests.isEmpty
-                    ? 'Create a quest and choose one next action.'
-                    : 'Open a Quest Detail and generate a Mission.',
+                    ? 'まずはQuestをひとつ灯そう。小さなMissionはそこから見えてくるよ。'
+                    : 'Quest詳細から、今日進めるMissionを選ぼう。',
               )
             else
               QuestraCard(
@@ -70,7 +70,7 @@ class HomeScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Today's Mission",
+                      '今日のMission',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 8),
@@ -84,31 +84,77 @@ class HomeScreen extends ConsumerWidget {
                           .read(missionControllerProvider.notifier)
                           .completeMission(todaysMission.id),
                       icon: const Icon(Icons.check_circle_outline),
-                      label: const Text('Complete'),
+                      label: const Text('Missionを完了'),
                     ),
                   ],
                 ),
               ),
             const SizedBox(height: 12),
             _HomeSection(
-              title: 'Quest Progress',
+              title: 'Questの航路',
               body:
-                  '${activeQuests.length} active / ${quests.length} total quests',
+                  '進行中 ${activeQuests.length} / 全 ${quests.length} Quest。焦らず、星をひとつずつ。',
             ),
             const SizedBox(height: 12),
             const _HomeSection(
-              title: 'Recent Trail',
-              body:
-                  'Arc noticed your first Trail pattern: small steps become lore.',
+              title: '最近のTrail',
+              body: 'このTrailは君の旅の証だね。小さな前進も、ちゃんと残っているよ。',
             ),
             const SizedBox(height: 12),
-            const _HomeSection(
-              title: 'Guild Preview',
-              body:
-                  'No guild yet. A future party can join your adventure here.',
+            _HomeActions(
+              onOpenGuild: () => context.go(AppRoutes.guild),
+              onOpenArc: () => context.go(AppRoutes.arc),
+              onOpenProfile: () => context.go(AppRoutes.profile),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _HomeActions extends StatelessWidget {
+  const _HomeActions({
+    required this.onOpenGuild,
+    required this.onOpenArc,
+    required this.onOpenProfile,
+  });
+
+  final VoidCallback onOpenGuild;
+  final VoidCallback onOpenArc;
+  final VoidCallback onOpenProfile;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('次の寄港地', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onOpenArc,
+                icon: const Icon(Icons.travel_explore_outlined),
+                label: const Text('Arc Chat'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onOpenGuild,
+                icon: const Icon(Icons.groups_outlined),
+                label: const Text('Guild'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onOpenProfile,
+                icon: const Icon(Icons.person_outline),
+                label: const Text('Profile'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

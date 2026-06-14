@@ -20,7 +20,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  final _nicknameController = TextEditingController(text: 'Adventurer');
+  final _nicknameController = TextEditingController(text: '旅人');
   final _questController = TextEditingController();
   int _step = 0;
 
@@ -34,7 +34,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Onboarding')),
+      appBar: AppBar(title: const Text('はじまりの航路')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -42,7 +42,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             QuestraCard(child: _buildStep(context)),
             const SizedBox(height: 20),
             QuestraPrimaryButton(
-              label: _step == 2 ? 'Begin' : 'Next',
+              label: _step == 2 ? '旅を始める' : '次へ',
               onPressed: _next,
             ),
           ],
@@ -59,44 +59,32 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           const Center(
             child: ArcWidget(
               emotion: ArcEmotion.excited,
-              message:
-                  'I am Arc. I will help turn your first wish into a Quest.',
+              message: 'ぼくはArc。君の願いを、最初のQuestという星に変える案内役だよ。',
             ),
           ),
           const SizedBox(height: 20),
-          Text(
-            'Arc Greeting',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
+          Text('Arcとの初対面', style: Theme.of(context).textTheme.headlineMedium),
         ],
       ),
       1 => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Nickname Setup',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
+          Text('呼び名を決める', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 12),
           TextField(
             controller: _nicknameController,
-            decoration: const InputDecoration(labelText: 'Nickname'),
+            decoration: const InputDecoration(labelText: '呼び名'),
           ),
         ],
       ),
       _ => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'First Quest Input',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
+          Text('最初のQuest', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 12),
           TextField(
             controller: _questController,
-            decoration: const InputDecoration(
-              labelText: 'What do you want to pursue first?',
-            ),
+            decoration: const InputDecoration(labelText: '最初に叶えたいことは？'),
           ),
         ],
       ),
@@ -110,10 +98,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
 
     final nickname = _nicknameController.text.trim().isEmpty
-        ? 'Adventurer'
+        ? '旅人'
         : _nicknameController.text.trim();
     final questTitle = _questController.text.trim().isEmpty
-        ? 'Start my first Questra adventure'
+        ? '最初のQuestraの旅を始める'
         : _questController.text.trim();
 
     await ref
@@ -121,7 +109,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         .completeOnboarding(nickname: nickname);
     final quest = Quest(
       title: questTitle,
-      description: 'Created during onboarding with Arc.',
+      description: 'Arcと一緒に、はじまりの航路で作ったQuest。',
       difficulty: QuestDifficulty.normal,
       status: QuestStatus.active,
       visibility: QuestVisibility.private,

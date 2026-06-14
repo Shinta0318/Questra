@@ -5,6 +5,7 @@ abstract final class AppRoutes {
   static const onboarding = '/onboarding';
   static const home = '/home';
   static const quest = '/quest';
+  static const mission = '/mission';
   static const trail = '/trail';
   static const arc = '/arc';
   static const guild = '/guild';

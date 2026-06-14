@@ -11,6 +11,8 @@ import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
+import '../trail/trail_controller.dart';
+import '../trail/trail_model.dart';
 import 'quest_controller.dart';
 import 'quest_guide_controller.dart';
 import 'quest_guide_model.dart';
@@ -32,11 +34,15 @@ class QuestDetailScreen extends ConsumerWidget {
         .watch(missionControllerProvider)
         .where((mission) => mission.questId == questId)
         .toList();
+    final trails = ref
+        .watch(trailControllerProvider)
+        .where((trail) => trail.questId == questId)
+        .toList();
 
     if (quest == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Quest Detail')),
-        body: const Center(child: Text('Quest not found.')),
+        body: const Center(child: Text('星図の中でこのQuestを見つけられませんでした。')),
       );
     }
 
@@ -73,7 +79,7 @@ class QuestDetailScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             _MissionsSection(quest: quest, guides: guides, missions: missions),
             const SizedBox(height: 16),
-            _TrailSection(quest: quest),
+            _TrailSection(quest: quest, missions: missions, trails: trails),
             const SizedBox(height: 16),
             _DreamBoardSection(quest: quest),
           ],
@@ -163,7 +169,7 @@ class _QuestHeader extends StatelessWidget {
             children: [
               Expanded(
                 child: QuestraPrimaryButton(
-                  label: 'Edit',
+                  label: 'Questを編集',
                   onPressed: () =>
                       context.go('${AppRoutes.quest}/${quest.id}/edit'),
                 ),
@@ -327,9 +333,9 @@ class _GuideCard extends ConsumerWidget {
               ref
                   .read(missionControllerProvider.notifier)
                   .generateMission(quest: quest, guide: guide, advice: advice);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Missionを生成しました。')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Missionを灯しました。一緒に進もう。')),
+              );
             },
             icon: const Icon(Icons.flag_outlined),
             label: const Text('Missionを生成'),
@@ -396,14 +402,20 @@ class _MissionsSection extends StatelessWidget {
   }
 }
 
-class _TrailSection extends StatelessWidget {
-  const _TrailSection({required this.quest});
+class _TrailSection extends ConsumerWidget {
+  const _TrailSection({
+    required this.quest,
+    required this.missions,
+    required this.trails,
+  });
 
   final Quest quest;
+  final List<Mission> missions;
+  final List<Trail> trails;
 
   @override
-  Widget build(BuildContext context) {
-    final trail = [
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trailSteps = [
       'Questを作成',
       '6つのGuideへ分解',
       'Arc Adviceを確認',
@@ -414,8 +426,9 @@ class _TrailSection extends StatelessWidget {
       number: 5,
       title: 'Trail',
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (var i = 0; i < trail.length; i++)
+          for (var i = 0; i < trailSteps.length; i++)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(
@@ -435,13 +448,40 @@ class _TrailSection extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(trail[i])),
+                  Expanded(child: Text(trailSteps[i])),
                 ],
               ),
             ),
+          if (trails.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...trails.map(
+              (trail) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text('• ${trail.title} / ${trail.trailType.label}'),
+              ),
+            ),
+          ],
           Text(
             'Trailは「${quest.title}」の進行ログとして育っていきます。',
             style: const TextStyle(color: QuestraColors.slate),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () {
+              final latestMission = missions.isEmpty ? null : missions.first;
+              ref
+                  .read(trailControllerProvider.notifier)
+                  .addQuestTrail(
+                    questId: quest.id,
+                    missionId: latestMission?.id,
+                    questTitle: quest.title,
+                  );
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Trailを残しました。君の旅の証だね。')),
+              );
+            },
+            icon: const Icon(Icons.timeline_outlined),
+            label: const Text('Trailを残す'),
           ),
         ],
       ),

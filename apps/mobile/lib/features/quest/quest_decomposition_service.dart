@@ -46,9 +46,8 @@ class QuestDecompositionService {
           (guide) => StarMapItem(
             questId: quest.id,
             guideType: guide.guideType,
-            title: '${guide.guideType.label} reference',
-            description:
-                'A neutral external resource to support ${quest.title}.',
+            title: '${guide.guideType.label}の参考星',
+            description: '${quest.title}の航路を支える中立的な外部素材です。',
             url: 'https://example.com/${guide.guideType.name}',
             contentType: _contentTypeForGuide(guide.guideType),
           ),
@@ -68,66 +67,34 @@ class QuestDecompositionService {
 
   String _guideDescription(Quest quest, GuideType guideType) {
     return switch (guideType) {
-      GuideType.route => 'Break ${quest.title} into a visible path.',
-      GuideType.knowledge => 'Identify what you need to learn first.',
-      GuideType.training => 'Practice the smallest repeatable skill.',
-      GuideType.guild =>
-        'Find Guild allies or spaces that can support progress.',
-      GuideType.resource => 'Collect tools, references, and materials.',
-      GuideType.opportunity =>
-        'Notice non-commercial openings that help you move forward.',
+      GuideType.route => '${quest.title}までの航路を見える形にします。',
+      GuideType.knowledge => '最初に学ぶべき知識を見つけます。',
+      GuideType.training => 'くり返せる最小の練習に分けます。',
+      GuideType.guild => '前進を支えてくれるGuildの仲間や場を探します。',
+      GuideType.resource => '必要な道具、参考素材、環境を整えます。',
+      GuideType.opportunity => '広告やオファーではない、前へ進むための機会を見つけます。',
     };
   }
 
   List<String> _suggestedActions(GuideType guideType) {
     return switch (guideType) {
-      GuideType.route => [
-        'Write the finish line',
-        'Choose three milestones',
-        'Pick the next checkpoint',
-      ],
-      GuideType.knowledge => [
-        'List unknowns',
-        'Read one beginner reference',
-        'Write one question for Arc',
-      ],
-      GuideType.training => [
-        'Practice for 10 minutes',
-        'Repeat one core move',
-        'Record what felt hard',
-      ],
-      GuideType.guild => [
-        'Name one helpful Guild ally',
-        'Find one relevant Guild space',
-        'Ask one small question',
-      ],
-      GuideType.resource => [
-        'Save one useful tool',
-        'Prepare your workspace',
-        'Remove one blocker',
-      ],
-      GuideType.opportunity => [
-        'Look for one event or opening',
-        'Bookmark one learning chance',
-        'Choose one next door to knock on',
-      ],
+      GuideType.route => ['到達点を書く', '3つの通過点を選ぶ', '次の目印を決める'],
+      GuideType.knowledge => ['知らないことを並べる', '初心者向け資料を1つ読む', 'Arcへの質問を1つ書く'],
+      GuideType.training => ['10分だけ練習する', '基本動作を1回くり返す', '難しかった点を記録する'],
+      GuideType.guild => ['助けになりそうな仲間を1人思い出す', '関係するGuildの場を探す', '小さな質問を1つ投げる'],
+      GuideType.resource => ['役立つ道具を1つ保存する', '作業場所を整える', '詰まりを1つ外す'],
+      GuideType.opportunity => ['参加できる場を1つ探す', '学びの機会を1つ保存する', '次に開ける扉を1つ選ぶ'],
     };
   }
 
   String _adviceText(String questTitle, GuideType guideType) {
     return switch (guideType) {
-      GuideType.route =>
-        'For "$questTitle", make the path visible before you sprint.',
-      GuideType.knowledge =>
-        'Start with one missing idea. Understanding grows in layers.',
-      GuideType.training =>
-        'Choose a tiny rep today. Five focused minutes still count.',
-      GuideType.guild =>
-        'A Guild works best when you ask for one clear signal, not a crowd.',
-      GuideType.resource =>
-        'Gather only what supports the next action. Keep the pack light.',
-      GuideType.opportunity =>
-        'Look for openings, not offers. This is about momentum, not selling.',
+      GuideType.route => '「$questTitle」は大切な星になりそうだね。走る前に、まず航路を見える形にしよう。',
+      GuideType.knowledge => '足りない知識はひとつずつ重ねれば大丈夫。星図は少しずつ明るくなるよ。',
+      GuideType.training => '今日は小さな練習を1回だけ選ぼう。5分の集中も、ちゃんと前進だよ。',
+      GuideType.guild => 'Guildでは大きな声より、はっきりした小さな質問が道しるべになるよ。',
+      GuideType.resource => '次のMissionを助けるものだけ持とう。荷物が軽いほど遠くへ進めるよ。',
+      GuideType.opportunity => '探すのは売り込みではなく、君の航路を広げる入口だよ。',
     };
   }
 

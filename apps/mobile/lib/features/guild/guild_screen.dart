@@ -9,8 +9,7 @@ class GuildScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const PlaceholderScreen(
       title: 'Guild',
-      subtitle:
-          'Guild members, follows, and shared Quest activity will live here.',
+      subtitle: '同じQuestや価値観を持つ仲間と出会う場所です。Guild Followや共有Trailはここに広がります。',
     );
   }
 }
