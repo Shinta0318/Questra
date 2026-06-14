@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/questra_card.dart';
+import '../../widgets/arc/arc_examples.dart';
 import 'arc_emotion.dart';
 import 'arc_widget.dart';
 
@@ -22,6 +23,14 @@ class ArcScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            Text('Examples', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            const ArcHomeExample(),
+            const SizedBox(height: 12),
+            const ArcChatExample(),
+            const SizedBox(height: 16),
+            Text('Emotions', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 12,
               runSpacing: 12,
