@@ -16,6 +16,8 @@ class QuestController extends Notifier<List<Quest>> {
         difficulty: QuestDifficulty.normal,
         status: QuestStatus.active,
         visibility: QuestVisibility.private,
+        progress: 0.42,
+        category: '世界観づくり',
         targetDate: DateTime.now().add(const Duration(days: 7)),
       ),
       Quest(
@@ -24,6 +26,17 @@ class QuestController extends Notifier<List<Quest>> {
         difficulty: QuestDifficulty.easy,
         status: QuestStatus.draft,
         visibility: QuestVisibility.guild,
+        progress: 0.16,
+        category: 'コミュニティ',
+      ),
+      Quest(
+        title: 'Build a morning training ritual',
+        description: 'Create a small repeatable routine for real progress.',
+        difficulty: QuestDifficulty.hard,
+        status: QuestStatus.active,
+        visibility: QuestVisibility.private,
+        progress: 0.68,
+        category: 'トレーニング',
       ),
     ];
   }
