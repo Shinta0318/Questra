@@ -9,6 +9,7 @@ import '../arc/arc_emotion.dart';
 import '../arc/arc_widget.dart';
 import '../auth/auth_controller.dart';
 import '../quest/quest_controller.dart';
+import '../quest/quest_guide_controller.dart';
 import '../quest/quest_model.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -117,18 +118,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await ref
         .read(authControllerProvider.notifier)
         .completeOnboarding(nickname: nickname);
-    ref
-        .read(questControllerProvider.notifier)
-        .add(
-          Quest(
-            title: questTitle,
-            description: 'Created during onboarding with Arc.',
-            difficulty: QuestDifficulty.normal,
-            status: QuestStatus.active,
-            visibility: QuestVisibility.private,
-            targetDate: DateTime.now().add(const Duration(days: 14)),
-          ),
-        );
+    final quest = Quest(
+      title: questTitle,
+      description: 'Created during onboarding with Arc.',
+      difficulty: QuestDifficulty.normal,
+      status: QuestStatus.active,
+      visibility: QuestVisibility.private,
+      targetDate: DateTime.now().add(const Duration(days: 14)),
+    );
+    ref.read(questControllerProvider.notifier).add(quest);
+    ref.read(questGuideControllerProvider.notifier).generateForQuest(quest);
 
     if (mounted) {
       context.go(AppRoutes.home);
