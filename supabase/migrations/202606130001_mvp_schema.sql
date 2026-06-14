@@ -48,10 +48,17 @@ create table if not exists public.trails (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.user_profiles(id) on delete cascade,
   quest_id uuid not null references public.quests(id) on delete cascade,
+  mission_id uuid references public.missions(id) on delete set null,
   title text not null,
   summary text not null default '',
+  content text not null default '',
+  trail_type text not null default 'quest_record',
+  source_type text not null default 'trail',
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint trails_trail_type_check check (
+    trail_type in ('quest_record', 'mission_record', 'arc_reflection', 'manual_note')
+  )
 );
 
 create table if not exists public.trail_events (
