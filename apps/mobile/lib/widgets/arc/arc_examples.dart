@@ -15,7 +15,7 @@ class ArcHomeExample extends StatelessWidget {
         children: [
           ArcWidget(
             emotion: ArcEmotion.support,
-            message: 'Today has a path. I will help you find the first star.',
+            message: '今日の航路は見えているよ。最初の星を一緒に探そう。',
           ),
         ],
       ),
@@ -38,11 +38,7 @@ class ArcChatExample extends StatelessWidget {
             showSpeechBubble: false,
           ),
           SizedBox(width: 12),
-          Expanded(
-            child: ArcSpeechBubble(
-              message: 'Tell me where you want to go next. No rush.',
-            ),
-          ),
+          Expanded(child: ArcSpeechBubble(message: '次に向かいたい星を聞かせて。急がなくて大丈夫。')),
         ],
       ),
     );

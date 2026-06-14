@@ -27,4 +27,29 @@ class TrailController extends Notifier<List<Trail>> {
       ),
     ];
   }
+
+  List<Trail> trailsForQuest(String questId) {
+    return state
+        .where((trail) => trail.questId == questId)
+        .toList(growable: false);
+  }
+
+  Trail addQuestTrail({
+    required String questId,
+    String? missionId,
+    required String questTitle,
+  }) {
+    final trail = Trail(
+      questId: questId,
+      missionId: missionId,
+      title: '$questTitle のTrail',
+      summary: 'Questを進める中で、新しい挑戦の記録を残した。',
+      content: 'Arcと一緒に航路を確認し、次のMissionへ進むためのTrailを残した。',
+      trailType: missionId == null
+          ? TrailType.questRecord
+          : TrailType.missionRecord,
+    );
+    state = [trail, ...state];
+    return trail;
+  }
 }

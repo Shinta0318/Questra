@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../widgets/arc/arc_emotion.dart';
+import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import 'quest_controller.dart';
@@ -42,7 +44,7 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
     _loadInitialValues();
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Edit Quest' : 'Create Quest')),
+      appBar: AppBar(title: Text(_isEditing ? 'Questを編集' : 'Questを作成')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -51,34 +53,44 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  ArcWidget(
+                    emotion: _isEditing
+                        ? ArcEmotion.serious
+                        : ArcEmotion.excited,
+                    size: 72,
+                    message: _isEditing
+                        ? '航路を整えよう。Questは進みながら磨いていけるよ。'
+                        : 'このQuestは大切な星になりそうだね。一緒に航路を描こう。',
+                  ),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: _titleController,
-                    decoration: const InputDecoration(labelText: 'Title'),
+                    decoration: const InputDecoration(labelText: 'Quest名'),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _descriptionController,
-                    decoration: const InputDecoration(labelText: 'Description'),
+                    decoration: const InputDecoration(labelText: '叶えたい理由・背景'),
                     minLines: 3,
                     maxLines: 5,
                   ),
                   const SizedBox(height: 12),
                   _EnumDropdown<QuestDifficulty>(
-                    label: 'Difficulty',
+                    label: '難しさ',
                     value: _difficulty,
                     values: QuestDifficulty.values,
                     onChanged: (value) => setState(() => _difficulty = value),
                   ),
                   const SizedBox(height: 12),
                   _EnumDropdown<QuestStatus>(
-                    label: 'Status',
+                    label: '状態',
                     value: _status,
                     values: QuestStatus.values,
                     onChanged: (value) => setState(() => _status = value),
                   ),
                   const SizedBox(height: 12),
                   _EnumDropdown<QuestVisibility>(
-                    label: 'Visibility',
+                    label: '公開範囲',
                     value: _visibility,
                     values: QuestVisibility.values,
                     onChanged: (value) => setState(() => _visibility = value),
@@ -89,12 +101,12 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
                     icon: const Icon(Icons.event_outlined),
                     label: Text(
                       _targetDate == null
-                          ? 'Target date'
+                          ? '目標日'
                           : DateFormat.yMMMd().format(_targetDate!),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  QuestraPrimaryButton(label: 'Save Quest', onPressed: _save),
+                  QuestraPrimaryButton(label: 'Questを保存', onPressed: _save),
                 ],
               ),
             ),

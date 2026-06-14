@@ -7,7 +7,7 @@ enum TrailType { questRecord, missionRecord, arcReflection, manualNote }
 class Trail {
   Trail({
     String? id,
-    required this.questId,
+    this.questId,
     this.missionId,
     required this.title,
     required this.summary,
@@ -19,7 +19,7 @@ class Trail {
        createdAt = createdAt ?? DateTime.now();
 
   final String id;
-  final String questId;
+  final String? questId;
   final String? missionId;
   final String title;
   final String summary;

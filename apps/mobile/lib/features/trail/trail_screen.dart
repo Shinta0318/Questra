@@ -74,7 +74,9 @@ class TrailScreen extends ConsumerWidget {
                       Text(trail.summary),
                       const SizedBox(height: 8),
                       Text(
-                        'Quest: ${trail.questId}',
+                        trail.questId == null
+                            ? 'Quest: 未紐づけ'
+                            : 'Quest: ${trail.questId}',
                         style: const TextStyle(color: QuestraColors.slate),
                       ),
                       if (trail.missionId != null)

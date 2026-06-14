@@ -6,6 +6,7 @@ import '../../features/auth/login_screen.dart';
 import '../../features/auth/signup_screen.dart';
 import '../../features/guild/guild_screen.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/mission/mission_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/quest/quest_detail_screen.dart';
 import '../../features/quest/quest_form_screen.dart';
@@ -38,10 +39,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
-        path: AppRoutes.home,
-        builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
       ),
@@ -49,6 +46,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),
         branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.home,
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -80,14 +85,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.trail,
-                builder: (context, state) => const TrailScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
                 path: AppRoutes.arc,
                 builder: (context, state) => const ArcScreen(),
               ),
@@ -96,20 +93,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.guild,
-                builder: (context, state) => const GuildScreen(),
+                path: AppRoutes.trail,
+                builder: (context, state) => const TrailScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.profile,
-                builder: (context, state) => const ProfileScreen(),
+                path: AppRoutes.mission,
+                builder: (context, state) => const MissionScreen(),
               ),
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.guild,
+        builder: (context, state) => const GuildScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (context, state) => const ProfileScreen(),
       ),
     ],
   );

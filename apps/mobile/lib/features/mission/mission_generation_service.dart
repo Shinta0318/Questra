@@ -23,18 +23,18 @@ class MissionGenerationService {
 
   String _titleForGuide(GuideType guideType) {
     return switch (guideType) {
-      GuideType.route => 'Sketch one checkpoint',
-      GuideType.knowledge => 'Learn one missing idea',
-      GuideType.training => 'Practice one tiny rep',
-      GuideType.guild => 'Ask one Guild question',
-      GuideType.resource => 'Prepare one useful resource',
-      GuideType.opportunity => 'Find one possible opening',
+      GuideType.route => '航路の目印を1つ決める',
+      GuideType.knowledge => '足りない知識を1つ調べる',
+      GuideType.training => '小さな練習を1回試す',
+      GuideType.guild => 'Guildで質問を1つ考える',
+      GuideType.resource => '必要な準備を1つ整える',
+      GuideType.opportunity => '次の機会を1つ探す',
     };
   }
 
   String _descriptionForGuide(QuestGuide guide, ArcAdvice? advice) {
     final action = guide.suggestedActions.first;
-    final arcLine = advice == null ? '' : ' Arc says: ${advice.adviceText}';
-    return '$action. Keep it concrete and finishable in 5 to 30 minutes today.$arcLine';
+    final arcLine = advice == null ? '' : ' Arcより: ${advice.adviceText}';
+    return '$action。5〜30分で終わる小さなMissionにしよう。小さなMissionも、ちゃんと前進だよ。$arcLine';
   }
 }

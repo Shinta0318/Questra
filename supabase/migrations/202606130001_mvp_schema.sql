@@ -42,13 +42,13 @@ create table if not exists public.missions (
     guide_type in ('route', 'knowledge', 'training', 'guild', 'resource', 'opportunity')
   ),
   constraint missions_difficulty_check check (difficulty in ('easy', 'normal')),
-  constraint missions_status_check check (status in ('todo', 'doing', 'done'))
+  constraint missions_status_check check (status in ('todo', 'doing', 'completed'))
 );
 
 create table if not exists public.trails (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.user_profiles(id) on delete cascade,
-  quest_id uuid not null references public.quests(id) on delete cascade,
+  quest_id uuid references public.quests(id) on delete set null,
   mission_id uuid references public.missions(id) on delete set null,
   title text not null,
   summary text not null default '',
@@ -65,7 +65,7 @@ create table if not exists public.trails (
 create table if not exists public.trail_events (
   id uuid primary key default gen_random_uuid(),
   trail_id uuid not null references public.trails(id) on delete cascade,
-  quest_id uuid not null references public.quests(id) on delete cascade,
+  quest_id uuid references public.quests(id) on delete set null,
   mission_id uuid references public.missions(id) on delete set null,
   event_type text not null default 'mission_update',
   content text not null default '',
