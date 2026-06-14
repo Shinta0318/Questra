@@ -45,7 +45,7 @@ class HomeScreen extends ConsumerWidget {
                   ArcWidget(
                     emotion: ArcEmotion.support,
                     message:
-                        'Welcome ${profile?.nickname ?? 'Adventurer'}. Your arc is moving.',
+                        'Welcome ${profile?.nickname ?? 'Adventurer'}. Your Quest is moving.',
                   ),
                   const SizedBox(height: 20),
                   QuestraPrimaryButton(
@@ -58,7 +58,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             if (todaysMission == null)
               _HomeSection(
-                title: "Today's Mission",
+                title: "Today’s Mission",
                 body: activeQuests.isEmpty
                     ? 'Create a quest and choose one next action.'
                     : 'Open a Quest Detail and generate a Mission.',
@@ -97,8 +97,9 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             const _HomeSection(
-              title: 'Recent Story',
-              body: 'Arc noticed your first pattern: small steps become lore.',
+              title: 'Recent Trail',
+              body:
+                  'Arc noticed your first Trail pattern: small steps become lore.',
             ),
             const SizedBox(height: 12),
             const _HomeSection(

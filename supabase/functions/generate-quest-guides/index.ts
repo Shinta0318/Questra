@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
     "route",
     "knowledge",
     "training",
-    "community",
+    "guild",
     "resource",
     "opportunity",
   ];
