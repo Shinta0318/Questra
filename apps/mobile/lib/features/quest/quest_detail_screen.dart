@@ -4,10 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../core/theme/questra_colors.dart';
+import '../../widgets/arc/arc_emotion.dart';
+import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
-import '../arc/arc_widget.dart';
 import '../mission/mission_controller.dart';
+import '../mission/mission_model.dart';
 import 'quest_controller.dart';
 import 'quest_guide_controller.dart';
 import 'quest_guide_model.dart';
@@ -20,118 +23,204 @@ class QuestDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final quest = ref
+    final questMatches = ref
         .watch(questControllerProvider)
         .where((quest) => quest.id == questId);
-    final current = quest.isEmpty ? null : quest.first;
-    final guideController = ref.read(questGuideControllerProvider.notifier);
-    final guides =
-        ref.watch(questGuideControllerProvider).guidesByQuest[questId] ??
-        const [];
-    final advice =
-        ref.watch(questGuideControllerProvider).adviceByQuest[questId] ??
-        const [];
-    final starMap =
-        ref.watch(questGuideControllerProvider).starMapByQuest[questId] ??
-        const [];
+    final quest = questMatches.isEmpty ? null : questMatches.first;
+    final guideState = ref.watch(questGuideControllerProvider);
+    final missions = ref
+        .watch(missionControllerProvider)
+        .where((mission) => mission.questId == questId)
+        .toList();
+
+    if (quest == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Quest Detail')),
+        body: const Center(child: Text('Quest not found.')),
+      );
+    }
+
+    final guides = guideState.guidesByQuest[questId] ?? _mockGuides(quest);
+    final advice = guideState.adviceByQuest[questId] ?? _mockAdvice(quest);
+    final starMap = guideState.starMapByQuest[questId] ?? _mockStarMap(quest);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Quest Detail')),
+      backgroundColor: QuestraColors.deepNavy,
+      appBar: AppBar(title: const Text('Quest詳細')),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: current == null
-              ? const Center(child: Text('Quest not found.'))
-              : ListView(
-                  children: [
-                    QuestraCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            current.title,
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(current.description),
-                          const SizedBox(height: 16),
-                          Text('Difficulty: ${current.difficulty.label}'),
-                          Text('Status: ${current.status.label}'),
-                          Text('Visibility: ${current.visibility.label}'),
-                          Text(
-                            'Target: ${current.targetDate == null ? 'None' : DateFormat.yMMMd().format(current.targetDate!)}',
-                          ),
-                          const SizedBox(height: 20),
-                          QuestraPrimaryButton(
-                            label: 'Edit',
-                            onPressed: () => context.go(
-                              '${AppRoutes.quest}/${current.id}/edit',
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              ref
-                                  .read(questControllerProvider.notifier)
-                                  .remove(current.id);
-                              context.go(AppRoutes.quest);
-                            },
-                            child: const Text('Delete Quest'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (guides.isEmpty)
-                      QuestraCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Quest Decomposition System',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 8),
-                            const Text('Generate Guides for this Quest.'),
-                            const SizedBox(height: 12),
-                            QuestraPrimaryButton(
-                              label: 'Generate Guides',
-                              onPressed: () =>
-                                  guideController.generateForQuest(current),
-                            ),
-                          ],
-                        ),
-                      )
-                    else
-                      ...guides.map(
-                        (guide) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _GuideCard(
-                            quest: current,
-                            guide: guide,
-                            advice: _firstAdvice(advice, guide.guideType),
-                            starMap: starMap
-                                .where(
-                                  (item) => item.guideType == guide.guideType,
-                                )
-                                .toList(),
-                          ),
-                        ),
-                      ),
-                  ],
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
+          children: [
+            _QuestHeader(quest: quest),
+            const SizedBox(height: 16),
+            _ProgressSection(quest: quest),
+            const SizedBox(height: 16),
+            _SectionTitle(number: 3, title: 'Guides'),
+            const SizedBox(height: 12),
+            ...guides.map(
+              (guide) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _GuideCard(
+                  quest: quest,
+                  guide: guide,
+                  advice: _firstAdvice(advice, guide.guideType),
+                  starMap: starMap
+                      .where((item) => item.guideType == guide.guideType)
+                      .toList(),
                 ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _MissionsSection(quest: quest, guides: guides, missions: missions),
+            const SizedBox(height: 16),
+            _TrailSection(quest: quest),
+            const SizedBox(height: 16),
+            _DreamBoardSection(quest: quest),
+          ],
         ),
       ),
     );
   }
+}
 
-  ArcAdvice? _firstAdvice(List<ArcAdvice> advice, GuideType guideType) {
-    for (final item in advice) {
-      if (item.guideType == guideType) {
-        return item;
-      }
-    }
-    return null;
+class _QuestHeader extends StatelessWidget {
+  const _QuestHeader({required this.quest});
+
+  final Quest quest;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        gradient: const LinearGradient(
+          colors: [QuestraColors.midnightNavy, QuestraColors.cosmicBlue],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.34)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const ArcWidget(
+                emotion: ArcEmotion.serious,
+                size: 78,
+                showSpeechBubble: false,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '1 Quest Header',
+                      style: TextStyle(
+                        color: QuestraColors.gold,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      quest.title,
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(color: QuestraColors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      quest.description,
+                      style: const TextStyle(color: QuestraColors.parchment),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _MetaPill(label: quest.category, icon: Icons.category_outlined),
+              _MetaPill(label: quest.status.label, icon: Icons.flag_outlined),
+              _MetaPill(
+                label: quest.difficulty.label,
+                icon: Icons.fitness_center_outlined,
+              ),
+              if (quest.targetDate != null)
+                _MetaPill(
+                  label: DateFormat.MMMd('ja').format(quest.targetDate!),
+                  icon: Icons.event_outlined,
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: QuestraPrimaryButton(
+                  label: 'Edit',
+                  onPressed: () =>
+                      context.go('${AppRoutes.quest}/${quest.id}/edit'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressSection extends StatelessWidget {
+  const _ProgressSection({required this.quest});
+
+  final Quest quest;
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = (quest.progress.clamp(0, 1) * 100).round();
+
+    return _SectionCard(
+      number: 2,
+      title: 'Progress',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: quest.progress.clamp(0, 1),
+                    minHeight: 12,
+                    backgroundColor: QuestraColors.cloud,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      QuestraColors.gold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '$percent%',
+                style: const TextStyle(
+                  color: QuestraColors.deepNavy,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Text('Guide、Mission、Trailを進めるほどQuestの輪郭がはっきりします。'),
+        ],
+      ),
+    );
   }
 }
 
@@ -150,41 +239,85 @@ class _GuideCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return QuestraCard(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: QuestraColors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: _guideColor(guide.guideType).withValues(alpha: 0.34),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _guideColor(guide.guideType).withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 9),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(guide.title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _guideColor(guide.guideType).withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  _guideIcon(guide.guideType),
+                  color: _guideColor(guide.guideType),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      guide.guideType.japaneseLabel,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Text(
+                      guide.guideType.label,
+                      style: const TextStyle(
+                        color: QuestraColors.slate,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(guide.description),
           const SizedBox(height: 12),
-          Text(
-            'Suggested actions',
-            style: Theme.of(context).textTheme.titleSmall,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: guide.suggestedActions
+                .map((action) => _ActionChip(label: action))
+                .toList(),
           ),
-          const SizedBox(height: 6),
-          ...guide.suggestedActions.map((action) => Text('• $action')),
           if (advice != null) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             ArcWidget(
               emotion: advice!.emotion,
-              size: 72,
+              size: 64,
               message: advice!.adviceText,
             ),
-            const SizedBox(height: 4),
-            Text('source_type: ${advice!.sourceType}'),
           ],
           if (starMap.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Text('Star Map', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 6),
-            ...starMap.map(
-              (item) => ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(item.title),
-                subtitle: Text(
-                  '${item.contentType} • ${item.sourceType}\n${item.description}\n${item.url}',
-                ),
+            const SizedBox(height: 12),
+            Text(
+              'Dream Board素材: ${starMap.first.title}',
+              style: const TextStyle(
+                color: QuestraColors.cosmicBlue,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],
@@ -194,15 +327,365 @@ class _GuideCard extends ConsumerWidget {
               ref
                   .read(missionControllerProvider.notifier)
                   .generateMission(quest: quest, guide: guide, advice: advice);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Mission generated for today.')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Missionを生成しました。')));
             },
             icon: const Icon(Icons.flag_outlined),
-            label: const Text('Generate Mission'),
+            label: const Text('Missionを生成'),
           ),
         ],
       ),
     );
+  }
+}
+
+class _MissionsSection extends StatelessWidget {
+  const _MissionsSection({
+    required this.quest,
+    required this.guides,
+    required this.missions,
+  });
+
+  final Quest quest;
+  final List<QuestGuide> guides;
+  final List<Mission> missions;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      number: 4,
+      title: 'Missions',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (missions.isEmpty)
+            const Text('Guideから今日できる小さなMissionを生成できます。')
+          else
+            ...missions.map(
+              (mission) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      mission.status == MissionStatus.completed
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
+                      color: QuestraColors.gold,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${mission.title} / ${mission.guideType.japaneseLabel}',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 8),
+          Text(
+            '分解元: ${guides.map((guide) => guide.guideType.japaneseLabel).join('・')}',
+            style: const TextStyle(color: QuestraColors.slate),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrailSection extends StatelessWidget {
+  const _TrailSection({required this.quest});
+
+  final Quest quest;
+
+  @override
+  Widget build(BuildContext context) {
+    final trail = [
+      'Questを作成',
+      '6つのGuideへ分解',
+      'Arc Adviceを確認',
+      'Missionで今日の一歩へ',
+    ];
+
+    return _SectionCard(
+      number: 5,
+      title: 'Trail',
+      child: Column(
+        children: [
+          for (var i = 0; i < trail.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 13,
+                    backgroundColor: i == 0
+                        ? QuestraColors.gold
+                        : QuestraColors.cosmicBlue,
+                    child: Text(
+                      '${i + 1}',
+                      style: const TextStyle(
+                        color: QuestraColors.deepNavy,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(trail[i])),
+                ],
+              ),
+            ),
+          Text(
+            'Trailは「${quest.title}」の進行ログとして育っていきます。',
+            style: const TextStyle(color: QuestraColors.slate),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DreamBoardSection extends StatelessWidget {
+  const _DreamBoardSection({required this.quest});
+
+  final Quest quest;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = ['理想の到達点', '参考になる星', '必要な道具', '出会いたい仲間'];
+
+    return _SectionCard(
+      number: 6,
+      title: 'Dream Board',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('「${quest.title}」を叶えるための素材置き場です。'),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: items.map((item) => _ActionChip(label: item)).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.number, required this.title});
+
+  final int number;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      '$number $title',
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+        color: QuestraColors.white,
+        fontWeight: FontWeight.w900,
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({
+    required this.number,
+    required this.title,
+    required this.child,
+  });
+
+  final int number;
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$number $title', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaPill extends StatelessWidget {
+  const _MetaPill({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: QuestraColors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: QuestraColors.white.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: QuestraColors.gold, size: 14),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: QuestraColors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionChip extends StatelessWidget {
+  const _ActionChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: QuestraColors.cosmicBlue.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: QuestraColors.midnightNavy,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+ArcAdvice? _firstAdvice(List<ArcAdvice> advice, GuideType guideType) {
+  for (final item in advice) {
+    if (item.guideType == guideType) {
+      return item;
+    }
+  }
+  return null;
+}
+
+List<QuestGuide> _mockGuides(Quest quest) {
+  return GuideType.values
+      .map(
+        (guideType) => QuestGuide(
+          questId: quest.id,
+          guideType: guideType,
+          title: '${guideType.label}: ${quest.title}',
+          description: _guideDescription(quest, guideType),
+          suggestedActions: _guideActions(guideType),
+        ),
+      )
+      .toList();
+}
+
+List<ArcAdvice> _mockAdvice(Quest quest) {
+  return GuideType.values
+      .map(
+        (guideType) => ArcAdvice(
+          questId: quest.id,
+          guideType: guideType,
+          adviceText: '${guideType.japaneseLabel}から一歩だけ選ぼう。小さく進めば星図は明るくなるよ。',
+          emotion: guideType == GuideType.training
+              ? ArcEmotion.support
+              : ArcEmotion.normal,
+        ),
+      )
+      .toList();
+}
+
+List<StarMapItem> _mockStarMap(Quest quest) {
+  return GuideType.values
+      .map(
+        (guideType) => StarMapItem(
+          questId: quest.id,
+          guideType: guideType,
+          title: '${guideType.japaneseLabel}の参考星',
+          description: 'Dream Boardに保存できるmock素材です。',
+          url: 'https://example.com/${guideType.name}',
+          contentType: 'mock',
+        ),
+      )
+      .toList();
+}
+
+String _guideDescription(Quest quest, GuideType guideType) {
+  return switch (guideType) {
+    GuideType.route => '目的地までの航路を描き、最初のチェックポイントを決めます。',
+    GuideType.knowledge => '達成に必要な知識と、最初に調べるテーマを整理します。',
+    GuideType.training => '初心者でも今日から練習できる小さな型に分けます。',
+    GuideType.community => '相談できる仲間、参加できる場所、質問の入口を探します。',
+    GuideType.resource => '必要な道具、素材、時間、環境を準備します。',
+    GuideType.opportunity => '広告や企業オファーではなく、学びや挑戦の機会を見つけます。',
+  };
+}
+
+List<String> _guideActions(GuideType guideType) {
+  return switch (guideType) {
+    GuideType.route => ['ゴールを書く', '3つの通過点を決める', '次の一歩を選ぶ'],
+    GuideType.knowledge => ['知らないことを列挙', '1つ読む', 'Arcに質問する'],
+    GuideType.training => ['10分練習', '1回だけ試す', '難所をメモする'],
+    GuideType.community => ['相談相手を探す', '場を見つける', '小さく質問する'],
+    GuideType.resource => ['道具を1つ準備', '作業場所を整える', '詰まりを1つ消す'],
+    GuideType.opportunity => ['イベントを探す', '挑戦枠を見る', '次の入口を保存する'],
+  };
+}
+
+Color _guideColor(GuideType guideType) {
+  return switch (guideType) {
+    GuideType.route => QuestraColors.cosmicBlue,
+    GuideType.knowledge => const Color(0xFF2FBF71),
+    GuideType.training => QuestraColors.gold,
+    GuideType.community => const Color(0xFF7B61FF),
+    GuideType.resource => const Color(0xFF1CB5E0),
+    GuideType.opportunity => const Color(0xFFFF8A5B),
+  };
+}
+
+IconData _guideIcon(GuideType guideType) {
+  return switch (guideType) {
+    GuideType.route => Icons.route_outlined,
+    GuideType.knowledge => Icons.menu_book_outlined,
+    GuideType.training => Icons.fitness_center_outlined,
+    GuideType.community => Icons.groups_outlined,
+    GuideType.resource => Icons.inventory_2_outlined,
+    GuideType.opportunity => Icons.auto_awesome_outlined,
+  };
+}
+
+extension _GuideTypeJapaneseLabel on GuideType {
+  String get japaneseLabel {
+    return switch (this) {
+      GuideType.route => '航路',
+      GuideType.knowledge => '知識',
+      GuideType.training => '鍛錬',
+      GuideType.community => '仲間',
+      GuideType.resource => '準備',
+      GuideType.opportunity => '機会',
+    };
   }
 }
