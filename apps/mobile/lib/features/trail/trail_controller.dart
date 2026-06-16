@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
+import '../media/media_model.dart';
+import '../media/media_providers.dart';
 import 'trail_model.dart';
 import 'trail_providers.dart';
 import 'trail_sync_state.dart';
@@ -84,6 +87,23 @@ class TrailController extends Notifier<List<Trail>> {
     return trail;
   }
 
+  Trail addManualTrail({
+    required String title,
+    required String summary,
+    required String content,
+  }) {
+    final trail = Trail(
+      title: title,
+      summary: summary,
+      content: content,
+      trailType: TrailType.manualNote,
+      sourceType: 'manual',
+    );
+    state = [trail, ...state];
+    unawaited(_persistTrail(trail));
+    return trail;
+  }
+
   void updateTrail(Trail updatedTrail) {
     state = [
       for (final trail in state)
@@ -98,6 +118,38 @@ class TrailController extends Notifier<List<Trail>> {
         .firstOrNull;
     state = state.where((trail) => trail.id != trailId).toList();
     unawaited(_deleteTrail(trailId, removedTrail));
+  }
+
+  Future<MediaAttachment?> attachImageToTrail({
+    required Trail trail,
+    required XFile image,
+  }) async {
+    final userId = ref.read(authControllerProvider).profile?.id;
+    if (userId == null) {
+      ref
+          .read(trailSyncControllerProvider.notifier)
+          .failed('Login is required to attach Trail media.');
+      return null;
+    }
+
+    final sync = ref.read(trailSyncControllerProvider.notifier);
+    sync.loading('Uploading Trail image...');
+    try {
+      final attachment = await ref
+          .read(mediaRepositoryProvider)
+          .uploadTrailImage(
+            ownerId: userId,
+            trailId: trail.id,
+            fileName: image.name,
+            bytes: await image.readAsBytes(),
+            contentType: image.mimeType ?? 'image/jpeg',
+          );
+      sync.saved('Trail image attached.');
+      return attachment;
+    } catch (error) {
+      sync.failed(error);
+      return null;
+    }
   }
 
   Future<void> _persistTrail(Trail trail) async {

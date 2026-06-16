@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/questra_colors.dart';
@@ -54,6 +55,12 @@ class TrailScreen extends ConsumerWidget {
             ],
             _TrailOverview(trails: trails),
             const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () => _showCreateTrailSheet(context, controller),
+              icon: const Icon(Icons.add),
+              label: const Text('Trailを残す'),
+            ),
+            const SizedBox(height: 16),
             if (trails.isEmpty)
               const QuestraCard(
                 child: Text('Missionを完了するかQuestにTrailを残すと、ここに進み方が並びます。'),
@@ -64,6 +71,10 @@ class TrailScreen extends ConsumerWidget {
                 child: _TrailCard(
                   trail: trail,
                   onEdit: () => _showEditTrailSheet(context, controller, trail),
+                  onReflect: () =>
+                      _showReflectTrailSheet(context, controller, trail),
+                  onAttachImage: () =>
+                      _attachTrailImage(context, controller, trail),
                   onDelete: () =>
                       _confirmDeleteTrail(context, controller, trail),
                 ),
@@ -71,6 +82,22 @@ class TrailScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showCreateTrailSheet(BuildContext context, TrailController controller) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _CreateTrailSheet(
+        onSubmit: (draft) {
+          controller.addManualTrail(
+            title: draft.title,
+            summary: draft.summary,
+            content: draft.content,
+          );
+        },
       ),
     );
   }
@@ -86,6 +113,43 @@ class TrailScreen extends ConsumerWidget {
       builder: (context) =>
           _EditTrailSheet(trail: trail, onSubmit: controller.updateTrail),
     );
+  }
+
+  void _showReflectTrailSheet(
+    BuildContext context,
+    TrailController controller,
+    Trail trail,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) =>
+          _ReflectTrailSheet(trail: trail, onSubmit: controller.updateTrail),
+    );
+  }
+
+  Future<void> _attachTrailImage(
+    BuildContext context,
+    TrailController controller,
+    Trail trail,
+  ) async {
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 86,
+    );
+    if (image == null) {
+      return;
+    }
+
+    final attachment = await controller.attachImageToTrail(
+      trail: trail,
+      image: image,
+    );
+    if (context.mounted && attachment != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Trailに画像を添付しました。')));
+    }
   }
 
   Future<void> _confirmDeleteTrail(
@@ -115,6 +179,124 @@ class TrailScreen extends ConsumerWidget {
       controller.removeTrail(trail.id);
     }
   }
+}
+
+class _TrailDraft {
+  const _TrailDraft({
+    required this.title,
+    required this.summary,
+    required this.content,
+  });
+
+  final String title;
+  final String summary;
+  final String content;
+}
+
+class _CreateTrailSheet extends StatefulWidget {
+  const _CreateTrailSheet({required this.onSubmit});
+
+  final ValueChanged<_TrailDraft> onSubmit;
+
+  @override
+  State<_CreateTrailSheet> createState() => _CreateTrailSheetState();
+}
+
+class _CreateTrailSheetState extends State<_CreateTrailSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _summaryController = TextEditingController();
+  final _contentController = TextEditingController();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _summaryController.dispose();
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Trailを残す',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: _required,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _summaryController,
+                  decoration: const InputDecoration(
+                    labelText: 'Summary',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: _required,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _contentController,
+                  minLines: 3,
+                  maxLines: 5,
+                  decoration: const InputDecoration(
+                    labelText: 'Content',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: _required,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: _submit,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Save Trail'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    widget.onSubmit(
+      _TrailDraft(
+        title: _titleController.text.trim(),
+        summary: _summaryController.text.trim(),
+        content: _contentController.text.trim(),
+      ),
+    );
+    Navigator.of(context).pop();
+  }
+}
+
+String? _required(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Required';
+  }
+  return null;
 }
 
 class _TrailOverview extends StatelessWidget {
@@ -200,11 +382,15 @@ class _TrailCard extends StatelessWidget {
   const _TrailCard({
     required this.trail,
     required this.onEdit,
+    required this.onReflect,
+    required this.onAttachImage,
     required this.onDelete,
   });
 
   final Trail trail;
   final VoidCallback onEdit;
+  final VoidCallback onReflect;
+  final VoidCallback onAttachImage;
   final VoidCallback onDelete;
 
   @override
@@ -241,12 +427,24 @@ class _TrailCard extends StatelessWidget {
                   switch (action) {
                     case _TrailAction.edit:
                       onEdit();
+                    case _TrailAction.reflect:
+                      onReflect();
+                    case _TrailAction.attachImage:
+                      onAttachImage();
                     case _TrailAction.delete:
                       onDelete();
                   }
                 },
                 itemBuilder: (context) => const [
                   PopupMenuItem(value: _TrailAction.edit, child: Text('Edit')),
+                  PopupMenuItem(
+                    value: _TrailAction.reflect,
+                    child: Text('Reflect'),
+                  ),
+                  PopupMenuItem(
+                    value: _TrailAction.attachImage,
+                    child: Text('Attach image'),
+                  ),
                   PopupMenuItem(
                     value: _TrailAction.delete,
                     child: Text('Delete'),
@@ -274,6 +472,105 @@ class _TrailCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _ReflectTrailSheet extends StatefulWidget {
+  const _ReflectTrailSheet({required this.trail, required this.onSubmit});
+
+  final Trail trail;
+  final ValueChanged<Trail> onSubmit;
+
+  @override
+  State<_ReflectTrailSheet> createState() => _ReflectTrailSheetState();
+}
+
+class _ReflectTrailSheetState extends State<_ReflectTrailSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _learningController = TextEditingController();
+  final _nextStepController = TextEditingController();
+
+  @override
+  void dispose() {
+    _learningController.dispose();
+    _nextStepController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20, 20, 20, bottomInset + 20),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Reflect on Trail',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(widget.trail.title),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _learningController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'What did this Trail teach you?',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: _required,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _nextStepController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'What is the next small Mission?',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: _required,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: _submit,
+                  icon: const Icon(Icons.auto_awesome),
+                  label: const Text('Save Reflection'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    final reflection = [
+      widget.trail.content,
+      '',
+      'Reflection: ${_learningController.text.trim()}',
+      'Next Mission: ${_nextStepController.text.trim()}',
+    ].where((line) => line.trim().isNotEmpty).join('\n');
+    widget.onSubmit(
+      widget.trail.copyWith(
+        summary: _learningController.text.trim(),
+        content: reflection,
+        trailType: TrailType.arcReflection,
+      ),
+    );
+    Navigator.of(context).pop();
   }
 }
 
@@ -370,13 +667,6 @@ class _EditTrailSheetState extends State<_EditTrailSheet> {
     );
   }
 
-  String? _required(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Required';
-    }
-    return null;
-  }
-
   void _submit() {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -439,4 +729,4 @@ class _TrailSyncBanner extends StatelessWidget {
   }
 }
 
-enum _TrailAction { edit, delete }
+enum _TrailAction { edit, reflect, attachImage, delete }
