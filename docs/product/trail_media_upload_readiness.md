@@ -37,10 +37,20 @@ The `media` table stores attachment metadata:
 6. App creates a private `media` row linked to the Trail.
 7. Trail sync banner reports upload success or failure.
 
+## Lifecycle Management
+
+- Attached Trail images are loaded from private `media` rows and shown on the
+  related Trail card.
+- `Replace image` uploads a new private image, removes the previous storage
+  object and media row, then updates the Trail card attachment state.
+- `Remove image` deletes the storage object and media row, then clears the Trail
+  card attachment state.
+- If replacement cleanup fails, the newly uploaded replacement is cleaned up and
+  the previous attachment remains the visible source of truth.
+
 ## Release Notes
 
 - Private upload is implemented first.
 - Public and Guild media visibility must stay blocked until share review UX is
   added.
-- Deleting a Trail media object and media row together should be added before
-  broader media management.
+- Trail media delete and replace are implemented for private image attachments.

@@ -392,13 +392,17 @@ class _ArcChatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final visibleMessages = messages.length <= 6
+        ? messages
+        : messages.skip(messages.length - 6);
+
     return QuestraCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Talk With Arc', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
-          ...messages.take(6).map(_ArcMessageBubble.new),
+          ...visibleMessages.map(_ArcMessageBubble.new),
           const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,

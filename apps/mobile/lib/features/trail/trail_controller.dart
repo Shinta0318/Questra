@@ -16,6 +16,11 @@ final trailControllerProvider = NotifierProvider<TrailController, List<Trail>>(
   TrailController.new,
 );
 
+final trailMediaControllerProvider =
+    NotifierProvider<TrailMediaController, Map<String, MediaAttachment>>(
+      TrailMediaController.new,
+    );
+
 class TrailController extends Notifier<List<Trail>> {
   @override
   List<Trail> build() {
@@ -58,9 +63,7 @@ class TrailController extends Notifier<List<Trail>> {
     sync.loading('Loading Trail records...');
     try {
       final trails = await ref.read(trailRepositoryProvider).findByUser(userId);
-      if (trails.isNotEmpty) {
-        state = trails;
-      }
+      state = trails;
       sync.saved('Trail records loaded.');
     } catch (error) {
       sync.failed(error);
@@ -144,11 +147,78 @@ class TrailController extends Notifier<List<Trail>> {
             bytes: await image.readAsBytes(),
             contentType: image.mimeType ?? 'image/jpeg',
           );
+      ref
+          .read(trailMediaControllerProvider.notifier)
+          .setAttachment(trail.id, attachment);
       sync.saved('Trail image attached.');
       return attachment;
     } catch (error) {
       sync.failed(error);
       return null;
+    }
+  }
+
+  Future<MediaAttachment?> replaceImageForTrail({
+    required Trail trail,
+    required MediaAttachment current,
+    required XFile image,
+  }) async {
+    final userId = ref.read(authControllerProvider).profile?.id;
+    if (userId == null) {
+      ref
+          .read(trailSyncControllerProvider.notifier)
+          .failed('Login is required to replace Trail media.');
+      return null;
+    }
+
+    final sync = ref.read(trailSyncControllerProvider.notifier);
+    sync.loading('Replacing Trail image...');
+    try {
+      final attachment = await ref
+          .read(mediaRepositoryProvider)
+          .replaceTrailImage(
+            ownerId: userId,
+            trailId: trail.id,
+            current: current,
+            fileName: image.name,
+            bytes: await image.readAsBytes(),
+            contentType: image.mimeType ?? 'image/jpeg',
+          );
+      ref
+          .read(trailMediaControllerProvider.notifier)
+          .setAttachment(trail.id, attachment);
+      sync.saved('Trail image replaced.');
+      return attachment;
+    } catch (error) {
+      sync.failed(error);
+      return null;
+    }
+  }
+
+  Future<bool> removeImageFromTrail({
+    required Trail trail,
+    required MediaAttachment attachment,
+  }) async {
+    final userId = ref.read(authControllerProvider).profile?.id;
+    if (userId == null) {
+      ref
+          .read(trailSyncControllerProvider.notifier)
+          .failed('Login is required to remove Trail media.');
+      return false;
+    }
+
+    final sync = ref.read(trailSyncControllerProvider.notifier);
+    sync.loading('Removing Trail image...');
+    try {
+      await ref
+          .read(mediaRepositoryProvider)
+          .deleteTrailImage(ownerId: userId, attachment: attachment);
+      ref.read(trailMediaControllerProvider.notifier).clearAttachment(trail.id);
+      sync.saved('Trail image removed.');
+      return true;
+    } catch (error) {
+      sync.failed(error);
+      return false;
     }
   }
 
@@ -177,22 +247,26 @@ class TrailController extends Notifier<List<Trail>> {
   }
 
   Future<void> _rememberTrail(String userId, Trail trail) async {
-    await ref
-        .read(memoryExtractionServiceProvider)
-        .extractAndSave(
-          MemoryExtractionEvent(
-            userId: userId,
-            questId: trail.questId,
-            missionId: trail.missionId,
-            trailId: trail.id,
-            sourceId: trail.id,
-            sourceType: ArcMemorySourceType.trailPosted,
-            title: 'Trail memory',
-            text: '${trail.title}: ${trail.summary} ${trail.content}',
-            metadata: {'trail_type': trail.trailType.storageKey},
-          ),
-        );
-    ref.invalidate(visibleArcMemoriesProvider);
+    try {
+      await ref
+          .read(memoryExtractionServiceProvider)
+          .extractAndSave(
+            MemoryExtractionEvent(
+              userId: userId,
+              questId: trail.questId,
+              missionId: trail.missionId,
+              trailId: trail.id,
+              sourceId: trail.id,
+              sourceType: ArcMemorySourceType.trailPosted,
+              title: 'Trail memory',
+              text: '${trail.title}: ${trail.summary} ${trail.content}',
+              metadata: {'trail_type': trail.trailType.storageKey},
+            ),
+          );
+      ref.invalidate(visibleArcMemoriesProvider);
+    } catch (_) {
+      // Arc Memory sync state is introduced later; keep the Trail action.
+    }
   }
 
   Future<void> _deleteTrail(String trailId, Trail? removedTrail) async {
@@ -215,5 +289,71 @@ class TrailController extends Notifier<List<Trail>> {
       }
       sync.failed(error);
     }
+  }
+}
+
+class TrailMediaController extends Notifier<Map<String, MediaAttachment>> {
+  @override
+  Map<String, MediaAttachment> build() {
+    ref.listen(authControllerProvider.select((state) => state.profile?.id), (
+      previous,
+      next,
+    ) {
+      if (next == null) {
+        state = const {};
+        return;
+      }
+      if (next != previous) {
+        _loadForCurrentTrails();
+      }
+    });
+
+    ref.listen(trailControllerProvider, (previous, next) {
+      if (ref.read(authControllerProvider).profile != null) {
+        loadForTrails(next);
+      }
+    });
+
+    if (ref.read(authControllerProvider).profile != null) {
+      unawaited(Future<void>.microtask(_loadForCurrentTrails));
+    }
+
+    return const {};
+  }
+
+  void setAttachment(String trailId, MediaAttachment attachment) {
+    state = {...state, trailId: attachment};
+  }
+
+  void clearAttachment(String trailId) {
+    final updated = {...state}..remove(trailId);
+    state = updated;
+  }
+
+  Future<void> loadForTrails(List<Trail> trails) async {
+    final userId = ref.read(authControllerProvider).profile?.id;
+    if (userId == null || trails.isEmpty) {
+      state = const {};
+      return;
+    }
+
+    final nextState = <String, MediaAttachment>{};
+    for (final trail in trails) {
+      try {
+        final images = await ref
+            .read(mediaRepositoryProvider)
+            .findTrailImages(ownerId: userId, trailId: trail.id);
+        if (images.isNotEmpty) {
+          nextState[trail.id] = images.first;
+        }
+      } catch (_) {
+        // Media sync state is introduced later; keep loading best-effort.
+      }
+    }
+    state = nextState;
+  }
+
+  void _loadForCurrentTrails() {
+    unawaited(loadForTrails(ref.read(trailControllerProvider)));
   }
 }

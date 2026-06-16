@@ -64,7 +64,7 @@ class SupabaseQuestRepository implements QuestRepository {
         .limit(1);
 
     if (rows.isEmpty) {
-      return quest;
+      throw StateError('Quest was not saved.');
     }
 
     return _questFromRow(Map<String, dynamic>.from(rows.first));
