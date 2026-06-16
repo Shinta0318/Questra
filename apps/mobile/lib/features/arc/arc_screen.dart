@@ -13,6 +13,8 @@ import '../quest/quest_model.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
 import 'arc_emotion.dart';
+import 'arc_guidance_providers.dart';
+import 'arc_guidance_service.dart';
 import 'arc_journey_context.dart';
 import 'arc_widget.dart';
 
@@ -43,6 +45,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     final quests = ref.watch(questControllerProvider);
     final missions = ref.watch(missionControllerProvider);
     final trails = ref.watch(trailControllerProvider);
+    final guidance = ref
+        .watch(arcGuidanceServiceProvider)
+        .build(quests: quests, missions: missions, trails: trails);
     final journeyContext = ArcJourneyContext.fromJourney(
       quests: quests,
       trails: trails,
@@ -70,6 +75,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                 quests: quests,
                 missions: missions,
                 trails: trails,
+                guidance: guidance,
                 journeyContext: journeyContext,
               ),
             ),
@@ -104,6 +110,8 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            _ArcGuidanceCard(guidance: guidance),
             const SizedBox(height: 16),
             memories.when(
               data: (items) => _ArcMemoryContextCard(memories: items),
@@ -167,6 +175,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     required List<Quest> quests,
     required List<Mission> missions,
     required List<Trail> trails,
+    required ArcGuidance guidance,
     required ArcJourneyContext journeyContext,
   }) async {
     final text = _messageController.text.trim();
@@ -180,6 +189,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       quests: quests,
       missions: missions,
       trails: trails,
+      guidance: guidance,
       journeyContext: journeyContext,
     );
     setState(() {
@@ -211,6 +221,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     required List<Quest> quests,
     required List<Mission> missions,
     required List<Trail> trails,
+    required ArcGuidance guidance,
     required ArcJourneyContext journeyContext,
   }) {
     final lower = text.toLowerCase();
@@ -230,15 +241,18 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         lower.contains('次') ||
         lower.contains('今日')) {
       if (openMissions.isEmpty) {
-        return '「${activeQuests.first.title}」から今日できるMissionをひとつ作ろう。5分で動ける形まで小さくするのがよさそう。';
+        return guidance.nextMission;
       }
-      return '今日のMissionは「${openMissions.first.title}」がよさそう。終えたらTrailに残して、進んだ距離を一緒に見よう。';
+      return guidance.nextMission;
     }
     if (lower.contains('trail') || lower.contains('残')) {
       if (trails.isEmpty) {
         return '最初のTrailは、完璧な記録じゃなくて大丈夫。Missionを終えたあとに「何が少し進んだか」を一行で残そう。';
       }
-      return '最新のTrail「${trails.first.title}」は、この航路の手がかりだね。次のMissionへつながる一文を拾ってみよう。';
+      return guidance.reflectionFeedback;
+    }
+    if (lower.contains('quest') || lower.contains('進捗')) {
+      return guidance.questComment;
     }
     return journeyContext.focusQuestTitle == null
         ? '君の今の航路を見ながら、次の一歩を小さくしよう。Quest、Mission、Trailのどこを整えたい？'
@@ -289,6 +303,78 @@ class _ArcMemoryContextCard extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _ArcGuidanceCard extends StatelessWidget {
+  const _ArcGuidanceCard({required this.guidance});
+
+  final ArcGuidance guidance;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Contextual Guidance',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 12),
+          _GuidanceLine(
+            icon: Icons.flag_outlined,
+            label: 'Quest',
+            text: guidance.questComment,
+          ),
+          const SizedBox(height: 10),
+          _GuidanceLine(
+            icon: Icons.check_circle_outline,
+            label: 'Next Mission',
+            text: guidance.nextMission,
+          ),
+          const SizedBox(height: 10),
+          _GuidanceLine(
+            icon: Icons.auto_awesome,
+            label: 'Reflection',
+            text: guidance.reflectionFeedback,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuidanceLine extends StatelessWidget {
+  const _GuidanceLine({
+    required this.icon,
+    required this.label,
+    required this.text,
+  });
+
+  final IconData icon;
+  final String label;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 2),
+              Text(text),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

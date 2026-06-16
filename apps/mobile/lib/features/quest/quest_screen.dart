@@ -7,6 +7,10 @@ import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../mission/mission_controller.dart';
+import '../mission/mission_model.dart';
+import '../trail/trail_controller.dart';
+import '../trail/trail_model.dart';
 import 'quest_controller.dart';
 import 'quest_model.dart';
 
@@ -16,9 +20,12 @@ class QuestScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final quests = ref.watch(questControllerProvider);
+    final missions = ref.watch(missionControllerProvider);
+    final trails = ref.watch(trailControllerProvider);
     final activeQuests = quests
         .where((quest) => quest.status == QuestStatus.active)
         .toList();
+    final focusQuest = activeQuests.isEmpty ? null : activeQuests.first;
 
     return Scaffold(
       backgroundColor: QuestraColors.deepNavy,
@@ -39,6 +46,20 @@ class QuestScreen extends ConsumerWidget {
             _QuestHero(
               activeCount: activeQuests.length,
               onCreateQuest: () => context.go('${AppRoutes.quest}/create'),
+            ),
+            const SizedBox(height: 16),
+            _QuestProgressDashboard(
+              quest: focusQuest,
+              missions: missions,
+              trailCount: focusQuest == null
+                  ? trails.length
+                  : trails
+                        .where((trail) => trail.questId == focusQuest.id)
+                        .length,
+              latestActivity: _latestActivity(missions, trails),
+              onOpenQuest: focusQuest == null
+                  ? () => context.go(AppRoutes.quest)
+                  : () => context.go('${AppRoutes.quest}/${focusQuest.id}'),
             ),
             const SizedBox(height: 22),
             Text(
@@ -62,6 +83,20 @@ class QuestScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _latestActivity(List<Mission> missions, List<Trail> trails) {
+    final latestMission = [...missions]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final latestTrail = [...trails]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (latestTrail.isNotEmpty) {
+      return 'Latest Trail: ${latestTrail.first.title}';
+    }
+    if (latestMission.isNotEmpty) {
+      return 'Latest Mission: ${latestMission.first.title}';
+    }
+    return 'No recent activity yet.';
   }
 }
 
@@ -126,6 +161,114 @@ class _QuestHero extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuestProgressDashboard extends StatelessWidget {
+  const _QuestProgressDashboard({
+    required this.quest,
+    required this.missions,
+    required this.trailCount,
+    required this.latestActivity,
+    required this.onOpenQuest,
+  });
+
+  final Quest? quest;
+  final List<Mission> missions;
+  final int trailCount;
+  final String latestActivity;
+  final VoidCallback onOpenQuest;
+
+  @override
+  Widget build(BuildContext context) {
+    final questProgress = ((quest?.progress ?? 0) * 100).round();
+    final questMissions = quest == null
+        ? missions
+        : missions.where((mission) => mission.questId == quest!.id).toList();
+    final completedMissions = questMissions
+        .where((mission) => mission.status == MissionStatus.completed)
+        .length;
+    final arcComment = quest == null
+        ? 'Questをひとつ選ぶと、進み方を一緒に見渡せるよ。'
+        : '「${quest!.title}」は$questProgress%まで進んでいるよ。次は小さなMissionでTrailを増やそう。';
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: QuestraColors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Quest Dashboard',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _DashboardMetric(label: 'Progress', value: '$questProgress%'),
+              _DashboardMetric(
+                label: 'Missions',
+                value: '$completedMissions/${questMissions.length}',
+              ),
+              _DashboardMetric(label: 'Trails', value: trailCount.toString()),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: (quest?.progress ?? 0).clamp(0, 1),
+              minHeight: 9,
+              backgroundColor: QuestraColors.cloud,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                QuestraColors.gold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(latestActivity),
+          const SizedBox(height: 8),
+          Text(arcComment),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: onOpenQuest,
+            icon: const Icon(Icons.open_in_new),
+            label: const Text('Quest詳細へ'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardMetric extends StatelessWidget {
+  const _DashboardMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
