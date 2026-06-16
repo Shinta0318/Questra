@@ -13,6 +13,8 @@ import '../mission/mission_model.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../quest/quest_model.dart';
+import '../trail/trail_controller.dart';
+import '../trail/trail_model.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -25,6 +27,9 @@ class HomeScreen extends ConsumerWidget {
         .where((quest) => quest.status == QuestStatus.active)
         .toList();
     final missions = ref.watch(missionControllerProvider);
+    final trails = ref.watch(trailControllerProvider);
+    final recentTrails = [...trails]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final openMissions =
         missions
             .where((mission) => mission.status == MissionStatus.todo)
@@ -93,14 +98,25 @@ class HomeScreen extends ConsumerWidget {
               title: 'Questの航路',
               body:
                   '進行中 ${activeQuests.length} / 全 ${quests.length} Quest。焦らず、星をひとつずつ。',
+              actionLabel: 'Questへ',
+              onPressed: () => context.go(AppRoutes.quest),
             ),
             const SizedBox(height: 12),
-            const _HomeSection(
-              title: '最近のTrail',
-              body: 'このTrailは君の旅の証だね。小さな前進も、ちゃんと残っているよ。',
+            _RecentTrailsSection(
+              trails: recentTrails.take(3).toList(growable: false),
+              onOpenTrail: () => context.go(AppRoutes.trail),
+            ),
+            const SizedBox(height: 12),
+            _GuildActivitySection(
+              activeQuestCount: activeQuests.length,
+              openMissionCount: openMissions.length,
+              recentTrailCount: recentTrails.length,
+              onOpenGuild: () => context.go(AppRoutes.guild),
             ),
             const SizedBox(height: 12),
             _HomeActions(
+              onOpenQuest: () => context.go(AppRoutes.quest),
+              onOpenTrail: () => context.go(AppRoutes.trail),
               onOpenGuild: () => context.go(AppRoutes.guild),
               onOpenArc: () => context.go(AppRoutes.arc),
               onOpenProfile: () => context.go(AppRoutes.profile),
@@ -126,11 +142,15 @@ void _completeMission(BuildContext context, WidgetRef ref, Mission mission) {
 
 class _HomeActions extends StatelessWidget {
   const _HomeActions({
+    required this.onOpenQuest,
+    required this.onOpenTrail,
     required this.onOpenGuild,
     required this.onOpenArc,
     required this.onOpenProfile,
   });
 
+  final VoidCallback onOpenQuest;
+  final VoidCallback onOpenTrail;
   final VoidCallback onOpenGuild;
   final VoidCallback onOpenArc;
   final VoidCallback onOpenProfile;
@@ -148,6 +168,16 @@ class _HomeActions extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
+              OutlinedButton.icon(
+                onPressed: onOpenQuest,
+                icon: const Icon(Icons.flag_outlined),
+                label: const Text('Quest'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onOpenTrail,
+                icon: const Icon(Icons.route_outlined),
+                label: const Text('Trail'),
+              ),
               OutlinedButton.icon(
                 onPressed: onOpenArc,
                 icon: const Icon(Icons.travel_explore_outlined),
@@ -172,10 +202,17 @@ class _HomeActions extends StatelessWidget {
 }
 
 class _HomeSection extends StatelessWidget {
-  const _HomeSection({required this.title, required this.body});
+  const _HomeSection({
+    required this.title,
+    required this.body,
+    this.actionLabel,
+    this.onPressed,
+  });
 
   final String title;
   final String body;
+  final String? actionLabel;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -187,8 +224,86 @@ class _HomeSection extends StatelessWidget {
           Text(title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(body),
+          if (actionLabel != null && onPressed != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(onPressed: onPressed, child: Text(actionLabel!)),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _RecentTrailsSection extends StatelessWidget {
+  const _RecentTrailsSection({required this.trails, required this.onOpenTrail});
+
+  final List<Trail> trails;
+  final VoidCallback onOpenTrail;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('最近のTrail', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          if (trails.isEmpty)
+            const Text('Missionを完了するかTrailを残すと、ここに旅の証が並びます。')
+          else
+            ...trails.map(
+              (trail) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      trail.title,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(trail.summary),
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: onOpenTrail,
+            icon: const Icon(Icons.route_outlined),
+            label: const Text('Trailへ'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuildActivitySection extends StatelessWidget {
+  const _GuildActivitySection({
+    required this.activeQuestCount,
+    required this.openMissionCount,
+    required this.recentTrailCount,
+    required this.onOpenGuild,
+  });
+
+  final int activeQuestCount;
+  final int openMissionCount;
+  final int recentTrailCount;
+  final VoidCallback onOpenGuild;
+
+  @override
+  Widget build(BuildContext context) {
+    final body = activeQuestCount == 0
+        ? 'まずQuestをひとつ灯すと、Guildで相談できる問いが作りやすくなります。'
+        : '進行中のQuest $activeQuestCount件、未完了Mission $openMissionCount件、Trail $recentTrailCount件から相談の種を作れます。';
+
+    return _HomeSection(
+      title: 'Guild Activity',
+      body: body,
+      actionLabel: 'Guildへ',
+      onPressed: onOpenGuild,
     );
   }
 }
