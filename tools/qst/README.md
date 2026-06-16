@@ -16,3 +16,13 @@ Local DEV-QST helpers live here. They use the repository backlog at
 - `report`: prints a QST report template for a backlog item.
 
 Reports produced from the template should be saved under `reports/qst`.
+
+## Release Checks
+
+```powershell
+dart run tools\qst\verify_rls_readiness.dart
+```
+
+- `verify_rls_readiness.dart`: checks the MVP Supabase migration for RLS
+  enablement and required owner/public/Guild policies for Quest, Mission, Trail,
+  TrailEvent, Arc Memory, and media boundaries.

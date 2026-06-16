@@ -16,8 +16,8 @@ launch signal.
 
 | Blocker | StudioProjects status | Next action |
 | --- | --- | --- |
-| RLS readiness is not represented in backlog | Partially covered by `docs/architecture/supabase-rls-security.md` and MVP schema policies | Add SQL/RLS verification QST and test coverage |
-| Trail image/media upload readiness is not represented in backlog | Not implemented | Add media upload MVP QST covering storage bucket, media rows, and Trail attachment UX |
+| RLS readiness is not represented in backlog | Covered by QST-031 static verification for MVP owner/public/Guild policy coverage | Add database-backed SQL tests when Supabase local test harness is introduced |
+| Trail image/media upload readiness is not represented in backlog | Covered by QST-032 private Trail image upload path, storage policies, and media rows | Add delete/replace management before broader media sharing |
 | Arc Experience readiness is below MVP threshold | Improved by QST-021, QST-027, and QST-029 | Sync planner and continue Arc Chat/Memory polish after release blockers |
 
 ## Completed Readiness Work
@@ -34,15 +34,15 @@ launch signal.
 
 ## Remaining Before MVP Release
 
-1. Add RLS verification tests for owner-only Quest, Mission, Trail, Arc Memory,
-   and media access.
-2. Add Trail media upload readiness, including storage policy design and an MVP
-   attachment path.
+1. Add database-backed RLS behavior tests once Supabase local test harness is
+   introduced.
+2. Add Trail media delete/replace management before broader sharing.
 3. Sync the OneDrive planner so AUTO-QST blockers map to QST-027 through
    QST-029 completion.
 4. Re-run Release Manager after planner sync and RLS/media readiness tasks.
 
 ## Launch Judgment
 
-Not ready for release. The core journey loop is stronger, but RLS verification
-and Trail media upload readiness remain release blockers.
+Not ready for release. The core journey loop is stronger, and RLS/media
+readiness now have repeatable implementation paths, but planner sync and
+database-backed verification remain before release.
