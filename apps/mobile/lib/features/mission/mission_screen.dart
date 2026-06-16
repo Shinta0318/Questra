@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/motion/questra_motion.dart';
 import '../../widgets/questra_card.dart';
 import '../quest/quest_guide_model.dart';
 import 'mission_controller.dart';
@@ -55,19 +56,23 @@ class MissionScreen extends ConsumerWidget {
                         OutlinedButton.icon(
                           onPressed: mission.status == MissionStatus.completed
                               ? null
-                              : () => ref
-                                    .read(missionControllerProvider.notifier)
-                                    .completeMission(mission.id),
+                              : () => _completeMission(context, ref, mission),
                           icon: Icon(
                             mission.status == MissionStatus.completed
                                 ? Icons.check_circle
                                 : Icons.check_circle_outline,
                             color: QuestraColors.gold,
                           ),
-                          label: Text(
-                            mission.status == MissionStatus.completed
-                                ? '完了済み'
-                                : 'Missionを完了',
+                          label: AnimatedSwitcher(
+                            duration: QuestraMotion.fast,
+                            switchInCurve: QuestraMotion.standard,
+                            switchOutCurve: QuestraMotion.standard,
+                            child: Text(
+                              key: ValueKey(mission.status),
+                              mission.status == MissionStatus.completed
+                                  ? '完了済み'
+                                  : 'Missionを完了',
+                            ),
                           ),
                         ),
                       ],
@@ -80,4 +85,16 @@ class MissionScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+void _completeMission(BuildContext context, WidgetRef ref, Mission mission) {
+  final completedMission = ref
+      .read(missionControllerProvider.notifier)
+      .completeMission(mission.id);
+  if (completedMission == null) {
+    return;
+  }
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(const SnackBar(content: Text('Mission完了。Trailに今日の一歩を残しました。')));
 }

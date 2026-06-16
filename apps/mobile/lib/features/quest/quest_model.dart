@@ -74,3 +74,36 @@ extension QuestEnumLabel on Enum {
     };
   }
 }
+
+extension QuestDifficultyStorage on QuestDifficulty {
+  String get storageKey => name;
+}
+
+extension QuestStatusStorage on QuestStatus {
+  String get storageKey => name;
+}
+
+extension QuestVisibilityStorage on QuestVisibility {
+  String get storageKey => name;
+}
+
+QuestDifficulty questDifficultyFromStorage(String value) {
+  return QuestDifficulty.values.firstWhere(
+    (difficulty) => difficulty.storageKey == value,
+    orElse: () => QuestDifficulty.normal,
+  );
+}
+
+QuestStatus questStatusFromStorage(String value) {
+  return QuestStatus.values.firstWhere(
+    (status) => status.storageKey == value,
+    orElse: () => QuestStatus.draft,
+  );
+}
+
+QuestVisibility questVisibilityFromStorage(String value) {
+  return QuestVisibility.values.firstWhere(
+    (visibility) => visibility.storageKey == value,
+    orElse: () => QuestVisibility.private,
+  );
+}

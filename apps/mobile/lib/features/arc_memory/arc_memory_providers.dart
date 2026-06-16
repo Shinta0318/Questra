@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 import '../../core/config/supabase_config.dart';
+import '../auth/auth_controller.dart';
+import 'arc_memory_model.dart';
 import 'arc_memory_repository.dart';
 import 'memory_extraction_service.dart';
 
@@ -18,4 +20,16 @@ final memoryExtractionServiceProvider = Provider<MemoryExtractionService>((
   return MemoryExtractionService(
     repository: ref.watch(arcMemoryRepositoryProvider),
   );
+});
+
+final visibleArcMemoriesProvider = FutureProvider<List<ArcMemory>>((ref) async {
+  final profile = ref.watch(authControllerProvider).profile;
+  if (profile == null) {
+    return [];
+  }
+
+  final memories = await ref
+      .watch(arcMemoryRepositoryProvider)
+      .findByUser(profile.id);
+  return memories.where((memory) => memory.userVisible).toList(growable: false);
 });

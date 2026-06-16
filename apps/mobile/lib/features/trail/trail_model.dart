@@ -27,6 +27,29 @@ class Trail {
   final TrailType trailType;
   final String sourceType;
   final DateTime createdAt;
+
+  Trail copyWith({
+    String? questId,
+    String? missionId,
+    String? title,
+    String? summary,
+    String? content,
+    TrailType? trailType,
+    String? sourceType,
+    DateTime? createdAt,
+  }) {
+    return Trail(
+      id: id,
+      questId: questId ?? this.questId,
+      missionId: missionId ?? this.missionId,
+      title: title ?? this.title,
+      summary: summary ?? this.summary,
+      content: content ?? this.content,
+      trailType: trailType ?? this.trailType,
+      sourceType: sourceType ?? this.sourceType,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
 
 extension TrailTypeLabel on TrailType {
@@ -38,4 +61,20 @@ extension TrailTypeLabel on TrailType {
       TrailType.manualNote => '手動メモ',
     };
   }
+
+  String get storageKey {
+    return switch (this) {
+      TrailType.questRecord => 'quest_record',
+      TrailType.missionRecord => 'mission_record',
+      TrailType.arcReflection => 'arc_reflection',
+      TrailType.manualNote => 'manual_note',
+    };
+  }
+}
+
+TrailType trailTypeFromStorage(String value) {
+  return TrailType.values.firstWhere(
+    (type) => type.storageKey == value,
+    orElse: () => TrailType.questRecord,
+  );
 }

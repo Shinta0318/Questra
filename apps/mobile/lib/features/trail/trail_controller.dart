@@ -1,6 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../arc_memory/arc_memory_model.dart';
+import '../arc_memory/arc_memory_providers.dart';
+import '../auth/auth_controller.dart';
 import 'trail_model.dart';
+import 'trail_providers.dart';
+import 'trail_sync_state.dart';
 
 final trailControllerProvider = NotifierProvider<TrailController, List<Trail>>(
   TrailController.new,
@@ -9,6 +16,15 @@ final trailControllerProvider = NotifierProvider<TrailController, List<Trail>>(
 class TrailController extends Notifier<List<Trail>> {
   @override
   List<Trail> build() {
+    ref.listen(authControllerProvider.select((state) => state.profile?.id), (
+      previous,
+      next,
+    ) {
+      if (next != null && next != previous) {
+        loadForUser(next);
+      }
+    });
+
     return [
       Trail(
         questId: 'mock-quest-arc',
@@ -34,6 +50,20 @@ class TrailController extends Notifier<List<Trail>> {
         .toList(growable: false);
   }
 
+  Future<void> loadForUser(String userId) async {
+    final sync = ref.read(trailSyncControllerProvider.notifier);
+    sync.loading('Loading Trail records...');
+    try {
+      final trails = await ref.read(trailRepositoryProvider).findByUser(userId);
+      if (trails.isNotEmpty) {
+        state = trails;
+      }
+      sync.saved('Trail records loaded.');
+    } catch (error) {
+      sync.failed(error);
+    }
+  }
+
   Trail addQuestTrail({
     required String questId,
     String? missionId,
@@ -50,6 +80,88 @@ class TrailController extends Notifier<List<Trail>> {
           : TrailType.missionRecord,
     );
     state = [trail, ...state];
+    unawaited(_persistTrail(trail));
     return trail;
+  }
+
+  void updateTrail(Trail updatedTrail) {
+    state = [
+      for (final trail in state)
+        if (trail.id == updatedTrail.id) updatedTrail else trail,
+    ];
+    unawaited(_persistTrail(updatedTrail));
+  }
+
+  void removeTrail(String trailId) {
+    final removedTrail = state
+        .where((trail) => trail.id == trailId)
+        .firstOrNull;
+    state = state.where((trail) => trail.id != trailId).toList();
+    unawaited(_deleteTrail(trailId, removedTrail));
+  }
+
+  Future<void> _persistTrail(Trail trail) async {
+    final userId = ref.read(authControllerProvider).profile?.id;
+    if (userId == null) {
+      return;
+    }
+
+    final sync = ref.read(trailSyncControllerProvider.notifier);
+    sync.loading('Saving Trail record...');
+
+    try {
+      final savedTrail = await ref
+          .read(trailRepositoryProvider)
+          .save(ownerId: userId, trail: trail);
+      state = [
+        for (final current in state)
+          if (current.id == trail.id) savedTrail else current,
+      ];
+      unawaited(_rememberTrail(userId, savedTrail));
+      sync.saved('Trail record saved.');
+    } catch (error) {
+      sync.failed(error);
+    }
+  }
+
+  Future<void> _rememberTrail(String userId, Trail trail) async {
+    await ref
+        .read(memoryExtractionServiceProvider)
+        .extractAndSave(
+          MemoryExtractionEvent(
+            userId: userId,
+            questId: trail.questId,
+            missionId: trail.missionId,
+            trailId: trail.id,
+            sourceId: trail.id,
+            sourceType: ArcMemorySourceType.trailPosted,
+            title: 'Trail memory',
+            text: '${trail.title}: ${trail.summary} ${trail.content}',
+            metadata: {'trail_type': trail.trailType.storageKey},
+          ),
+        );
+    ref.invalidate(visibleArcMemoriesProvider);
+  }
+
+  Future<void> _deleteTrail(String trailId, Trail? removedTrail) async {
+    final userId = ref.read(authControllerProvider).profile?.id;
+    if (userId == null) {
+      return;
+    }
+
+    final sync = ref.read(trailSyncControllerProvider.notifier);
+    sync.loading('Deleting Trail record...');
+
+    try {
+      await ref
+          .read(trailRepositoryProvider)
+          .delete(ownerId: userId, trailId: trailId);
+      sync.saved('Trail record deleted.');
+    } catch (error) {
+      if (removedTrail != null) {
+        state = [removedTrail, ...state];
+      }
+      sync.failed(error);
+    }
   }
 }

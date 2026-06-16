@@ -1,21 +1,31 @@
 # QST Backlog
 
-This backlog is the source list for DEV-QST work selection. Keep items small
-enough to implement, verify, and report in one focused development pass.
+This backlog mirrors the Questra Project Planner source in
+`C:\Users\shint\OneDrive\ドキュメント\Questra` and should follow the Master Spec
+there before new QSTs are created or reordered.
 
 | QST ID | Status | Title | Scope | Acceptance |
 | --- | --- | --- | --- | --- |
-| QST-002 | Done | Migrate QST planner tooling | Add local QST backlog, planner, prompt, and report helpers. | A developer can run the QST helper to show the next task and generate a prompt from this backlog. |
-| QST-003 | Done | Add formal Trail data model and posting flow | Add local Trail entry model/controller and a create flow in the Trail tab. | A user can create a Trail entry linked to the current journey state without Supabase wiring. |
-| QST-004 | Done | Add Arc Chat MVP surface | Add a lightweight Arc chat screen and local conversation state. | A user can open Arc, exchange local messages, and see Arc respond with guided next-step copy. |
-| QST-005 | Ready | Persist Trail entries to Supabase | Add schema and repository wiring for Trail entries. | Trail entries have a planned database table and app code has a clear adapter boundary for remote persistence. |
-| QST-006 | Ready | Connect Arc Chat to persisted journey context | Use persisted Quest and Trail state to enrich Arc replies. | Arc replies can reference current Quest and Trail context through a repository boundary. |
+| QST-020 | Done | Quest/Mission/Trail terminology foundation | Align the app around Quest, Mission, and Trail. | Legacy Story naming is removed and the core loop language is coherent. |
+| QST-021 | Done | Arc UI foundation | Establish reusable Arc presentation and naming patterns. | Arc UI uses consistent components and Master Spec compliant language. |
+| QST-022 | Done | Quest/Mission/Trail review pass | Verify terminology consistency across app and docs. | App-facing code and docs use Quest, Mission, Trail, Arc, Guild, Horizon, Signal, Stardust, Bond, and Navigator Rank consistently. |
+| QST-023 | Done | Mission completion flow | Tighten the core Mission completion experience. | Completing a Mission leaves a clear Trail and updates the user's journey state. |
+| QST-024 | Done | Trail progress overview | Add a Trail overview once Arc UI and Mission completion foundations are stable. | Users can scan recent progress and understand how Trails connect to Quests and Missions. |
+| QST-025 | Done | Guild prototype planning | Plan the Guild prototype after core journey features are stable. | Guild scope is documented without expanding beyond the MVP core loop. |
+| QST-026 | Done | Animation polish pass | Polish Arc and core loop motion after UI foundations are stable. | Motion improves clarity without decorative excess. |
+| QST-027 | Done | Arc Chat MVP completion | Prioritize MVP Arc Chat gaps from Release Manager. | Arc Chat supports the core Quest -> Mission -> Trail loop and respects Arc expression rules. |
+| QST-028 | Done | Profile and User MVP pass | Address Profile/User MVP gaps from Release Manager. | User profile state is coherent with onboarding and core journey ownership. |
+| QST-029 | Done | Arc Memory MVP pass | Cover Quest, Mission, and Trail memory surfaces required before MVP. | Arc Memory can store and surface core journey memories transparently. |
+| QST-030 | Done | MVP release readiness pass | Resolve release-blocking MVP gaps and checklist items. | Release Manager readiness improves and blockers are explicitly tracked. |
+| QST-031 | Ready | RLS verification coverage | Add release-blocking RLS verification for owner-only data boundaries. | Quest, Mission, Trail, Arc Memory, and media access rules are covered by repeatable checks. |
+| QST-032 | Ready | Trail media upload readiness | Represent and implement MVP Trail image/media upload readiness. | Trail media has a storage, policy, and UI path that can be tested before release. |
+| QST-033 | Ready | Planner release sync | Sync OneDrive planner/release state with completed StudioProjects QST work. | Release Manager no longer lists completed Arc Chat/Profile/Arc Memory work as missing. |
 
 ## Selection Rules
 
+- Treat the OneDrive Master Spec and Planner as the source of truth.
 - Pick the first `Ready` QST unless the user names a specific QST.
+- Prioritize Release Manager blockers before expansion work.
 - Keep generated implementation reports in `reports/qst`.
-- After finishing a QST, update its status to `Done` and add the next concrete
-  candidates uncovered during implementation.
-- Prefer changes that advance the app itself over process-only work, unless the
-  process gap blocks repeatable DEV-QST operation.
+- Do not use `Story` for product concepts, UI, docs, QSTs, or new code.
+- Do not call Arc an AI assistant in user-facing product language.
