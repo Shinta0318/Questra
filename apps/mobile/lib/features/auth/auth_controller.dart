@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     show AuthException, Supabase;
@@ -14,7 +16,30 @@ class AuthController extends Notifier<AuthState> {
   final _uuid = const Uuid();
 
   @override
-  AuthState build() => const AuthState();
+  AuthState build() {
+    if (SupabaseConfig.isConfigured) {
+      unawaited(restoreSession());
+    }
+    return const AuthState();
+  }
+
+  Future<void> restoreSession() async {
+    if (!SupabaseConfig.isConfigured) {
+      return;
+    }
+
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      return;
+    }
+
+    final profile = await _loadProfile(
+      user.id,
+      user.email ?? '',
+      user.userMetadata?['nickname'] as String?,
+    );
+    state = state.copyWith(profile: profile, isLoading: false);
+  }
 
   Future<void> signUp({
     required String email,
@@ -32,7 +57,12 @@ class AuthController extends Notifier<AuthState> {
         if (user == null) {
           throw const AuthException('Signup did not return a user.');
         }
-        await _upsertProfile(user.id, email, nickname);
+        await _upsertProfile(
+          user.id,
+          email,
+          nickname,
+          onboardingCompleted: false,
+        );
         state = state.copyWith(
           profile: UserProfile(id: user.id, email: email, nickname: nickname),
         );
@@ -56,13 +86,12 @@ class AuthController extends Notifier<AuthState> {
         if (user == null) {
           throw const AuthException('Login did not return a user.');
         }
-        state = state.copyWith(
-          profile: UserProfile(
-            id: user.id,
-            email: user.email ?? email,
-            nickname: user.userMetadata?['nickname'] as String? ?? 'Adventurer',
-          ),
+        final profile = await _loadProfile(
+          user.id,
+          user.email ?? email,
+          user.userMetadata?['nickname'] as String?,
         );
+        state = state.copyWith(profile: profile);
         return;
       }
 
@@ -98,7 +127,12 @@ class AuthController extends Notifier<AuthState> {
     state = state.copyWith(profile: updated);
 
     if (SupabaseConfig.isConfigured) {
-      await _upsertProfile(updated.id, updated.email, updated.nickname);
+      await _upsertProfile(
+        updated.id,
+        updated.email,
+        updated.nickname,
+        onboardingCompleted: updated.onboardingCompleted,
+      );
     }
   }
 
@@ -117,12 +151,41 @@ class AuthController extends Notifier<AuthState> {
   Future<void> _upsertProfile(
     String userId,
     String email,
-    String nickname,
-  ) async {
+    String nickname, {
+    required bool onboardingCompleted,
+  }) async {
     await Supabase.instance.client.from('user_profiles').upsert({
       'id': userId,
       'nickname': nickname,
+      'onboarding_completed': onboardingCompleted,
       'updated_at': DateTime.now().toIso8601String(),
     });
+  }
+
+  Future<UserProfile> _loadProfile(
+    String userId,
+    String email,
+    String? fallbackNickname,
+  ) async {
+    final row = await Supabase.instance.client
+        .from('user_profiles')
+        .select('id,nickname,onboarding_completed')
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (row == null) {
+      return UserProfile(
+        id: userId,
+        email: email,
+        nickname: fallbackNickname ?? 'Adventurer',
+      );
+    }
+
+    return UserProfile(
+      id: row['id'] as String,
+      email: email,
+      nickname: row['nickname'] as String? ?? fallbackNickname ?? 'Adventurer',
+      onboardingCompleted: row['onboarding_completed'] as bool? ?? false,
+    );
   }
 }

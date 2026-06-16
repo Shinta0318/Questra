@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'arc_advice_providers.dart';
 import 'quest_decomposition_service.dart';
 import 'quest_guide_model.dart';
 import 'quest_model.dart';
+import 'quest_providers.dart';
 
 final questDecompositionServiceProvider = Provider<QuestDecompositionService>(
   (ref) => const QuestDecompositionService(),
@@ -62,6 +66,44 @@ class QuestGuideController extends Notifier<QuestGuideState> {
       guidesByQuest: {...state.guidesByQuest, quest.id: bundle.guides},
       adviceByQuest: {...state.adviceByQuest, quest.id: bundle.advice},
       starMapByQuest: {...state.starMapByQuest, quest.id: bundle.starMap},
+    );
+    unawaited(_persistGuides(quest.id, bundle.guides));
+    unawaited(_refreshAdvice(quest, bundle.guides));
+  }
+
+  Future<void> loadGuidesForQuest(String questId) async {
+    final guides = await ref
+        .read(questGuideRepositoryProvider)
+        .findByQuest(questId);
+    if (guides.isNotEmpty) {
+      state = state.copyWith(
+        guidesByQuest: {...state.guidesByQuest, questId: guides},
+      );
+    }
+  }
+
+  Future<void> _persistGuides(String questId, List<QuestGuide> guides) async {
+    try {
+      final savedGuides = await ref
+          .read(questGuideRepositoryProvider)
+          .saveAll(guides);
+      state = state.copyWith(
+        guidesByQuest: {...state.guidesByQuest, questId: savedGuides},
+      );
+    } catch (_) {
+      // Guide sync state is introduced later; keep generated local guides.
+    }
+  }
+
+  Future<void> _refreshAdvice(Quest quest, List<QuestGuide> guides) async {
+    final service = ref.read(arcAdviceServiceProvider);
+    final advice = <ArcAdvice>[];
+    for (final guide in guides) {
+      advice.add(await service.generate(quest: quest, guide: guide));
+    }
+
+    state = state.copyWith(
+      adviceByQuest: {...state.adviceByQuest, quest.id: advice},
     );
   }
 }

@@ -80,9 +80,8 @@ class HomeScreen extends ConsumerWidget {
                     Text('Guide: ${todaysMission.guideType.label}'),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
-                      onPressed: () => ref
-                          .read(missionControllerProvider.notifier)
-                          .completeMission(todaysMission.id),
+                      onPressed: () =>
+                          _completeMission(context, ref, todaysMission),
                       icon: const Icon(Icons.check_circle_outline),
                       label: const Text('Missionを完了'),
                     ),
@@ -111,6 +110,18 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+void _completeMission(BuildContext context, WidgetRef ref, Mission mission) {
+  final completedMission = ref
+      .read(missionControllerProvider.notifier)
+      .completeMission(mission.id);
+  if (completedMission == null) {
+    return;
+  }
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(const SnackBar(content: Text('Mission完了。Trailに今日の一歩を残しました。')));
 }
 
 class _HomeActions extends StatelessWidget {

@@ -46,3 +46,41 @@ class Mission {
     );
   }
 }
+
+extension MissionDifficultyStorage on MissionDifficulty {
+  String get storageKey => name;
+}
+
+extension MissionStatusStorage on MissionStatus {
+  String get storageKey {
+    return switch (this) {
+      MissionStatus.todo => 'todo',
+      MissionStatus.completed => 'completed',
+    };
+  }
+}
+
+extension GuideTypeStorage on GuideType {
+  String get storageKey => name;
+}
+
+MissionDifficulty missionDifficultyFromStorage(String value) {
+  return MissionDifficulty.values.firstWhere(
+    (difficulty) => difficulty.storageKey == value,
+    orElse: () => MissionDifficulty.easy,
+  );
+}
+
+MissionStatus missionStatusFromStorage(String value) {
+  return MissionStatus.values.firstWhere(
+    (status) => status.storageKey == value,
+    orElse: () => MissionStatus.todo,
+  );
+}
+
+GuideType guideTypeFromStorage(String value) {
+  return GuideType.values.firstWhere(
+    (guideType) => guideType.storageKey == value,
+    orElse: () => GuideType.route,
+  );
+}

@@ -1,6 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../arc_memory/arc_memory_model.dart';
+import '../arc_memory/arc_memory_providers.dart';
+import '../auth/auth_controller.dart';
 import 'quest_model.dart';
+import 'quest_providers.dart';
 
 final questControllerProvider = NotifierProvider<QuestController, List<Quest>>(
   QuestController.new,
@@ -9,6 +15,15 @@ final questControllerProvider = NotifierProvider<QuestController, List<Quest>>(
 class QuestController extends Notifier<List<Quest>> {
   @override
   List<Quest> build() {
+    ref.listen(authControllerProvider.select((state) => state.profile?.id), (
+      previous,
+      next,
+    ) {
+      if (next != null && next != previous) {
+        loadForUser(next);
+      }
+    });
+
     return [
       Quest(
         title: 'Design the first adventure arc',
@@ -50,8 +65,18 @@ class QuestController extends Notifier<List<Quest>> {
     return null;
   }
 
+  Future<void> loadForUser(String userId) async {
+    final quests = await ref.read(questRepositoryProvider).findByUser(userId);
+    if (quests.isNotEmpty) {
+      state = quests;
+    }
+  }
+
   void add(Quest quest) {
     state = [...state, quest];
+    unawaited(
+      _persistQuest(quest, sourceType: ArcMemorySourceType.questCreated),
+    );
   }
 
   void update(Quest updatedQuest) {
@@ -59,9 +84,75 @@ class QuestController extends Notifier<List<Quest>> {
       for (final quest in state)
         if (quest.id == updatedQuest.id) updatedQuest else quest,
     ];
+    unawaited(
+      _persistQuest(updatedQuest, sourceType: ArcMemorySourceType.questUpdated),
+    );
   }
 
   void remove(String id) {
+    final removedQuest = findById(id);
     state = state.where((quest) => quest.id != id).toList();
+    unawaited(_deleteQuest(id, removedQuest));
+  }
+
+  Future<void> _persistQuest(
+    Quest quest, {
+    required ArcMemorySourceType sourceType,
+  }) async {
+    final userId = ref.read(authControllerProvider).profile?.id;
+    if (userId == null) {
+      return;
+    }
+
+    try {
+      final savedQuest = await ref
+          .read(questRepositoryProvider)
+          .save(ownerId: userId, quest: quest);
+      state = [
+        for (final current in state)
+          if (current.id == quest.id) savedQuest else current,
+      ];
+      unawaited(_rememberQuest(userId, savedQuest, sourceType));
+    } catch (_) {
+      // Quest sync state is introduced later; keep optimistic local state now.
+    }
+  }
+
+  Future<void> _rememberQuest(
+    String userId,
+    Quest quest,
+    ArcMemorySourceType sourceType,
+  ) async {
+    await ref
+        .read(memoryExtractionServiceProvider)
+        .extractAndSave(
+          MemoryExtractionEvent(
+            userId: userId,
+            questId: quest.id,
+            sourceId: quest.id,
+            sourceType: sourceType,
+            title: 'Quest memory',
+            text: '${quest.title}: ${quest.description}',
+            metadata: {'status': quest.status.storageKey},
+          ),
+        );
+    ref.invalidate(visibleArcMemoriesProvider);
+  }
+
+  Future<void> _deleteQuest(String questId, Quest? removedQuest) async {
+    final userId = ref.read(authControllerProvider).profile?.id;
+    if (userId == null) {
+      return;
+    }
+
+    try {
+      await ref
+          .read(questRepositoryProvider)
+          .delete(ownerId: userId, questId: questId);
+    } catch (_) {
+      if (removedQuest != null) {
+        state = [removedQuest, ...state];
+      }
+    }
   }
 }

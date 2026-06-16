@@ -44,3 +44,7 @@ navigation pattern if product usage shows they need permanent tab placement.
 This structure is enough for the MVP because it exposes the core loop without
 requiring future systems such as DM, Guild Follow, Corporate Quest, Quest Offer,
 or Premium to be implemented now.
+
+Guild prototype scope is defined in
+`docs/product/guild_prototype_plan.md`; broader social features remain reserved
+until the core journey loop and access rules are stable.

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/theme/questra_colors.dart';
+import '../motion/questra_motion.dart';
 import 'arc_emotion.dart';
 import 'arc_speech_bubble.dart';
 
@@ -34,7 +35,13 @@ class _ArcWidgetState extends State<ArcWidget>
     _controller = AnimationController(
       vsync: this,
       duration: _ArcVisuals.fromEmotion(widget.emotion).duration,
-    )..repeat(reverse: true);
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation();
   }
 
   @override
@@ -42,9 +49,7 @@ class _ArcWidgetState extends State<ArcWidget>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.emotion != widget.emotion) {
       _controller.duration = _ArcVisuals.fromEmotion(widget.emotion).duration;
-      _controller
-        ..reset()
-        ..repeat(reverse: true);
+      _syncAnimation(reset: true);
     }
   }
 
@@ -57,30 +62,47 @@ class _ArcWidgetState extends State<ArcWidget>
   @override
   Widget build(BuildContext context) {
     final visuals = _ArcVisuals.fromEmotion(widget.emotion);
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            final t = _controller.value;
-            final scale = 1 + visuals.pulseStrength * math.sin(t * math.pi);
-            final tilt = visuals.tilt * math.sin(t * math.pi * 2);
+        if (disableAnimations)
+          _ArcStarCharacter(size: widget.size, visuals: visuals)
+        else
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              final t = QuestraMotion.gentle.transform(_controller.value);
+              final scale = 1 + visuals.pulseStrength * math.sin(t * math.pi);
+              final tilt = visuals.tilt * math.sin(t * math.pi * 2);
 
-            return Transform.rotate(
-              angle: tilt,
-              child: Transform.scale(scale: scale, child: child),
-            );
-          },
-          child: _ArcStarCharacter(size: widget.size, visuals: visuals),
-        ),
+              return Transform.rotate(
+                angle: tilt,
+                child: Transform.scale(scale: scale, child: child),
+              );
+            },
+            child: _ArcStarCharacter(size: widget.size, visuals: visuals),
+          ),
         if (widget.message != null && widget.showSpeechBubble) ...[
           const SizedBox(height: 14),
           ArcSpeechBubble(message: widget.message!),
         ],
       ],
     );
+  }
+
+  void _syncAnimation({bool reset = false}) {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.stop();
+      return;
+    }
+    if (reset) {
+      _controller.reset();
+    }
+    if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
   }
 }
 
