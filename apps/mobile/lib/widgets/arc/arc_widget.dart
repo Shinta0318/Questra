@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/questra_colors.dart';
 import '../motion/questra_motion.dart';
+import 'arc_asset_paths.dart';
 import 'arc_emotion.dart';
 import 'arc_speech_bubble.dart';
 
@@ -62,13 +63,18 @@ class _ArcWidgetState extends State<ArcWidget>
   @override
   Widget build(BuildContext context) {
     final visuals = _ArcVisuals.fromEmotion(widget.emotion);
+    final assetPath = ArcAssetPaths.fromEmotion(widget.emotion);
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (disableAnimations)
-          _ArcStarCharacter(size: widget.size, visuals: visuals)
+          _ArcStarCharacter(
+            size: widget.size,
+            visuals: visuals,
+            assetPath: assetPath,
+          )
         else
           AnimatedBuilder(
             animation: _controller,
@@ -82,7 +88,11 @@ class _ArcWidgetState extends State<ArcWidget>
                 child: Transform.scale(scale: scale, child: child),
               );
             },
-            child: _ArcStarCharacter(size: widget.size, visuals: visuals),
+            child: _ArcStarCharacter(
+              size: widget.size,
+              visuals: visuals,
+              assetPath: assetPath,
+            ),
           ),
         if (widget.message != null && widget.showSpeechBubble) ...[
           const SizedBox(height: 14),
@@ -107,10 +117,15 @@ class _ArcWidgetState extends State<ArcWidget>
 }
 
 class _ArcStarCharacter extends StatelessWidget {
-  const _ArcStarCharacter({required this.size, required this.visuals});
+  const _ArcStarCharacter({
+    required this.size,
+    required this.visuals,
+    required this.assetPath,
+  });
 
   final double size;
   final _ArcVisuals visuals;
+  final String assetPath;
 
   @override
   Widget build(BuildContext context) {
@@ -134,59 +149,85 @@ class _ArcStarCharacter extends StatelessWidget {
               ],
             ),
           ),
-          ClipPath(
-            clipper: _StarClipper(),
-            child: Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [visuals.highlight, visuals.core, visuals.shadow],
-                  center: Alignment.topLeft,
-                  radius: 0.95,
-                ),
-              ),
-            ),
-          ),
-          ClipPath(
-            clipper: _StarClipper(),
-            child: Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                border: Border.all(color: QuestraColors.gold, width: 2),
-              ),
-            ),
-          ),
-          Positioned(
-            top: size * 0.35,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _ArcEye(size: size * 0.11, sparkle: visuals.eyeSparkle),
-                SizedBox(width: size * 0.18),
-                _ArcEye(size: size * 0.11, sparkle: visuals.eyeSparkle),
-              ],
-            ),
-          ),
-          Positioned(
-            top: size * 0.50,
-            child: CustomPaint(
-              size: Size(size * 0.26, size * 0.14),
-              painter: _ArcMouthPainter(visuals.expression),
-            ),
-          ),
-          Positioned(
-            top: size * 0.18,
-            right: size * 0.20,
-            child: Icon(
-              visuals.accentIcon,
-              color: QuestraColors.white.withValues(alpha: 0.88),
-              size: size * 0.16,
-            ),
+          Image.asset(
+            assetPath,
+            width: size,
+            height: size,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
+            errorBuilder: (context, error, stackTrace) {
+              return _GeneratedArcStar(size: size, visuals: visuals);
+            },
           ),
         ],
       ),
+    );
+  }
+}
+
+class _GeneratedArcStar extends StatelessWidget {
+  const _GeneratedArcStar({required this.size, required this.visuals});
+
+  final double size;
+  final _ArcVisuals visuals;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        ClipPath(
+          clipper: _StarClipper(),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                colors: [visuals.highlight, visuals.core, visuals.shadow],
+                center: Alignment.topLeft,
+                radius: 0.95,
+              ),
+            ),
+          ),
+        ),
+        ClipPath(
+          clipper: _StarClipper(),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              border: Border.all(color: QuestraColors.gold, width: 2),
+            ),
+          ),
+        ),
+        Positioned(
+          top: size * 0.35,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ArcEye(size: size * 0.11, sparkle: visuals.eyeSparkle),
+              SizedBox(width: size * 0.18),
+              _ArcEye(size: size * 0.11, sparkle: visuals.eyeSparkle),
+            ],
+          ),
+        ),
+        Positioned(
+          top: size * 0.50,
+          child: CustomPaint(
+            size: Size(size * 0.26, size * 0.14),
+            painter: _ArcMouthPainter(visuals.expression),
+          ),
+        ),
+        Positioned(
+          top: size * 0.18,
+          right: size * 0.20,
+          child: Icon(
+            visuals.accentIcon,
+            color: QuestraColors.white.withValues(alpha: 0.88),
+            size: size * 0.16,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -8,6 +8,11 @@ import 'media_model.dart';
 const trailMediaBucket = 'trail-media';
 
 abstract interface class MediaRepository {
+  Future<List<MediaAttachment>> findTrailImages({
+    required String ownerId,
+    required String trailId,
+  });
+
   Future<MediaAttachment> uploadTrailImage({
     required String ownerId,
     required String trailId,
@@ -15,10 +20,40 @@ abstract interface class MediaRepository {
     required Uint8List bytes,
     String contentType = 'image/jpeg',
   });
+
+  Future<MediaAttachment> replaceTrailImage({
+    required String ownerId,
+    required String trailId,
+    required MediaAttachment current,
+    required String fileName,
+    required Uint8List bytes,
+    String contentType = 'image/jpeg',
+  });
+
+  Future<void> deleteTrailImage({
+    required String ownerId,
+    required MediaAttachment attachment,
+  });
 }
 
 class InMemoryMediaRepository implements MediaRepository {
   final List<MediaAttachment> _attachments = [];
+
+  @override
+  Future<List<MediaAttachment>> findTrailImages({
+    required String ownerId,
+    required String trailId,
+  }) async {
+    return _attachments
+        .where(
+          (attachment) =>
+              attachment.ownerId == ownerId &&
+              attachment.relatedTable == 'trails' &&
+              attachment.relatedId == trailId &&
+              attachment.mediaType == MediaType.image,
+        )
+        .toList(growable: false);
+  }
 
   @override
   Future<MediaAttachment> uploadTrailImage({
@@ -40,12 +75,60 @@ class InMemoryMediaRepository implements MediaRepository {
     _attachments.insert(0, attachment);
     return attachment;
   }
+
+  @override
+  Future<MediaAttachment> replaceTrailImage({
+    required String ownerId,
+    required String trailId,
+    required MediaAttachment current,
+    required String fileName,
+    required Uint8List bytes,
+    String contentType = 'image/jpeg',
+  }) async {
+    await deleteTrailImage(ownerId: ownerId, attachment: current);
+    return uploadTrailImage(
+      ownerId: ownerId,
+      trailId: trailId,
+      fileName: fileName,
+      bytes: bytes,
+      contentType: contentType,
+    );
+  }
+
+  @override
+  Future<void> deleteTrailImage({
+    required String ownerId,
+    required MediaAttachment attachment,
+  }) async {
+    _attachments.removeWhere(
+      (current) => current.ownerId == ownerId && current.id == attachment.id,
+    );
+  }
 }
 
 class SupabaseMediaRepository implements MediaRepository {
   const SupabaseMediaRepository(this.client);
 
   final SupabaseClient client;
+
+  @override
+  Future<List<MediaAttachment>> findTrailImages({
+    required String ownerId,
+    required String trailId,
+  }) async {
+    final rows = await client
+        .from('media')
+        .select()
+        .eq('owner_id', ownerId)
+        .eq('related_table', 'trails')
+        .eq('related_id', trailId)
+        .eq('media_type', 'image')
+        .order('created_at', ascending: false);
+
+    return rows
+        .map((row) => _attachmentFromRow(Map<String, dynamic>.from(row)))
+        .toList(growable: false);
+  }
 
   @override
   Future<MediaAttachment> uploadTrailImage({
@@ -64,32 +147,83 @@ class SupabaseMediaRepository implements MediaRepository {
           fileOptions: FileOptions(contentType: contentType, upsert: false),
         );
 
-    final rows = await client
-        .from('media')
-        .insert({
-          'owner_id': ownerId,
-          'bucket': trailMediaBucket,
-          'path': path,
-          'media_type': 'image',
-          'related_table': 'trails',
-          'related_id': trailId,
-          'visibility': 'private',
-          'metadata': {'content_type': contentType, 'size_bytes': bytes.length},
-        })
-        .select()
-        .limit(1);
+    var shouldCleanUpStorage = true;
+    try {
+      final rows = await client
+          .from('media')
+          .insert({
+            'owner_id': ownerId,
+            'bucket': trailMediaBucket,
+            'path': path,
+            'media_type': 'image',
+            'related_table': 'trails',
+            'related_id': trailId,
+            'visibility': 'private',
+            'metadata': {
+              'content_type': contentType,
+              'size_bytes': bytes.length,
+            },
+          })
+          .select()
+          .limit(1);
 
-    if (rows.isEmpty) {
-      return MediaAttachment(
-        ownerId: ownerId,
-        bucket: trailMediaBucket,
-        path: path,
-        mediaType: MediaType.image,
-        relatedTable: 'trails',
-        relatedId: trailId,
-      );
+      if (rows.isEmpty) {
+        throw StateError('Trail media metadata was not created.');
+      }
+      shouldCleanUpStorage = false;
+      return _attachmentFromRow(Map<String, dynamic>.from(rows.first));
+    } catch (_) {
+      if (shouldCleanUpStorage) {
+        try {
+          await client.storage.from(trailMediaBucket).remove([path]);
+        } catch (_) {
+          // Preserve the original metadata failure for the caller.
+        }
+      }
+      rethrow;
     }
-    return _attachmentFromRow(Map<String, dynamic>.from(rows.first));
+  }
+
+  @override
+  Future<MediaAttachment> replaceTrailImage({
+    required String ownerId,
+    required String trailId,
+    required MediaAttachment current,
+    required String fileName,
+    required Uint8List bytes,
+    String contentType = 'image/jpeg',
+  }) async {
+    final replacement = await uploadTrailImage(
+      ownerId: ownerId,
+      trailId: trailId,
+      fileName: fileName,
+      bytes: bytes,
+      contentType: contentType,
+    );
+    try {
+      await deleteTrailImage(ownerId: ownerId, attachment: current);
+    } catch (_) {
+      try {
+        await deleteTrailImage(ownerId: ownerId, attachment: replacement);
+      } catch (_) {
+        // Preserve the original delete failure for the caller.
+      }
+      rethrow;
+    }
+    return replacement;
+  }
+
+  @override
+  Future<void> deleteTrailImage({
+    required String ownerId,
+    required MediaAttachment attachment,
+  }) async {
+    await client.storage.from(attachment.bucket).remove([attachment.path]);
+    await client
+        .from('media')
+        .delete()
+        .eq('owner_id', ownerId)
+        .eq('id', attachment.id);
   }
 
   MediaAttachment _attachmentFromRow(Map<String, dynamic> row) {

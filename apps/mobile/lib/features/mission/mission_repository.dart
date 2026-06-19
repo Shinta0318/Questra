@@ -84,7 +84,7 @@ class SupabaseMissionRepository implements MissionRepository {
         .limit(1);
 
     if (rows.isEmpty) {
-      return mission;
+      throw StateError('Mission was not saved.');
     }
 
     return _missionFromRow(Map<String, dynamic>.from(rows.first));

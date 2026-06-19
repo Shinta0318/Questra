@@ -26,6 +26,16 @@ class QuestScreen extends ConsumerWidget {
         .where((quest) => quest.status == QuestStatus.active)
         .toList();
     final focusQuest = activeQuests.isEmpty ? null : activeQuests.first;
+    final dashboardMissions = focusQuest == null
+        ? missions
+        : missions
+              .where((mission) => mission.questId == focusQuest.id)
+              .toList(growable: false);
+    final dashboardTrails = focusQuest == null
+        ? trails
+        : trails
+              .where((trail) => trail.questId == focusQuest.id)
+              .toList(growable: false);
 
     return Scaffold(
       backgroundColor: QuestraColors.deepNavy,
@@ -50,13 +60,12 @@ class QuestScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _QuestProgressDashboard(
               quest: focusQuest,
-              missions: missions,
-              trailCount: focusQuest == null
-                  ? trails.length
-                  : trails
-                        .where((trail) => trail.questId == focusQuest.id)
-                        .length,
-              latestActivity: _latestActivity(missions, trails),
+              missions: dashboardMissions,
+              trailCount: dashboardTrails.length,
+              latestActivity: _latestActivity(
+                dashboardMissions,
+                dashboardTrails,
+              ),
               onOpenQuest: focusQuest == null
                   ? () => context.go(AppRoutes.quest)
                   : () => context.go('${AppRoutes.quest}/${focusQuest.id}'),

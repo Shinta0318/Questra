@@ -12,6 +12,8 @@ Internal beta candidate, not public release ready.
 - Static analysis: passed
 - Main tests: passed
 - RLS readiness check: passed
+- RLS behavior harness: implemented
+- Release assets/legal drafts: tracked
 - App source terminology check: passed
 
 ## Reviewed Surfaces
@@ -26,8 +28,8 @@ Internal beta candidate, not public release ready.
 | Arc Chat | Ready for internal beta | Arc Chat includes contextual guidance and memory extraction. |
 | Arc Memory | Ready for internal beta | Quest, Mission, Trail, Reflection, and Arc Chat memory paths exist. |
 | Profile | Ready for internal beta | Profile shows onboarding and journey owner state. |
-| Media Upload | Internal beta caution | Private Trail image upload path exists; delete/replace management remains. |
-| RLS | Internal beta caution | Static readiness check passes; database-backed behavior tests remain. |
+| Media Upload | Ready for internal beta | Private Trail image upload, display, delete, and replace paths exist. |
+| RLS | Ready for internal beta | Static readiness check passes and database-backed behavior tests are available for local Supabase verification. |
 
 ## Terminology Review
 
@@ -39,18 +41,18 @@ Internal beta candidate, not public release ready.
 ## Remaining Issues
 
 1. Release readiness score is still below launch threshold.
-2. Supabase local database-backed RLS behavior tests are not yet implemented.
-3. Trail media delete/replace management is not yet implemented.
-4. App icon, splash, terms, privacy policy, and store text remain release work.
+2. Supabase local database-backed RLS behavior tests should be run in the local
+   database or CI before public release.
+3. App icon and splash assets still need final design replacement before public
+   release.
+4. Terms, privacy policy, and store text drafts require human review before
+   public release.
 5. Performance targets are documented but not measured by repeatable tooling.
 6. OneDrive generated backlog still contains future-scope items that should stay
    deferred during MVP/beta execution.
 
 ## Beta Candidate QSTs
 
-- QST-041: RLS behavior test harness.
-- QST-042: Trail media delete and replace management.
-- QST-043: Release assets and legal copy readiness.
 - QST-044: Performance measurement pass.
 - QST-045: Beta feedback operations.
 

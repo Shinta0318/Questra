@@ -52,7 +52,7 @@ class SupabaseTrailEventRepository implements TrailEventRepository {
         .limit(1);
 
     if (rows.isEmpty) {
-      return event;
+      throw StateError('Trail event was not saved.');
     }
 
     return _eventFromRow(Map<String, dynamic>.from(rows.first));

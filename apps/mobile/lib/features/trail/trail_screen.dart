@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/questra_card.dart';
 import '../auth/auth_controller.dart';
+import '../media/media_model.dart';
 import 'trail_controller.dart';
 import 'trail_model.dart';
 import 'trail_sync_state.dart';
@@ -16,6 +17,7 @@ class TrailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trails = ref.watch(trailControllerProvider);
+    final trailMedia = ref.watch(trailMediaControllerProvider);
     final syncState = ref.watch(trailSyncControllerProvider);
     final profile = ref.watch(authControllerProvider).profile;
     final controller = ref.read(trailControllerProvider.notifier);
@@ -70,11 +72,28 @@ class TrailScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _TrailCard(
                   trail: trail,
+                  attachment: trailMedia[trail.id],
                   onEdit: () => _showEditTrailSheet(context, controller, trail),
                   onReflect: () =>
                       _showReflectTrailSheet(context, controller, trail),
                   onAttachImage: () =>
                       _attachTrailImage(context, controller, trail),
+                  onReplaceImage: trailMedia[trail.id] == null
+                      ? null
+                      : () => _replaceTrailImage(
+                          context,
+                          controller,
+                          trail,
+                          trailMedia[trail.id]!,
+                        ),
+                  onRemoveImage: trailMedia[trail.id] == null
+                      ? null
+                      : () => _confirmRemoveTrailImage(
+                          context,
+                          controller,
+                          trail,
+                          trailMedia[trail.id]!,
+                        ),
                   onDelete: () =>
                       _confirmDeleteTrail(context, controller, trail),
                 ),
@@ -84,6 +103,69 @@ class TrailScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _replaceTrailImage(
+    BuildContext context,
+    TrailController controller,
+    Trail trail,
+    MediaAttachment current,
+  ) async {
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 86,
+    );
+    if (image == null) {
+      return;
+    }
+
+    final attachment = await controller.replaceImageForTrail(
+      trail: trail,
+      current: current,
+      image: image,
+    );
+    if (context.mounted && attachment != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Trail画像を置き換えました。')));
+    }
+  }
+
+  Future<void> _confirmRemoveTrailImage(
+    BuildContext context,
+    TrailController controller,
+    Trail trail,
+    MediaAttachment attachment,
+  ) async {
+    final shouldRemove = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove image?'),
+        content: Text('Remove the image attached to "${trail.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldRemove == true) {
+      final removed = await controller.removeImageFromTrail(
+        trail: trail,
+        attachment: attachment,
+      );
+      if (context.mounted && removed) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Trail画像を削除しました。')));
+      }
+    }
   }
 
   void _showCreateTrailSheet(BuildContext context, TrailController controller) {
@@ -381,16 +463,22 @@ class _TrailMetric extends StatelessWidget {
 class _TrailCard extends StatelessWidget {
   const _TrailCard({
     required this.trail,
+    required this.attachment,
     required this.onEdit,
     required this.onReflect,
     required this.onAttachImage,
+    required this.onReplaceImage,
+    required this.onRemoveImage,
     required this.onDelete,
   });
 
   final Trail trail;
+  final MediaAttachment? attachment;
   final VoidCallback onEdit;
   final VoidCallback onReflect;
   final VoidCallback onAttachImage;
+  final VoidCallback? onReplaceImage;
+  final VoidCallback? onRemoveImage;
   final VoidCallback onDelete;
 
   @override
@@ -431,21 +519,39 @@ class _TrailCard extends StatelessWidget {
                       onReflect();
                     case _TrailAction.attachImage:
                       onAttachImage();
+                    case _TrailAction.replaceImage:
+                      onReplaceImage?.call();
+                    case _TrailAction.removeImage:
+                      onRemoveImage?.call();
                     case _TrailAction.delete:
                       onDelete();
                   }
                 },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: _TrailAction.edit, child: Text('Edit')),
-                  PopupMenuItem(
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: _TrailAction.edit,
+                    child: Text('Edit'),
+                  ),
+                  const PopupMenuItem(
                     value: _TrailAction.reflect,
                     child: Text('Reflect'),
                   ),
-                  PopupMenuItem(
-                    value: _TrailAction.attachImage,
-                    child: Text('Attach image'),
-                  ),
-                  PopupMenuItem(
+                  if (attachment == null)
+                    const PopupMenuItem(
+                      value: _TrailAction.attachImage,
+                      child: Text('Attach image'),
+                    )
+                  else ...const [
+                    PopupMenuItem(
+                      value: _TrailAction.replaceImage,
+                      child: Text('Replace image'),
+                    ),
+                    PopupMenuItem(
+                      value: _TrailAction.removeImage,
+                      child: Text('Remove image'),
+                    ),
+                  ],
+                  const PopupMenuItem(
                     value: _TrailAction.delete,
                     child: Text('Delete'),
                   ),
@@ -469,6 +575,46 @@ class _TrailCard extends StatelessWidget {
               'Mission: ${trail.missionId}',
               style: const TextStyle(color: QuestraColors.slate),
             ),
+          if (attachment != null) ...[
+            const SizedBox(height: 10),
+            _TrailImageAttachment(attachment: attachment!),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TrailImageAttachment extends StatelessWidget {
+  const _TrailImageAttachment({required this.attachment});
+
+  final MediaAttachment attachment;
+
+  @override
+  Widget build(BuildContext context) {
+    final fileName = attachment.path.split('/').last;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: QuestraColors.cloud,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.image_outlined, color: QuestraColors.cosmicBlue),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              fileName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Text('Private', style: TextStyle(color: QuestraColors.slate)),
         ],
       ),
     );
@@ -729,4 +875,11 @@ class _TrailSyncBanner extends StatelessWidget {
   }
 }
 
-enum _TrailAction { edit, reflect, attachImage, delete }
+enum _TrailAction {
+  edit,
+  reflect,
+  attachImage,
+  replaceImage,
+  removeImage,
+  delete,
+}

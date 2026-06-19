@@ -1,6 +1,7 @@
 import 'dart:io';
 
 const migrationPath = 'supabase/migrations/202606130001_mvp_schema.sql';
+const behaviorTestPath = 'supabase/tests/rls_behavior.sql';
 
 const requiredRlsTables = [
   'quests',
@@ -45,6 +46,19 @@ const requiredSnippets = [
   'public.is_guild_owner',
 ];
 
+const requiredBehaviorSnippets = [
+  'set local role authenticated;',
+  'request.jwt.claim.sub',
+  'owner can read own private Quest',
+  'owner cannot read another private Mission',
+  'other cannot read owner private Trail',
+  'other cannot read owner Arc Memory',
+  'other cannot read owner private media row',
+  'other cannot create a Quest for owner',
+  'other cannot create an Arc Memory for owner',
+  'rollback;',
+];
+
 void main() {
   final migration = File(migrationPath);
   if (!migration.existsSync()) {
@@ -73,6 +87,18 @@ void main() {
     }
   }
 
+  final behaviorTest = File(behaviorTestPath);
+  if (!behaviorTest.existsSync()) {
+    failures.add('Missing RLS behavior test harness: $behaviorTestPath');
+  } else {
+    final behaviorSql = behaviorTest.readAsStringSync();
+    for (final snippet in requiredBehaviorSnippets) {
+      if (!behaviorSql.contains(snippet)) {
+        failures.add('Missing behavior test snippet: $snippet');
+      }
+    }
+  }
+
   if (failures.isNotEmpty) {
     _fail(failures);
   }
@@ -80,6 +106,7 @@ void main() {
   stdout.writeln('RLS readiness verification passed.');
   stdout.writeln('Checked ${requiredRlsTables.length} RLS tables.');
   stdout.writeln('Checked ${requiredPolicies.length} required policies.');
+  stdout.writeln('Checked database-backed behavior test harness.');
 }
 
 Never _fail(List<String> failures) {

@@ -76,7 +76,7 @@ class SupabaseTrailRepository implements TrailRepository {
         .limit(1);
 
     if (rows.isEmpty) {
-      return trail;
+      throw StateError('Trail was not saved.');
     }
 
     return _trailFromRow(Map<String, dynamic>.from(rows.first));
