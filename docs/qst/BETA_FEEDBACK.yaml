@@ -1,0 +1,94 @@
+version: 1
+updated: 2026-06-20
+owner: Release Manager
+purpose: Internal beta feedback intake, triage, and QST conversion rules.
+intake_channels:
+  - id: in_app_notes
+    label: In-app tester notes
+    status: planned
+    required_fields:
+      - tester_id
+      - build_version
+      - surface
+      - feedback_type
+      - severity
+      - summary
+      - steps
+      - expected
+      - actual
+  - id: manual_report
+    label: Manual beta report
+    status: ready
+    required_fields:
+      - tester_id
+      - build_version
+      - surface
+      - feedback_type
+      - severity
+      - summary
+      - evidence
+labels:
+  severity:
+    - id: S0
+      label: Beta blocker
+      response: Fix or defer beta build before inviting more testers.
+    - id: S1
+      label: Major beta issue
+      response: Convert to QST within 24 hours.
+    - id: S2
+      label: Usability issue
+      response: Batch into next beta polish pass.
+    - id: S3
+      label: Suggestion
+      response: Keep in backlog only if repeated or strategically aligned.
+  surface:
+    - Home
+    - Quest
+    - Mission
+    - Trail
+    - Guild
+    - Arc Chat
+    - Arc Memory
+    - Profile
+    - Media
+    - Auth
+    - RLS
+    - Performance
+    - Design
+  feedback_type:
+    - crash
+    - data_loss
+    - broken_flow
+    - confusing_copy
+    - visual_polish
+    - slow_response
+    - missing_state
+    - trust_or_safety
+    - idea
+triage_rules:
+  - id: blocker_crash
+    when: severity S0 or feedback_type crash
+    action: Create a P0 QST and stop beta expansion until resolved.
+  - id: persistence_or_rls
+    when: surface RLS or feedback_type data_loss
+    action: Create a P0 QST with reproduction steps and owner boundary notes.
+  - id: arc_experience
+    when: surface Arc Chat or surface Arc Memory or confusing Arc wording
+    action: Create a P1 QST unless it blocks Quest to Mission to Trail progression.
+  - id: repeated_suggestion
+    when: same S3 suggestion appears from three testers
+    action: Promote to P2 candidate QST for product review.
+qst_conversion:
+  required_sections:
+    - Title
+    - Problem
+    - Evidence
+    - Scope
+    - Acceptance
+    - Validation
+  priority_mapping:
+    S0: P0
+    S1: P0
+    S2: P1
+    S3: P2
+  next_id_policy: Use the next open QST number in docs/qst/BACKLOG.yaml.

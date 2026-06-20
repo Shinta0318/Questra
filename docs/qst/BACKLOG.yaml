@@ -369,10 +369,26 @@ items:
       - Guidance references Quest, Mission, and Trail using current product terms.
       - Arc is framed as a navigator/companion, not an AI assistant.
       - Flutter analyze and tests pass.
+  - id: QST-069
+    requested_id: QST-045
+    title: Beta Feedback Operations
+    status: Done
+    priority: P0
+    epic: BETA-HARDENING
+    depends_on: [QST-067, QST-068]
+    completed_by:
+      report: reports/qst/QST-069.md
+    scope: Define internal beta feedback intake, labels, triage workflow, stop conditions, and QST conversion rules.
+    acceptance:
+      - Feedback intake has required fields and channels.
+      - Severity, surface, and feedback type labels are defined.
+      - S0/S1 feedback has clear triage rules.
+      - Feedback can be converted into future QSTs.
+      - Beta feedback readiness can be verified by script.
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass
     reason: Superseded by QST-067 after Arc Experience Epic completion.
   - id: QST-045
     title: Beta feedback operations
-    reason: Deferred until Arc Experience Epic and performance measurement are ready for beta operations.
+    reason: Superseded by QST-069 after Arc Experience and performance readiness completion.

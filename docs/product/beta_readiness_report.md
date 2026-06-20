@@ -49,10 +49,11 @@ Internal beta candidate, not public release ready.
    release.
 4. Terms, privacy policy, and store text drafts require human review before
    public release.
-5. Performance targets are documented but not measured by repeatable tooling.
-6. OneDrive generated backlog still contains future-scope items that should stay
+5. Performance readiness now has repeatable tooling from QST-067.
+6. Beta feedback operations now have intake, triage, and QST conversion rules from QST-069.
+7. OneDrive generated backlog still contains future-scope items that should stay
    deferred during MVP/beta execution.
-7. Arc Experience Epic QST-047 through QST-059 should be completed or explicitly
+8. Arc Experience Epic QST-047 through QST-059 should be completed or explicitly
    scoped before wider beta positioning.
 
 ## Beta Candidate QSTs
@@ -72,8 +73,8 @@ Internal beta candidate, not public release ready.
 
 ## Deferred Beta Operations
 
-- QST-044: Performance measurement pass.
-- QST-045: Beta feedback operations.
+- QST-044: Performance measurement pass. Superseded by QST-067.
+- QST-045: Beta feedback operations. Superseded by QST-069.
 
 ## Launch Judgment
 
@@ -81,5 +82,4 @@ Questra is suitable for internal beta preparation, but not public release. The
 core Quest -> Mission -> Trail loop is working across Home, Quest, Mission,
 Trail, Guild, Arc Chat, Arc Memory, Profile, media readiness, and RLS readiness.
 Release work should now focus on database-backed verification, media lifecycle,
-assets/legal copy, Arc Experience Epic completion, and repeatable performance
-checks.
+assets/legal copy, final screenshot QA, and real-device beta validation.
