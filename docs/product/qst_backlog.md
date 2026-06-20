@@ -30,14 +30,36 @@ there before new QSTs are created or reordered.
 | QST-041 | Done | RLS behavior test harness | Add database-backed RLS behavior tests for core private data boundaries. | Owner-only Quest, Mission, Trail, Arc Memory, and media access can be verified repeatably. |
 | QST-042 | Done | Trail media delete and replace management | Add lifecycle management for private Trail media. | Users can remove or replace an attached Trail image safely. |
 | QST-043 | Done | Release assets and legal copy readiness | Prepare beta-facing app assets and legal copy checklist. | Icon, splash, terms, privacy policy, and store text have tracked owners and draft artifacts. |
-| QST-044 | Ready | Performance measurement pass | Add repeatable performance checks for beta targets. | App start, Home, and Quest list performance can be measured consistently. |
-| QST-045 | Ready | Beta feedback operations | Define internal beta feedback intake and triage workflow. | Beta feedback has collection, labeling, and QST conversion rules. |
+| QST-044 | Deferred | Performance measurement pass | Add repeatable performance checks for beta targets. | App start, Home, and Quest list performance can be measured consistently. |
+| QST-045 | Deferred | Beta feedback operations | Define internal beta feedback intake and triage workflow. | Beta feedback has collection, labeling, and QST conversion rules. |
+| QST-046 | Done | Arc Expression Assets Integration | Move prepared Arc expression PNGs into Flutter assets and make them available from Arc UI. | Seven Arc PNGs are registered, centrally referenced, and rendered by existing Arc UI. |
+| QST-047 | Done | Arc Expression Engine | Add expression resolution rules that map Arc state, guidance context, and events to image assets. | Arc expression selection is centralized and context-aware across Quest, Mission, Trail, Reflection, and Bond inputs. |
+| QST-048 | Done | Arc Presence System | Make Arc presence consistent across Home, Arc Chat, Quest, Mission, Trail, and empty states. | Arc appears with consistent sizing, spacing, and expression behavior across MVP surfaces. |
+| QST-049 | Done | Arc Contextual Guidance | Use Quest, Mission, Trail, and Reflection context to suggest the next action without assistant framing. | Arc references latest journey context and remains framed as a navigator/companion. |
+| QST-050 | Done | Arc Celebration System | Add celebration moments for Mission completion, Trail reflection, Quest progress, and rank or bond milestones. | Celebration expression and copy appear for key progress events without blocking core flow. |
+| QST-051 | Done | Questra MVP Performance and Asset Optimization | Optimize MVP display speed, Arc and Trail image handling, list reads, Arc Memory reads, and Supabase query payloads. | Core list reads are limited, image size rules are documented, and performance checks are repeatable. |
+| QST-052 | Done | Arc Empty States | Replace generic empty states with Arc-guided empty states across MVP surfaces. | Empty states use Arc guidance, a clear next action, and matching emotional tone. |
+| QST-053 | Done | Arc Concern System | Add concern expressions and copy for stalled Quests, overdue Missions, and low activity. | Arc can express concern without blame and offer a small next step. |
+| QST-054 | Done | Arc Reflection Coach | Improve Trail Reflection with Arc coaching prompts and expression changes. | Reflection prompts adapt to Trail/Mission context and help identify learning and next Mission. |
+| QST-055 | Done | Bond Foundation | Establish Bond as the foundation for Arc relationship progression. | Bond state is represented, visible, and framed without manipulative engagement loops. |
+| QST-056 | Done | Bond Growth Rules | Define and implement MVP-safe Bond growth rules from meaningful journey actions. | Bond grows from deterministic Quest, Mission, Trail, Reflection, and Arc interaction signals. |
+| QST-057 | Done | Stardust Foundation | Introduce Stardust as a lightweight progress resource tied to meaningful activity. | Stardust has an owner, display surface, and non-payment MVP award rules. |
+| QST-058 | Done | Navigator Rank | Add Navigator Rank as a simple progression label based on journey depth. | Navigator Rank has deterministic thresholds and displays current rank. |
+| QST-059 | Done | Arc Relationship Review | Review Arc Experience coherence across assets, expressions, presence, guidance, Bond, Stardust, and Navigator Rank. | Arc relationship systems have no major release blockers and remaining beta risks are documented. |
+| QST-060 | Done | Arc Daily Greeting | Add daily Arc greeting rules for Home based on date, recent activity, and open Missions. | Home can display a context-aware daily Arc greeting. |
+| QST-061 | Done | Questra Design System V1 | Create the formal Questra design system and apply it to Home and Arc UI surfaces. | App design tokens and theme are available, and Home/Arc use the refreshed premium adventure styling. |
+| QST-062 | Done | Import Arc Assets and Rebuild UI Based on Reference Images | Import approved Arc/mock assets and rebuild Home and Arc Chat toward the reference images. | Arc assets render in-app, mock references are registered, and Home/Arc Chat use the approved visual direction. |
+| QST-063 | Done | Supabase Persistence Hardening | Harden Quest, Mission, Trail, Trail Reflection, Arc Memory, and Profile persistence boundaries. | Save/load failures are surfaced, related Arc Memory is sequenced after persistence, and migration gaps are documented. |
+| QST-064 | Done | Arc AI Chat Integration | Connect Arc Chat to an AI-capable service boundary with Quest, Mission, Trail, Reflection, and Arc Memory context. | Arc Chat shows thinking state, returns contextual responses, falls back gracefully, and can save exchanges as Arc Memory. |
+| QST-065 | Done | AI Quest Guide Generation | Generate an Arc Guide after Quest creation with summary, path, cautions, encouragement, and adoptable Mission candidates. | Quest Detail shows Arc Guide, 3+ Mission candidates can be adopted into saved Missions, and guide history is recorded in Arc Memory when available. |
+| QST-066 | Done | AI Tagging Foundation | Add AI-generated tags for Quest, Mission, Trail, and Arc Memory with persistence, search, and statistics APIs. | Tags and entity tags are saved with owner-scoped RLS, and future Guild/Star Map/recommendation flows can query tag data. |
 
 ## Selection Rules
 
 - Treat the OneDrive Master Spec and Planner as the source of truth.
 - Pick the first `Ready` QST unless the user names a specific QST.
 - Prioritize Release Manager blockers before expansion work.
+- Prioritize the Arc Experience Epic (`QST-046` through `QST-059`) before deferred beta operations while Arc is being raised to an MVP differentiator.
 - Keep generated implementation reports in `reports/qst`.
 - Do not use `Story` for product concepts, UI, docs, QSTs, or new code.
 - Do not call Arc an AI assistant in user-facing product language.

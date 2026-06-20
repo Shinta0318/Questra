@@ -4,22 +4,22 @@ class ArcAssetPaths {
   const ArcAssetPaths._();
 
   static const normal = 'assets/characters/arc/arc_normal.png';
-  static const happy = 'assets/characters/arc/arc_happy.png';
-  static const cheering = 'assets/characters/arc/arc_cheering.png';
+  static const excited = 'assets/characters/arc/arc_excited.png';
+  static const support = 'assets/characters/arc/arc_support.png';
   static const serious = 'assets/characters/arc/arc_serious.png';
   static const worried = 'assets/characters/arc/arc_worried.png';
-  static const sad = 'assets/characters/arc/arc_sad.png';
-  static const celebration = 'assets/characters/arc/arc_celebration.png';
+  static const lonely = 'assets/characters/arc/arc_lonely.png';
+  static const celebrate = 'assets/characters/arc/arc_celebrate.png';
 
   static String fromEmotion(ArcEmotion emotion) {
     return switch (emotion) {
       ArcEmotion.normal => normal,
-      ArcEmotion.excited => happy,
-      ArcEmotion.support => cheering,
+      ArcEmotion.excited => excited,
+      ArcEmotion.support => support,
       ArcEmotion.serious => serious,
       ArcEmotion.worried => worried,
-      ArcEmotion.lonely => sad,
-      ArcEmotion.celebrate => celebration,
+      ArcEmotion.lonely => lonely,
+      ArcEmotion.celebrate => celebrate,
     };
   }
 }

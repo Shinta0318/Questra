@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/questra_colors.dart';
+import '../arc/arc_emotion.dart';
+import '../arc/arc_widget.dart';
 
 class QuestraBottomNavigation extends StatelessWidget {
   const QuestraBottomNavigation({
@@ -47,27 +49,34 @@ class QuestraBottomNavigation extends StatelessWidget {
                 _NavItem(
                   icon: Icons.explore_outlined,
                   selectedIcon: Icons.explore,
-                  label: 'クエスト',
+                  label: 'Quest',
                   selected: currentIndex == 1,
                   onTap: () => onDestinationSelected(1),
-                ),
-                _ArcNavItem(
-                  selected: currentIndex == 2,
-                  onTap: () => onDestinationSelected(2),
                 ),
                 _NavItem(
                   icon: Icons.timeline_outlined,
                   selectedIcon: Icons.timeline,
-                  label: 'トレイル',
+                  label: 'Trail',
+                  selected: currentIndex == 2,
+                  onTap: () => onDestinationSelected(2),
+                ),
+                _NavItem(
+                  icon: Icons.groups_outlined,
+                  selectedIcon: Icons.groups,
+                  label: 'Guild',
                   selected: currentIndex == 3,
                   onTap: () => onDestinationSelected(3),
                 ),
-                _NavItem(
-                  icon: Icons.flag_outlined,
-                  selectedIcon: Icons.flag,
-                  label: 'ミッション',
+                _ArcNavItem(
                   selected: currentIndex == 4,
                   onTap: () => onDestinationSelected(4),
+                ),
+                _NavItem(
+                  icon: Icons.person_outline,
+                  selectedIcon: Icons.person,
+                  label: 'プロフィール',
+                  selected: currentIndex == 5,
+                  onTap: () => onDestinationSelected(5),
                 ),
               ],
             ),
@@ -150,7 +159,7 @@ class _ArcNavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Tooltip(
-        message: 'アーク',
+        message: 'Arc',
         child: InkWell(
           borderRadius: BorderRadius.circular(28),
           onTap: onTap,
@@ -165,10 +174,7 @@ class _ArcNavItem extends StatelessWidget {
                   height: selected ? 60 : 54,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const RadialGradient(
-                      colors: [QuestraColors.skyBlue, QuestraColors.cosmicBlue],
-                      center: Alignment.topLeft,
-                    ),
+                    color: QuestraColors.white.withValues(alpha: 0.08),
                     border: Border.all(color: QuestraColors.gold, width: 2),
                     boxShadow: [
                       BoxShadow(
@@ -180,16 +186,16 @@ class _ArcNavItem extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.travel_explore,
-                    color: QuestraColors.white,
-                    size: 28,
+                  child: const ArcWidget(
+                    emotion: ArcEmotion.normal,
+                    size: 42,
+                    showSpeechBubble: false,
                   ),
                 ),
                 Positioned(
                   bottom: 0,
                   child: Text(
-                    'アーク',
+                    'Arc',
                     style: TextStyle(
                       color: selected
                           ? QuestraColors.gold

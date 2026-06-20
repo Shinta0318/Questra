@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,7 @@ import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
+import 'arc_quest_guide_controller.dart';
 import 'quest_controller.dart';
 import 'quest_guide_controller.dart';
 import 'quest_model.dart';
@@ -186,6 +189,11 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
     );
     controller.add(quest);
     ref.read(questGuideControllerProvider.notifier).generateForQuest(quest);
+    unawaited(
+      ref
+          .read(arcQuestGuideControllerProvider.notifier)
+          .generateForQuest(quest),
+    );
     context.go('${AppRoutes.quest}/${quest.id}');
   }
 }

@@ -3,8 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../core/theme/questra_colors.dart';
+import '../../widgets/arc/arc_emotion.dart';
+import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
+import '../arc/arc_bond_service.dart';
+import '../arc/navigator_rank_service.dart';
+import '../arc/stardust_service.dart';
 import '../auth/auth_controller.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
@@ -28,6 +34,21 @@ class ProfileScreen extends ConsumerWidget {
     final openMissionCount = missions
         .where((mission) => mission.status == MissionStatus.todo)
         .length;
+    final bond = ref
+        .watch(arcBondServiceProvider)
+        .resolve(profile?.bondScore ?? 0);
+    final stardust = ref
+        .watch(stardustServiceProvider)
+        .resolve(profile?.stardustBalance ?? 0);
+    final navigatorRank = ref
+        .watch(navigatorRankServiceProvider)
+        .resolve(
+          quests: quests,
+          missions: missions,
+          trails: trails,
+          bondScore: profile?.bondScore ?? 0,
+          stardustBalance: profile?.stardustBalance ?? 0,
+        );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
@@ -78,6 +99,18 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
+            _ArcBondCard(bond: bond, profileAvailable: profile != null),
+            const SizedBox(height: 16),
+            _StardustCard(
+              stardust: stardust,
+              profileAvailable: profile != null,
+            ),
+            const SizedBox(height: 16),
+            _NavigatorRankCard(
+              rank: navigatorRank,
+              storedRank: profile?.navigatorRank,
+            ),
+            const SizedBox(height: 16),
             QuestraCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,6 +149,208 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StardustCard extends StatelessWidget {
+  const _StardustCard({required this.stardust, required this.profileAvailable});
+
+  final StardustState stardust;
+  final bool profileAvailable;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: QuestraColors.gold.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(Icons.auto_awesome, color: QuestraColors.gold),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Stardust', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 4),
+                Text(
+                  profileAvailable
+                      ? stardust.description
+                      : 'ログインすると活動のしるしをプロフィールに保存できます。',
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '${stardust.balance}',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: QuestraColors.deepNavy,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(stardust.label),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavigatorRankCard extends StatelessWidget {
+  const _NavigatorRankCard({required this.rank, required this.storedRank});
+
+  final NavigatorRankState rank;
+  final String? storedRank;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: QuestraColors.cosmicBlue.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(
+                  Icons.explore_outlined,
+                  color: QuestraColors.cosmicBlue,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Navigator Rank',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(rank.description),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            rank.label,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: rank.progressToNext,
+              minHeight: 10,
+              backgroundColor: QuestraColors.cloud,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                QuestraColors.cosmicBlue,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Chip(label: Text('Rank score ${rank.score}')),
+              if (storedRank != null) Chip(label: Text('Saved $storedRank')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArcBondCard extends StatelessWidget {
+  const _ArcBondCard({required this.bond, required this.profileAvailable});
+
+  final ArcBondState bond;
+  final bool profileAvailable;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const ArcWidget(
+                emotion: ArcEmotion.support,
+                size: 72,
+                showSpeechBubble: false,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Arc Bond',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      profileAvailable
+                          ? bond.description
+                          : 'ログインするとArcとの航路をこのプロフィールに保存できます。',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: bond.progress,
+                    minHeight: 10,
+                    backgroundColor: QuestraColors.cloud,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      QuestraColors.gold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '${bond.score}',
+                style: const TextStyle(
+                  color: QuestraColors.deepNavy,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Chip(label: Text(bond.label)),
+        ],
       ),
     );
   }

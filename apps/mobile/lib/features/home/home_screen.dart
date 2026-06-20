@@ -3,276 +3,167 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
-import '../../widgets/questra_card.dart';
-import '../../widgets/questra_primary_button.dart';
-import '../arc/arc_emotion.dart';
-import '../arc/arc_widget.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_gradients.dart';
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_shadows.dart';
+import '../../core/theme/app_spacing.dart';
+import '../arc/arc_daily_greeting_service.dart';
 import '../auth/auth_controller.dart';
 import '../mission/mission_controller.dart';
-import '../mission/mission_model.dart';
 import '../quest/quest_controller.dart';
-import '../quest/quest_guide_model.dart';
-import '../quest/quest_model.dart';
 import '../trail/trail_controller.dart';
-import '../trail/trail_model.dart';
+import '../../widgets/arc/arc_emotion.dart';
+import '../../widgets/arc/arc_widget.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+  static const _quests = [
+    _HomeQuest('Questraをローンチする', 0.42, '起業', 3),
+    _HomeQuest('英語を話せるようになる', 0.18, '学習', 2),
+    _HomeQuest('富士山に登る', 0.67, '挑戦', 3),
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(authControllerProvider).profile;
-    final quests = ref.watch(questControllerProvider);
-    final activeQuests = quests
-        .where((quest) => quest.status == QuestStatus.active)
-        .toList();
-    final missions = ref.watch(missionControllerProvider);
-    final trails = ref.watch(trailControllerProvider);
-    final recentTrails = [...trails]
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final openMissions =
-        missions
-            .where((mission) => mission.status == MissionStatus.todo)
-            .toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final todaysMission = openMissions.isEmpty ? null : openMissions.first;
+    final greeting = ref
+        .watch(arcDailyGreetingServiceProvider)
+        .resolve(
+          quests: ref.watch(questControllerProvider),
+          missions: ref.watch(missionControllerProvider),
+          trails: ref.watch(trailControllerProvider),
+          now: DateTime.now(),
+          nickname: profile?.nickname,
+        );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            QuestraCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: AppColors.deepNavy,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(gradient: AppGradients.adventure),
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.lg,
+              AppSpacing.xl,
+              AppSpacing.xxl,
+            ),
+            children: [
+              const _CaptainStatusBar(),
+              const SizedBox(height: AppSpacing.lg),
+              _ArcHero(greeting: greeting),
+              const SizedBox(height: AppSpacing.xl),
+              Row(
                 children: [
-                  ArcWidget(
-                    emotion: ArcEmotion.support,
-                    message:
-                        '${profile?.nickname ?? '旅人'}、君の航路を覚えているよ。このQuestは大切な星になりそうだね。',
+                  Text(
+                    '進行中のQuest',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(color: AppColors.white),
                   ),
-                  const SizedBox(height: 20),
-                  QuestraPrimaryButton(
-                    label: 'Questへ進む',
-                    onPressed: () => context.go(AppRoutes.quest),
+                  const Spacer(),
+                  Text(
+                    'すべて見る',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.warmGold,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-            if (todaysMission == null)
-              _HomeSection(
-                title: '今日のMission',
-                body: activeQuests.isEmpty
-                    ? 'まずはQuestをひとつ灯そう。小さなMissionはそこから見えてくるよ。'
-                    : 'Quest詳細から、今日進めるMissionを選ぼう。',
-              )
-            else
-              QuestraCard(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '今日のMission',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(todaysMission.title),
-                    const SizedBox(height: 6),
-                    Text('Quest: ${todaysMission.questTitle}'),
-                    Text('Guide: ${todaysMission.guideType.label}'),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () =>
-                          _completeMission(context, ref, todaysMission),
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: const Text('Missionを完了'),
-                    ),
-                  ],
+              const SizedBox(height: AppSpacing.md),
+              ..._quests.map(
+                (quest) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: _QuestMockCard(quest: quest),
                 ),
               ),
-            const SizedBox(height: 12),
-            _HomeSection(
-              title: 'Questの航路',
-              body:
-                  '進行中 ${activeQuests.length} / 全 ${quests.length} Quest。焦らず、星をひとつずつ。',
-              actionLabel: 'Questへ',
-              onPressed: () => context.go(AppRoutes.quest),
-            ),
-            const SizedBox(height: 12),
-            _RecentTrailsSection(
-              trails: recentTrails.take(3).toList(growable: false),
-              onOpenTrail: () => context.go(AppRoutes.trail),
-            ),
-            const SizedBox(height: 12),
-            _GuildActivitySection(
-              activeQuestCount: activeQuests.length,
-              openMissionCount: openMissions.length,
-              recentTrailCount: recentTrails.length,
-              onOpenGuild: () => context.go(AppRoutes.guild),
-            ),
-            const SizedBox(height: 12),
-            _HomeActions(
-              onOpenQuest: () => context.go(AppRoutes.quest),
-              onOpenTrail: () => context.go(AppRoutes.trail),
-              onOpenGuild: () => context.go(AppRoutes.guild),
-              onOpenArc: () => context.go(AppRoutes.arc),
-              onOpenProfile: () => context.go(AppRoutes.profile),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.sm),
+              FilledButton.icon(
+                onPressed: () => context.go('${AppRoutes.quest}/create'),
+                icon: const Icon(Icons.add),
+                label: const Text('新しいQuestを始める'),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              const _StarMapPreview(),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-void _completeMission(BuildContext context, WidgetRef ref, Mission mission) {
-  final completedMission = ref
-      .read(missionControllerProvider.notifier)
-      .completeMission(mission.id);
-  if (completedMission == null) {
-    return;
-  }
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(const SnackBar(content: Text('Mission完了。Trailに今日の一歩を残しました。')));
-}
-
-class _HomeActions extends StatelessWidget {
-  const _HomeActions({
-    required this.onOpenQuest,
-    required this.onOpenTrail,
-    required this.onOpenGuild,
-    required this.onOpenArc,
-    required this.onOpenProfile,
-  });
-
-  final VoidCallback onOpenQuest;
-  final VoidCallback onOpenTrail;
-  final VoidCallback onOpenGuild;
-  final VoidCallback onOpenArc;
-  final VoidCallback onOpenProfile;
+class _CaptainStatusBar extends StatelessWidget {
+  const _CaptainStatusBar();
 
   @override
   Widget build(BuildContext context) {
-    return QuestraCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('次の寄港地', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.14)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              OutlinedButton.icon(
-                onPressed: onOpenQuest,
-                icon: const Icon(Icons.flag_outlined),
-                label: const Text('Quest'),
+              const ArcWidget(
+                emotion: ArcEmotion.normal,
+                size: 36,
+                showSpeechBubble: false,
               ),
-              OutlinedButton.icon(
-                onPressed: onOpenTrail,
-                icon: const Icon(Icons.route_outlined),
-                label: const Text('Trail'),
-              ),
-              OutlinedButton.icon(
-                onPressed: onOpenArc,
-                icon: const Icon(Icons.travel_explore_outlined),
-                label: const Text('Arc Chat'),
-              ),
-              OutlinedButton.icon(
-                onPressed: onOpenGuild,
-                icon: const Icon(Icons.groups_outlined),
-                label: const Text('Guild'),
-              ),
-              OutlinedButton.icon(
-                onPressed: onOpenProfile,
-                icon: const Icon(Icons.person_outline),
-                label: const Text('Profile'),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'キャプテン\nLv.24',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w800,
+                  height: 1.15,
+                ),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        const Spacer(),
+        const _MetricPill(icon: Icons.monetization_on, label: '2,450'),
+        const SizedBox(width: AppSpacing.sm),
+        const _MetricPill(icon: Icons.auto_awesome, label: '18'),
+      ],
     );
   }
 }
 
-class _HomeSection extends StatelessWidget {
-  const _HomeSection({
-    required this.title,
-    required this.body,
-    this.actionLabel,
-    this.onPressed,
-  });
+class _MetricPill extends StatelessWidget {
+  const _MetricPill({required this.icon, required this.label});
 
-  final String title;
-  final String body;
-  final String? actionLabel;
-  final VoidCallback? onPressed;
+  final IconData icon;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return QuestraCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          Text(body),
-          if (actionLabel != null && onPressed != null) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(onPressed: onPressed, child: Text(actionLabel!)),
-          ],
-        ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: AppColors.cosmicBlue.withValues(alpha: 0.28)),
       ),
-    );
-  }
-}
-
-class _RecentTrailsSection extends StatelessWidget {
-  const _RecentTrailsSection({required this.trails, required this.onOpenTrail});
-
-  final List<Trail> trails;
-  final VoidCallback onOpenTrail;
-
-  @override
-  Widget build(BuildContext context) {
-    return QuestraCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text('最近のTrail', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          if (trails.isEmpty)
-            const Text('Missionを完了するかTrailを残すと、ここに旅の証が並びます。')
-          else
-            ...trails.map(
-              (trail) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      trail.title,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(trail.summary),
-                  ],
-                ),
-              ),
+          Icon(icon, color: AppColors.gold, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.white,
+              fontWeight: FontWeight.w900,
             ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: onOpenTrail,
-            icon: const Icon(Icons.route_outlined),
-            label: const Text('Trailへ'),
           ),
         ],
       ),
@@ -280,30 +171,186 @@ class _RecentTrailsSection extends StatelessWidget {
   }
 }
 
-class _GuildActivitySection extends StatelessWidget {
-  const _GuildActivitySection({
-    required this.activeQuestCount,
-    required this.openMissionCount,
-    required this.recentTrailCount,
-    required this.onOpenGuild,
-  });
+class _ArcHero extends StatelessWidget {
+  const _ArcHero({required this.greeting});
 
-  final int activeQuestCount;
-  final int openMissionCount;
-  final int recentTrailCount;
-  final VoidCallback onOpenGuild;
+  final ArcDailyGreeting greeting;
 
   @override
   Widget build(BuildContext context) {
-    final body = activeQuestCount == 0
-        ? 'まずQuestをひとつ灯すと、Guildで相談できる問いが作りやすくなります。'
-        : '進行中のQuest $activeQuestCount件、未完了Mission $openMissionCount件、Trail $recentTrailCount件から相談の種を作れます。';
-
-    return _HomeSection(
-      title: 'Guild Activity',
-      body: body,
-      actionLabel: 'Guildへ',
-      onPressed: onOpenGuild,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.72),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.22)),
+        boxShadow: AppShadows.glassCard,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _QuestTag(label: greeting.contextLabel),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  greeting.message,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.white,
+                    height: 1.55,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          ArcWidget(
+            emotion: greeting.emotion,
+            size: 120,
+            showSpeechBubble: false,
+          ),
+        ],
+      ),
     );
   }
+}
+
+class _QuestMockCard extends StatelessWidget {
+  const _QuestMockCard({required this.quest});
+
+  final _HomeQuest quest;
+
+  @override
+  Widget build(BuildContext context) {
+    final progressPercent = (quest.progress * 100).round();
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.78),
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.24)),
+        boxShadow: AppShadows.glassCard,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            quest.title,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: AppColors.white),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: LinearProgressIndicator(
+              value: quest.progress,
+              minHeight: 8,
+              backgroundColor: AppColors.deepNavy,
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              _QuestTag(label: quest.category),
+              const Spacer(),
+              Text(
+                '$progressPercent%',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Text(
+                '進行中',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.parchment,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: List.generate(
+              5,
+              (index) => Icon(
+                index < quest.stars ? Icons.star : Icons.star_border,
+                size: 16,
+                color: AppColors.gold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuestTag extends StatelessWidget {
+  const _QuestTag({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.cosmicBlue.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: AppColors.white,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _StarMapPreview extends StatelessWidget {
+  const _StarMapPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        gradient: AppGradients.glass,
+        borderRadius: AppRadius.glassCard,
+        boxShadow: AppShadows.glassCard,
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.explore, color: AppColors.gold, size: 34),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              'Star Map\nQuest、Mission、Trailをつないで次の航路を見つけよう。',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.deepNavy,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeQuest {
+  const _HomeQuest(this.title, this.progress, this.category, this.stars);
+
+  final String title;
+  final double progress;
+  final String category;
+  final int stars;
 }

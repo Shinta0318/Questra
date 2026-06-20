@@ -1,0 +1,349 @@
+version: 1
+updated: 2026-06-20
+source: docs/product/qst_backlog.md
+notes:
+  - QST-037 through QST-043 already exist in the current backlog as completed MVP/beta work.
+  - The requested Arc Experience Epic has been renumbered to QST-046 through QST-059 to avoid collisions.
+  - Existing QST-044 and QST-045 are deferred while Arc Experience work is promoted to MVP priority.
+rules:
+  selection:
+    - Pick the first Ready item by numeric order.
+    - Prioritize priority P0 before P1 before P2 when numeric order is equal within an epic.
+    - Keep Arc user-facing language as navigator/companion framing, not AI assistant framing.
+    - Do not use Story as a product concept.
+epics:
+  - id: ARC-EXP
+    title: Arc Experience Epic
+    status: Active
+    priority: P0
+    rationale: Arc official character images make Arc experience a primary MVP differentiator.
+    starts_after: QST-036
+    requested_range: QST-037-QST-050
+    assigned_range: QST-046-QST-059
+    release_manager_reflection:
+      phase: MVP / Internal beta
+      impact: Raises Arc Experience readiness as a primary MVP differentiator.
+      promoted_over:
+        - QST-044 Performance measurement pass
+        - QST-045 Beta feedback operations
+items:
+  - id: QST-046
+    requested_id: QST-037
+    title: Arc Expression Assets Integration
+    status: Done
+    priority: P0
+    epic: ARC-EXP
+    depends_on: [QST-036]
+    completed_by:
+      report: reports/qst/QST-037-arc-expression-assets-integration.md
+      commit: 8493adc
+    scope: Move prepared Arc expression PNGs into Flutter assets and make them available from Arc UI.
+    acceptance:
+      - Seven Arc expression PNGs exist under apps/mobile/assets/characters/arc/.
+      - The asset directory is registered in apps/mobile/pubspec.yaml.
+      - Arc asset paths are centrally managed.
+      - Existing Arc UI can render arc_normal.png.
+  - id: QST-047
+    requested_id: QST-038
+    title: Arc Expression Engine
+    status: Done
+    priority: P0
+    epic: ARC-EXP
+    depends_on: [QST-046]
+    completed_by:
+      report: reports/qst/QST-047.md
+    scope: Add expression resolution rules that map Arc state, guidance context, and events to image assets.
+    acceptance:
+      - Arc expression selection is centralized.
+      - Quest, Mission, Trail, Reflection, and Bond inputs can resolve an Arc expression.
+      - Existing Arc UI consumes the resolver instead of hard-coded expression decisions.
+  - id: QST-048
+    requested_id: QST-039
+    title: Arc Presence System
+    status: Done
+    priority: P0
+    epic: ARC-EXP
+    depends_on: [QST-046, QST-047]
+    completed_by:
+      report: reports/qst/QST-048.md
+    scope: Make Arc presence consistent across Home, Arc Chat, Quest, Mission, Trail, and empty states.
+    acceptance:
+      - Arc appears with consistent sizing, spacing, and expression behavior.
+      - Presence rules distinguish guide, celebration, concern, reflection, and empty-state contexts.
+  - id: QST-049
+    requested_id: QST-040
+    title: Arc Contextual Guidance
+    status: Done
+    priority: P0
+    epic: ARC-EXP
+    depends_on: [QST-038]
+    completed_by:
+      report: reports/qst/QST-038.md
+    scope: Use Quest, Mission, Trail, and Reflection context to suggest the next action without AI assistant framing.
+    acceptance:
+      - Arc references the latest Quest, Mission, Trail, and Reflection.
+      - Arc suggests context-aware next action.
+      - Arc remains framed as a navigator/companion.
+  - id: QST-050
+    requested_id: QST-041
+    title: Arc Celebration System
+    status: Done
+    priority: P0
+    epic: ARC-EXP
+    depends_on: [QST-047, QST-049]
+    completed_by:
+      report: reports/qst/QST-050.md
+    scope: Add celebration moments for Mission completion, Trail reflection, Quest progress, and rank or bond milestones.
+    acceptance:
+      - Celebration expression is shown for key progress events.
+      - Celebration copy remains Arc-native and non-generic.
+      - Celebration state does not block core task completion.
+  - id: QST-051
+    requested_id: QST-051
+    title: Questra MVP Performance and Asset Optimization
+    status: Done
+    priority: P0
+    epic: MVP-PERF
+    depends_on: [QST-046, QST-047, QST-048, QST-049, QST-050]
+    completed_by:
+      report: reports/qst/QST-051.md
+    scope: Optimize MVP display speed, asset sizing, image upload size, list reads, Arc Memory reads, and Supabase query payloads.
+    acceptance:
+      - Arc PNG display limits and asset sizes are documented.
+      - Trail images are picked with compression and max dimensions before upload.
+      - List and Arc Memory reads have limits.
+      - Supabase reads select only required columns where practical.
+      - Performance verification steps are documented.
+  - id: QST-052
+    requested_id: QST-043
+    title: Arc Empty States
+    status: Done
+    priority: P1
+    epic: ARC-EXP
+    depends_on: [QST-047, QST-048]
+    completed_by:
+      report: reports/qst/QST-052.md
+    scope: Replace generic empty states with Arc-guided empty states across MVP surfaces.
+    acceptance:
+      - Quest, Mission, Trail, Guild, and Arc Memory empty states use Arc guidance.
+      - Empty-state copy points to one clear next action.
+      - Expressions match empty-state emotional tone.
+  - id: QST-053
+    requested_id: QST-044
+    title: Arc Concern System
+    status: Done
+    priority: P1
+    epic: ARC-EXP
+    depends_on: [QST-047, QST-048]
+    completed_by:
+      report: reports/qst/QST-053.md
+    scope: Add concern expressions and copy for stalled Quests, overdue Missions, and low activity.
+    acceptance:
+      - Arc can express concern without blame or pressure.
+      - Concern state uses recent inactivity and open work signals.
+      - Concern guidance offers a small next step.
+  - id: QST-054
+    requested_id: QST-045
+    title: Arc Reflection Coach
+    status: Done
+    priority: P1
+    epic: ARC-EXP
+    depends_on: [QST-035, QST-047]
+    completed_by:
+      report: reports/qst/QST-054.md
+    scope: Improve Trail Reflection with Arc coaching prompts and expression changes.
+    acceptance:
+      - Reflection prompt adapts to Trail and Mission context.
+      - Arc feedback helps identify learning and next Mission.
+      - Reflection remains part of the Quest to Mission to Trail loop.
+  - id: QST-055
+    requested_id: QST-046
+    title: Bond Foundation
+    status: Done
+    priority: P1
+    epic: ARC-EXP
+    depends_on: [QST-029, QST-047]
+    completed_by:
+      report: reports/qst/QST-055.md
+    scope: Establish Bond as the foundation for Arc relationship progression.
+    acceptance:
+      - Bond state is represented in the product model.
+      - Bond can be shown in Profile or Arc surfaces.
+      - Bond language does not imply manipulative engagement loops.
+  - id: QST-056
+    requested_id: QST-047
+    title: Bond Growth Rules
+    status: Done
+    priority: P1
+    epic: ARC-EXP
+    depends_on: [QST-055]
+    completed_by:
+      report: reports/qst/QST-056.md
+    scope: Define and implement MVP-safe Bond growth rules from meaningful journey actions.
+    acceptance:
+      - Bond grows from Quest, Mission, Trail, Reflection, and Arc interaction signals.
+      - Rules are deterministic and testable.
+      - Growth is capped or balanced to avoid noisy increments.
+  - id: QST-057
+    requested_id: QST-048
+    title: Stardust Foundation
+    status: Done
+    priority: P1
+    epic: ARC-EXP
+    depends_on: [QST-056]
+    completed_by:
+      report: reports/qst/QST-057.md
+    scope: Introduce Stardust as a lightweight progress resource tied to meaningful activity.
+    acceptance:
+      - Stardust state has a clear owner and display surface.
+      - Stardust is awarded from approved MVP actions.
+      - Stardust does not require payments or store mechanics for MVP.
+  - id: QST-058
+    requested_id: QST-049
+    title: Navigator Rank
+    status: Done
+    priority: P1
+    epic: ARC-EXP
+    depends_on: [QST-056, QST-057]
+    completed_by:
+      report: reports/qst/QST-058.md
+    scope: Add Navigator Rank as a simple progression label based on journey depth.
+    acceptance:
+      - Navigator Rank has deterministic thresholds.
+      - Profile or Arc surface displays current rank.
+      - Rank progression references Quest, Mission, and Trail behavior.
+  - id: QST-059
+    requested_id: QST-050
+    title: Arc Relationship Review
+    status: Done
+    priority: P0
+    epic: ARC-EXP
+    depends_on: [QST-050, QST-051, QST-052, QST-053, QST-054, QST-055, QST-056, QST-057, QST-058, QST-060]
+    completed_by:
+      report: reports/qst/QST-059.md
+    scope: Review Arc Experience coherence across assets, expressions, presence, guidance, Bond, Stardust, and Navigator Rank.
+    acceptance:
+      - Arc expression rules are consistent across MVP surfaces.
+      - Arc relationship systems have no major release blockers.
+      - Remaining beta risks are documented.
+  - id: QST-060
+    requested_id: QST-042
+    title: Arc Daily Greeting
+    status: Done
+    priority: P1
+    epic: ARC-EXP
+    depends_on: [QST-047, QST-048, QST-051]
+    completed_by:
+      report: reports/qst/QST-060.md
+    scope: Add daily Arc greeting rules for Home based on date, recent activity, and open Missions.
+    acceptance:
+      - Home can display a daily Arc greeting.
+      - Greeting changes based on recent journey context.
+      - Empty or returning-user states are handled gracefully.
+  - id: QST-061
+    requested_id: QST-0??
+    title: Questra Design System V1
+    status: Done
+    priority: P0
+    epic: DESIGN-SYS
+    depends_on: [QST-051]
+    completed_by:
+      report: reports/qst/QST-061.md
+    scope: Create a Questra design system and apply it to Home and Arc UI.
+    acceptance:
+      - AppColors, AppTypography, AppSpacing, AppRadius, AppShadows, AppGradients, and AppTheme are available.
+      - Home uses the refreshed theme surface.
+      - Arc UI uses refreshed glass and speech bubble styling.
+      - Visual direction moves closer to Deep Navy, Cosmic Blue, Gold Accent, premium adventure theme.
+  - id: QST-062
+    requested_id: QST-0??
+    title: Import Arc Assets and Rebuild UI Based on Reference Images
+    status: Done
+    priority: P0
+    epic: DESIGN-SYS
+    depends_on: [QST-061]
+    completed_by:
+      report: reports/qst/QST-062.md
+    scope: Import approved Arc and Questra mock images, register assets, and rebuild Home and Arc Chat toward the reference mock direction.
+    acceptance:
+      - Arc expression assets are imported with approved filenames.
+      - Mock reference images are imported and registered.
+      - ArcWidget renders real Arc image assets for all emotions.
+      - Home screen visually follows the Questra Home mock.
+      - Arc Chat screen visually follows the Arc Chat mock.
+      - Visible UI labels avoid Story terminology.
+  - id: QST-063
+    requested_id: QST-041
+    title: Supabase Persistence Hardening
+    status: Done
+    priority: P0
+    epic: BETA-HARDENING
+    depends_on: [QST-041, QST-051]
+    completed_by:
+      report: reports/qst/QST-063.md
+    scope: Harden Quest, Mission, Trail, Trail Reflection, Arc Memory, and Profile persistence boundaries for Beta readiness.
+    acceptance:
+      - Quest save, load, and delete report persistence status.
+      - Mission save and load report persistence status.
+      - Trail and Trail Reflection continue to report sync status.
+      - Arc Memory creation is tied to persisted Quest, Mission, and Trail actions where available.
+      - Profile persistence failures are surfaced through AuthState.
+      - Migration gaps are documented.
+  - id: QST-064
+    requested_id: QST-042
+    title: Arc AI Chat Integration
+    status: Done
+    priority: P0
+    epic: BETA-HARDENING
+    depends_on: [QST-038, QST-063]
+    completed_by:
+      report: reports/qst/QST-064.md
+    scope: Connect Arc Chat to an AI-capable service boundary with Quest, Mission, Trail, Reflection, and Arc Memory context.
+    acceptance:
+      - Arc Chat can return contextual generated responses.
+      - Active Quest context is included.
+      - Recent Mission and Trail context is included.
+      - Arc Memory context is included.
+      - Thinking UI is shown while waiting.
+      - Failure falls back to an Arc-native response.
+      - Chat exchanges can be saved as Arc Memory.
+  - id: QST-065
+    requested_id: QST-043
+    title: AI Quest Guide Generation
+    status: Done
+    priority: P0
+    epic: BETA-HARDENING
+    depends_on: [QST-063, QST-064]
+    completed_by:
+      report: reports/qst/QST-065.md
+    scope: Generate an Arc Guide after Quest creation with Quest summary, completion path, cautions, encouragement, and adoptable Mission candidates.
+    acceptance:
+      - Quest creation starts Arc Guide generation.
+      - Quest Detail displays generated Arc Guide content.
+      - At least three Mission candidates are generated.
+      - Mission candidates can be adopted into saved Missions.
+      - Generated guide history is recorded through Arc Memory when a profile is available.
+  - id: QST-066
+    requested_id: QST-046
+    title: AI Tagging Foundation
+    status: Done
+    priority: P0
+    epic: BETA-HARDENING
+    depends_on: [QST-063, QST-064, QST-065]
+    completed_by:
+      report: reports/qst/QST-066.md
+    scope: Add tags and entity_tags persistence plus AI tag generation for Quest, Mission, Trail, and Arc Memory.
+    acceptance:
+      - Quest save triggers AI tag generation.
+      - Mission save triggers AI tag generation.
+      - Trail save triggers AI tag generation.
+      - Arc Memory save triggers AI tag generation.
+      - Tags and entity tags are persisted with owner-scoped RLS.
+      - Tag search and tag statistics are available through repository/service APIs.
+deferred_existing_items:
+  - id: QST-044
+    title: Performance measurement pass
+    reason: Deferred until Arc Experience Epic establishes the MVP differentiator layer.
+  - id: QST-045
+    title: Beta feedback operations
+    reason: Deferred until Arc Experience Epic and performance measurement are ready for beta operations.

@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/persistence/persistence_sync_state.dart';
+import '../arc/arc_bond_growth_service.dart';
+import '../arc/stardust_service.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../quest/quest_model.dart';
+import '../tagging/tagging_providers.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_event_model.dart';
 import '../trail/trail_providers.dart';
@@ -21,6 +25,11 @@ final missionGenerationServiceProvider = Provider<MissionGenerationService>(
 
 final missionControllerProvider =
     NotifierProvider<MissionController, List<Mission>>(MissionController.new);
+
+final missionSyncControllerProvider =
+    NotifierProvider<PersistenceSyncController, PersistenceSyncState>(
+      PersistenceSyncController.new,
+    );
 
 class MissionController extends Notifier<List<Mission>> {
   @override
@@ -68,8 +77,32 @@ class MissionController extends Notifier<List<Mission>> {
         .read(missionGenerationServiceProvider)
         .generate(quest: quest, guide: guide, advice: advice);
     state = [mission, ...state];
-    unawaited(_persistMission(mission));
-    unawaited(_rememberMission(mission, ArcMemorySourceType.missionCreated));
+    unawaited(
+      _persistMission(mission, sourceType: ArcMemorySourceType.missionCreated),
+    );
+    return mission;
+  }
+
+  Mission addMissionDraft({
+    required Quest quest,
+    required String title,
+    required String description,
+    required GuideType guideType,
+    required MissionDifficulty difficulty,
+  }) {
+    final mission = Mission(
+      questId: quest.id,
+      questTitle: quest.title,
+      title: title,
+      description: description,
+      guideType: guideType,
+      difficulty: difficulty,
+      status: MissionStatus.todo,
+    );
+    state = [mission, ...state];
+    unawaited(
+      _persistMission(mission, sourceType: ArcMemorySourceType.missionCreated),
+    );
     return mission;
   }
 
@@ -89,9 +122,11 @@ class MissionController extends Notifier<List<Mission>> {
         if (mission.id == missionId) updatedMission else mission,
     ];
 
-    unawaited(_persistMission(updatedMission));
     unawaited(
-      _rememberMission(updatedMission, ArcMemorySourceType.missionCompleted),
+      _persistMission(
+        updatedMission,
+        sourceType: ArcMemorySourceType.missionCompleted,
+      ),
     );
     final trail = ref
         .read(trailControllerProvider.notifier)
@@ -120,6 +155,8 @@ class MissionController extends Notifier<List<Mission>> {
       return;
     }
 
+    final sync = ref.read(missionSyncControllerProvider.notifier);
+    sync.loading('Missionを読み込んでいます...');
     try {
       final loaded = await ref
           .read(missionRepositoryProvider)
@@ -132,8 +169,9 @@ class MissionController extends Notifier<List<Mission>> {
             !loadedIds.contains(mission.id),
       );
       state = [...loaded, ...localOnly];
-    } catch (_) {
-      // Mission sync state is introduced later; keep local state for now.
+      sync.saved('Missionを読み込みました。');
+    } catch (error) {
+      sync.failed('Mission load', error);
     }
   }
 
@@ -145,24 +183,71 @@ class MissionController extends Notifier<List<Mission>> {
     unawaited(loadForQuests(questIds));
   }
 
-  Future<void> _persistMission(Mission mission) async {
+  Future<void> _persistMission(
+    Mission mission, {
+    required ArcMemorySourceType sourceType,
+  }) async {
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
+      ref
+          .read(missionSyncControllerProvider.notifier)
+          .failed('Mission save', 'ログインが必要です。');
       return;
     }
 
+    final sync = ref.read(missionSyncControllerProvider.notifier);
+    sync.loading('Missionを保存しています...');
     try {
-      await ref.read(missionRepositoryProvider).save(mission);
+      final savedMission = await ref
+          .read(missionRepositoryProvider)
+          .save(mission);
+      state = [
+        for (final current in state)
+          if (current.id == savedMission.id) savedMission else current,
+      ];
+      unawaited(_tagMission(userId, savedMission));
+      _growBond(sourceType);
+      await _rememberMission(savedMission, sourceType);
+      sync.saved('Missionを保存しました。');
+    } catch (error) {
+      sync.failed('Mission save', error);
+    }
+  }
+
+  void _growBond(ArcMemorySourceType sourceType) {
+    final growth = ref
+        .read(arcBondGrowthServiceProvider)
+        .forMission(sourceType);
+    final award = ref.read(stardustServiceProvider).forMission(sourceType);
+    unawaited(
+      ref
+          .read(authControllerProvider.notifier)
+          .addBondScore(delta: growth.delta, reason: growth.reason),
+    );
+    unawaited(
+      ref
+          .read(authControllerProvider.notifier)
+          .addStardust(amount: award.amount, reason: award.reason),
+    );
+  }
+
+  Future<void> _tagMission(String userId, Mission mission) async {
+    try {
+      await ref
+          .read(taggingServiceProvider)
+          .tagMission(ownerId: userId, mission: mission);
     } catch (_) {
-      // Mission sync state is introduced later; keep optimistic local state now.
+      // Tagging should not block Mission save or completion.
     }
   }
 
   Future<void> _saveTrailEvent(TrailEvent event) async {
     try {
       await ref.read(trailEventRepositoryProvider).save(event);
-    } catch (_) {
-      // Trail event sync state is introduced later; keep the completed Mission.
+    } catch (error) {
+      ref
+          .read(missionSyncControllerProvider.notifier)
+          .failed('Trail event save', error);
     }
   }
 

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../core/performance/performance_limits.dart';
 import '../../core/theme/questra_colors.dart';
 import '../motion/questra_motion.dart';
 import 'arc_asset_paths.dart';
@@ -12,7 +13,7 @@ class ArcWidget extends StatefulWidget {
   const ArcWidget({
     this.emotion = ArcEmotion.normal,
     this.message,
-    this.size = 132,
+    this.size = QuestraPerformanceLimits.arcAssetMaxDisplaySize,
     this.showSpeechBubble = true,
     super.key,
   });

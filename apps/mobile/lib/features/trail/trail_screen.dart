@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/performance/performance_limits.dart';
+import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
+import '../../widgets/arc/arc_empty_state.dart';
+import '../../widgets/arc/arc_presence.dart';
 import '../../widgets/questra_card.dart';
+import '../arc/arc_celebration_service.dart';
+import '../arc/arc_expression_engine.dart';
+import '../arc/arc_guidance_providers.dart';
+import '../arc/arc_reflection_coach_service.dart';
 import '../auth/auth_controller.dart';
 import '../media/media_model.dart';
+import '../mission/mission_controller.dart';
+import '../mission/mission_model.dart';
 import 'trail_controller.dart';
 import 'trail_model.dart';
 import 'trail_sync_state.dart';
@@ -17,10 +28,17 @@ class TrailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trails = ref.watch(trailControllerProvider);
+    final missions = ref.watch(missionControllerProvider);
     final trailMedia = ref.watch(trailMediaControllerProvider);
     final syncState = ref.watch(trailSyncControllerProvider);
     final profile = ref.watch(authControllerProvider).profile;
     final controller = ref.read(trailControllerProvider.notifier);
+    final expressionEngine = ref.watch(arcExpressionEngineProvider);
+    final arcExpression = expressionEngine.resolveJourney(
+      quests: const [],
+      missions: const [],
+      trails: trails,
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Trail')),
@@ -28,20 +46,10 @@ class TrailScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            QuestraCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Trail',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Trail links Quests, Missions, and Arc reflections into a path you can return to.',
-                  ),
-                ],
-              ),
+            ArcPresence(
+              surface: ArcPresenceSurface.trail,
+              emotion: arcExpression.emotion,
+              message: 'TrailはQuestとMissionの足あとを、あとで戻れる航路として残してくれるよ。',
             ),
             const SizedBox(height: 16),
             if (syncState.status != TrailSyncStatus.idle) ...[
@@ -64,8 +72,19 @@ class TrailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             if (trails.isEmpty)
-              const QuestraCard(
-                child: Text('Missionを完了するかQuestにTrailを残すと、ここに進み方が並びます。'),
+              ArcEmptyState(
+                title: 'まだTrailがありません',
+                emotion: expressionEngine
+                    .resolve(
+                      const ArcExpressionContext(
+                        moment: ArcExpressionMoment.empty,
+                      ),
+                    )
+                    .emotion,
+                message: 'Missionを完了するかQuestにTrailを残すと、ここに進み方が並びます。',
+                actionLabel: 'Questへ戻る',
+                icon: Icons.timeline_outlined,
+                onAction: () => context.go(AppRoutes.quest),
               ),
             ...trails.map(
               (trail) => Padding(
@@ -74,8 +93,13 @@ class TrailScreen extends ConsumerWidget {
                   trail: trail,
                   attachment: trailMedia[trail.id],
                   onEdit: () => _showEditTrailSheet(context, controller, trail),
-                  onReflect: () =>
-                      _showReflectTrailSheet(context, controller, trail),
+                  onReflect: () => _showReflectTrailSheet(
+                    context,
+                    ref,
+                    controller,
+                    trail,
+                    _missionForTrail(trail, missions),
+                  ),
                   onAttachImage: () =>
                       _attachTrailImage(context, controller, trail),
                   onReplaceImage: trailMedia[trail.id] == null
@@ -105,6 +129,14 @@ class TrailScreen extends ConsumerWidget {
     );
   }
 
+  Mission? _missionForTrail(Trail trail, List<Mission> missions) {
+    final missionId = trail.missionId;
+    if (missionId == null) {
+      return null;
+    }
+    return missions.where((mission) => mission.id == missionId).firstOrNull;
+  }
+
   Future<void> _replaceTrailImage(
     BuildContext context,
     TrailController controller,
@@ -113,7 +145,9 @@ class TrailScreen extends ConsumerWidget {
   ) async {
     final image = await ImagePicker().pickImage(
       source: ImageSource.gallery,
-      imageQuality: 86,
+      maxWidth: QuestraPerformanceLimits.trailImageMaxWidth,
+      maxHeight: QuestraPerformanceLimits.trailImageMaxHeight,
+      imageQuality: QuestraPerformanceLimits.trailImageQuality,
     );
     if (image == null) {
       return;
@@ -199,14 +233,34 @@ class TrailScreen extends ConsumerWidget {
 
   void _showReflectTrailSheet(
     BuildContext context,
+    WidgetRef ref,
     TrailController controller,
     Trail trail,
+    Mission? mission,
   ) {
+    final coach = ref
+        .read(arcReflectionCoachServiceProvider)
+        .build(trail: trail, mission: mission);
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (context) =>
-          _ReflectTrailSheet(trail: trail, onSubmit: controller.updateTrail),
+      builder: (context) => _ReflectTrailSheet(
+        trail: trail,
+        mission: mission,
+        coach: coach,
+        onSubmit: (updatedTrail) {
+          controller.updateTrail(updatedTrail);
+          showArcCelebrationSnackBar(
+            context,
+            ref
+                .read(arcCelebrationServiceProvider)
+                .build(
+                  event: ArcCelebrationEvent.trailReflection,
+                  subject: updatedTrail.title,
+                ),
+          );
+        },
+      ),
     );
   }
 
@@ -217,7 +271,9 @@ class TrailScreen extends ConsumerWidget {
   ) async {
     final image = await ImagePicker().pickImage(
       source: ImageSource.gallery,
-      imageQuality: 86,
+      maxWidth: QuestraPerformanceLimits.trailImageMaxWidth,
+      maxHeight: QuestraPerformanceLimits.trailImageMaxHeight,
+      imageQuality: QuestraPerformanceLimits.trailImageQuality,
     );
     if (image == null) {
       return;
@@ -622,9 +678,16 @@ class _TrailImageAttachment extends StatelessWidget {
 }
 
 class _ReflectTrailSheet extends StatefulWidget {
-  const _ReflectTrailSheet({required this.trail, required this.onSubmit});
+  const _ReflectTrailSheet({
+    required this.trail,
+    required this.coach,
+    required this.onSubmit,
+    this.mission,
+  });
 
   final Trail trail;
+  final Mission? mission;
+  final ArcReflectionCoach coach;
   final ValueChanged<Trail> onSubmit;
 
   @override
@@ -658,18 +721,24 @@ class _ReflectTrailSheetState extends State<_ReflectTrailSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Reflect on Trail',
+                  'Trailを振り返る',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 8),
                 Text(widget.trail.title),
                 const SizedBox(height: 16),
+                ArcPresence(
+                  surface: ArcPresenceSurface.reflection,
+                  emotion: widget.coach.emotion,
+                  message: widget.coach.message,
+                ),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _learningController,
                   minLines: 2,
                   maxLines: 4,
-                  decoration: const InputDecoration(
-                    labelText: 'What did this Trail teach you?',
+                  decoration: InputDecoration(
+                    labelText: widget.coach.learningPrompt,
                     border: OutlineInputBorder(),
                   ),
                   validator: _required,
@@ -679,17 +748,22 @@ class _ReflectTrailSheetState extends State<_ReflectTrailSheet> {
                   controller: _nextStepController,
                   minLines: 2,
                   maxLines: 4,
-                  decoration: const InputDecoration(
-                    labelText: 'What is the next small Mission?',
+                  decoration: InputDecoration(
+                    labelText: widget.coach.nextMissionPrompt,
                     border: OutlineInputBorder(),
                   ),
                   validator: _required,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  widget.coach.feedbackHint,
+                  style: const TextStyle(color: QuestraColors.slate),
                 ),
                 const SizedBox(height: 16),
                 FilledButton.icon(
                   onPressed: _submit,
                   icon: const Icon(Icons.auto_awesome),
-                  label: const Text('Save Reflection'),
+                  label: const Text('Reflectionを保存'),
                 ),
               ],
             ),
@@ -706,8 +780,10 @@ class _ReflectTrailSheetState extends State<_ReflectTrailSheet> {
     final reflection = [
       widget.trail.content,
       '',
+      if (widget.mission != null) 'Mission: ${widget.mission!.title}',
       'Reflection: ${_learningController.text.trim()}',
       'Next Mission: ${_nextStepController.text.trim()}',
+      'Arc Coach: ${widget.coach.feedbackHint}',
     ].where((line) => line.trim().isNotEmpty).join('\n');
     widget.onSubmit(
       widget.trail.copyWith(

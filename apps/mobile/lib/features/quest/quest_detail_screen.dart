@@ -9,10 +9,14 @@ import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
+import '../arc/arc_celebration_service.dart';
+import '../arc/arc_guidance_providers.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
+import 'arc_quest_guide_controller.dart';
+import 'arc_quest_guide_service.dart';
 import 'quest_controller.dart';
 import 'quest_guide_controller.dart';
 import 'quest_guide_model.dart';
@@ -30,6 +34,7 @@ class QuestDetailScreen extends ConsumerWidget {
         .where((quest) => quest.id == questId);
     final quest = questMatches.isEmpty ? null : questMatches.first;
     final guideState = ref.watch(questGuideControllerProvider);
+    final arcGuideState = ref.watch(arcQuestGuideControllerProvider);
     final missions = ref
         .watch(missionControllerProvider)
         .where((mission) => mission.questId == questId)
@@ -61,7 +66,9 @@ class QuestDetailScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _ProgressSection(quest: quest),
             const SizedBox(height: 16),
-            _SectionTitle(number: 3, title: 'Guides'),
+            _ArcQuestGuidePanel(quest: quest, state: arcGuideState),
+            const SizedBox(height: 16),
+            _SectionTitle(number: 4, title: 'Guides'),
             const SizedBox(height: 12),
             ...guides.map(
               (guide) => Padding(
@@ -224,6 +231,211 @@ class _ProgressSection extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           const Text('Guide、Mission、Trailを進めるほどQuestの輪郭がはっきりします。'),
+          if (quest.progress >= 0.85 && quest.status == QuestStatus.active) ...[
+            const SizedBox(height: 12),
+            ArcCelebrationCard(
+              moment: const ArcCelebrationService().build(
+                event: ArcCelebrationEvent.questProgress,
+                subject: quest.title,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ArcQuestGuidePanel extends ConsumerWidget {
+  const _ArcQuestGuidePanel({required this.quest, required this.state});
+
+  final Quest quest;
+  final ArcQuestGuideState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final guide = state.guideFor(quest.id);
+    final isLoading = state.isLoading(quest.id);
+    final error = state.errorFor(quest.id);
+
+    return _SectionCard(
+      number: 3,
+      title: 'Arc Guide',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isLoading) ...[
+            const ArcWidget(
+              emotion: ArcEmotion.serious,
+              size: 70,
+              message: '航路を読んでいます。目的地までの最初の星を探しているところです。',
+            ),
+            const SizedBox(height: 12),
+            const LinearProgressIndicator(),
+          ] else if (guide == null) ...[
+            if (error != null) ...[
+              ArcWidget(
+                emotion: ArcEmotion.worried,
+                size: 70,
+                message: '星雲が少し濃いみたい。今は手動でMissionを作る航路に切り替えられます。',
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error,
+                style: const TextStyle(color: QuestraColors.slate),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ] else
+              const Text('ArcがこのQuestの進め方と最初のMission候補をまとめます。'),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => ref
+                  .read(arcQuestGuideControllerProvider.notifier)
+                  .generateForQuest(quest),
+              icon: const Icon(Icons.auto_awesome_outlined),
+              label: const Text('Arc Guideを生成'),
+            ),
+          ] else ...[
+            ArcWidget(
+              emotion: ArcEmotion.support,
+              size: 70,
+              message: guide.encouragement,
+            ),
+            const SizedBox(height: 14),
+            _GuideTextBlock(title: 'Questの要約', body: guide.summary),
+            const SizedBox(height: 10),
+            _GuideTextBlock(title: '達成までの進め方', body: guide.path),
+            const SizedBox(height: 10),
+            _GuideTextBlock(title: '注意点', body: guide.cautions),
+            const SizedBox(height: 16),
+            Text(
+              '最初のMission候補',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 10),
+            ...guide.missionCandidates.map(
+              (candidate) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _MissionCandidateCard(
+                  quest: quest,
+                  candidate: candidate,
+                ),
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => ref
+                  .read(arcQuestGuideControllerProvider.notifier)
+                  .generateForQuest(quest),
+              icon: const Icon(Icons.refresh_outlined),
+              label: const Text('Guideを再生成'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _GuideTextBlock extends StatelessWidget {
+  const _GuideTextBlock({required this.title, required this.body});
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: QuestraColors.cosmicBlue,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(body),
+      ],
+    );
+  }
+}
+
+class _MissionCandidateCard extends ConsumerWidget {
+  const _MissionCandidateCard({required this.quest, required this.candidate});
+
+  final Quest quest;
+  final ArcMissionCandidate candidate;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: QuestraColors.cosmicBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: QuestraColors.cosmicBlue.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _guideIcon(candidate.guideType),
+                color: _guideColor(candidate.guideType),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  candidate.title,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(candidate.description),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _ActionChip(label: candidate.guideType.japaneseLabel),
+              _ActionChip(label: candidate.difficulty.japaneseLabel),
+              OutlinedButton.icon(
+                onPressed: () {
+                  ref
+                      .read(missionControllerProvider.notifier)
+                      .addMissionDraft(
+                        quest: quest,
+                        title: candidate.title,
+                        description: candidate.description,
+                        guideType: candidate.guideType,
+                        difficulty: candidate.difficulty,
+                      );
+                  showArcCelebrationSnackBar(
+                    context,
+                    ref
+                        .read(arcCelebrationServiceProvider)
+                        .build(
+                          event: ArcCelebrationEvent.missionStarted,
+                          subject: candidate.title,
+                        ),
+                  );
+                },
+                icon: const Icon(Icons.flag_outlined),
+                label: const Text('採用'),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -333,8 +545,14 @@ class _GuideCard extends ConsumerWidget {
               ref
                   .read(missionControllerProvider.notifier)
                   .generateMission(quest: quest, guide: guide, advice: advice);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Missionを灯しました。一緒に進もう。')),
+              showArcCelebrationSnackBar(
+                context,
+                ref
+                    .read(arcCelebrationServiceProvider)
+                    .build(
+                      event: ArcCelebrationEvent.missionStarted,
+                      subject: guide.guideType.japaneseLabel,
+                    ),
               );
             },
             icon: const Icon(Icons.flag_outlined),
@@ -360,7 +578,7 @@ class _MissionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
-      number: 4,
+      number: 5,
       title: 'Missions',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -423,7 +641,7 @@ class _TrailSection extends ConsumerWidget {
     ];
 
     return _SectionCard(
-      number: 5,
+      number: 6,
       title: 'Trail',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,8 +694,14 @@ class _TrailSection extends ConsumerWidget {
                     missionId: latestMission?.id,
                     questTitle: quest.title,
                   );
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Trailを残しました。君の旅の証だね。')),
+              showArcCelebrationSnackBar(
+                context,
+                ref
+                    .read(arcCelebrationServiceProvider)
+                    .build(
+                      event: ArcCelebrationEvent.trailRecorded,
+                      subject: quest.title,
+                    ),
               );
             },
             icon: const Icon(Icons.timeline_outlined),
@@ -499,7 +723,7 @@ class _DreamBoardSection extends StatelessWidget {
     final items = ['理想の到達点', '参考になる星', '必要な道具', '出会いたい仲間'];
 
     return _SectionCard(
-      number: 6,
+      number: 7,
       title: 'Dream Board',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -726,6 +950,15 @@ extension _GuideTypeJapaneseLabel on GuideType {
       GuideType.guild => '仲間',
       GuideType.resource => '準備',
       GuideType.opportunity => '機会',
+    };
+  }
+}
+
+extension _MissionDifficultyJapaneseLabel on MissionDifficulty {
+  String get japaneseLabel {
+    return switch (this) {
+      MissionDifficulty.easy => 'やさしい',
+      MissionDifficulty.normal => 'ふつう',
     };
   }
 }

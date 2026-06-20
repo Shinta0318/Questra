@@ -124,15 +124,84 @@ class AuthController extends Notifier<AuthState> {
       nickname: nickname,
       onboardingCompleted: true,
     );
+    state = state.copyWith(profile: updated, isLoading: true, clearError: true);
+
+    try {
+      if (SupabaseConfig.isConfigured) {
+        await _upsertProfile(
+          updated.id,
+          updated.email,
+          updated.nickname,
+          onboardingCompleted: updated.onboardingCompleted,
+        );
+      }
+      state = state.copyWith(profile: updated, isLoading: false);
+    } catch (error) {
+      state = state.copyWith(
+        profile: profile,
+        isLoading: false,
+        errorMessage: error.toString(),
+      );
+    }
+  }
+
+  Future<void> addBondScore({
+    required int delta,
+    required String reason,
+  }) async {
+    final profile = state.profile;
+    if (profile == null || delta <= 0) {
+      return;
+    }
+
+    final nextScore = (profile.bondScore + delta).clamp(0, 100);
+    final updated = profile.copyWith(bondScore: nextScore);
     state = state.copyWith(profile: updated);
 
-    if (SupabaseConfig.isConfigured) {
-      await _upsertProfile(
-        updated.id,
-        updated.email,
-        updated.nickname,
-        onboardingCompleted: updated.onboardingCompleted,
-      );
+    if (!SupabaseConfig.isConfigured) {
+      return;
+    }
+
+    try {
+      await Supabase.instance.client
+          .from('user_profiles')
+          .update({
+            'bond_score': nextScore,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', profile.id);
+    } catch (_) {
+      state = state.copyWith(profile: profile);
+    }
+  }
+
+  Future<void> addStardust({
+    required int amount,
+    required String reason,
+  }) async {
+    final profile = state.profile;
+    if (profile == null || amount <= 0) {
+      return;
+    }
+
+    final nextBalance = profile.stardustBalance + amount;
+    final updated = profile.copyWith(stardustBalance: nextBalance);
+    state = state.copyWith(profile: updated);
+
+    if (!SupabaseConfig.isConfigured) {
+      return;
+    }
+
+    try {
+      await Supabase.instance.client
+          .from('user_profiles')
+          .update({
+            'stardust_balance': nextBalance,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', profile.id);
+    } catch (_) {
+      state = state.copyWith(profile: profile);
     }
   }
 
@@ -169,7 +238,9 @@ class AuthController extends Notifier<AuthState> {
   ) async {
     final row = await Supabase.instance.client
         .from('user_profiles')
-        .select('id,nickname,onboarding_completed')
+        .select(
+          'id,nickname,onboarding_completed,arc_level,bond_score,stardust_balance,navigator_rank',
+        )
         .eq('id', userId)
         .maybeSingle();
 
@@ -186,6 +257,10 @@ class AuthController extends Notifier<AuthState> {
       email: email,
       nickname: row['nickname'] as String? ?? fallbackNickname ?? 'Adventurer',
       onboardingCompleted: row['onboarding_completed'] as bool? ?? false,
+      arcLevel: row['arc_level'] as int? ?? 1,
+      bondScore: row['bond_score'] as int? ?? 0,
+      stardustBalance: row['stardust_balance'] as int? ?? 0,
+      navigatorRank: row['navigator_rank'] as String? ?? 'novice',
     );
   }
 }

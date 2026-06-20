@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart'
     show FileOptions, SupabaseClient;
 
+import '../../core/performance/performance_limits.dart';
 import 'media_model.dart';
 
 const trailMediaBucket = 'trail-media';
@@ -11,6 +12,7 @@ abstract interface class MediaRepository {
   Future<List<MediaAttachment>> findTrailImages({
     required String ownerId,
     required String trailId,
+    int limit = QuestraPerformanceLimits.trailImageAttachmentLimit,
   });
 
   Future<MediaAttachment> uploadTrailImage({
@@ -43,6 +45,7 @@ class InMemoryMediaRepository implements MediaRepository {
   Future<List<MediaAttachment>> findTrailImages({
     required String ownerId,
     required String trailId,
+    int limit = QuestraPerformanceLimits.trailImageAttachmentLimit,
   }) async {
     return _attachments
         .where(
@@ -52,6 +55,7 @@ class InMemoryMediaRepository implements MediaRepository {
               attachment.relatedId == trailId &&
               attachment.mediaType == MediaType.image,
         )
+        .take(limit)
         .toList(growable: false);
   }
 
@@ -115,15 +119,19 @@ class SupabaseMediaRepository implements MediaRepository {
   Future<List<MediaAttachment>> findTrailImages({
     required String ownerId,
     required String trailId,
+    int limit = QuestraPerformanceLimits.trailImageAttachmentLimit,
   }) async {
     final rows = await client
         .from('media')
-        .select()
+        .select(
+          'id,owner_id,guild_id,bucket,path,media_type,related_table,related_id,visibility,metadata,created_at',
+        )
         .eq('owner_id', ownerId)
         .eq('related_table', 'trails')
         .eq('related_id', trailId)
         .eq('media_type', 'image')
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(limit);
 
     return rows
         .map((row) => _attachmentFromRow(Map<String, dynamic>.from(row)))
@@ -164,7 +172,9 @@ class SupabaseMediaRepository implements MediaRepository {
               'size_bytes': bytes.length,
             },
           })
-          .select()
+          .select(
+            'id,owner_id,guild_id,bucket,path,media_type,related_table,related_id,visibility,metadata,created_at',
+          )
           .limit(1);
 
       if (rows.isEmpty) {

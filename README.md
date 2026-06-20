@@ -40,3 +40,20 @@ spaces.
 - `docs/architecture`: System design and technical decisions.
 - `docs/analytics`: Measurement plans and event specs.
 - `docs/design`: UX and visual design documentation.
+
+## MVP Performance Check
+
+Use these checks before internal beta builds:
+
+- Run `flutter analyze` from `apps/mobile`.
+- Run `flutter test -r expanded` from `apps/mobile`.
+- Run the app on a physical device with `flutter run --profile`.
+- Check Home first render target: 1.5 seconds or less.
+- Check Quest and Trail list render target: 1 second or less.
+- Check route transition target: 300 ms or less.
+- Check list scrolling target: stable 60 fps in Flutter DevTools.
+- Confirm Arc Chat shows a waiting or thinking state while work is pending.
+- Confirm Arc PNG assets remain below `QuestraPerformanceLimits.arcAssetMaxBytes`.
+- Confirm Trail images are picked with max 1600 px dimensions and quality 78 before upload.
+- Confirm Supabase list queries use limits and explicit column selections.
+- Confirm Arc Memory visible reads are limited and ordered by importance and recency.

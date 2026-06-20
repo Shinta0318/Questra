@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
-import '../../widgets/arc/arc_emotion.dart';
-import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/arc/arc_empty_state.dart';
+import '../../widgets/arc/arc_presence.dart';
 import '../../widgets/motion/questra_motion.dart';
+import '../../widgets/persistence_sync_banner.dart';
 import '../../widgets/questra_card.dart';
+import '../arc/arc_celebration_service.dart';
+import '../arc/arc_expression_engine.dart';
+import '../arc/arc_guidance_providers.dart';
 import '../quest/quest_guide_model.dart';
 import 'mission_controller.dart';
 import 'mission_model.dart';
@@ -16,6 +22,13 @@ class MissionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final missions = ref.watch(missionControllerProvider);
+    final syncState = ref.watch(missionSyncControllerProvider);
+    final expressionEngine = ref.watch(arcExpressionEngineProvider);
+    final arcExpression = expressionEngine.resolveJourney(
+      quests: const [],
+      missions: missions,
+      trails: const [],
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mission')),
@@ -23,16 +36,32 @@ class MissionScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            const QuestraCard(
-              child: ArcWidget(
-                emotion: ArcEmotion.support,
-                message: '小さなMissionも、ちゃんと前進だよ。今日の星をひとつ選ぼう。',
-              ),
+            PersistenceSyncBanner(
+              state: syncState,
+              onDismiss: () =>
+                  ref.read(missionSyncControllerProvider.notifier).clear(),
+            ),
+            if (syncState.isActive) const SizedBox(height: 12),
+            ArcPresence(
+              surface: ArcPresenceSurface.mission,
+              emotion: arcExpression.emotion,
+              message: '小さなMissionも、ちゃんと前進だよ。今日の星をひとつ選ぼう。',
             ),
             const SizedBox(height: 16),
             if (missions.isEmpty)
-              const QuestraCard(
-                child: Text('Quest詳細からMissionを生成すると、ここに今日の一歩が並びます。'),
+              ArcEmptyState(
+                title: 'まだMissionがありません',
+                emotion: expressionEngine
+                    .resolve(
+                      const ArcExpressionContext(
+                        moment: ArcExpressionMoment.empty,
+                      ),
+                    )
+                    .emotion,
+                message: 'Quest詳細からMissionを生成すると、ここに今日の一歩が並びます。',
+                actionLabel: 'Questを確認',
+                icon: Icons.travel_explore_outlined,
+                onAction: () => context.go(AppRoutes.quest),
               )
             else
               ...missions.map(
@@ -94,7 +123,13 @@ void _completeMission(BuildContext context, WidgetRef ref, Mission mission) {
   if (completedMission == null) {
     return;
   }
-  ScaffoldMessenger.of(
+  showArcCelebrationSnackBar(
     context,
-  ).showSnackBar(const SnackBar(content: Text('Mission完了。Trailに今日の一歩を残しました。')));
+    ref
+        .read(arcCelebrationServiceProvider)
+        .build(
+          event: ArcCelebrationEvent.missionCompleted,
+          subject: completedMission.title,
+        ),
+  );
 }

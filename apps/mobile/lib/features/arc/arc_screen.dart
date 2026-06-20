@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../widgets/arc/arc_examples.dart';
-import '../../widgets/questra_card.dart';
-import '../auth/auth_controller.dart';
+import '../../core/router/app_routes.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_gradients.dart';
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_shadows.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../widgets/arc/arc_emotion.dart';
+import '../../widgets/arc/arc_empty_state.dart';
+import '../../widgets/arc/arc_widget.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
+import '../auth/auth_controller.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_model.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
-import 'arc_emotion.dart';
+import 'arc_bond_growth_service.dart';
+import 'arc_chat_service.dart';
 import 'arc_guidance_providers.dart';
-import 'arc_guidance_service.dart';
-import 'arc_journey_context.dart';
-import 'arc_widget.dart';
+import 'stardust_service.dart';
 
 class ArcScreen extends ConsumerStatefulWidget {
   const ArcScreen({super.key});
@@ -26,17 +33,19 @@ class ArcScreen extends ConsumerStatefulWidget {
 }
 
 class _ArcScreenState extends ConsumerState<ArcScreen> {
-  final _messageController = TextEditingController();
-  final List<_ArcChatMessage> _messages = [
-    const _ArcChatMessage(
-      author: _ArcChatAuthor.arc,
-      text: '次に向かいたい星を聞かせて。急がなくて大丈夫。',
+  final _controller = TextEditingController();
+  final List<ArcChatMessage> _messages = [
+    ArcChatMessage(
+      text: 'おかえり、キャプテン。\nどんなことを話したい？',
+      fromArc: true,
+      createdAt: DateTime.now(),
     ),
   ];
+  bool _isThinking = false;
 
   @override
   void dispose() {
-    _messageController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -45,389 +54,243 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     final quests = ref.watch(questControllerProvider);
     final missions = ref.watch(missionControllerProvider);
     final trails = ref.watch(trailControllerProvider);
-    final guidance = ref
-        .watch(arcGuidanceServiceProvider)
-        .build(quests: quests, missions: missions, trails: trails);
-    final journeyContext = ArcJourneyContext.fromJourney(
-      quests: quests,
-      trails: trails,
-    );
     final memories = ref.watch(visibleArcMemoriesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Arc Chat')),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            const QuestraCard(
-              child: ArcWidget(
-                emotion: ArcEmotion.normal,
-                message:
-                    'I remember your route. Let us choose the next Mission with care.',
-              ),
-            ),
-            const SizedBox(height: 16),
-            _ArcChatCard(
-              messages: _messages,
-              controller: _messageController,
-              onSubmit: () => _sendMessage(
-                quests: quests,
-                missions: missions,
-                trails: trails,
-                guidance: guidance,
-                journeyContext: journeyContext,
-              ),
-            ),
-            const SizedBox(height: 16),
-            QuestraCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Journey Context',
-                    style: Theme.of(context).textTheme.titleLarge,
+      backgroundColor: AppColors.deepNavy,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(gradient: AppGradients.adventure),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const _ArcHeader(),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    AppSpacing.md,
+                    AppSpacing.xl,
+                    AppSpacing.xl,
                   ),
-                  const SizedBox(height: 8),
-                  Text(journeyContext.guidance),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      Chip(
-                        label: Text(
-                          '${journeyContext.activeQuestCount} active Quests',
-                        ),
-                      ),
-                      Chip(label: Text('${journeyContext.trailCount} Trails')),
-                      if (journeyContext.focusQuestTitle != null)
-                        Chip(label: Text(journeyContext.focusQuestTitle!)),
-                      if (journeyContext.latestTrailTitle != null)
-                        Chip(label: Text(journeyContext.latestTrailTitle!)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _ArcGuidanceCard(guidance: guidance),
-            const SizedBox(height: 16),
-            memories.when(
-              data: (items) => _ArcMemoryContextCard(memories: items),
-              loading: () => const QuestraCard(
-                child: Row(
                   children: [
-                    SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ..._messages.map(
+                      (message) => _ArcMessageBubble(
+                        text: message.text,
+                        fromArc: message.fromArc,
+                        emotion: message.fromArc
+                            ? ArcEmotion.support
+                            : ArcEmotion.normal,
+                      ),
                     ),
-                    SizedBox(width: 12),
-                    Text('Loading Arc memories...'),
+                    if (_isThinking) const _ArcThinkingBubble(),
+                    const _ShootingStarDivider(),
+                    _ArcActionCard(
+                      onQuickAction: (text) => _send(
+                        text,
+                        quests: quests,
+                        missions: missions,
+                        trails: trails,
+                        memories: memories.asData?.value ?? const [],
+                      ),
+                    ),
+                    if ((memories.asData?.value ?? const []).isEmpty) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      ArcEmptyState(
+                        title: 'Arc Memoryはまだ静かな星図です',
+                        message:
+                            'Quest、Mission、Trailを進めると、Arcが大切な手がかりを少しずつ覚えていきます。',
+                        actionLabel: 'Questを進める',
+                        icon: Icons.travel_explore_outlined,
+                        onAction: () => context.go(AppRoutes.quest),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              error: (error, stackTrace) => QuestraCard(
-                child: Text('Arc memory context is unavailable: $error'),
+              _ArcInputBar(
+                controller: _controller,
+                onSend: () {
+                  _send(
+                    _controller.text,
+                    quests: quests,
+                    missions: missions,
+                    trails: trails,
+                    memories: memories.asData?.value ?? const [],
+                  );
+                },
               ),
-            ),
-            const SizedBox(height: 16),
-            Text('Arc Guidance', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            const ArcHomeExample(),
-            const SizedBox(height: 12),
-            const ArcChatExample(),
-            const SizedBox(height: 16),
-            Text('Arc Moods', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: ArcEmotion.values
-                  .map(
-                    (emotion) => SizedBox(
-                      width: 150,
-                      child: QuestraCard(
-                        padding: const EdgeInsets.all(14),
-                        child: Column(
-                          children: [
-                            ArcWidget(emotion: emotion, size: 72),
-                            const SizedBox(height: 8),
-                            Text(
-                              emotion.label,
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Future<void> _sendMessage({
+  Future<void> _send(
+    String rawText, {
     required List<Quest> quests,
     required List<Mission> missions,
     required List<Trail> trails,
-    required ArcGuidance guidance,
-    required ArcJourneyContext journeyContext,
+    required List<ArcMemory> memories,
   }) async {
-    final text = _messageController.text.trim();
-    if (text.isEmpty) {
+    final text = rawText.trim();
+    if (text.isEmpty || _isThinking) {
       return;
     }
-    _messageController.clear();
 
-    final reply = _buildArcReply(
+    _controller.clear();
+    final userMessage = ArcChatMessage(
       text: text,
-      quests: quests,
-      missions: missions,
-      trails: trails,
-      guidance: guidance,
-      journeyContext: journeyContext,
+      fromArc: false,
+      createdAt: DateTime.now(),
     );
+
     setState(() {
-      _messages
-        ..add(_ArcChatMessage(author: _ArcChatAuthor.user, text: text))
-        ..add(_ArcChatMessage(author: _ArcChatAuthor.arc, text: reply));
+      _messages.add(userMessage);
+      _isThinking = true;
     });
 
+    final context = ArcChatContext(
+      activeQuests: quests
+          .where((quest) => quest.status == QuestStatus.active)
+          .toList(growable: false),
+      recentMissions: missions.take(5).toList(growable: false),
+      recentTrails: trails.take(5).toList(growable: false),
+      memories: memories.take(5).toList(growable: false),
+    );
+
+    try {
+      final response = await ref
+          .read(arcChatServiceProvider)
+          .send(userMessage: text, history: _messages, context: context);
+      final arcMessage = ArcChatMessage(
+        text: response.message,
+        fromArc: true,
+        createdAt: DateTime.now(),
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _messages.add(arcMessage);
+        _isThinking = false;
+      });
+      await _rememberChat(userMessage, arcMessage, context);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _messages.add(
+          ArcChatMessage(
+            text: '星雲が少しざわついているみたい。今は小さな一歩だけ一緒に選ぼう。',
+            fromArc: true,
+            createdAt: DateTime.now(),
+          ),
+        );
+        _isThinking = false;
+      });
+    }
+  }
+
+  Future<void> _rememberChat(
+    ArcChatMessage userMessage,
+    ArcChatMessage arcMessage,
+    ArcChatContext context,
+  ) async {
     final profile = ref.read(authControllerProvider).profile;
     if (profile == null) {
       return;
     }
-    await ref
-        .read(memoryExtractionServiceProvider)
-        .extractAndSave(
-          MemoryExtractionEvent(
-            userId: profile.id,
-            sourceType: ArcMemorySourceType.arcChat,
-            text: text,
-            title: 'Arc Chat memory',
-            metadata: {'surface': 'arc_chat'},
-          ),
-        );
-    ref.invalidate(visibleArcMemoriesProvider);
-  }
-
-  String _buildArcReply({
-    required String text,
-    required List<Quest> quests,
-    required List<Mission> missions,
-    required List<Trail> trails,
-    required ArcGuidance guidance,
-    required ArcJourneyContext journeyContext,
-  }) {
-    final lower = text.toLowerCase();
-    final activeQuests = quests
-        .where((quest) => quest.status == QuestStatus.active)
-        .toList();
-    final openMissions =
-        missions
-            .where((mission) => mission.status == MissionStatus.todo)
-            .toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-    if (activeQuests.isEmpty) {
-      return 'まずQuestをひとつ星にしよう。願いを一文で置けたら、そこから小さなMissionを一緒に選べるよ。';
-    }
-    if (lower.contains('mission') ||
-        lower.contains('次') ||
-        lower.contains('今日')) {
-      if (openMissions.isEmpty) {
-        return guidance.nextMission;
-      }
-      return guidance.nextMission;
-    }
-    if (lower.contains('trail') || lower.contains('残')) {
-      if (trails.isEmpty) {
-        return '最初のTrailは、完璧な記録じゃなくて大丈夫。Missionを終えたあとに「何が少し進んだか」を一行で残そう。';
-      }
-      return guidance.reflectionFeedback;
-    }
-    if (lower.contains('quest') || lower.contains('進捗')) {
-      return guidance.questComment;
-    }
-    return journeyContext.focusQuestTitle == null
-        ? '君の今の航路を見ながら、次の一歩を小さくしよう。Quest、Mission、Trailのどこを整えたい？'
-        : '今は「${journeyContext.focusQuestTitle}」が明るく見えているよ。次はMissionをひとつ選び、終えたらTrailに残そう。';
-  }
-}
-
-class _ArcMemoryContextCard extends StatelessWidget {
-  const _ArcMemoryContextCard({required this.memories});
-
-  final List<ArcMemory> memories;
-
-  @override
-  Widget build(BuildContext context) {
-    final visibleMemories = memories.take(3).toList(growable: false);
-
-    return QuestraCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Arc Memories', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          if (visibleMemories.isEmpty)
-            const Text(
-              'No visible memories yet. Arc will remember meaningful journey moments here.',
-            )
-          else
-            ...visibleMemories.map(
-              (memory) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      memory.title,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(memory.content),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${memory.memoryType.storageKey} / ${memory.sourceType.storageKey}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
+    final quest = context.activeQuests.isEmpty
+        ? null
+        : context.activeQuests.first;
+    final trail = context.recentTrails.isEmpty
+        ? null
+        : context.recentTrails.first;
+    try {
+      await ref
+          .read(memoryExtractionServiceProvider)
+          .extractAndSave(
+            MemoryExtractionEvent(
+              userId: profile.id,
+              questId: quest?.id,
+              trailId: trail?.id,
+              sourceType: ArcMemorySourceType.arcChat,
+              title: 'Arc conversation',
+              text: 'User: ${userMessage.text}\nArc: ${arcMessage.text}',
+              metadata: {
+                'source': 'arc_chat',
+                'message_count': _messages.length,
+              },
             ),
-        ],
+          );
+      final growth = ref
+          .read(arcBondGrowthServiceProvider)
+          .forArcConversation();
+      final award = ref.read(stardustServiceProvider).forArcConversation();
+      await ref
+          .read(authControllerProvider.notifier)
+          .addBondScore(delta: growth.delta, reason: growth.reason);
+      await ref
+          .read(authControllerProvider.notifier)
+          .addStardust(amount: award.amount, reason: award.reason);
+      ref.invalidate(visibleArcMemoriesProvider);
+    } catch (_) {
+      // Chat memory is helpful context, but the visible chat should not break.
+    }
+  }
+}
+
+class _ArcHeader extends StatelessWidget {
+  const _ArcHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.md,
       ),
-    );
-  }
-}
-
-class _ArcGuidanceCard extends StatelessWidget {
-  const _ArcGuidanceCard({required this.guidance});
-
-  final ArcGuidance guidance;
-
-  @override
-  Widget build(BuildContext context) {
-    return QuestraCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            'Contextual Guidance',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 12),
-          _GuidanceLine(
-            icon: Icons.flag_outlined,
-            label: 'Quest',
-            text: guidance.questComment,
-          ),
-          const SizedBox(height: 10),
-          _GuidanceLine(
-            icon: Icons.check_circle_outline,
-            label: 'Next Mission',
-            text: guidance.nextMission,
-          ),
-          const SizedBox(height: 10),
-          _GuidanceLine(
-            icon: Icons.auto_awesome,
-            label: 'Reflection',
-            text: guidance.reflectionFeedback,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GuidanceLine extends StatelessWidget {
-  const _GuidanceLine({
-    required this.icon,
-    required this.label,
-    required this.text,
-  });
-
-  final IconData icon;
-  final String label;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 2),
-              Text(text),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ArcChatCard extends StatelessWidget {
-  const _ArcChatCard({
-    required this.messages,
-    required this.controller,
-    required this.onSubmit,
-  });
-
-  final List<_ArcChatMessage> messages;
-  final TextEditingController controller;
-  final VoidCallback onSubmit;
-
-  @override
-  Widget build(BuildContext context) {
-    final visibleMessages = messages.length <= 6
-        ? messages
-        : messages.skip(messages.length - 6);
-
-    return QuestraCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Talk With Arc', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          ...visibleMessages.map(_ArcMessageBubble.new),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  minLines: 1,
-                  maxLines: 3,
-                  textInputAction: TextInputAction.send,
-                  decoration: const InputDecoration(
-                    labelText: 'Arcに話す',
-                    hintText: '今日のMissionを相談する',
-                    border: OutlineInputBorder(),
-                  ),
-                  onSubmitted: (_) => onSubmit(),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Arc',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(color: AppColors.white),
                 ),
-              ),
-              const SizedBox(width: 8),
-              IconButton.filled(
-                tooltip: 'Send to Arc',
-                onPressed: onSubmit,
-                icon: const Icon(Icons.send),
-              ),
-            ],
+                Text(
+                  '星の航海士',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.parchment,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.white.withValues(alpha: 0.08),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.42)),
+              boxShadow: AppShadows.goldGlow,
+            ),
+            child: const ArcWidget(
+              emotion: ArcEmotion.normal,
+              size: 42,
+              showSpeechBubble: false,
+            ),
           ),
         ],
       ),
@@ -436,34 +299,209 @@ class _ArcChatCard extends StatelessWidget {
 }
 
 class _ArcMessageBubble extends StatelessWidget {
-  const _ArcMessageBubble(this.message);
+  const _ArcMessageBubble({
+    required this.text,
+    required this.fromArc,
+    this.emotion = ArcEmotion.normal,
+  });
 
-  final _ArcChatMessage message;
+  final String text;
+  final bool fromArc;
+  final ArcEmotion emotion;
 
   @override
   Widget build(BuildContext context) {
-    final isArc = message.author == _ArcChatAuthor.arc;
-    return Align(
-      alignment: isArc ? Alignment.centerLeft : Alignment.centerRight,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        constraints: const BoxConstraints(maxWidth: 280),
-        decoration: BoxDecoration(
-          color: isArc ? const Color(0xFFEAF4FF) : const Color(0xFFFFF4D1),
-          borderRadius: BorderRadius.circular(14),
+    final bubble = Container(
+      constraints: const BoxConstraints(maxWidth: 280),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: fromArc
+            ? AppColors.midnightNavy.withValues(alpha: 0.82)
+            : AppColors.cosmicBlue.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(AppRadius.lg),
+          topRight: const Radius.circular(AppRadius.lg),
+          bottomLeft: Radius.circular(fromArc ? 6 : AppRadius.lg),
+          bottomRight: Radius.circular(fromArc ? AppRadius.lg : 6),
         ),
-        child: Text(message.text),
+        border: Border.all(
+          color: fromArc
+              ? AppColors.skyBlue.withValues(alpha: 0.18)
+              : AppColors.skyBlue.withValues(alpha: 0.34),
+        ),
+        boxShadow: AppShadows.glassCard,
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: AppColors.white,
+          height: 1.5,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: Row(
+        mainAxisAlignment: fromArc
+            ? MainAxisAlignment.start
+            : MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (fromArc) ...[
+            ArcWidget(emotion: emotion, size: 54, showSpeechBubble: false),
+            const SizedBox(width: AppSpacing.sm),
+          ],
+          Flexible(child: bubble),
+        ],
       ),
     );
   }
 }
 
-enum _ArcChatAuthor { arc, user }
+class _ArcThinkingBubble extends StatelessWidget {
+  const _ArcThinkingBubble();
 
-class _ArcChatMessage {
-  const _ArcChatMessage({required this.author, required this.text});
+  @override
+  Widget build(BuildContext context) {
+    return const _ArcMessageBubble(
+      text: '星図を読んでいるよ...',
+      fromArc: true,
+      emotion: ArcEmotion.serious,
+    );
+  }
+}
 
-  final _ArcChatAuthor author;
-  final String text;
+class _ArcActionCard extends StatelessWidget {
+  const _ArcActionCard({required this.onQuickAction});
+
+  final ValueChanged<String> onQuickAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.80),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.22)),
+        boxShadow: AppShadows.glassCard,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '今日の航路をArcに相談する',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: AppColors.white),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              _QuickAction(
+                label: '次のMissionを選ぶ',
+                onTap: () => onQuickAction('次のMissionを一緒に選んで。'),
+              ),
+              _QuickAction(
+                label: 'Trailを振り返る',
+                onTap: () => onQuickAction('最近のTrailを踏まえて振り返りたい。'),
+              ),
+              _QuickAction(
+                label: '不安をほどく',
+                onTap: () => onQuickAction('今の不安を小さな一歩に分けたい。'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickAction extends StatelessWidget {
+  const _QuickAction({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      onPressed: onTap,
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(0, 42),
+        backgroundColor: AppColors.cosmicBlue.withValues(alpha: 0.78),
+        foregroundColor: AppColors.white,
+      ),
+      child: Text(label),
+    );
+  }
+}
+
+class _ShootingStarDivider extends StatelessWidget {
+  const _ShootingStarDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+      child: Center(
+        child: Icon(Icons.auto_awesome, color: AppColors.gold, size: 32),
+      ),
+    );
+  }
+}
+
+class _ArcInputBar extends StatelessWidget {
+  const _ArcInputBar({required this.controller, required this.onSend});
+
+  final TextEditingController controller;
+  final VoidCallback onSend;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.midnightNavy.withValues(alpha: 0.86),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.24)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                onSubmitted: (_) => onSend(),
+                style: const TextStyle(color: AppColors.white),
+                decoration: InputDecoration(
+                  hintText: 'メッセージを入力...',
+                  hintStyle: TextStyle(
+                    color: AppColors.white.withValues(alpha: 0.46),
+                  ),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: onSend,
+              icon: const Icon(Icons.near_me, color: AppColors.gold),
+              tooltip: '送信',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

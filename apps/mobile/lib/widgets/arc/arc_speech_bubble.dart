@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_gradients.dart';
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_shadows.dart';
 import '../../core/theme/questra_colors.dart';
 
 class ArcSpeechBubble extends StatelessWidget {
@@ -18,18 +22,10 @@ class ArcSpeechBubble extends StatelessWidget {
       constraints: BoxConstraints(maxWidth: maxWidth),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: QuestraColors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: QuestraColors.cosmicBlue.withValues(alpha: 0.18),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: QuestraColors.deepNavy.withValues(alpha: 0.10),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          gradient: AppGradients.glass,
+          borderRadius: AppRadius.card,
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.26)),
+          boxShadow: AppShadows.goldGlow,
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),

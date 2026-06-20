@@ -1,10 +1,17 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
+import '../../core/performance/performance_limits.dart';
 import 'mission_model.dart';
 
 abstract interface class MissionRepository {
-  Future<List<Mission>> findByQuest(String questId);
-  Future<List<Mission>> findManyByQuestIds(List<String> questIds);
+  Future<List<Mission>> findByQuest(
+    String questId, {
+    int limit = QuestraPerformanceLimits.missionListLimit,
+  });
+  Future<List<Mission>> findManyByQuestIds(
+    List<String> questIds, {
+    int limit = QuestraPerformanceLimits.missionListLimit,
+  });
   Future<Mission> save(Mission mission);
   Future<void> delete(String missionId);
 }
@@ -13,17 +20,25 @@ class InMemoryMissionRepository implements MissionRepository {
   final List<Mission> _missions = [];
 
   @override
-  Future<List<Mission>> findByQuest(String questId) async {
+  Future<List<Mission>> findByQuest(
+    String questId, {
+    int limit = QuestraPerformanceLimits.missionListLimit,
+  }) async {
     return _missions
         .where((mission) => mission.questId == questId)
+        .take(limit)
         .toList(growable: false);
   }
 
   @override
-  Future<List<Mission>> findManyByQuestIds(List<String> questIds) async {
+  Future<List<Mission>> findManyByQuestIds(
+    List<String> questIds, {
+    int limit = QuestraPerformanceLimits.missionListLimit,
+  }) async {
     final questIdSet = questIds.toSet();
     return _missions
         .where((mission) => questIdSet.contains(mission.questId))
+        .take(limit)
         .toList(growable: false);
   }
 
@@ -46,12 +61,18 @@ class SupabaseMissionRepository implements MissionRepository {
   final SupabaseClient client;
 
   @override
-  Future<List<Mission>> findByQuest(String questId) async {
+  Future<List<Mission>> findByQuest(
+    String questId, {
+    int limit = QuestraPerformanceLimits.missionListLimit,
+  }) async {
     final rows = await client
         .from('missions')
-        .select()
+        .select(
+          'id,quest_id,title,description,guide_type,difficulty,status,created_at',
+        )
         .eq('quest_id', questId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(limit);
 
     return rows
         .map((row) => _missionFromRow(Map<String, dynamic>.from(row)))
@@ -59,16 +80,22 @@ class SupabaseMissionRepository implements MissionRepository {
   }
 
   @override
-  Future<List<Mission>> findManyByQuestIds(List<String> questIds) async {
+  Future<List<Mission>> findManyByQuestIds(
+    List<String> questIds, {
+    int limit = QuestraPerformanceLimits.missionListLimit,
+  }) async {
     if (questIds.isEmpty) {
       return [];
     }
 
     final rows = await client
         .from('missions')
-        .select()
+        .select(
+          'id,quest_id,title,description,guide_type,difficulty,status,created_at',
+        )
         .inFilter('quest_id', questIds)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(limit);
 
     return rows
         .map((row) => _missionFromRow(Map<String, dynamic>.from(row)))
@@ -80,7 +107,9 @@ class SupabaseMissionRepository implements MissionRepository {
     final rows = await client
         .from('missions')
         .upsert(_missionToRow(mission))
-        .select()
+        .select(
+          'id,quest_id,title,description,guide_type,difficulty,status,created_at',
+        )
         .limit(1);
 
     if (rows.isEmpty) {
