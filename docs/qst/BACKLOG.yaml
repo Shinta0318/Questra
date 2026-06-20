@@ -355,6 +355,20 @@ items:
       - Arc assets, Trail image compression, list limits, and Arc Memory limits are machine-checkable.
       - Beta performance checks are available from README.
       - Flutter analyze and tests pass.
+  - id: QST-068
+    title: Arc Guidance Localization Pass
+    status: Done
+    priority: P0
+    epic: BETA-HARDENING
+    depends_on: [QST-049, QST-060]
+    completed_by:
+      report: reports/qst/QST-068.md
+    scope: Replace remaining English Arc journey guidance with Japanese navigator copy and lock it with tests.
+    acceptance:
+      - Arc Journey Context guidance is Japanese.
+      - Guidance references Quest, Mission, and Trail using current product terms.
+      - Arc is framed as a navigator/companion, not an AI assistant.
+      - Flutter analyze and tests pass.
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

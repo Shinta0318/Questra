@@ -44,21 +44,21 @@ class ArcJourneyContext {
     int activeQuestCount,
   ) {
     if (focusQuest != null && latestTrail != null) {
-      return 'I can see ${focusQuest.title} moving through your latest Trail: ${latestTrail.title}. Choose the next small Mission and keep the record warm.';
+      return '「${focusQuest.title}」の航路は、最新のTrail「${latestTrail.title}」につながっているよ。次は小さなMissionをひとつ選ぼう。';
     }
 
     if (focusQuest != null) {
-      return 'Your strongest active Quest is ${focusQuest.title}. Leave one Trail when you take the next visible step.';
+      return '今いちばん輪郭が見えているQuestは「${focusQuest.title}」。次の一歩を進めたら、Trailとして旅の記録に残そう。';
     }
 
     if (latestTrail != null) {
-      return 'Your latest Trail is ${latestTrail.title}. Turn that memory into the next Quest when you are ready.';
+      return '最新のTrail「${latestTrail.title}」は次の星の手がかりになりそう。準備ができたら、新しいQuestへつなげよう。';
     }
 
     if (activeQuestCount == 0) {
-      return 'The journey is quiet. Start with one Quest, then I can help you shape the next step.';
+      return '今は静かな出発点にいるね。まずQuestをひとつ置けば、次のMissionを一緒に形にできるよ。';
     }
 
-    return 'I am reading your Quest and Trail context. The next useful step is the one you can record today.';
+    return 'QuestとTrailの流れを見ながら、今日記録できる小さなMissionを一緒に探そう。';
   }
 }

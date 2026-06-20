@@ -54,6 +54,7 @@ there before new QSTs are created or reordered.
 | QST-065 | Done | AI Quest Guide Generation | Generate an Arc Guide after Quest creation with summary, path, cautions, encouragement, and adoptable Mission candidates. | Quest Detail shows Arc Guide, 3+ Mission candidates can be adopted into saved Missions, and guide history is recorded in Arc Memory when available. |
 | QST-066 | Done | AI Tagging Foundation | Add AI-generated tags for Quest, Mission, Trail, and Arc Memory with persistence, search, and statistics APIs. | Tags and entity tags are saved with owner-scoped RLS, and future Guild/Star Map/recommendation flows can query tag data. |
 | QST-067 | Done | Performance Measurement Pass | Add repeatable performance readiness budgets and verification for beta targets. | App start, Home, Quest/Trail list, route transition, scroll, asset, image, list, and Arc Memory checks are documented or machine-checkable. |
+| QST-068 | Done | Arc Guidance Localization Pass | Replace remaining English Arc journey guidance with Japanese navigator copy and lock it with tests. | Arc Journey Context guidance uses Japanese Quest/Mission/Trail language and avoids assistant framing. |
 
 ## Selection Rules
 
