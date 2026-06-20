@@ -1,6 +1,6 @@
 import 'dart:io';
 
-const migrationPath = 'supabase/migrations/202606130001_mvp_schema.sql';
+const migrationDir = 'supabase/migrations';
 const behaviorTestPath = 'supabase/tests/rls_behavior.sql';
 
 const requiredRlsTables = [
@@ -10,6 +10,8 @@ const requiredRlsTables = [
   'trail_events',
   'arc_memories',
   'media',
+  'tags',
+  'entity_tags',
 ];
 
 const requiredPolicies = [
@@ -35,6 +37,14 @@ const requiredPolicies = [
   'Users create their own media records',
   'Users update their own media records',
   'Users delete their own media records',
+  'Users read their own tags',
+  'Users create their own tags',
+  'Users update their own tags',
+  'Users delete their own tags',
+  'Users read their own entity tags',
+  'Users create their own entity tags',
+  'Users update their own entity tags',
+  'Users delete their own entity tags',
 ];
 
 const requiredSnippets = [
@@ -60,12 +70,17 @@ const requiredBehaviorSnippets = [
 ];
 
 void main() {
-  final migration = File(migrationPath);
-  if (!migration.existsSync()) {
-    _fail(['Missing migration: $migrationPath']);
+  final migrationDirectory = Directory(migrationDir);
+  if (!migrationDirectory.existsSync()) {
+    _fail(['Missing migration directory: $migrationDir']);
   }
 
-  final sql = migration.readAsStringSync();
+  final sql = migrationDirectory
+      .listSync()
+      .whereType<File>()
+      .where((file) => file.path.endsWith('.sql'))
+      .map((file) => file.readAsStringSync())
+      .join('\n');
   final failures = <String>[];
 
   for (final table in requiredRlsTables) {

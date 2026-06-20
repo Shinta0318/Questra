@@ -4,24 +4,40 @@ class UserProfile {
     required this.email,
     required this.nickname,
     this.onboardingCompleted = false,
+    this.arcLevel = 1,
+    this.bondScore = 0,
+    this.stardustBalance = 0,
+    this.navigatorRank = 'novice',
   });
 
   final String id;
   final String email;
   final String nickname;
   final bool onboardingCompleted;
+  final int arcLevel;
+  final int bondScore;
+  final int stardustBalance;
+  final String navigatorRank;
 
   UserProfile copyWith({
     String? id,
     String? email,
     String? nickname,
     bool? onboardingCompleted,
+    int? arcLevel,
+    int? bondScore,
+    int? stardustBalance,
+    String? navigatorRank,
   }) {
     return UserProfile(
       id: id ?? this.id,
       email: email ?? this.email,
       nickname: nickname ?? this.nickname,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
+      arcLevel: arcLevel ?? this.arcLevel,
+      bondScore: bondScore ?? this.bondScore,
+      stardustBalance: stardustBalance ?? this.stardustBalance,
+      navigatorRank: navigatorRank ?? this.navigatorRank,
     );
   }
 }

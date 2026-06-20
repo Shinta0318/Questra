@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../arc/arc_bond_growth_service.dart';
+import '../arc/stardust_service.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
 import '../media/media_model.dart';
 import '../media/media_providers.dart';
+import '../tagging/tagging_providers.dart';
 import 'trail_model.dart';
 import 'trail_providers.dart';
 import 'trail_sync_state.dart';
@@ -239,10 +242,37 @@ class TrailController extends Notifier<List<Trail>> {
         for (final current in state)
           if (current.id == trail.id) savedTrail else current,
       ];
+      unawaited(_tagTrail(userId, savedTrail));
+      _growBond(savedTrail);
       unawaited(_rememberTrail(userId, savedTrail));
       sync.saved('Trail record saved.');
     } catch (error) {
       sync.failed(error);
+    }
+  }
+
+  void _growBond(Trail trail) {
+    final growth = ref.read(arcBondGrowthServiceProvider).forTrail(trail);
+    final award = ref.read(stardustServiceProvider).forTrail(trail);
+    unawaited(
+      ref
+          .read(authControllerProvider.notifier)
+          .addBondScore(delta: growth.delta, reason: growth.reason),
+    );
+    unawaited(
+      ref
+          .read(authControllerProvider.notifier)
+          .addStardust(amount: award.amount, reason: award.reason),
+    );
+  }
+
+  Future<void> _tagTrail(String userId, Trail trail) async {
+    try {
+      await ref
+          .read(taggingServiceProvider)
+          .tagTrail(ownerId: userId, trail: trail);
+    } catch (_) {
+      // Tagging is best-effort enrichment for future recommendations.
     }
   }
 

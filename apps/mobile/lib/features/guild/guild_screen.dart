@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router/app_routes.dart';
+import '../../core/performance/performance_limits.dart';
+import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/questra_card.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
@@ -21,14 +25,18 @@ class GuildScreen extends ConsumerWidget {
     final activeQuests = quests
         .where((quest) => quest.status == QuestStatus.active)
         .toList();
-    final openMissions =
-        missions
-            .where((mission) => mission.status == MissionStatus.todo)
-            .toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final latestTrails = [...trails]
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final openMissions = missions
+        .where((mission) => mission.status == MissionStatus.todo)
+        .take(QuestraPerformanceLimits.homeOpenMissionCount)
+        .toList(growable: false);
+    final latestTrails = trails
+        .take(QuestraPerformanceLimits.guildTrailPreviewLimit)
+        .toList(growable: false);
     final question = _buildGuildQuestion(activeQuests, openMissions);
+    final hasGuildContext =
+        activeQuests.isNotEmpty ||
+        openMissions.isNotEmpty ||
+        latestTrails.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Guild')),
@@ -38,6 +46,16 @@ class GuildScreen extends ConsumerWidget {
           children: [
             _GuildIntroCard(),
             const SizedBox(height: 16),
+            if (!hasGuildContext) ...[
+              ArcEmptyState(
+                title: 'Guildに持ち寄る航路を準備しましょう',
+                message: 'QuestかTrailがひとつあるだけで、Guildへの相談はぐっと具体的になります。',
+                actionLabel: 'Questを始める',
+                icon: Icons.groups_outlined,
+                onAction: () => context.go('${AppRoutes.quest}/create'),
+              ),
+              const SizedBox(height: 16),
+            ],
             _GuildQuestionCard(question: question),
             const SizedBox(height: 16),
             _GuildTrailReflectionCard(trails: latestTrails),
@@ -133,24 +151,22 @@ class _GuildTrailReflectionCard extends StatelessWidget {
           if (trails.isEmpty)
             const Text('Trailを残すと、Guildで相談しやすい気づきがここに並びます。')
           else
-            ...trails
-                .take(3)
-                .map(
-                  (trail) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          trail.title,
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(trail.summary),
-                      ],
+            ...trails.map(
+              (trail) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      trail.title,
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Text(trail.summary),
+                  ],
                 ),
+              ),
+            ),
         ],
       ),
     );

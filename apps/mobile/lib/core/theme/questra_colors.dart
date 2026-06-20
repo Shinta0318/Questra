@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+import 'app_colors.dart';
 
 abstract final class QuestraColors {
-  static const deepNavy = Color(0xFF071426);
-  static const midnightNavy = Color(0xFF0D213A);
-  static const cosmicBlue = Color(0xFF1C6DD0);
-  static const skyBlue = Color(0xFF5EA7FF);
-  static const gold = Color(0xFFFFC857);
-  static const parchment = Color(0xFFF7F2E8);
-  static const cloud = Color(0xFFF4F7FB);
-  static const slate = Color(0xFF50647C);
-  static const white = Color(0xFFFFFFFF);
+  static const deepNavy = AppColors.deepNavy;
+  static const midnightNavy = AppColors.midnightNavy;
+  static const cosmicBlue = AppColors.cosmicBlue;
+  static const skyBlue = AppColors.skyBlue;
+  static const gold = AppColors.gold;
+  static const parchment = AppColors.parchment;
+  static const cloud = AppColors.cloud;
+  static const slate = AppColors.slate;
+  static const white = AppColors.white;
 }

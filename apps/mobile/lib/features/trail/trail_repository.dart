@@ -1,9 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
+import '../../core/performance/performance_limits.dart';
 import 'trail_model.dart';
 
 abstract interface class TrailRepository {
-  Future<List<Trail>> findByUser(String userId);
+  Future<List<Trail>> findByUser(
+    String userId, {
+    int limit = QuestraPerformanceLimits.trailListLimit,
+  });
   Future<Trail> save({
     required String ownerId,
     required Trail trail,
@@ -16,10 +20,14 @@ class InMemoryTrailRepository implements TrailRepository {
   final List<_OwnedTrail> _trails = [];
 
   @override
-  Future<List<Trail>> findByUser(String userId) async {
+  Future<List<Trail>> findByUser(
+    String userId, {
+    int limit = QuestraPerformanceLimits.trailListLimit,
+  }) async {
     return _trails
         .where((entry) => entry.ownerId == userId)
         .map((entry) => entry.trail)
+        .take(limit)
         .toList(growable: false);
   }
 
@@ -51,12 +59,18 @@ class SupabaseTrailRepository implements TrailRepository {
   final SupabaseClient client;
 
   @override
-  Future<List<Trail>> findByUser(String userId) async {
+  Future<List<Trail>> findByUser(
+    String userId, {
+    int limit = QuestraPerformanceLimits.trailListLimit,
+  }) async {
     final rows = await client
         .from('trails')
-        .select()
+        .select(
+          'id,quest_id,mission_id,title,summary,content,trail_type,source_type,created_at',
+        )
         .eq('owner_id', userId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(limit);
 
     return rows
         .map((row) => _trailFromRow(Map<String, dynamic>.from(row)))
@@ -72,7 +86,9 @@ class SupabaseTrailRepository implements TrailRepository {
     final rows = await client
         .from('trails')
         .upsert(_trailToRow(ownerId, trail, visibility))
-        .select()
+        .select(
+          'id,quest_id,mission_id,title,summary,content,trail_type,source_type,created_at',
+        )
         .limit(1);
 
     if (rows.isEmpty) {

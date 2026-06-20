@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 import '../../core/config/supabase_config.dart';
 import '../auth/auth_controller.dart';
+import '../tagging/tagging_providers.dart';
 import 'arc_memory_model.dart';
 import 'arc_memory_repository.dart';
 import 'memory_extraction_service.dart';
@@ -19,6 +20,7 @@ final memoryExtractionServiceProvider = Provider<MemoryExtractionService>((
 ) {
   return MemoryExtractionService(
     repository: ref.watch(arcMemoryRepositoryProvider),
+    taggingService: ref.watch(taggingServiceProvider),
   );
 });
 

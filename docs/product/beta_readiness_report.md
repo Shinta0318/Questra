@@ -14,6 +14,7 @@ Internal beta candidate, not public release ready.
 - RLS readiness check: passed
 - RLS behavior harness: implemented
 - Release assets/legal drafts: tracked
+- Arc Experience Epic: promoted to MVP priority
 - App source terminology check: passed
 
 ## Reviewed Surfaces
@@ -27,6 +28,7 @@ Internal beta candidate, not public release ready.
 | Guild MVP | Ready for internal beta | Guild supports question drafting and safe Trail reflection review. |
 | Arc Chat | Ready for internal beta | Arc Chat includes contextual guidance and memory extraction. |
 | Arc Memory | Ready for internal beta | Quest, Mission, Trail, Reflection, and Arc Chat memory paths exist. |
+| Arc Experience Epic | MVP priority | Official Arc expression assets are integrated; expression engine, presence, celebration, greeting, empty states, concern, reflection coaching, Bond, Stardust, Navigator Rank, and relationship review are now tracked as QST-046 through QST-059. |
 | Profile | Ready for internal beta | Profile shows onboarding and journey owner state. |
 | Media Upload | Ready for internal beta | Private Trail image upload, display, delete, and replace paths exist. |
 | RLS | Ready for internal beta | Static readiness check passes and database-backed behavior tests are available for local Supabase verification. |
@@ -50,8 +52,25 @@ Internal beta candidate, not public release ready.
 5. Performance targets are documented but not measured by repeatable tooling.
 6. OneDrive generated backlog still contains future-scope items that should stay
    deferred during MVP/beta execution.
+7. Arc Experience Epic QST-047 through QST-059 should be completed or explicitly
+   scoped before wider beta positioning.
 
 ## Beta Candidate QSTs
+
+- QST-047: Arc Expression Engine.
+- QST-048: Arc Presence System.
+- QST-050: Arc Celebration System.
+- QST-051: Arc Daily Greeting.
+- QST-052: Arc Empty States.
+- QST-053: Arc Concern System.
+- QST-054: Arc Reflection Coach.
+- QST-055: Bond Foundation.
+- QST-056: Bond Growth Rules.
+- QST-057: Stardust Foundation.
+- QST-058: Navigator Rank.
+- QST-059: Arc Relationship Review.
+
+## Deferred Beta Operations
 
 - QST-044: Performance measurement pass.
 - QST-045: Beta feedback operations.
@@ -62,4 +81,5 @@ Questra is suitable for internal beta preparation, but not public release. The
 core Quest -> Mission -> Trail loop is working across Home, Quest, Mission,
 Trail, Guild, Arc Chat, Arc Memory, Profile, media readiness, and RLS readiness.
 Release work should now focus on database-backed verification, media lifecycle,
-assets/legal copy, and repeatable performance checks.
+assets/legal copy, Arc Experience Epic completion, and repeatable performance
+checks.

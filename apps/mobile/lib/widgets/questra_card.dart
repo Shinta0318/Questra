@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/app_gradients.dart';
+import '../core/theme/app_radius.dart';
+import '../core/theme/app_shadows.dart';
+import '../core/theme/app_spacing.dart';
 import '../core/theme/questra_colors.dart';
 
 class QuestraCard extends StatelessWidget {
@@ -15,16 +19,23 @@ class QuestraCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.transparent,
+      shadowColor: Colors.transparent,
       child: Container(
         width: double.infinity,
         padding: padding,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          gradient: AppGradients.glass,
+          borderRadius: AppRadius.glassCard,
           border: Border.all(
-            color: QuestraColors.cosmicBlue.withValues(alpha: 0.08),
+            color: QuestraColors.white.withValues(alpha: 0.72),
           ),
+          boxShadow: AppShadows.glassCard,
         ),
-        child: child,
+        child: Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xs),
+          child: child,
+        ),
       ),
     );
   }

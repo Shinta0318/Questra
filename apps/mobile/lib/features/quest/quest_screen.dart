@@ -6,7 +6,11 @@ import 'package:intl/intl.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_emotion.dart';
+import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/persistence_sync_banner.dart';
+import '../arc/arc_concern_service.dart';
+import '../arc/arc_guidance_providers.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../trail/trail_controller.dart';
@@ -22,6 +26,7 @@ class QuestScreen extends ConsumerWidget {
     final quests = ref.watch(questControllerProvider);
     final missions = ref.watch(missionControllerProvider);
     final trails = ref.watch(trailControllerProvider);
+    final syncState = ref.watch(questSyncControllerProvider);
     final activeQuests = quests
         .where((quest) => quest.status == QuestStatus.active)
         .toList();
@@ -36,6 +41,12 @@ class QuestScreen extends ConsumerWidget {
         : trails
               .where((trail) => trail.questId == focusQuest.id)
               .toList(growable: false);
+    final arcExpression = ref
+        .watch(arcExpressionEngineProvider)
+        .resolveJourney(quests: quests, missions: missions, trails: trails);
+    final concern = ref
+        .watch(arcConcernServiceProvider)
+        .evaluate(quests: quests, missions: missions, trails: trails);
 
     return Scaffold(
       backgroundColor: QuestraColors.deepNavy,
@@ -53,10 +64,21 @@ class QuestScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
           children: [
+            PersistenceSyncBanner(
+              state: syncState,
+              onDismiss: () =>
+                  ref.read(questSyncControllerProvider.notifier).clear(),
+            ),
+            if (syncState.isActive) const SizedBox(height: 12),
             _QuestHero(
               activeCount: activeQuests.length,
+              emotion: arcExpression.emotion,
               onCreateQuest: () => context.go('${AppRoutes.quest}/create'),
             ),
+            if (concern != null) ...[
+              const SizedBox(height: 16),
+              _QuestConcernCard(concern: concern),
+            ],
             const SizedBox(height: 16),
             _QuestProgressDashboard(
               quest: focusQuest,
@@ -79,15 +101,24 @@ class QuestScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            ...quests.map(
-              (quest) => Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: _QuestCard(
-                  quest: quest,
-                  onTap: () => context.go('${AppRoutes.quest}/${quest.id}'),
+            if (quests.isEmpty)
+              ArcEmptyState(
+                title: 'まだQuestがありません',
+                message: '最初のQuestを灯すと、ArcがMissionとTrailへの航路を一緒に描きます。',
+                actionLabel: 'Questを作成',
+                icon: Icons.add_circle_outline,
+                onAction: () => context.go('${AppRoutes.quest}/create'),
+              )
+            else
+              ...quests.map(
+                (quest) => Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _QuestCard(
+                    quest: quest,
+                    onTap: () => context.go('${AppRoutes.quest}/${quest.id}'),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -100,19 +131,91 @@ class QuestScreen extends ConsumerWidget {
     final latestTrail = [...trails]
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     if (latestTrail.isNotEmpty) {
-      return 'Latest Trail: ${latestTrail.first.title}';
+      return '最近のTrail: ${latestTrail.first.title}';
     }
     if (latestMission.isNotEmpty) {
-      return 'Latest Mission: ${latestMission.first.title}';
+      return '最近のMission: ${latestMission.first.title}';
     }
-    return 'No recent activity yet.';
+    return 'まだ最近の活動はありません。最初のMissionから始めましょう。';
+  }
+}
+
+class _QuestConcernCard extends StatelessWidget {
+  const _QuestConcernCard({required this.concern});
+
+  final ArcConcern concern;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: QuestraColors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.34)),
+        boxShadow: [
+          BoxShadow(
+            color: QuestraColors.gold.withValues(alpha: 0.14),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ArcWidget(
+            emotion: concern.emotion,
+            size: 76,
+            showSpeechBubble: false,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  concern.title,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(concern.message),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _openConcernTarget(context),
+                  icon: const Icon(Icons.near_me_outlined),
+                  label: Text(concern.actionLabel),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openConcernTarget(BuildContext context) {
+    if (concern.type == ArcConcernType.lowActivity) {
+      context.go(AppRoutes.trail);
+      return;
+    }
+    if (concern.questId != null) {
+      context.go('${AppRoutes.quest}/${concern.questId}');
+      return;
+    }
+    context.go(AppRoutes.quest);
   }
 }
 
 class _QuestHero extends StatelessWidget {
-  const _QuestHero({required this.activeCount, required this.onCreateQuest});
+  const _QuestHero({
+    required this.activeCount,
+    required this.emotion,
+    required this.onCreateQuest,
+  });
 
   final int activeCount;
+  final ArcEmotion emotion;
   final VoidCallback onCreateQuest;
 
   @override
@@ -137,11 +240,7 @@ class _QuestHero extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const ArcWidget(
-            emotion: ArcEmotion.serious,
-            size: 86,
-            showSpeechBubble: false,
-          ),
+          ArcWidget(emotion: emotion, size: 86, showSpeechBubble: false),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

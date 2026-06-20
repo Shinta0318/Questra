@@ -1,9 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
+import '../../core/performance/performance_limits.dart';
 import 'quest_model.dart';
 
 abstract interface class QuestRepository {
-  Future<List<Quest>> findByUser(String userId);
+  Future<List<Quest>> findByUser(
+    String userId, {
+    int limit = QuestraPerformanceLimits.questListLimit,
+  });
   Future<Quest> save({required String ownerId, required Quest quest});
   Future<void> delete({required String ownerId, required String questId});
 }
@@ -12,10 +16,14 @@ class InMemoryQuestRepository implements QuestRepository {
   final List<_OwnedQuest> _quests = [];
 
   @override
-  Future<List<Quest>> findByUser(String userId) async {
+  Future<List<Quest>> findByUser(
+    String userId, {
+    int limit = QuestraPerformanceLimits.questListLimit,
+  }) async {
     return _quests
         .where((entry) => entry.ownerId == userId)
         .map((entry) => entry.quest)
+        .take(limit)
         .toList(growable: false);
   }
 
@@ -43,12 +51,18 @@ class SupabaseQuestRepository implements QuestRepository {
   final SupabaseClient client;
 
   @override
-  Future<List<Quest>> findByUser(String userId) async {
+  Future<List<Quest>> findByUser(
+    String userId, {
+    int limit = QuestraPerformanceLimits.questListLimit,
+  }) async {
     final rows = await client
         .from('quests')
-        .select()
+        .select(
+          'id,title,description,difficulty,status,visibility,target_date,created_at',
+        )
         .eq('owner_id', userId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(limit);
 
     return rows
         .map((row) => _questFromRow(Map<String, dynamic>.from(row)))
@@ -60,7 +74,7 @@ class SupabaseQuestRepository implements QuestRepository {
     final rows = await client
         .from('quests')
         .upsert(_questToRow(ownerId, quest))
-        .select()
+        .select('id,title,description,difficulty,status,visibility,target_date')
         .limit(1);
 
     if (rows.isEmpty) {

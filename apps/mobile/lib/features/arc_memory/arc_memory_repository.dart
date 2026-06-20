@@ -1,9 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
+import '../../core/performance/performance_limits.dart';
 import 'arc_memory_model.dart';
 
 abstract interface class ArcMemoryRepository {
-  Future<List<ArcMemory>> findByUser(String userId);
+  Future<List<ArcMemory>> findByUser(
+    String userId, {
+    int limit = QuestraPerformanceLimits.arcMemoryVisibleLimit,
+  });
   Future<bool> existsByDedupeKey(String dedupeKey);
   Future<void> save(ArcMemory memory);
 }
@@ -12,10 +16,24 @@ class InMemoryArcMemoryRepository implements ArcMemoryRepository {
   final List<ArcMemory> _memories = [];
 
   @override
-  Future<List<ArcMemory>> findByUser(String userId) async {
-    return _memories
-        .where((memory) => memory.userId == userId)
-        .toList(growable: false);
+  Future<List<ArcMemory>> findByUser(
+    String userId, {
+    int limit = QuestraPerformanceLimits.arcMemoryVisibleLimit,
+  }) async {
+    final memories =
+        _memories
+            .where((memory) => memory.userId == userId)
+            .where((memory) => memory.userVisible)
+            .toList()
+          ..sort((a, b) {
+            final importance = b.importanceScore.compareTo(a.importanceScore);
+            if (importance != 0) {
+              return importance;
+            }
+            return b.createdAt.compareTo(a.createdAt);
+          });
+
+    return memories.take(limit).toList(growable: false);
   }
 
   @override
@@ -35,12 +53,20 @@ class SupabaseArcMemoryRepository implements ArcMemoryRepository {
   final SupabaseClient client;
 
   @override
-  Future<List<ArcMemory>> findByUser(String userId) async {
+  Future<List<ArcMemory>> findByUser(
+    String userId, {
+    int limit = QuestraPerformanceLimits.arcMemoryVisibleLimit,
+  }) async {
     final rows = await client
         .from('arc_memories')
-        .select()
+        .select(
+          'id,user_id,quest_id,mission_id,trail_id,memory_type,title,content,importance_score,emotional_tone,source_type,source_id,metadata,sensitivity_level,user_visible,created_at,updated_at',
+        )
         .eq('user_id', userId)
-        .order('created_at', ascending: false);
+        .eq('user_visible', true)
+        .order('importance_score', ascending: false)
+        .order('created_at', ascending: false)
+        .limit(limit);
 
     return rows
         .map((row) => _memoryFromRow(Map<String, dynamic>.from(row)))

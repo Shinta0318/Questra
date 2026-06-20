@@ -1,10 +1,15 @@
 import 'arc_memory_model.dart';
 import 'arc_memory_repository.dart';
+import '../tagging/tagging_service.dart';
 
 class MemoryExtractionService {
-  const MemoryExtractionService({required this.repository});
+  const MemoryExtractionService({
+    required this.repository,
+    this.taggingService,
+  });
 
   final ArcMemoryRepository repository;
+  final TaggingService? taggingService;
 
   Future<List<ArcMemory>> extractAndSave(MemoryExtractionEvent event) async {
     final candidate = extractCandidate(event);
@@ -17,6 +22,11 @@ class MemoryExtractionService {
     }
 
     await repository.save(candidate);
+    try {
+      await taggingService?.tagArcMemory(candidate);
+    } catch (_) {
+      // Tagging enriches Memory search, but Memory persistence remains primary.
+    }
     return [candidate];
   }
 

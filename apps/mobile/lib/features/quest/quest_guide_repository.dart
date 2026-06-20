@@ -1,9 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
+import '../../core/performance/performance_limits.dart';
 import 'quest_guide_model.dart';
 
 abstract interface class QuestGuideRepository {
-  Future<List<QuestGuide>> findByQuest(String questId);
+  Future<List<QuestGuide>> findByQuest(
+    String questId, {
+    int limit = QuestraPerformanceLimits.questGuideLimit,
+  });
   Future<List<QuestGuide>> saveAll(List<QuestGuide> guides);
 }
 
@@ -11,9 +15,13 @@ class InMemoryQuestGuideRepository implements QuestGuideRepository {
   final List<QuestGuide> _guides = [];
 
   @override
-  Future<List<QuestGuide>> findByQuest(String questId) async {
+  Future<List<QuestGuide>> findByQuest(
+    String questId, {
+    int limit = QuestraPerformanceLimits.questGuideLimit,
+  }) async {
     return _guides
         .where((guide) => guide.questId == questId)
+        .take(limit)
         .toList(growable: false);
   }
 
@@ -32,12 +40,16 @@ class SupabaseQuestGuideRepository implements QuestGuideRepository {
   final SupabaseClient client;
 
   @override
-  Future<List<QuestGuide>> findByQuest(String questId) async {
+  Future<List<QuestGuide>> findByQuest(
+    String questId, {
+    int limit = QuestraPerformanceLimits.questGuideLimit,
+  }) async {
     final rows = await client
         .from('quest_guides')
-        .select()
+        .select('id,quest_id,guide_type,title,description,suggested_actions')
         .eq('quest_id', questId)
-        .order('created_at');
+        .order('created_at')
+        .limit(limit);
 
     return rows
         .map((row) => _guideFromRow(Map<String, dynamic>.from(row)))
@@ -53,7 +65,7 @@ class SupabaseQuestGuideRepository implements QuestGuideRepository {
     final rows = await client
         .from('quest_guides')
         .upsert(guides.map(_guideToRow).toList())
-        .select();
+        .select('id,quest_id,guide_type,title,description,suggested_actions');
 
     return rows
         .map((row) => _guideFromRow(Map<String, dynamic>.from(row)))
