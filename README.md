@@ -49,6 +49,7 @@ Use these checks before internal beta builds:
 - Run `flutter test -r expanded` from `apps/mobile`.
 - Run `dart run tools/qst/verify_performance_readiness.dart` from the repository root.
 - Run `dart run tools/qst/verify_beta_feedback_readiness.dart` from the repository root.
+- Run `dart run tools/qst/verify_beta_readiness_report.dart` from the repository root.
 - Run the app on a physical device with `flutter run --profile`.
 - Check Home first render target: 1.5 seconds or less.
 - Check Quest and Trail list render target: 1 second or less.

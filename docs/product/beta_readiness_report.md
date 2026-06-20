@@ -6,15 +6,17 @@ Internal beta candidate, not public release ready.
 
 ## Readiness Summary
 
-- Release Manager readiness: 57 / 100
+- Release Manager readiness: 74 / 100
 - Release Manager blocking issues: 0
-- MVP prepared rate: 87.5%
+- MVP prepared rate: 93%
 - Static analysis: passed
 - Main tests: passed
 - RLS readiness check: passed
 - RLS behavior harness: implemented
+- Performance readiness check: passed
+- Beta feedback operations: ready
 - Release assets/legal drafts: tracked
-- Arc Experience Epic: promoted to MVP priority
+- Arc Experience Epic: completed for internal beta
 - App source terminology check: passed
 
 ## Reviewed Surfaces
@@ -28,7 +30,7 @@ Internal beta candidate, not public release ready.
 | Guild MVP | Ready for internal beta | Guild supports question drafting and safe Trail reflection review. |
 | Arc Chat | Ready for internal beta | Arc Chat includes contextual guidance and memory extraction. |
 | Arc Memory | Ready for internal beta | Quest, Mission, Trail, Reflection, and Arc Chat memory paths exist. |
-| Arc Experience Epic | MVP priority | Official Arc expression assets are integrated; expression engine, presence, celebration, greeting, empty states, concern, reflection coaching, Bond, Stardust, Navigator Rank, and relationship review are now tracked as QST-046 through QST-059. |
+| Arc Experience Epic | Ready for internal beta | Official Arc expression assets are integrated; expression engine, presence, celebration, greeting, empty states, concern, reflection coaching, Bond, Stardust, Navigator Rank, relationship review, and daily guidance are complete for beta. |
 | Profile | Ready for internal beta | Profile shows onboarding and journey owner state. |
 | Media Upload | Ready for internal beta | Private Trail image upload, display, delete, and replace paths exist. |
 | RLS | Ready for internal beta | Static readiness check passes and database-backed behavior tests are available for local Supabase verification. |
@@ -42,21 +44,19 @@ Internal beta candidate, not public release ready.
 
 ## Remaining Issues
 
-1. Release readiness score is still below launch threshold.
+1. Public release readiness is still below launch threshold.
 2. Supabase local database-backed RLS behavior tests should be run in the local
    database or CI before public release.
 3. App icon and splash assets still need final design replacement before public
    release.
 4. Terms, privacy policy, and store text drafts require human review before
    public release.
-5. Performance readiness now has repeatable tooling from QST-067.
-6. Beta feedback operations now have intake, triage, and QST conversion rules from QST-069.
-7. OneDrive generated backlog still contains future-scope items that should stay
+5. OneDrive generated backlog still contains future-scope items that should stay
    deferred during MVP/beta execution.
-8. Arc Experience Epic QST-047 through QST-059 should be completed or explicitly
-   scoped before wider beta positioning.
+6. Real-device beta validation and screenshot QA still need to be run on the
+   current candidate build.
 
-## Beta Candidate QSTs
+## Completed Beta Foundation QSTs
 
 - QST-047: Arc Expression Engine.
 - QST-048: Arc Presence System.
@@ -70,6 +70,8 @@ Internal beta candidate, not public release ready.
 - QST-057: Stardust Foundation.
 - QST-058: Navigator Rank.
 - QST-059: Arc Relationship Review.
+- QST-067: Performance Measurement Pass.
+- QST-069: Beta Feedback Operations.
 
 ## Deferred Beta Operations
 

@@ -385,6 +385,21 @@ items:
       - S0/S1 feedback has clear triage rules.
       - Feedback can be converted into future QSTs.
       - Beta feedback readiness can be verified by script.
+  - id: QST-070
+    title: Beta Readiness Refresh
+    status: Done
+    priority: P0
+    epic: BETA-HARDENING
+    depends_on: [QST-067, QST-068, QST-069]
+    completed_by:
+      report: reports/qst/QST-070.md
+    scope: Refresh the beta readiness report after performance and beta feedback operations are in place.
+    acceptance:
+      - Readiness score and MVP prepared rate reflect current progress.
+      - Performance and feedback operations are marked as ready.
+      - Outdated Arc Experience and performance blockers are removed.
+      - Remaining launch blockers are explicitly listed.
+      - Beta readiness report can be verified by script.
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

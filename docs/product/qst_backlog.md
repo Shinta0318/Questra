@@ -56,6 +56,7 @@ there before new QSTs are created or reordered.
 | QST-067 | Done | Performance Measurement Pass | Add repeatable performance readiness budgets and verification for beta targets. | App start, Home, Quest/Trail list, route transition, scroll, asset, image, list, and Arc Memory checks are documented or machine-checkable. |
 | QST-068 | Done | Arc Guidance Localization Pass | Replace remaining English Arc journey guidance with Japanese navigator copy and lock it with tests. | Arc Journey Context guidance uses Japanese Quest/Mission/Trail language and avoids assistant framing. |
 | QST-069 | Done | Beta Feedback Operations | Define internal beta feedback intake, labels, triage workflow, stop conditions, and QST conversion rules. | Beta feedback has required fields, severity/surface labels, triage rules, and script-verifiable readiness. |
+| QST-070 | Done | Beta Readiness Refresh | Refresh the beta readiness report after performance and beta feedback operations are in place. | Readiness score, completed beta foundations, and remaining launch blockers are current and script-verifiable. |
 
 ## Selection Rules
 
