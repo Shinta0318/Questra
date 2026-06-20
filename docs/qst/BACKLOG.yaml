@@ -201,10 +201,12 @@ items:
   - id: QST-058
     requested_id: QST-049
     title: Navigator Rank
-    status: Ready
+    status: Done
     priority: P1
     epic: ARC-EXP
     depends_on: [QST-056, QST-057]
+    completed_by:
+      report: reports/qst/QST-058.md
     scope: Add Navigator Rank as a simple progression label based on journey depth.
     acceptance:
       - Navigator Rank has deterministic thresholds.

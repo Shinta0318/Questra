@@ -44,7 +44,7 @@ there before new QSTs are created or reordered.
 | QST-055 | Done | Bond Foundation | Establish Bond as the foundation for Arc relationship progression. | Bond state is represented, visible, and framed without manipulative engagement loops. |
 | QST-056 | Done | Bond Growth Rules | Define and implement MVP-safe Bond growth rules from meaningful journey actions. | Bond grows from deterministic Quest, Mission, Trail, Reflection, and Arc interaction signals. |
 | QST-057 | Done | Stardust Foundation | Introduce Stardust as a lightweight progress resource tied to meaningful activity. | Stardust has an owner, display surface, and non-payment MVP award rules. |
-| QST-058 | Ready | Navigator Rank | Add Navigator Rank as a simple progression label based on journey depth. | Navigator Rank has deterministic thresholds and displays current rank. |
+| QST-058 | Done | Navigator Rank | Add Navigator Rank as a simple progression label based on journey depth. | Navigator Rank has deterministic thresholds and displays current rank. |
 | QST-059 | Ready | Arc Relationship Review | Review Arc Experience coherence across assets, expressions, presence, guidance, Bond, Stardust, and Navigator Rank. | Arc relationship systems have no major release blockers and remaining beta risks are documented. |
 | QST-060 | Ready | Arc Daily Greeting | Add daily Arc greeting rules for Home based on date, recent activity, and open Missions. | Home can display a context-aware daily Arc greeting. |
 | QST-061 | Done | Questra Design System V1 | Create the formal Questra design system and apply it to Home and Arc UI surfaces. | App design tokens and theme are available, and Home/Arc use the refreshed premium adventure styling. |

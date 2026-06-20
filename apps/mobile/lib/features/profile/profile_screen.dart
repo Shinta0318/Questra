@@ -9,6 +9,7 @@ import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_bond_service.dart';
+import '../arc/navigator_rank_service.dart';
 import '../arc/stardust_service.dart';
 import '../auth/auth_controller.dart';
 import '../mission/mission_controller.dart';
@@ -39,6 +40,15 @@ class ProfileScreen extends ConsumerWidget {
     final stardust = ref
         .watch(stardustServiceProvider)
         .resolve(profile?.stardustBalance ?? 0);
+    final navigatorRank = ref
+        .watch(navigatorRankServiceProvider)
+        .resolve(
+          quests: quests,
+          missions: missions,
+          trails: trails,
+          bondScore: profile?.bondScore ?? 0,
+          stardustBalance: profile?.stardustBalance ?? 0,
+        );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
@@ -94,6 +104,11 @@ class ProfileScreen extends ConsumerWidget {
             _StardustCard(
               stardust: stardust,
               profileAvailable: profile != null,
+            ),
+            const SizedBox(height: 16),
+            _NavigatorRankCard(
+              rank: navigatorRank,
+              storedRank: profile?.navigatorRank,
             ),
             const SizedBox(height: 16),
             QuestraCard(
@@ -183,6 +198,83 @@ class _StardustCard extends StatelessWidget {
                 Text(stardust.label),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavigatorRankCard extends StatelessWidget {
+  const _NavigatorRankCard({required this.rank, required this.storedRank});
+
+  final NavigatorRankState rank;
+  final String? storedRank;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: QuestraColors.cosmicBlue.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(
+                  Icons.explore_outlined,
+                  color: QuestraColors.cosmicBlue,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Navigator Rank',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(rank.description),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            rank.label,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: rank.progressToNext,
+              minHeight: 10,
+              backgroundColor: QuestraColors.cloud,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                QuestraColors.cosmicBlue,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Chip(label: Text('Rank score ${rank.score}')),
+              if (storedRank != null) Chip(label: Text('Saved $storedRank')),
+            ],
           ),
         ],
       ),
