@@ -215,10 +215,12 @@ items:
   - id: QST-059
     requested_id: QST-050
     title: Arc Relationship Review
-    status: Ready
+    status: Done
     priority: P0
     epic: ARC-EXP
     depends_on: [QST-050, QST-051, QST-052, QST-053, QST-054, QST-055, QST-056, QST-057, QST-058, QST-060]
+    completed_by:
+      report: reports/qst/QST-059.md
     scope: Review Arc Experience coherence across assets, expressions, presence, guidance, Bond, Stardust, and Navigator Rank.
     acceptance:
       - Arc expression rules are consistent across MVP surfaces.
