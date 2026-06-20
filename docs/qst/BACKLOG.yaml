@@ -340,10 +340,25 @@ items:
       - Arc Memory save triggers AI tag generation.
       - Tags and entity tags are persisted with owner-scoped RLS.
       - Tag search and tag statistics are available through repository/service APIs.
+  - id: QST-067
+    requested_id: QST-044
+    title: Performance Measurement Pass
+    status: Done
+    priority: P0
+    epic: BETA-HARDENING
+    depends_on: [QST-051, QST-059, QST-066]
+    completed_by:
+      report: reports/qst/QST-067.md
+    scope: Add repeatable performance readiness budgets and verification for beta targets.
+    acceptance:
+      - App start, Home, Quest/Trail list, route transition, and scroll targets are documented.
+      - Arc assets, Trail image compression, list limits, and Arc Memory limits are machine-checkable.
+      - Beta performance checks are available from README.
+      - Flutter analyze and tests pass.
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass
-    reason: Deferred until Arc Experience Epic establishes the MVP differentiator layer.
+    reason: Superseded by QST-067 after Arc Experience Epic completion.
   - id: QST-045
     title: Beta feedback operations
     reason: Deferred until Arc Experience Epic and performance measurement are ready for beta operations.

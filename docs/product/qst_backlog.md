@@ -53,6 +53,7 @@ there before new QSTs are created or reordered.
 | QST-064 | Done | Arc AI Chat Integration | Connect Arc Chat to an AI-capable service boundary with Quest, Mission, Trail, Reflection, and Arc Memory context. | Arc Chat shows thinking state, returns contextual responses, falls back gracefully, and can save exchanges as Arc Memory. |
 | QST-065 | Done | AI Quest Guide Generation | Generate an Arc Guide after Quest creation with summary, path, cautions, encouragement, and adoptable Mission candidates. | Quest Detail shows Arc Guide, 3+ Mission candidates can be adopted into saved Missions, and guide history is recorded in Arc Memory when available. |
 | QST-066 | Done | AI Tagging Foundation | Add AI-generated tags for Quest, Mission, Trail, and Arc Memory with persistence, search, and statistics APIs. | Tags and entity tags are saved with owner-scoped RLS, and future Guild/Star Map/recommendation flows can query tag data. |
+| QST-067 | Done | Performance Measurement Pass | Add repeatable performance readiness budgets and verification for beta targets. | App start, Home, Quest/Trail list, route transition, scroll, asset, image, list, and Arc Memory checks are documented or machine-checkable. |
 
 ## Selection Rules
 
