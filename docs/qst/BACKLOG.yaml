@@ -1,5 +1,5 @@
 version: 1
-updated: 2026-06-19
+updated: 2026-06-20
 source: docs/product/qst_backlog.md
 notes:
   - QST-037 through QST-043 already exist in the current backlog as completed MVP/beta work.
@@ -227,10 +227,12 @@ items:
   - id: QST-060
     requested_id: QST-042
     title: Arc Daily Greeting
-    status: Ready
+    status: Done
     priority: P1
     epic: ARC-EXP
     depends_on: [QST-047, QST-048, QST-051]
+    completed_by:
+      report: reports/qst/QST-060.md
     scope: Add daily Arc greeting rules for Home based on date, recent activity, and open Missions.
     acceptance:
       - Home can display a daily Arc greeting.

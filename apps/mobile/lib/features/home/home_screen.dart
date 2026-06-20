@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
@@ -7,10 +8,15 @@ import '../../core/theme/app_gradients.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
+import '../arc/arc_daily_greeting_service.dart';
+import '../auth/auth_controller.dart';
+import '../mission/mission_controller.dart';
+import '../quest/quest_controller.dart';
+import '../trail/trail_controller.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   static const _quests = [
@@ -20,7 +26,18 @@ class HomeScreen extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(authControllerProvider).profile;
+    final greeting = ref
+        .watch(arcDailyGreetingServiceProvider)
+        .resolve(
+          quests: ref.watch(questControllerProvider),
+          missions: ref.watch(missionControllerProvider),
+          trails: ref.watch(trailControllerProvider),
+          now: DateTime.now(),
+          nickname: profile?.nickname,
+        );
+
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
       body: DecoratedBox(
@@ -36,7 +53,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               const _CaptainStatusBar(),
               const SizedBox(height: AppSpacing.lg),
-              const _ArcHero(),
+              _ArcHero(greeting: greeting),
               const SizedBox(height: AppSpacing.xl),
               Row(
                 children: [
@@ -155,7 +172,9 @@ class _MetricPill extends StatelessWidget {
 }
 
 class _ArcHero extends StatelessWidget {
-  const _ArcHero();
+  const _ArcHero({required this.greeting});
+
+  final ArcDailyGreeting greeting;
 
   @override
   Widget build(BuildContext context) {
@@ -170,17 +189,24 @@ class _ArcHero extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              'おかえり、キャプテン。\n今日も素晴らしい航海になりそうだね！',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.white,
-                height: 1.55,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _QuestTag(label: greeting.contextLabel),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  greeting.message,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.white,
+                    height: 1.55,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: AppSpacing.lg),
-          const ArcWidget(
-            emotion: ArcEmotion.support,
+          ArcWidget(
+            emotion: greeting.emotion,
             size: 120,
             showSpeechBubble: false,
           ),
