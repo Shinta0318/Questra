@@ -247,7 +247,7 @@ items:
   - id: QST-083
     title: Arc 3D Readiness Architecture
     priority: P1
-    status: Ready
+    status: Done
     dependencies: [QST-047, QST-073]
     goal: Prepare Arc expression architecture for future PNG, Rive, and GLB/3D implementations.
     scope:
@@ -263,10 +263,12 @@ items:
       - apps/mobile/lib/widgets/arc/
       - apps/mobile/lib/features/arc/arc_expression_engine.dart
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-083.md
   - id: QST-084
     title: Arc Animation Event Layer
     priority: P1
-    status: Planned
+    status: Ready
     dependencies: [QST-083]
     goal: Add a renderer-neutral animation event interface for Arc reactions.
     scope:

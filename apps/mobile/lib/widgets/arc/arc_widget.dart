@@ -8,6 +8,7 @@ import '../motion/questra_motion.dart';
 import 'arc_asset_paths.dart';
 import 'arc_emotion.dart';
 import 'arc_speech_bubble.dart';
+import 'arc_visual_asset.dart';
 
 class ArcWidget extends StatefulWidget {
   const ArcWidget({
@@ -64,18 +65,14 @@ class _ArcWidgetState extends State<ArcWidget>
   @override
   Widget build(BuildContext context) {
     final visuals = _ArcVisuals.fromEmotion(widget.emotion);
-    final assetPath = ArcAssetPaths.fromEmotion(widget.emotion);
+    final asset = ArcAssetPaths.assetForEmotion(widget.emotion);
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (disableAnimations)
-          _ArcStarCharacter(
-            size: widget.size,
-            visuals: visuals,
-            assetPath: assetPath,
-          )
+          _ArcStarCharacter(size: widget.size, visuals: visuals, asset: asset)
         else
           AnimatedBuilder(
             animation: _controller,
@@ -92,7 +89,7 @@ class _ArcWidgetState extends State<ArcWidget>
             child: _ArcStarCharacter(
               size: widget.size,
               visuals: visuals,
-              assetPath: assetPath,
+              asset: asset,
             ),
           ),
         if (widget.message != null && widget.showSpeechBubble) ...[
@@ -121,12 +118,12 @@ class _ArcStarCharacter extends StatelessWidget {
   const _ArcStarCharacter({
     required this.size,
     required this.visuals,
-    required this.assetPath,
+    required this.asset,
   });
 
   final double size;
   final _ArcVisuals visuals;
-  final String assetPath;
+  final ArcVisualAsset asset;
 
   @override
   Widget build(BuildContext context) {
@@ -150,16 +147,20 @@ class _ArcStarCharacter extends StatelessWidget {
               ],
             ),
           ),
-          Image.asset(
-            assetPath,
-            width: size,
-            height: size,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.high,
-            errorBuilder: (context, error, stackTrace) {
-              return _GeneratedArcStar(size: size, visuals: visuals);
-            },
-          ),
+          if (asset.isPng)
+            Image.asset(
+              asset.path,
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+              semanticLabel: asset.semanticLabel,
+              errorBuilder: (context, error, stackTrace) {
+                return _GeneratedArcStar(size: size, visuals: visuals);
+              },
+            )
+          else
+            _GeneratedArcStar(size: size, visuals: visuals),
         ],
       ),
     );

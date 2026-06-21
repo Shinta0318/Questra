@@ -1,5 +1,6 @@
 import '../../widgets/arc/arc_asset_paths.dart';
 import '../../widgets/arc/arc_emotion.dart';
+import '../../widgets/arc/arc_visual_asset.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
 import '../trail/trail_model.dart';
@@ -38,13 +39,15 @@ class ArcExpressionContext {
 class ArcExpressionDecision {
   const ArcExpressionDecision({
     required this.emotion,
-    required this.assetPath,
+    required this.asset,
     required this.reason,
   });
 
   final ArcEmotion emotion;
-  final String assetPath;
+  final ArcVisualAsset asset;
   final String reason;
+
+  String get assetPath => asset.path;
 }
 
 class ArcExpressionEngine {
@@ -54,7 +57,7 @@ class ArcExpressionEngine {
     final emotion = _resolveEmotion(context);
     return ArcExpressionDecision(
       emotion: emotion,
-      assetPath: ArcAssetPaths.fromEmotion(emotion),
+      asset: ArcAssetPaths.assetForEmotion(emotion),
       reason: _reasonFor(context, emotion),
     );
   }

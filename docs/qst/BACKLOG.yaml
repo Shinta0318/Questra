@@ -572,7 +572,7 @@ items:
       report: reports/qst/QST-082.md
   - id: QST-083
     title: Arc 3D Readiness Architecture
-    status: Ready
+    status: Done
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-047, QST-073]
@@ -581,9 +581,11 @@ items:
     acceptance:
       - Arc expression decisions return a renderer-agnostic asset descriptor.
       - Existing ArcWidget still renders current PNG assets.
+    completed_by:
+      report: reports/qst/QST-083.md
   - id: QST-084
     title: Arc Animation Event Layer
-    status: Planned
+    status: Ready
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-083]

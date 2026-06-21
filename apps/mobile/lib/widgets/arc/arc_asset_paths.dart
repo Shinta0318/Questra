@@ -1,4 +1,5 @@
 import 'arc_emotion.dart';
+import 'arc_visual_asset.dart';
 
 class ArcAssetPaths {
   const ArcAssetPaths._();
@@ -21,5 +22,13 @@ class ArcAssetPaths {
       ArcEmotion.lonely => lonely,
       ArcEmotion.celebrate => celebrate,
     };
+  }
+
+  static ArcVisualAsset assetForEmotion(ArcEmotion emotion) {
+    return ArcVisualAsset(
+      type: ArcVisualAssetType.png,
+      path: fromEmotion(emotion),
+      semanticLabel: 'Arc ${emotion.label} PNG expression',
+    );
   }
 }
