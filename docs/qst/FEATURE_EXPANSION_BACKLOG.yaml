@@ -225,7 +225,7 @@ items:
   - id: QST-082
     title: Horizon Next Challenge MVP
     priority: P1
-    status: Ready
+    status: Done
     dependencies: [QST-081, QST-058]
     goal: Let Arc suggest the next challenge based on user achievement and readiness.
     scope:
@@ -242,10 +242,12 @@ items:
       - apps/mobile/lib/features/home/home_screen.dart
       - apps/mobile/lib/features/star_map/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-082.md
   - id: QST-083
     title: Arc 3D Readiness Architecture
     priority: P1
-    status: Planned
+    status: Ready
     dependencies: [QST-047, QST-073]
     goal: Prepare Arc expression architecture for future PNG, Rive, and GLB/3D implementations.
     scope:
