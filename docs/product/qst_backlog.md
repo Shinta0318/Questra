@@ -62,8 +62,8 @@ there before new QSTs are created or reordered.
 | QST-073 | Done | Arc Emotion Timeline | Store and display Arc emotional history based on user journey actions. | Arc emotion events can be created and shown with reason, source, and timestamp. |
 | QST-074 | Done | Arc Action Trigger Rules | Automatically switch Arc expression and copy in response to key user states and actions. | Trigger rules are centralized and map major MVP actions to Arc emotion/copy. |
 | QST-075 | Done | Quest Milestone System | Break Quests into visible Milestones so users can understand progress beyond a flat percentage. | Quest Detail shows Milestones with status and progress. |
-| QST-076 | Ready | Mission Reminder / Signal MVP | Introduce a lightweight Signal foundation for Mission due dates, stalled Missions, and gentle reminders. | Signals can be generated from Mission and Quest context without platform notifications. |
-| QST-077 | Planned | Trail Timeline V1 | Let users revisit Trails in a chronological timeline. | Trail Timeline renders recent Trails in order using Trail terminology. |
+| QST-076 | Done | Mission Reminder / Signal MVP | Introduce a lightweight Signal foundation for Mission due dates, stalled Missions, and gentle reminders. | Signals can be generated from Mission and Quest context without platform notifications. |
+| QST-077 | Ready | Trail Timeline V1 | Let users revisit Trails in a chronological timeline. | Trail Timeline renders recent Trails in order using Trail terminology. |
 | QST-078 | Planned | Trail Highlight System | Let Arc identify meaningful Trails and mark them as Star Memory candidates. | Trail highlights are deterministic and include visible reasons. |
 | QST-079 | Planned | Guild Quest Matching | Improve Guild usefulness by connecting users with similar Quest tags and nearby goals. | Matching ranks related Quests by tags without exposing private content. |
 | QST-080 | Planned | Guild Safe Posting Review | Add a lightweight Arc review before Guild posting to reduce personal information and unsafe sharing. | Review flags obvious personal information and allows revision. |

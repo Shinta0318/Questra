@@ -12,7 +12,10 @@ import '../../widgets/questra_card.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_expression_engine.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../quest/quest_controller.dart';
 import '../quest/quest_guide_model.dart';
+import '../signal/mission_signal_model.dart';
+import '../signal/signal_providers.dart';
 import 'mission_controller.dart';
 import 'mission_model.dart';
 
@@ -22,7 +25,11 @@ class MissionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final missions = ref.watch(missionControllerProvider);
+    final quests = ref.watch(questControllerProvider);
     final syncState = ref.watch(missionSyncControllerProvider);
+    final signals = ref
+        .watch(missionSignalServiceProvider)
+        .generate(quests: quests, missions: missions, now: DateTime.now());
     final expressionEngine = ref.watch(arcExpressionEngineProvider);
     final arcExpression = expressionEngine.resolveJourney(
       quests: const [],
@@ -48,6 +55,10 @@ class MissionScreen extends ConsumerWidget {
               message: '小さなMissionも、ちゃんと前進だよ。今日の星をひとつ選ぼう。',
             ),
             const SizedBox(height: 16),
+            if (signals.isNotEmpty) ...[
+              _MissionSignalPanel(signals: signals.take(3).toList()),
+              const SizedBox(height: 16),
+            ],
             if (missions.isEmpty)
               ArcEmptyState(
                 title: 'まだMissionがありません',
@@ -111,6 +122,78 @@ class MissionScreen extends ConsumerWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MissionSignalPanel extends StatelessWidget {
+  const _MissionSignalPanel({required this.signals});
+
+  final List<MissionSignal> signals;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Signal', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          const Text('Arcが今のMission状況から、やさしく次の一歩を照らします。'),
+          const SizedBox(height: 12),
+          ...signals.map(
+            (signal) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _MissionSignalTile(signal: signal),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MissionSignalTile extends StatelessWidget {
+  const _MissionSignalTile({required this.signal});
+
+  final MissionSignal signal;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (signal.severity) {
+      MissionSignalSeverity.urgent => QuestraColors.gold,
+      MissionSignalSeverity.focus => QuestraColors.cosmicBlue,
+      MissionSignalSeverity.calm => QuestraColors.slate,
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.20)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.notifications_none_outlined, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  signal.title,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 4),
+                Text(signal.message),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

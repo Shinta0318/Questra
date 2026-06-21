@@ -18,6 +18,8 @@ import '../arc/arc_guidance_providers.dart';
 import '../auth/auth_controller.dart';
 import '../mission/mission_controller.dart';
 import '../quest/quest_controller.dart';
+import '../signal/mission_signal_model.dart';
+import '../signal/signal_providers.dart';
 import '../trail/trail_controller.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -32,17 +34,23 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(authControllerProvider).profile;
+    final quests = ref.watch(questControllerProvider);
+    final missions = ref.watch(missionControllerProvider);
+    final trails = ref.watch(trailControllerProvider);
     final emotionEvents = ref.watch(arcEmotionTimelineControllerProvider);
     final latestEvent = emotionEvents.firstOrNull;
     final inactiveDecision = ref
         .watch(arcActionTriggerServiceProvider)
         .resolve(trigger: ArcActionTrigger.inactiveConcern);
+    final missionSignals = ref
+        .watch(missionSignalServiceProvider)
+        .generate(quests: quests, missions: missions, now: DateTime.now());
     final greeting = ref
         .watch(arcDailyGreetingServiceProvider)
         .resolve(
-          quests: ref.watch(questControllerProvider),
-          missions: ref.watch(missionControllerProvider),
-          trails: ref.watch(trailControllerProvider),
+          quests: quests,
+          missions: missions,
+          trails: trails,
           now: DateTime.now(),
           nickname: profile?.nickname,
         );
@@ -69,6 +77,10 @@ class HomeScreen extends ConsumerWidget {
                 label: latestEvent?.sourceType.label ?? 'Arc Signal',
                 message: latestEvent?.reason ?? inactiveDecision.message,
               ),
+              if (missionSignals.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                _MissionSignalCard(signal: missionSignals.first),
+              ],
               const SizedBox(height: AppSpacing.xl),
               Row(
                 children: [
@@ -106,6 +118,68 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MissionSignalCard extends StatelessWidget {
+  const _MissionSignalCard({required this.signal});
+
+  final MissionSignal signal;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (signal.severity) {
+      MissionSignalSeverity.urgent => AppColors.gold,
+      MissionSignalSeverity.focus => AppColors.skyBlue,
+      MissionSignalSeverity.calm => AppColors.parchment,
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.68),
+        borderRadius: AppRadius.card,
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+        boxShadow: AppShadows.glassCard,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.wb_twilight_outlined, color: color, size: 30),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  signal.severity.label,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  signal.title,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  signal.message,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.parchment,
+                    height: 1.45,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

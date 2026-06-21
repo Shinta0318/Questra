@@ -92,7 +92,7 @@ items:
   - id: QST-076
     title: Mission Reminder / Signal MVP
     priority: P0
-    status: Ready
+    status: Done
     dependencies: [QST-053, QST-075]
     goal: Introduce a lightweight Signal foundation for Mission due dates, stalled Missions, and gentle reminders.
     scope:
@@ -110,10 +110,12 @@ items:
       - apps/mobile/lib/features/home/home_screen.dart
       - apps/mobile/lib/features/mission/mission_screen.dart
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-076.md
   - id: QST-077
     title: Trail Timeline V1
     priority: P1
-    status: Planned
+    status: Ready
     dependencies: [QST-034, QST-035, QST-072]
     goal: Let users revisit Trails in a beautiful chronological timeline.
     scope:

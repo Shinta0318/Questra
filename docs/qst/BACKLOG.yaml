@@ -481,7 +481,7 @@ items:
       report: reports/qst/QST-075.md
   - id: QST-076
     title: Mission Reminder / Signal MVP
-    status: Ready
+    status: Done
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-053, QST-075]
@@ -490,9 +490,11 @@ items:
     acceptance:
       - Signals can be generated from Mission and Quest context.
       - No platform notification permission is required for MVP.
+    completed_by:
+      report: reports/qst/QST-076.md
   - id: QST-077
     title: Trail Timeline V1
-    status: Planned
+    status: Ready
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-034, QST-035, QST-072]
