@@ -1,10 +1,11 @@
 version: 1
-updated: 2026-06-20
+updated: 2026-06-21
 source: docs/product/qst_backlog.md
 notes:
   - QST-037 through QST-043 already exist in the current backlog as completed MVP/beta work.
   - The requested Arc Experience Epic has been renumbered to QST-046 through QST-059 to avoid collisions.
   - Existing QST-044 and QST-045 are deferred while Arc Experience work is promoted to MVP priority.
+  - QST-073 through QST-090 are planned in docs/qst/FEATURE_EXPANSION_BACKLOG.yaml.
 rules:
   selection:
     - Pick the first Ready item by numeric order.
@@ -26,6 +27,14 @@ epics:
       promoted_over:
         - QST-044 Performance measurement pass
         - QST-045 Beta feedback operations
+  - id: FEATURE-EXPANSION
+    title: Feature Expansion Epic
+    status: Active
+    priority: P0
+    rationale: Expand feature depth, retention, differentiation, and launch readiness after QST-072 without destabilizing MVP/Beta.
+    starts_after: QST-072
+    assigned_range: QST-073-QST-090
+    source: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
 items:
   - id: QST-046
     requested_id: QST-037
@@ -430,6 +439,205 @@ items:
       - Pass and stop criteria cover terminology, Arc framing, layout, and asset rendering.
       - Screenshot output location and filenames are documented.
       - Screenshot QA readiness can be verified by script.
+  - id: QST-073
+    title: Arc Emotion Timeline
+    status: Ready
+    priority: P0
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-068, QST-070]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Store and display Arc emotional history based on user journey actions.
+    acceptance:
+      - Arc emotion events can be created from major journey actions.
+      - Timeline shows emotion, reason, source type, and timestamp.
+      - Empty state uses Arc-native Japanese copy.
+  - id: QST-074
+    title: Arc Action Trigger Rules
+    status: Planned
+    priority: P0
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-073]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Automatically switch Arc expression and copy in response to key user states and actions.
+    acceptance:
+      - Trigger rules are centralized and testable.
+      - Each major MVP action resolves an Arc emotion and short Japanese message.
+  - id: QST-075
+    title: Quest Milestone System
+    status: Planned
+    priority: P0
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-063, QST-065]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Break Quests into visible Milestones so users can understand progress beyond a flat percentage.
+    acceptance:
+      - Quest Detail shows Milestones with status and progress.
+      - Milestone status can be updated without breaking Quest progress.
+  - id: QST-076
+    title: Mission Reminder / Signal MVP
+    status: Planned
+    priority: P0
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-053, QST-075]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Introduce a lightweight Signal foundation for Mission due dates, stalled Missions, and gentle reminders.
+    acceptance:
+      - Signals can be generated from Mission and Quest context.
+      - No platform notification permission is required for MVP.
+  - id: QST-077
+    title: Trail Timeline V1
+    status: Planned
+    priority: P1
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-034, QST-035, QST-072]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Let users revisit Trails in a beautiful chronological timeline.
+    acceptance:
+      - Trail Timeline renders recent Trails in chronological order.
+      - Visible labels use Trail terminology.
+  - id: QST-078
+    title: Trail Highlight System
+    status: Planned
+    priority: P1
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-077, QST-029]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Let Arc identify meaningful Trails and mark them as Star Memory candidates.
+    acceptance:
+      - Trail highlights are deterministic and testable.
+      - Highlight reason is visible to the user.
+  - id: QST-079
+    title: Guild Quest Matching
+    status: Planned
+    priority: P1
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-066, QST-036]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Improve Guild usefulness by connecting users with similar Quest tags and nearby goals.
+    acceptance:
+      - Matching can rank related Quests by tags.
+      - Private Quest content is not exposed.
+  - id: QST-080
+    title: Guild Safe Posting Review
+    status: Planned
+    priority: P0
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-079, QST-054]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Add a lightweight Arc review before Guild posting to reduce personal information and unsafe sharing.
+    acceptance:
+      - Review flags obvious personal information.
+      - User can revise before posting.
+  - id: QST-081
+    title: Star Map Recommendation Foundation
+    status: Planned
+    priority: P0
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-066, QST-075, QST-078]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Build a foundation for recommending the next Quest using Quest, Mission, Trail, and Tag context.
+    acceptance:
+      - Service returns ranked Quest recommendation candidates.
+      - Each recommendation has reason text.
+  - id: QST-082
+    title: Horizon Next Challenge MVP
+    status: Planned
+    priority: P1
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-081, QST-058]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Let Arc suggest the next challenge based on user achievement and readiness.
+    acceptance:
+      - Arc can suggest one next challenge with reason.
+      - No paid gating is introduced.
+  - id: QST-083
+    title: Arc 3D Readiness Architecture
+    status: Planned
+    priority: P1
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-047, QST-073]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Prepare Arc expression architecture for future PNG, Rive, and GLB/3D implementations.
+    acceptance:
+      - Arc expression decisions return a renderer-agnostic asset descriptor.
+      - Existing ArcWidget still renders current PNG assets.
+  - id: QST-084
+    title: Arc Animation Event Layer
+    status: Planned
+    priority: P1
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-083]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Add a renderer-neutral animation event interface for Arc reactions.
+    acceptance:
+      - Animation events are centralized and testable.
+      - No new heavy animation engine is required.
+  - id: QST-085
+    title: Dream Board V1
+    status: Planned
+    priority: P2
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-075, QST-032]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Let users collect visual inspiration for each Quest without disrupting the core loop.
+    acceptance:
+      - Quest Detail can show a Dream Board section.
+      - Media handling follows existing Trail media constraints.
+  - id: QST-086
+    title: Quest Template Library
+    status: Planned
+    priority: P1
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-065, QST-075]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Help users start faster with Quest templates for common life areas.
+    acceptance:
+      - Quest creation can start from a template.
+      - User can edit template output before saving.
+  - id: QST-087
+    title: Premium Readiness Flags
+    status: Planned
+    priority: P2
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-070]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Prepare future Premium feature switches without enforcing payments or harming MVP UX.
+    acceptance:
+      - All MVP/Beta core features remain enabled by default.
+      - No payment UI or hard paywall is introduced.
+  - id: QST-088
+    title: Onboarding Personalization
+    status: Planned
+    priority: P0
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-028, QST-060, QST-076]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Personalize the first-run experience with Arc name preference, Quest tendencies, and Signal frequency.
+    acceptance:
+      - Preferences persist to profile or local fallback.
+      - Arc copy reflects the chosen name/preference.
+  - id: QST-089
+    title: Beta Analytics Events
+    status: Planned
+    priority: P0
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-069, QST-071]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Define and implement privacy-conscious event tracking boundaries for beta learning.
+    acceptance:
+      - Analytics event names and payload rules are documented.
+      - Default implementation is no-op or local-safe.
+  - id: QST-090
+    title: Feature Expansion Review
+    status: Planned
+    priority: P0
+    epic: FEATURE-EXPANSION
+    depends_on: [QST-073, QST-074, QST-075, QST-076, QST-077, QST-078, QST-079, QST-080, QST-081, QST-082, QST-083, QST-084, QST-085, QST-086, QST-087, QST-088, QST-089]
+    detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+    scope: Review QST-073 through QST-089 for coherence, UX quality, MVP stability, and launch direction.
+    acceptance:
+      - MVP/Beta stability is preserved.
+      - QST-091 through QST-100 candidates are proposed.
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

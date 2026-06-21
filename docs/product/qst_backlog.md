@@ -59,6 +59,24 @@ there before new QSTs are created or reordered.
 | QST-070 | Done | Beta Readiness Refresh | Refresh the beta readiness report after performance and beta feedback operations are in place. | Readiness score, completed beta foundations, and remaining launch blockers are current and script-verifiable. |
 | QST-071 | Done | Real Device Beta Validation Checklist | Define the real-device manual validation pass required before expanding internal beta. | Required devices, preflight, manual checks, stop conditions, and evidence capture are documented and script-verifiable. |
 | QST-072 | Done | Final Screenshot QA | Define final screenshot QA requirements for beta and store-readiness evidence. | Required screens, viewports, pass/stop criteria, and output naming are documented and script-verifiable. |
+| QST-073 | Ready | Arc Emotion Timeline | Store and display Arc emotional history based on user journey actions. | Arc emotion events can be created and shown with reason, source, and timestamp. |
+| QST-074 | Planned | Arc Action Trigger Rules | Automatically switch Arc expression and copy in response to key user states and actions. | Trigger rules are centralized and map major MVP actions to Arc emotion/copy. |
+| QST-075 | Planned | Quest Milestone System | Break Quests into visible Milestones so users can understand progress beyond a flat percentage. | Quest Detail shows Milestones with status and progress. |
+| QST-076 | Planned | Mission Reminder / Signal MVP | Introduce a lightweight Signal foundation for Mission due dates, stalled Missions, and gentle reminders. | Signals can be generated from Mission and Quest context without platform notifications. |
+| QST-077 | Planned | Trail Timeline V1 | Let users revisit Trails in a chronological timeline. | Trail Timeline renders recent Trails in order using Trail terminology. |
+| QST-078 | Planned | Trail Highlight System | Let Arc identify meaningful Trails and mark them as Star Memory candidates. | Trail highlights are deterministic and include visible reasons. |
+| QST-079 | Planned | Guild Quest Matching | Improve Guild usefulness by connecting users with similar Quest tags and nearby goals. | Matching ranks related Quests by tags without exposing private content. |
+| QST-080 | Planned | Guild Safe Posting Review | Add a lightweight Arc review before Guild posting to reduce personal information and unsafe sharing. | Review flags obvious personal information and allows revision. |
+| QST-081 | Planned | Star Map Recommendation Foundation | Build a foundation for recommending the next Quest using Quest, Mission, Trail, and Tag context. | Service returns ranked Quest recommendation candidates with reasons. |
+| QST-082 | Planned | Horizon Next Challenge MVP | Let Arc suggest the next challenge based on user achievement and readiness. | Arc can suggest one next challenge without paid gating. |
+| QST-083 | Planned | Arc 3D Readiness Architecture | Prepare Arc expression architecture for future PNG, Rive, and GLB/3D implementations. | Arc expression decisions return a renderer-agnostic asset descriptor. |
+| QST-084 | Planned | Arc Animation Event Layer | Add a renderer-neutral animation event interface for Arc reactions. | Animation events are centralized and testable. |
+| QST-085 | Planned | Dream Board V1 | Let users collect visual inspiration for each Quest without disrupting the core loop. | Quest Detail can show a Dream Board section with existing media constraints. |
+| QST-086 | Planned | Quest Template Library | Help users start faster with Quest templates for common life areas. | Quest creation can start from editable templates. |
+| QST-087 | Planned | Premium Readiness Flags | Prepare future Premium feature switches without enforcing payments or harming MVP UX. | MVP/Beta core features remain enabled and no paywall is introduced. |
+| QST-088 | Planned | Onboarding Personalization | Personalize first-run experience with Arc name preference, Quest tendencies, and Signal frequency. | Preferences persist and Arc copy reflects them. |
+| QST-089 | Planned | Beta Analytics Events | Define and implement privacy-conscious event tracking boundaries for beta learning. | Analytics event names and payload rules are documented with safe defaults. |
+| QST-090 | Planned | Feature Expansion Review | Review QST-073 through QST-089 for coherence, UX quality, MVP stability, and launch direction. | MVP/Beta stability is preserved and QST-091 through QST-100 candidates are proposed. |
 
 ## Selection Rules
 

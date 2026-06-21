@@ -1,0 +1,390 @@
+version: 1
+updated: 2026-06-21
+epic:
+  id: FEATURE-EXPANSION
+  title: Questra Feature Expansion Epic
+  range: QST-073-QST-090
+  goal: Improve app feature depth, retention, differentiation, and beta-to-launch readiness without destabilizing the MVP.
+  constraints:
+    - Do not use Story as a product concept.
+    - Do not call Arc an AI assistant in user-facing text.
+    - Keep MVP and Beta flows stable.
+    - Do not introduce complex paid features yet.
+    - Prefer incremental Flutter and Supabase changes.
+items:
+  - id: QST-073
+    title: Arc Emotion Timeline
+    priority: P0
+    status: Ready
+    dependencies: [QST-068, QST-070]
+    goal: Store and display Arc emotional history based on user journey actions.
+    scope:
+      - Add Arc emotion event model and repository boundary.
+      - Record emotion events for Quest creation, Mission completion, Trail posting, Reflection, Arc Chat, and concern states.
+      - Add a lightweight Arc Emotion Timeline surface in Arc or Profile.
+      - Keep local fallback behavior for unconfigured Supabase.
+    acceptance:
+      - Arc emotion events can be created from major journey actions.
+      - Timeline shows emotion, reason, source type, and timestamp.
+      - Empty state uses Arc-native Japanese copy.
+      - User-facing text avoids assistant framing.
+      - Flutter analyze and tests pass.
+    files_likely_to_change:
+      - apps/mobile/lib/features/arc/arc_emotion_timeline_model.dart
+      - apps/mobile/lib/features/arc/arc_emotion_timeline_repository.dart
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - apps/mobile/lib/features/quest/quest_controller.dart
+      - apps/mobile/lib/features/mission/mission_controller.dart
+      - apps/mobile/lib/features/trail/trail_controller.dart
+      - supabase/migrations/
+      - apps/mobile/test/
+  - id: QST-074
+    title: Arc Action Trigger Rules
+    priority: P0
+    status: Planned
+    dependencies: [QST-073]
+    goal: Automatically switch Arc expression and copy in response to key user states and actions.
+    scope:
+      - Add deterministic Arc action trigger service.
+      - Map Quest creation, Mission completion, Trail posting, Reflection, inactivity, unauthenticated state, and save failures to Arc expression/copy.
+      - Feed trigger decisions into Home, Arc Chat, Quest Detail, Mission, and Trail surfaces.
+    acceptance:
+      - Trigger rules are centralized and testable.
+      - Each major MVP action resolves an Arc emotion and short Japanese message.
+      - Save failure and unauthenticated states are handled gently.
+      - Existing core flows remain stable.
+    files_likely_to_change:
+      - apps/mobile/lib/features/arc/arc_action_trigger_service.dart
+      - apps/mobile/lib/features/home/home_screen.dart
+      - apps/mobile/lib/features/quest/quest_detail_screen.dart
+      - apps/mobile/lib/features/mission/mission_screen.dart
+      - apps/mobile/lib/features/trail/trail_screen.dart
+      - apps/mobile/test/
+  - id: QST-075
+    title: Quest Milestone System
+    priority: P0
+    status: Planned
+    dependencies: [QST-063, QST-065]
+    goal: Break Quests into visible Milestones so users can understand progress beyond a flat percentage.
+    scope:
+      - Add Milestone model, repository, and Supabase migration proposal or implementation.
+      - Show Milestones on Quest Detail.
+      - Allow generated Quest Guide output to suggest Milestones.
+      - Connect Mission candidates to Milestones when possible.
+    acceptance:
+      - Quest Detail shows Milestones with status and progress.
+      - At least one Milestone can be created or generated per Quest.
+      - Milestone status can be updated without breaking Quest progress.
+      - Supabase ownership follows existing Quest owner boundaries.
+    files_likely_to_change:
+      - apps/mobile/lib/features/quest/quest_milestone_model.dart
+      - apps/mobile/lib/features/quest/quest_milestone_repository.dart
+      - apps/mobile/lib/features/quest/quest_detail_screen.dart
+      - apps/mobile/lib/features/quest/arc_quest_guide_service.dart
+      - supabase/migrations/
+      - apps/mobile/test/
+  - id: QST-076
+    title: Mission Reminder / Signal MVP
+    priority: P0
+    status: Planned
+    dependencies: [QST-053, QST-075]
+    goal: Introduce a lightweight Signal foundation for Mission due dates, stalled Missions, and gentle reminders.
+    scope:
+      - Add Signal model and deterministic reminder rules.
+      - Show Signals in Home and Mission surfaces.
+      - Avoid push notification complexity for now.
+      - Support due-soon, overdue, stale, and suggested-small-step Signals.
+    acceptance:
+      - Signals can be generated from Mission and Quest context.
+      - Home shows the most relevant Signal.
+      - Signals use gentle Arc language and do not shame users.
+      - No platform notification permission is required for MVP.
+    files_likely_to_change:
+      - apps/mobile/lib/features/signal/
+      - apps/mobile/lib/features/home/home_screen.dart
+      - apps/mobile/lib/features/mission/mission_screen.dart
+      - apps/mobile/test/
+  - id: QST-077
+    title: Trail Timeline V1
+    priority: P1
+    status: Planned
+    dependencies: [QST-034, QST-035, QST-072]
+    goal: Let users revisit Trails in a beautiful chronological timeline.
+    scope:
+      - Add Timeline view or mode to Trail screen.
+      - Group Trails by date or Quest.
+      - Include media thumbnail, reflection marker, Arc highlight marker, and source type.
+      - Keep existing Trail list behavior available.
+    acceptance:
+      - Trail Timeline renders recent Trails in chronological order.
+      - Empty state uses Arc guidance.
+      - Timeline handles media and reflection Trails without crashing.
+      - Visible labels use Trail terminology.
+    files_likely_to_change:
+      - apps/mobile/lib/features/trail/trail_screen.dart
+      - apps/mobile/lib/features/trail/trail_timeline_widget.dart
+      - apps/mobile/lib/features/media/media_repository.dart
+      - apps/mobile/test/
+  - id: QST-078
+    title: Trail Highlight System
+    priority: P1
+    status: Planned
+    dependencies: [QST-077, QST-029]
+    goal: Let Arc identify meaningful Trails and mark them as Star Memory candidates.
+    scope:
+      - Add Trail highlight scoring service.
+      - Use reflection depth, Quest progress, tag importance, media, and Arc Memory signals.
+      - Display highlights in Trail Timeline and Arc Memory surfaces.
+    acceptance:
+      - Trail highlights are deterministic and testable.
+      - Highlight reason is visible to the user.
+      - Highlighted Trails can be used as Star Memory candidates.
+      - Low-signal Trails are not over-promoted.
+    files_likely_to_change:
+      - apps/mobile/lib/features/trail/trail_highlight_service.dart
+      - apps/mobile/lib/features/trail/trail_screen.dart
+      - apps/mobile/lib/features/arc_memory/
+      - apps/mobile/test/
+  - id: QST-079
+    title: Guild Quest Matching
+    priority: P1
+    status: Planned
+    dependencies: [QST-066, QST-036]
+    goal: Improve Guild usefulness by connecting users with similar Quest tags and nearby goals.
+    scope:
+      - Add local/repository-level matching service using Quest tags.
+      - Show suggested Guild prompts or matching categories.
+      - Keep privacy-first behavior and avoid exposing private Quest details.
+    acceptance:
+      - Matching can rank related Quests by tags.
+      - Guild screen shows safe matching suggestions.
+      - Private Quest content is not exposed.
+      - Matching works without paid features.
+    files_likely_to_change:
+      - apps/mobile/lib/features/guild/
+      - apps/mobile/lib/features/tagging/
+      - apps/mobile/lib/features/quest/
+      - apps/mobile/test/
+  - id: QST-080
+    title: Guild Safe Posting Review
+    priority: P0
+    status: Planned
+    dependencies: [QST-079, QST-054]
+    goal: Add a lightweight Arc review before Guild posting to reduce personal information and unsafe sharing.
+    scope:
+      - Add safe posting review service.
+      - Detect contact details, overly private content, and unclear wording.
+      - Show a non-blocking review card before posting or drafting.
+    acceptance:
+      - Review flags obvious personal information.
+      - Review suggests safer wording in Japanese.
+      - User can revise before posting.
+      - Arc is framed as a companion checking the signal, not an assistant.
+    files_likely_to_change:
+      - apps/mobile/lib/features/guild/guild_safe_posting_review_service.dart
+      - apps/mobile/lib/features/guild/guild_screen.dart
+      - apps/mobile/test/
+  - id: QST-081
+    title: Star Map Recommendation Foundation
+    priority: P0
+    status: Planned
+    dependencies: [QST-066, QST-075, QST-078]
+    goal: Build a foundation for recommending the next Quest using Quest, Mission, Trail, and Tag context.
+    scope:
+      - Add Star Map recommendation model and service.
+      - Use tags, completed Missions, Trail highlights, and active Quest gaps.
+      - Keep recommendations deterministic for MVP/Beta.
+    acceptance:
+      - Service returns ranked Quest recommendation candidates.
+      - Each recommendation has reason text.
+      - Recommendations do not require external AI to function.
+      - Tests cover empty, active, and completed journey states.
+    files_likely_to_change:
+      - apps/mobile/lib/features/star_map/
+      - apps/mobile/lib/features/tagging/
+      - apps/mobile/lib/features/quest/
+      - apps/mobile/test/
+  - id: QST-082
+    title: Horizon Next Challenge MVP
+    priority: P1
+    status: Planned
+    dependencies: [QST-081, QST-058]
+    goal: Let Arc suggest the next challenge based on user achievement and readiness.
+    scope:
+      - Add Horizon next challenge service.
+      - Use Navigator Rank, completed Quests, tags, and recent Trails.
+      - Display the top challenge in Home or Star Map.
+    acceptance:
+      - Arc can suggest one next challenge with reason.
+      - Suggestion adapts to low, medium, and high progress users.
+      - User can start or dismiss a suggestion.
+      - No paid gating is introduced.
+    files_likely_to_change:
+      - apps/mobile/lib/features/horizon/
+      - apps/mobile/lib/features/home/home_screen.dart
+      - apps/mobile/lib/features/star_map/
+      - apps/mobile/test/
+  - id: QST-083
+    title: Arc 3D Readiness Architecture
+    priority: P1
+    status: Planned
+    dependencies: [QST-047, QST-073]
+    goal: Prepare Arc expression architecture for future PNG, Rive, and GLB/3D implementations.
+    scope:
+      - Add Arc visual asset descriptor independent of PNG path.
+      - Keep existing PNG renderer as the default.
+      - Avoid adding actual 3D runtime dependencies in this QST.
+    acceptance:
+      - Arc expression decisions return a renderer-agnostic asset descriptor.
+      - Existing ArcWidget still renders current PNG assets.
+      - Tests prove PNG behavior remains unchanged.
+      - Future Rive/GLB types can be represented.
+    files_likely_to_change:
+      - apps/mobile/lib/widgets/arc/
+      - apps/mobile/lib/features/arc/arc_expression_engine.dart
+      - apps/mobile/test/
+  - id: QST-084
+    title: Arc Animation Event Layer
+    priority: P1
+    status: Planned
+    dependencies: [QST-083]
+    goal: Add a renderer-neutral animation event interface for Arc reactions.
+    scope:
+      - Define Arc animation event types such as idle, blink, celebrate, concern, thinking, and transition.
+      - Map current PNG widget motion to event metadata.
+      - Keep implementation compatible with future Rive/GLB renderers.
+    acceptance:
+      - Animation events are centralized and testable.
+      - ArcWidget can consume basic events without visual regression.
+      - No new heavy animation engine is required.
+      - Future renderer support is documented.
+    files_likely_to_change:
+      - apps/mobile/lib/widgets/arc/arc_animation_event.dart
+      - apps/mobile/lib/widgets/arc/arc_widget.dart
+      - apps/mobile/lib/features/arc/
+      - apps/mobile/test/
+  - id: QST-085
+    title: Dream Board V1
+    priority: P2
+    status: Planned
+    dependencies: [QST-075, QST-032]
+    goal: Let users collect visual inspiration for each Quest without disrupting the core loop.
+    scope:
+      - Add Dream Board model and Quest-scoped UI.
+      - Support image references and notes.
+      - Keep AI-generated backgrounds as future-compatible metadata, not required for MVP.
+    acceptance:
+      - Quest Detail can show a Dream Board section.
+      - User can add, view, and remove a Dream Board item locally or through repository boundary.
+      - Media handling follows existing Trail media constraints.
+      - Empty state uses Arc guidance.
+    files_likely_to_change:
+      - apps/mobile/lib/features/dream_board/
+      - apps/mobile/lib/features/quest/quest_detail_screen.dart
+      - apps/mobile/lib/features/media/
+      - supabase/migrations/
+      - apps/mobile/test/
+  - id: QST-086
+    title: Quest Template Library
+    priority: P1
+    status: Planned
+    dependencies: [QST-065, QST-075]
+    goal: Help users start faster with Quest templates for common life areas.
+    scope:
+      - Add template model and curated seed templates for travel, health, learning, family, work, and challenge.
+      - Allow template selection during Quest creation.
+      - Include suggested Milestones and Missions where available.
+    acceptance:
+      - Quest creation can start from a template.
+      - Templates include category, description, Milestones, and Mission suggestions.
+      - User can edit template output before saving.
+      - Templates work without network calls.
+    files_likely_to_change:
+      - apps/mobile/lib/features/quest/quest_template_model.dart
+      - apps/mobile/lib/features/quest/quest_template_library.dart
+      - apps/mobile/lib/features/quest/quest_form_screen.dart
+      - apps/mobile/test/
+  - id: QST-087
+    title: Premium Readiness Flags
+    priority: P2
+    status: Planned
+    dependencies: [QST-070]
+    goal: Prepare future Premium feature switches without enforcing payments or harming MVP UX.
+    scope:
+      - Add feature flag model for future Premium capabilities.
+      - Define default all-free beta behavior.
+      - Document future monetization boundaries and prohibited MVP gates.
+    acceptance:
+      - Feature flags can represent future Premium-only capabilities.
+      - All MVP/Beta core features remain enabled by default.
+      - No payment UI or hard paywall is introduced.
+      - Tests verify default beta access remains open.
+    files_likely_to_change:
+      - apps/mobile/lib/core/feature_flags/
+      - docs/product/
+      - apps/mobile/test/
+  - id: QST-088
+    title: Onboarding Personalization
+    priority: P0
+    status: Planned
+    dependencies: [QST-028, QST-060, QST-076]
+    goal: Personalize the first-run experience with Arc name preference, Quest tendencies, and Signal frequency.
+    scope:
+      - Extend onboarding profile fields.
+      - Let users set nickname/captain name, Quest interests, and reminder frequency.
+      - Feed preferences into Arc Daily Greeting and Signal rules.
+    acceptance:
+      - Onboarding captures personalization without increasing setup friction too much.
+      - Preferences persist to profile or local fallback.
+      - Arc copy reflects the chosen name/preference.
+      - Signal frequency can be represented without platform notifications.
+    files_likely_to_change:
+      - apps/mobile/lib/features/onboarding/
+      - apps/mobile/lib/features/auth/auth_state.dart
+      - apps/mobile/lib/features/auth/auth_controller.dart
+      - apps/mobile/lib/features/arc/arc_daily_greeting_service.dart
+      - supabase/migrations/
+      - apps/mobile/test/
+  - id: QST-089
+    title: Beta Analytics Events
+    priority: P0
+    status: Planned
+    dependencies: [QST-069, QST-071]
+    goal: Define and implement privacy-conscious event tracking boundaries for beta learning.
+    scope:
+      - Add analytics event taxonomy for core actions.
+      - Add local no-op analytics service and repository boundary for future provider.
+      - Track Quest created, Mission completed, Trail posted, Arc Chat sent, Guild draft, media attached, and onboarding completed.
+      - Avoid storing sensitive content in analytics payloads.
+    acceptance:
+      - Analytics event names and payload rules are documented.
+      - App can emit events through a centralized service.
+      - Default implementation is no-op or local-safe.
+      - Tests verify no raw Quest/Trail content is required in analytics events.
+    files_likely_to_change:
+      - apps/mobile/lib/core/analytics/
+      - apps/mobile/lib/features/quest/
+      - apps/mobile/lib/features/mission/
+      - apps/mobile/lib/features/trail/
+      - docs/analytics/
+      - apps/mobile/test/
+  - id: QST-090
+    title: Feature Expansion Review
+    priority: P0
+    status: Planned
+    dependencies: [QST-073, QST-074, QST-075, QST-076, QST-077, QST-078, QST-079, QST-080, QST-081, QST-082, QST-083, QST-084, QST-085, QST-086, QST-087, QST-088, QST-089]
+    goal: Review QST-073 through QST-089 for coherence, UX quality, MVP stability, and launch direction.
+    scope:
+      - Review Arc companion consistency.
+      - Review Quest planning, Trail depth, Guild usefulness, Star Map foundation, 3D readiness, Premium flags, onboarding, and analytics.
+      - Update Beta Readiness and next QST candidates.
+    acceptance:
+      - Major blockers are listed with owners or QST candidates.
+      - MVP/Beta stability is preserved.
+      - Feature expansion does not introduce Story terminology or assistant framing.
+      - QST-091 through QST-100 candidates are proposed.
+    files_likely_to_change:
+      - docs/product/beta_readiness_report.md
+      - docs/qst/BACKLOG.yaml
+      - docs/product/qst_backlog.md
+      - reports/qst/QST-090.md
