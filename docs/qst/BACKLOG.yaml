@@ -415,6 +415,21 @@ items:
       - Stop conditions are explicit.
       - Evidence capture requirements are listed.
       - Validation checklist readiness can be verified by script.
+  - id: QST-072
+    title: Final Screenshot QA
+    status: Done
+    priority: P1
+    epic: BETA-HARDENING
+    depends_on: [QST-071]
+    completed_by:
+      report: reports/qst/QST-072.md
+    scope: Define final screenshot QA requirements for beta and store-readiness evidence.
+    acceptance:
+      - Required beta screenshots are listed.
+      - Mobile, tablet, and web viewport targets are documented.
+      - Pass and stop criteria cover terminology, Arc framing, layout, and asset rendering.
+      - Screenshot output location and filenames are documented.
+      - Screenshot QA readiness can be verified by script.
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

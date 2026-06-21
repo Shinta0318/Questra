@@ -58,6 +58,7 @@ there before new QSTs are created or reordered.
 | QST-069 | Done | Beta Feedback Operations | Define internal beta feedback intake, labels, triage workflow, stop conditions, and QST conversion rules. | Beta feedback has required fields, severity/surface labels, triage rules, and script-verifiable readiness. |
 | QST-070 | Done | Beta Readiness Refresh | Refresh the beta readiness report after performance and beta feedback operations are in place. | Readiness score, completed beta foundations, and remaining launch blockers are current and script-verifiable. |
 | QST-071 | Done | Real Device Beta Validation Checklist | Define the real-device manual validation pass required before expanding internal beta. | Required devices, preflight, manual checks, stop conditions, and evidence capture are documented and script-verifiable. |
+| QST-072 | Done | Final Screenshot QA | Define final screenshot QA requirements for beta and store-readiness evidence. | Required screens, viewports, pass/stop criteria, and output naming are documented and script-verifiable. |
 
 ## Selection Rules
 
