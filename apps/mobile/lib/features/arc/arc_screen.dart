@@ -25,6 +25,7 @@ import 'arc_chat_service.dart';
 import 'arc_emotion_timeline_controller.dart';
 import 'arc_emotion_timeline_model.dart';
 import 'arc_guidance_providers.dart';
+import 'arc_action_trigger_service.dart';
 import 'stardust_service.dart';
 
 class ArcScreen extends ConsumerStatefulWidget {
@@ -180,13 +181,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         _messages.add(arcMessage);
         _isThinking = false;
       });
-      ref
-          .read(arcEmotionTimelineControllerProvider.notifier)
-          .record(
-            emotion: ArcEmotion.support,
-            sourceType: ArcEmotionSourceType.arcChat,
-            reason: 'Arc Chatで今日の航路を一緒に読みました。',
-          );
+      _recordChatAction(ArcActionTrigger.arcChatResponded);
       await _rememberChat(userMessage, arcMessage, context);
     } catch (_) {
       if (!mounted) {
@@ -202,14 +197,21 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         );
         _isThinking = false;
       });
-      ref
-          .read(arcEmotionTimelineControllerProvider.notifier)
-          .record(
-            emotion: ArcEmotion.worried,
-            sourceType: ArcEmotionSourceType.saveFailure,
-            reason: 'Arc Chatの応答で星雲が少し揺れました。',
-          );
+      _recordChatAction(ArcActionTrigger.saveFailure);
     }
+  }
+
+  void _recordChatAction(ArcActionTrigger trigger) {
+    final decision = ref
+        .read(arcActionTriggerServiceProvider)
+        .resolve(trigger: trigger, surface: 'Arc Chat');
+    ref
+        .read(arcEmotionTimelineControllerProvider.notifier)
+        .record(
+          emotion: decision.emotion,
+          sourceType: decision.sourceType,
+          reason: decision.message,
+        );
   }
 
   Future<void> _rememberChat(

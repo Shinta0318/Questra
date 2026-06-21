@@ -3,15 +3,15 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/persistence/persistence_sync_state.dart';
+import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_bond_growth_service.dart';
 import '../arc/arc_emotion_timeline_controller.dart';
-import '../arc/arc_emotion_timeline_model.dart';
+import '../arc/arc_guidance_providers.dart';
 import '../arc/stardust_service.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
 import '../tagging/tagging_providers.dart';
-import '../../widgets/arc/arc_emotion.dart';
 import 'quest_model.dart';
 import 'quest_providers.dart';
 
@@ -91,15 +91,7 @@ class QuestController extends Notifier<List<Quest>> {
 
   void add(Quest quest) {
     state = [...state, quest];
-    ref
-        .read(arcEmotionTimelineControllerProvider.notifier)
-        .record(
-          emotion: ArcEmotion.excited,
-          sourceType: ArcEmotionSourceType.questCreated,
-          reason: '新しいQuest「${quest.title}」が星図に加わりました。',
-          sourceId: quest.id,
-          questId: quest.id,
-        );
+    _recordQuestAction(ArcActionTrigger.questCreated, quest);
     unawaited(
       _persistQuest(quest, sourceType: ArcMemorySourceType.questCreated),
     );
@@ -110,15 +102,7 @@ class QuestController extends Notifier<List<Quest>> {
       for (final quest in state)
         if (quest.id == updatedQuest.id) updatedQuest else quest,
     ];
-    ref
-        .read(arcEmotionTimelineControllerProvider.notifier)
-        .record(
-          emotion: ArcEmotion.support,
-          sourceType: ArcEmotionSourceType.questUpdated,
-          reason: 'Quest「${updatedQuest.title}」の航路が更新されました。',
-          sourceId: updatedQuest.id,
-          questId: updatedQuest.id,
-        );
+    _recordQuestAction(ArcActionTrigger.questUpdated, updatedQuest);
     unawaited(
       _persistQuest(updatedQuest, sourceType: ArcMemorySourceType.questUpdated),
     );
@@ -139,15 +123,11 @@ class QuestController extends Notifier<List<Quest>> {
       ref
           .read(questSyncControllerProvider.notifier)
           .failed('Quest save', 'ログインが必要です。');
-      ref
-          .read(arcEmotionTimelineControllerProvider.notifier)
-          .record(
-            emotion: ArcEmotion.worried,
-            sourceType: ArcEmotionSourceType.unauthenticated,
-            reason: 'Questを保存するにはログインが必要でした。',
-            sourceId: quest.id,
-            questId: quest.id,
-          );
+      _recordQuestAction(
+        ArcActionTrigger.unauthenticated,
+        quest,
+        surface: 'Quest保存',
+      );
       return;
     }
 
@@ -167,16 +147,31 @@ class QuestController extends Notifier<List<Quest>> {
       sync.saved('Questを保存しました。');
     } catch (error) {
       sync.failed('Quest save', error);
-      ref
-          .read(arcEmotionTimelineControllerProvider.notifier)
-          .record(
-            emotion: ArcEmotion.worried,
-            sourceType: ArcEmotionSourceType.saveFailure,
-            reason: 'Quest「${quest.title}」の保存で星図が少し揺れました。',
-            sourceId: quest.id,
-            questId: quest.id,
-          );
+      _recordQuestAction(
+        ArcActionTrigger.saveFailure,
+        quest,
+        surface: 'Quest保存',
+      );
     }
+  }
+
+  void _recordQuestAction(
+    ArcActionTrigger trigger,
+    Quest quest, {
+    String? surface,
+  }) {
+    final decision = ref
+        .read(arcActionTriggerServiceProvider)
+        .resolve(trigger: trigger, questTitle: quest.title, surface: surface);
+    ref
+        .read(arcEmotionTimelineControllerProvider.notifier)
+        .record(
+          emotion: decision.emotion,
+          sourceType: decision.sourceType,
+          reason: decision.message,
+          sourceId: quest.id,
+          questId: quest.id,
+        );
   }
 
   Future<void> _tagQuest(String userId, Quest quest) async {

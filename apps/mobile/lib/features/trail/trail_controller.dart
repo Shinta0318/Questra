@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_bond_growth_service.dart';
 import '../arc/arc_emotion_timeline_controller.dart';
-import '../arc/arc_emotion_timeline_model.dart';
+import '../arc/arc_guidance_providers.dart';
 import '../arc/stardust_service.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
@@ -13,7 +14,6 @@ import '../auth/auth_controller.dart';
 import '../media/media_model.dart';
 import '../media/media_providers.dart';
 import '../tagging/tagging_providers.dart';
-import '../../widgets/arc/arc_emotion.dart';
 import 'trail_model.dart';
 import 'trail_providers.dart';
 import 'trail_sync_state.dart';
@@ -234,6 +234,24 @@ class TrailController extends Notifier<List<Trail>> {
   Future<void> _persistTrail(Trail trail) async {
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
+      final decision = ref
+          .read(arcActionTriggerServiceProvider)
+          .resolve(
+            trigger: ArcActionTrigger.unauthenticated,
+            trailTitle: trail.title,
+            surface: 'Trail保存',
+          );
+      ref
+          .read(arcEmotionTimelineControllerProvider.notifier)
+          .record(
+            emotion: decision.emotion,
+            sourceType: decision.sourceType,
+            reason: decision.message,
+            sourceId: trail.id,
+            questId: trail.questId,
+            missionId: trail.missionId,
+            trailId: trail.id,
+          );
       return;
     }
 
@@ -254,12 +272,19 @@ class TrailController extends Notifier<List<Trail>> {
       sync.saved('Trail record saved.');
     } catch (error) {
       sync.failed(error);
+      final decision = ref
+          .read(arcActionTriggerServiceProvider)
+          .resolve(
+            trigger: ArcActionTrigger.saveFailure,
+            trailTitle: trail.title,
+            surface: 'Trail保存',
+          );
       ref
           .read(arcEmotionTimelineControllerProvider.notifier)
           .record(
-            emotion: ArcEmotion.worried,
-            sourceType: ArcEmotionSourceType.saveFailure,
-            reason: 'Trail「${trail.title}」の保存で星図が少し揺れました。',
+            emotion: decision.emotion,
+            sourceType: decision.sourceType,
+            reason: decision.message,
             sourceId: trail.id,
             questId: trail.questId,
             missionId: trail.missionId,
@@ -270,16 +295,20 @@ class TrailController extends Notifier<List<Trail>> {
 
   void _recordTrailEmotion(Trail trail) {
     final isReflection = trail.trailType == TrailType.arcReflection;
+    final decision = ref
+        .read(arcActionTriggerServiceProvider)
+        .resolve(
+          trigger: isReflection
+              ? ArcActionTrigger.reflectionAdded
+              : ArcActionTrigger.trailPosted,
+          trailTitle: trail.title,
+        );
     ref
         .read(arcEmotionTimelineControllerProvider.notifier)
         .record(
-          emotion: isReflection ? ArcEmotion.support : ArcEmotion.celebrate,
-          sourceType: isReflection
-              ? ArcEmotionSourceType.reflectionAdded
-              : ArcEmotionSourceType.trailPosted,
-          reason: isReflection
-              ? 'Trail「${trail.title}」から振り返りの星が見つかりました。'
-              : 'Trail「${trail.title}」が航路に残りました。',
+          emotion: decision.emotion,
+          sourceType: decision.sourceType,
+          reason: decision.message,
           sourceId: trail.id,
           questId: trail.questId,
           missionId: trail.missionId,
