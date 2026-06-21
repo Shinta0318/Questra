@@ -13,6 +13,13 @@ import '../quest/quest_controller.dart';
 import '../quest/quest_model.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
+import 'guild_quest_matching_service.dart';
+
+final guildQuestMatchingServiceProvider = Provider<GuildQuestMatchingService>((
+  ref,
+) {
+  return const GuildQuestMatchingService();
+});
 
 class GuildScreen extends ConsumerWidget {
   const GuildScreen({super.key});
@@ -33,6 +40,11 @@ class GuildScreen extends ConsumerWidget {
         .take(QuestraPerformanceLimits.guildTrailPreviewLimit)
         .toList(growable: false);
     final question = _buildGuildQuestion(activeQuests, openMissions);
+    final guildMatches = activeQuests.isEmpty
+        ? const <GuildQuestMatch>[]
+        : ref
+              .watch(guildQuestMatchingServiceProvider)
+              .rank(sourceQuest: activeQuests.first, candidates: quests);
     final hasGuildContext =
         activeQuests.isNotEmpty ||
         openMissions.isNotEmpty ||
@@ -58,6 +70,8 @@ class GuildScreen extends ConsumerWidget {
             ],
             _GuildQuestionCard(question: question),
             const SizedBox(height: 16),
+            _GuildQuestMatchCard(matches: guildMatches),
+            const SizedBox(height: 16),
             _GuildTrailReflectionCard(trails: latestTrails),
           ],
         ),
@@ -78,6 +92,83 @@ class GuildScreen extends ConsumerWidget {
       return '「${quest.title}」を進めたいです。最初のMissionを小さくするなら、どんな一歩がよさそうですか？';
     }
     return 'これから始めたいQuestがあります。まだ形が曖昧なので、最初の小さなMissionを一緒に考えてほしいです。';
+  }
+}
+
+class _GuildQuestMatchCard extends StatelessWidget {
+  const _GuildQuestMatchCard({required this.matches});
+
+  final List<GuildQuestMatch> matches;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Quest Matching', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          const Text('近いQuestを持つ仲間を探すための候補です。private Questの詳細は表示しません。'),
+          const SizedBox(height: 12),
+          if (matches.isEmpty)
+            const Text('今は近い公開/Guild Questが見つかっていません。QuestやTrailが増えると精度が上がります。')
+          else
+            ...matches.map(
+              (match) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _GuildQuestMatchTile(match: match),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuildQuestMatchTile extends StatelessWidget {
+  const _GuildQuestMatchTile({required this.match});
+
+  final GuildQuestMatch match;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.14),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.hub_outlined),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  match.title,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 4),
+                Text('${match.category} / ${match.visibility.label}'),
+                const SizedBox(height: 4),
+                Text(match.reason),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${match.score}',
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+        ],
+      ),
+    );
   }
 }
 

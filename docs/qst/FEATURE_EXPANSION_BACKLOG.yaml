@@ -160,7 +160,7 @@ items:
   - id: QST-079
     title: Guild Quest Matching
     priority: P1
-    status: Ready
+    status: Done
     dependencies: [QST-066, QST-036]
     goal: Improve Guild usefulness by connecting users with similar Quest tags and nearby goals.
     scope:
@@ -177,10 +177,12 @@ items:
       - apps/mobile/lib/features/tagging/
       - apps/mobile/lib/features/quest/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-079.md
   - id: QST-080
     title: Guild Safe Posting Review
     priority: P0
-    status: Planned
+    status: Ready
     dependencies: [QST-079, QST-054]
     goal: Add a lightweight Arc review before Guild posting to reduce personal information and unsafe sharing.
     scope:

@@ -520,7 +520,7 @@ items:
       report: reports/qst/QST-078.md
   - id: QST-079
     title: Guild Quest Matching
-    status: Ready
+    status: Done
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-066, QST-036]
@@ -529,9 +529,11 @@ items:
     acceptance:
       - Matching can rank related Quests by tags.
       - Private Quest content is not exposed.
+    completed_by:
+      report: reports/qst/QST-079.md
   - id: QST-080
     title: Guild Safe Posting Review
-    status: Planned
+    status: Ready
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-079, QST-054]
