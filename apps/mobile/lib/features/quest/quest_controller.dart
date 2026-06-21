@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/persistence/persistence_sync_state.dart';
+import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_bond_growth_service.dart';
+import '../arc/arc_emotion_timeline_controller.dart';
+import '../arc/arc_guidance_providers.dart';
 import '../arc/stardust_service.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
@@ -88,6 +91,7 @@ class QuestController extends Notifier<List<Quest>> {
 
   void add(Quest quest) {
     state = [...state, quest];
+    _recordQuestAction(ArcActionTrigger.questCreated, quest);
     unawaited(
       _persistQuest(quest, sourceType: ArcMemorySourceType.questCreated),
     );
@@ -98,6 +102,7 @@ class QuestController extends Notifier<List<Quest>> {
       for (final quest in state)
         if (quest.id == updatedQuest.id) updatedQuest else quest,
     ];
+    _recordQuestAction(ArcActionTrigger.questUpdated, updatedQuest);
     unawaited(
       _persistQuest(updatedQuest, sourceType: ArcMemorySourceType.questUpdated),
     );
@@ -118,6 +123,11 @@ class QuestController extends Notifier<List<Quest>> {
       ref
           .read(questSyncControllerProvider.notifier)
           .failed('Quest save', 'ログインが必要です。');
+      _recordQuestAction(
+        ArcActionTrigger.unauthenticated,
+        quest,
+        surface: 'Quest保存',
+      );
       return;
     }
 
@@ -137,7 +147,31 @@ class QuestController extends Notifier<List<Quest>> {
       sync.saved('Questを保存しました。');
     } catch (error) {
       sync.failed('Quest save', error);
+      _recordQuestAction(
+        ArcActionTrigger.saveFailure,
+        quest,
+        surface: 'Quest保存',
+      );
     }
+  }
+
+  void _recordQuestAction(
+    ArcActionTrigger trigger,
+    Quest quest, {
+    String? surface,
+  }) {
+    final decision = ref
+        .read(arcActionTriggerServiceProvider)
+        .resolve(trigger: trigger, questTitle: quest.title, surface: surface);
+    ref
+        .read(arcEmotionTimelineControllerProvider.notifier)
+        .record(
+          emotion: decision.emotion,
+          sourceType: decision.sourceType,
+          reason: decision.message,
+          sourceId: quest.id,
+          questId: quest.id,
+        );
   }
 
   Future<void> _tagQuest(String userId, Quest quest) async {

@@ -19,8 +19,14 @@ import '../media/media_model.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import 'trail_controller.dart';
+import 'trail_highlight_service.dart';
 import 'trail_model.dart';
 import 'trail_sync_state.dart';
+import 'trail_timeline_widget.dart';
+
+final trailHighlightServiceProvider = Provider<TrailHighlightService>((ref) {
+  return const TrailHighlightService();
+});
 
 class TrailScreen extends ConsumerWidget {
   const TrailScreen({super.key});
@@ -33,6 +39,9 @@ class TrailScreen extends ConsumerWidget {
     final syncState = ref.watch(trailSyncControllerProvider);
     final profile = ref.watch(authControllerProvider).profile;
     final controller = ref.read(trailControllerProvider.notifier);
+    final trailHighlights = ref
+        .watch(trailHighlightServiceProvider)
+        .rank(trails: trails, attachments: trailMedia);
     final expressionEngine = ref.watch(arcExpressionEngineProvider);
     final arcExpression = expressionEngine.resolveJourney(
       quests: const [],
@@ -64,6 +73,15 @@ class TrailScreen extends ConsumerWidget {
               const SizedBox(height: 12),
             ],
             _TrailOverview(trails: trails),
+            const SizedBox(height: 16),
+            TrailTimelineWidget(
+              trails: trails,
+              attachments: trailMedia,
+              highlights: {
+                for (final highlight in trailHighlights)
+                  highlight.trailId: highlight,
+              },
+            ),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: () => _showCreateTrailSheet(context, controller),

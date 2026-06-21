@@ -20,7 +20,10 @@ import 'arc_quest_guide_service.dart';
 import 'quest_controller.dart';
 import 'quest_guide_controller.dart';
 import 'quest_guide_model.dart';
+import 'quest_milestone_controller.dart';
+import 'quest_milestone_model.dart';
 import 'quest_model.dart';
+import 'quest_providers.dart';
 
 class QuestDetailScreen extends ConsumerWidget {
   const QuestDetailScreen({required this.questId, super.key});
@@ -54,6 +57,15 @@ class QuestDetailScreen extends ConsumerWidget {
     final guides = guideState.guidesByQuest[questId] ?? _mockGuides(quest);
     final advice = guideState.adviceByQuest[questId] ?? _mockAdvice(quest);
     final starMap = guideState.starMapByQuest[questId] ?? _mockStarMap(quest);
+    final storedMilestones =
+        ref.watch(questMilestoneControllerProvider)[questId] ??
+        const <QuestMilestone>[];
+    final generatedMilestones = ref
+        .watch(questMilestoneServiceProvider)
+        .plan(quest: quest, guides: guides, missions: missions);
+    final milestones = storedMilestones.isEmpty
+        ? generatedMilestones
+        : storedMilestones;
 
     return Scaffold(
       backgroundColor: QuestraColors.deepNavy,
@@ -66,9 +78,14 @@ class QuestDetailScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _ProgressSection(quest: quest),
             const SizedBox(height: 16),
+            _MilestonesSection(
+              milestones: milestones,
+              isGeneratedPlan: storedMilestones.isEmpty,
+            ),
+            const SizedBox(height: 16),
             _ArcQuestGuidePanel(quest: quest, state: arcGuideState),
             const SizedBox(height: 16),
-            _SectionTitle(number: 4, title: 'Guides'),
+            _SectionTitle(number: 5, title: 'Guides'),
             const SizedBox(height: 12),
             ...guides.map(
               (guide) => Padding(
@@ -246,6 +263,144 @@ class _ProgressSection extends StatelessWidget {
   }
 }
 
+class _MilestonesSection extends ConsumerWidget {
+  const _MilestonesSection({
+    required this.milestones,
+    required this.isGeneratedPlan,
+  });
+
+  final List<QuestMilestone> milestones;
+  final bool isGeneratedPlan;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return _SectionCard(
+      number: 3,
+      title: 'Milestones',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Questを小さな到達点へ分けて、現在地と次の一歩を見えるようにします。'),
+          const SizedBox(height: 12),
+          if (isGeneratedPlan)
+            OutlinedButton.icon(
+              onPressed: () => ref
+                  .read(questMilestoneControllerProvider.notifier)
+                  .saveGeneratedPlan(milestones),
+              icon: const Icon(Icons.bookmark_add_outlined),
+              label: const Text('Milestoneを保存'),
+            ),
+          if (isGeneratedPlan) const SizedBox(height: 12),
+          ...milestones.map(
+            (milestone) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _MilestoneTile(milestone: milestone),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MilestoneTile extends ConsumerWidget {
+  const _MilestoneTile({required this.milestone});
+
+  final QuestMilestone milestone;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final percent = (milestone.progress.clamp(0, 1) * 100).round();
+    final nextStatus = ref
+        .read(questMilestoneServiceProvider)
+        .nextStatus(milestone.status);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: QuestraColors.cosmicBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: QuestraColors.cosmicBlue.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 15,
+                backgroundColor:
+                    milestone.status == QuestMilestoneStatus.completed
+                    ? QuestraColors.gold
+                    : QuestraColors.cosmicBlue,
+                child: Text(
+                  '${milestone.sortOrder + 1}',
+                  style: const TextStyle(
+                    color: QuestraColors.deepNavy,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      milestone.title,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(milestone.description),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              _ActionChip(label: milestone.status.label),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: milestone.progress.clamp(0, 1),
+              minHeight: 8,
+              backgroundColor: QuestraColors.cloud,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                QuestraColors.gold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                '$percent%',
+                style: const TextStyle(
+                  color: QuestraColors.slate,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () => ref
+                    .read(questMilestoneControllerProvider.notifier)
+                    .updateStatus(milestone, nextStatus),
+                icon: const Icon(Icons.sync_alt_outlined),
+                label: Text('${nextStatus.label}へ'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ArcQuestGuidePanel extends ConsumerWidget {
   const _ArcQuestGuidePanel({required this.quest, required this.state});
 
@@ -259,7 +414,7 @@ class _ArcQuestGuidePanel extends ConsumerWidget {
     final error = state.errorFor(quest.id);
 
     return _SectionCard(
-      number: 3,
+      number: 4,
       title: 'Arc Guide',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -578,7 +733,7 @@ class _MissionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
-      number: 5,
+      number: 6,
       title: 'Missions',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -641,7 +796,7 @@ class _TrailSection extends ConsumerWidget {
     ];
 
     return _SectionCard(
-      number: 6,
+      number: 7,
       title: 'Trail',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -723,7 +878,7 @@ class _DreamBoardSection extends StatelessWidget {
     final items = ['理想の到達点', '参考になる星', '必要な道具', '出会いたい仲間'];
 
     return _SectionCard(
-      number: 7,
+      number: 8,
       title: 'Dream Board',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

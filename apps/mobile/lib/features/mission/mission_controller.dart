@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/persistence/persistence_sync_state.dart';
+import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_bond_growth_service.dart';
+import '../arc/arc_emotion_timeline_controller.dart';
+import '../arc/arc_guidance_providers.dart';
 import '../arc/stardust_service.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
@@ -77,6 +80,7 @@ class MissionController extends Notifier<List<Mission>> {
         .read(missionGenerationServiceProvider)
         .generate(quest: quest, guide: guide, advice: advice);
     state = [mission, ...state];
+    _recordMissionEmotion(mission, trigger: ArcActionTrigger.missionCreated);
     unawaited(
       _persistMission(mission, sourceType: ArcMemorySourceType.missionCreated),
     );
@@ -100,6 +104,7 @@ class MissionController extends Notifier<List<Mission>> {
       status: MissionStatus.todo,
     );
     state = [mission, ...state];
+    _recordMissionEmotion(mission, trigger: ArcActionTrigger.missionCreated);
     unawaited(
       _persistMission(mission, sourceType: ArcMemorySourceType.missionCreated),
     );
@@ -121,6 +126,10 @@ class MissionController extends Notifier<List<Mission>> {
       for (final mission in state)
         if (mission.id == missionId) updatedMission else mission,
     ];
+    _recordMissionEmotion(
+      updatedMission,
+      trigger: ArcActionTrigger.missionCompleted,
+    );
 
     unawaited(
       _persistMission(
@@ -192,6 +201,11 @@ class MissionController extends Notifier<List<Mission>> {
       ref
           .read(missionSyncControllerProvider.notifier)
           .failed('Mission save', 'ログインが必要です。');
+      _recordMissionEmotion(
+        mission,
+        trigger: ArcActionTrigger.unauthenticated,
+        surface: 'Mission保存',
+      );
       return;
     }
 
@@ -211,7 +225,37 @@ class MissionController extends Notifier<List<Mission>> {
       sync.saved('Missionを保存しました。');
     } catch (error) {
       sync.failed('Mission save', error);
+      _recordMissionEmotion(
+        mission,
+        trigger: ArcActionTrigger.saveFailure,
+        surface: 'Mission保存',
+      );
     }
+  }
+
+  void _recordMissionEmotion(
+    Mission mission, {
+    required ArcActionTrigger trigger,
+    String? surface,
+  }) {
+    final decision = ref
+        .read(arcActionTriggerServiceProvider)
+        .resolve(
+          trigger: trigger,
+          missionTitle: mission.title,
+          questTitle: mission.questTitle,
+          surface: surface,
+        );
+    ref
+        .read(arcEmotionTimelineControllerProvider.notifier)
+        .record(
+          emotion: decision.emotion,
+          sourceType: decision.sourceType,
+          reason: decision.message,
+          sourceId: mission.id,
+          questId: mission.questId,
+          missionId: mission.id,
+        );
   }
 
   void _growBond(ArcMemorySourceType sourceType) {

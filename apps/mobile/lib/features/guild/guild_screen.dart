@@ -13,6 +13,19 @@ import '../quest/quest_controller.dart';
 import '../quest/quest_model.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
+import 'guild_quest_matching_service.dart';
+import 'guild_safe_posting_review_service.dart';
+
+final guildQuestMatchingServiceProvider = Provider<GuildQuestMatchingService>((
+  ref,
+) {
+  return const GuildQuestMatchingService();
+});
+
+final guildSafePostingReviewServiceProvider =
+    Provider<GuildSafePostingReviewService>((ref) {
+      return const GuildSafePostingReviewService();
+    });
 
 class GuildScreen extends ConsumerWidget {
   const GuildScreen({super.key});
@@ -33,6 +46,14 @@ class GuildScreen extends ConsumerWidget {
         .take(QuestraPerformanceLimits.guildTrailPreviewLimit)
         .toList(growable: false);
     final question = _buildGuildQuestion(activeQuests, openMissions);
+    final postingReview = ref
+        .watch(guildSafePostingReviewServiceProvider)
+        .review(question);
+    final guildMatches = activeQuests.isEmpty
+        ? const <GuildQuestMatch>[]
+        : ref
+              .watch(guildQuestMatchingServiceProvider)
+              .rank(sourceQuest: activeQuests.first, candidates: quests);
     final hasGuildContext =
         activeQuests.isNotEmpty ||
         openMissions.isNotEmpty ||
@@ -56,7 +77,9 @@ class GuildScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
             ],
-            _GuildQuestionCard(question: question),
+            _GuildQuestionCard(question: question, review: postingReview),
+            const SizedBox(height: 16),
+            _GuildQuestMatchCard(matches: guildMatches),
             const SizedBox(height: 16),
             _GuildTrailReflectionCard(trails: latestTrails),
           ],
@@ -81,6 +104,83 @@ class GuildScreen extends ConsumerWidget {
   }
 }
 
+class _GuildQuestMatchCard extends StatelessWidget {
+  const _GuildQuestMatchCard({required this.matches});
+
+  final List<GuildQuestMatch> matches;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Quest Matching', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          const Text('近いQuestを持つ仲間を探すための候補です。private Questの詳細は表示しません。'),
+          const SizedBox(height: 12),
+          if (matches.isEmpty)
+            const Text('今は近い公開/Guild Questが見つかっていません。QuestやTrailが増えると精度が上がります。')
+          else
+            ...matches.map(
+              (match) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _GuildQuestMatchTile(match: match),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuildQuestMatchTile extends StatelessWidget {
+  const _GuildQuestMatchTile({required this.match});
+
+  final GuildQuestMatch match;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.14),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.hub_outlined),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  match.title,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 4),
+                Text('${match.category} / ${match.visibility.label}'),
+                const SizedBox(height: 4),
+                Text(match.reason),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${match.score}',
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _GuildIntroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -98,9 +198,10 @@ class _GuildIntroCard extends StatelessWidget {
 }
 
 class _GuildQuestionCard extends StatelessWidget {
-  const _GuildQuestionCard({required this.question});
+  const _GuildQuestionCard({required this.question, required this.review});
 
   final String question;
+  final GuildPostingReview review;
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +212,8 @@ class _GuildQuestionCard extends StatelessWidget {
           Text('Question Draft', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(question),
+          const SizedBox(height: 12),
+          _GuildPostingReviewPanel(review: review),
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: () => _copyQuestion(context),
@@ -129,6 +232,64 @@ class _GuildQuestionCard extends StatelessWidget {
         context,
       ).showSnackBar(const SnackBar(content: Text('Guildへの質問をコピーしました。')));
     }
+  }
+}
+
+class _GuildPostingReviewPanel extends StatelessWidget {
+  const _GuildPostingReviewPanel({required this.review});
+
+  final GuildPostingReview review;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (review.severity) {
+      GuildPostingReviewSeverity.safe => Colors.green,
+      GuildPostingReviewSeverity.caution => Colors.orange,
+      GuildPostingReviewSeverity.blocked => Colors.redAccent,
+    };
+    final title = switch (review.severity) {
+      GuildPostingReviewSeverity.safe => 'Arc Review: 安全に相談できそうです',
+      GuildPostingReviewSeverity.caution => 'Arc Review: 少しだけ見直しましょう',
+      GuildPostingReviewSeverity.blocked => 'Arc Review: 投稿前に修正しましょう',
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.verified_user_outlined, color: color, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(color: color, fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
+          if (review.issues.isEmpty) ...[
+            const SizedBox(height: 6),
+            const Text('個人情報や強い表現は見つかっていません。'),
+          ] else ...[
+            const SizedBox(height: 8),
+            ...review.issues.map(
+              (issue) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text('・${issue.label}: ${issue.message}'),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
