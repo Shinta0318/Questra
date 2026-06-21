@@ -585,7 +585,7 @@ items:
       report: reports/qst/QST-083.md
   - id: QST-084
     title: Arc Animation Event Layer
-    status: Ready
+    status: Done
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-083]
@@ -594,9 +594,11 @@ items:
     acceptance:
       - Animation events are centralized and testable.
       - No new heavy animation engine is required.
+    completed_by:
+      report: reports/qst/QST-084.md
   - id: QST-085
     title: Dream Board V1
-    status: Planned
+    status: Ready
     priority: P2
     epic: FEATURE-EXPANSION
     depends_on: [QST-075, QST-032]

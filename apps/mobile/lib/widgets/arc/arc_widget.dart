@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/performance/performance_limits.dart';
 import '../../core/theme/questra_colors.dart';
 import '../motion/questra_motion.dart';
+import 'arc_animation_event.dart';
 import 'arc_asset_paths.dart';
 import 'arc_emotion.dart';
 import 'arc_speech_bubble.dart';
@@ -16,6 +17,7 @@ class ArcWidget extends StatefulWidget {
     this.message,
     this.size = QuestraPerformanceLimits.arcAssetMaxDisplaySize,
     this.showSpeechBubble = true,
+    this.animationEvent,
     super.key,
   });
 
@@ -23,6 +25,7 @@ class ArcWidget extends StatefulWidget {
   final String? message;
   final double size;
   final bool showSpeechBubble;
+  final ArcAnimationEvent? animationEvent;
 
   @override
   State<ArcWidget> createState() => _ArcWidgetState();
@@ -37,7 +40,7 @@ class _ArcWidgetState extends State<ArcWidget>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: _ArcVisuals.fromEmotion(widget.emotion).duration,
+      duration: _animationEvent.duration,
     );
   }
 
@@ -50,8 +53,9 @@ class _ArcWidgetState extends State<ArcWidget>
   @override
   void didUpdateWidget(covariant ArcWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.emotion != widget.emotion) {
-      _controller.duration = _ArcVisuals.fromEmotion(widget.emotion).duration;
+    if (oldWidget.emotion != widget.emotion ||
+        oldWidget.animationEvent != widget.animationEvent) {
+      _controller.duration = _animationEvent.duration;
       _syncAnimation(reset: true);
     }
   }
@@ -66,6 +70,7 @@ class _ArcWidgetState extends State<ArcWidget>
   Widget build(BuildContext context) {
     final visuals = _ArcVisuals.fromEmotion(widget.emotion);
     final asset = ArcAssetPaths.assetForEmotion(widget.emotion);
+    final animationEvent = _animationEvent;
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     return Column(
@@ -78,8 +83,9 @@ class _ArcWidgetState extends State<ArcWidget>
             animation: _controller,
             builder: (context, child) {
               final t = QuestraMotion.gentle.transform(_controller.value);
-              final scale = 1 + visuals.pulseStrength * math.sin(t * math.pi);
-              final tilt = visuals.tilt * math.sin(t * math.pi * 2);
+              final scale =
+                  1 + animationEvent.pulseStrength * math.sin(t * math.pi);
+              final tilt = animationEvent.tilt * math.sin(t * math.pi * 2);
 
               return Transform.rotate(
                 angle: tilt,
@@ -108,9 +114,14 @@ class _ArcWidgetState extends State<ArcWidget>
     if (reset) {
       _controller.reset();
     }
-    if (!_controller.isAnimating) {
+    if (_animationEvent.loop && !_controller.isAnimating) {
       _controller.repeat(reverse: true);
     }
+  }
+
+  ArcAnimationEvent get _animationEvent {
+    return widget.animationEvent ??
+        ArcAnimationEventResolver.forEmotion(widget.emotion);
   }
 }
 
@@ -363,11 +374,8 @@ class _ArcVisuals {
     required this.glow,
     required this.expression,
     required this.accentIcon,
-    required this.duration,
-    required this.pulseStrength,
     required this.glowAlpha,
     required this.glowRadius,
-    required this.tilt,
     required this.eyeSparkle,
   });
 
@@ -377,11 +385,8 @@ class _ArcVisuals {
   final Color glow;
   final _ArcExpression expression;
   final IconData accentIcon;
-  final Duration duration;
-  final double pulseStrength;
   final double glowAlpha;
   final double glowRadius;
-  final double tilt;
   final bool eyeSparkle;
 
   factory _ArcVisuals.fromEmotion(ArcEmotion emotion) {
@@ -393,11 +398,8 @@ class _ArcVisuals {
         glow: QuestraColors.skyBlue,
         expression: _ArcExpression.smile,
         accentIcon: Icons.auto_awesome,
-        duration: Duration(milliseconds: 1700),
-        pulseStrength: 0.018,
         glowAlpha: 0.28,
         glowRadius: 28,
-        tilt: 0.018,
         eyeSparkle: true,
       ),
       ArcEmotion.excited => const _ArcVisuals(
@@ -407,11 +409,8 @@ class _ArcVisuals {
         glow: QuestraColors.gold,
         expression: _ArcExpression.openSmile,
         accentIcon: Icons.star,
-        duration: Duration(milliseconds: 900),
-        pulseStrength: 0.050,
         glowAlpha: 0.42,
         glowRadius: 36,
-        tilt: 0.044,
         eyeSparkle: true,
       ),
       ArcEmotion.support => const _ArcVisuals(
@@ -421,11 +420,8 @@ class _ArcVisuals {
         glow: Color(0xFFB8F5D1),
         expression: _ArcExpression.calm,
         accentIcon: Icons.favorite,
-        duration: Duration(milliseconds: 2100),
-        pulseStrength: 0.014,
         glowAlpha: 0.34,
         glowRadius: 30,
-        tilt: 0.010,
         eyeSparkle: false,
       ),
       ArcEmotion.serious => const _ArcVisuals(
@@ -435,11 +431,8 @@ class _ArcVisuals {
         glow: QuestraColors.cosmicBlue,
         expression: _ArcExpression.serious,
         accentIcon: Icons.navigation,
-        duration: Duration(milliseconds: 2400),
-        pulseStrength: 0.006,
         glowAlpha: 0.24,
         glowRadius: 22,
-        tilt: 0.004,
         eyeSparkle: false,
       ),
       ArcEmotion.worried => const _ArcVisuals(
@@ -449,11 +442,8 @@ class _ArcVisuals {
         glow: Color(0xFFD7C8FF),
         expression: _ArcExpression.worried,
         accentIcon: Icons.help_outline,
-        duration: Duration(milliseconds: 1300),
-        pulseStrength: 0.024,
         glowAlpha: 0.26,
         glowRadius: 24,
-        tilt: 0.028,
         eyeSparkle: false,
       ),
       ArcEmotion.lonely => const _ArcVisuals(
@@ -463,11 +453,8 @@ class _ArcVisuals {
         glow: Color(0xFFC7D0DD),
         expression: _ArcExpression.small,
         accentIcon: Icons.nights_stay,
-        duration: Duration(milliseconds: 2600),
-        pulseStrength: 0.008,
         glowAlpha: 0.20,
         glowRadius: 20,
-        tilt: 0.006,
         eyeSparkle: false,
       ),
       ArcEmotion.celebrate => const _ArcVisuals(
@@ -477,11 +464,8 @@ class _ArcVisuals {
         glow: QuestraColors.gold,
         expression: _ArcExpression.cheer,
         accentIcon: Icons.celebration,
-        duration: Duration(milliseconds: 760),
-        pulseStrength: 0.060,
         glowAlpha: 0.50,
         glowRadius: 40,
-        tilt: 0.055,
         eyeSparkle: true,
       ),
     };

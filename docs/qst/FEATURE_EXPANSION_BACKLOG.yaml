@@ -268,7 +268,7 @@ items:
   - id: QST-084
     title: Arc Animation Event Layer
     priority: P1
-    status: Ready
+    status: Done
     dependencies: [QST-083]
     goal: Add a renderer-neutral animation event interface for Arc reactions.
     scope:
@@ -285,10 +285,12 @@ items:
       - apps/mobile/lib/widgets/arc/arc_widget.dart
       - apps/mobile/lib/features/arc/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-084.md
   - id: QST-085
     title: Dream Board V1
     priority: P2
-    status: Planned
+    status: Ready
     dependencies: [QST-075, QST-032]
     goal: Let users collect visual inspiration for each Quest without disrupting the core loop.
     scope:

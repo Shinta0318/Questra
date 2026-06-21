@@ -70,8 +70,8 @@ there before new QSTs are created or reordered.
 | QST-081 | Done | Star Map Recommendation Foundation | Build a foundation for recommending the next Quest using Quest, Mission, Trail, and Tag context. | Service returns ranked Quest recommendation candidates with reasons. |
 | QST-082 | Done | Horizon Next Challenge MVP | Let Arc suggest the next challenge based on user achievement and readiness. | Arc can suggest one next challenge without paid gating. |
 | QST-083 | Done | Arc 3D Readiness Architecture | Prepare Arc expression architecture for future PNG, Rive, and GLB/3D implementations. | Arc expression decisions return a renderer-agnostic asset descriptor. |
-| QST-084 | Ready | Arc Animation Event Layer | Add a renderer-neutral animation event interface for Arc reactions. | Animation events are centralized and testable. |
-| QST-085 | Planned | Dream Board V1 | Let users collect visual inspiration for each Quest without disrupting the core loop. | Quest Detail can show a Dream Board section with existing media constraints. |
+| QST-084 | Done | Arc Animation Event Layer | Add a renderer-neutral animation event interface for Arc reactions. | Animation events are centralized and testable. |
+| QST-085 | Ready | Dream Board V1 | Let users collect visual inspiration for each Quest without disrupting the core loop. | Quest Detail can show a Dream Board section with existing media constraints. |
 | QST-086 | Planned | Quest Template Library | Help users start faster with Quest templates for common life areas. | Quest creation can start from editable templates. |
 | QST-087 | Planned | Premium Readiness Flags | Prepare future Premium feature switches without enforcing payments or harming MVP UX. | MVP/Beta core features remain enabled and no paywall is introduced. |
 | QST-088 | Planned | Onboarding Personalization | Personalize first-run experience with Arc name preference, Quest tendencies, and Signal frequency. | Preferences persist and Arc copy reflects them. |
