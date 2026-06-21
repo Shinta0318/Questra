@@ -6,6 +6,7 @@ import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/questra_card.dart';
 import '../media/media_model.dart';
+import 'trail_highlight_service.dart';
 import 'trail_model.dart';
 import 'trail_timeline_service.dart';
 
@@ -14,11 +15,13 @@ class TrailTimelineWidget extends StatelessWidget {
     required this.trails,
     required this.attachments,
     super.key,
+    this.highlights = const {},
     this.service = const TrailTimelineService(),
   });
 
   final List<Trail> trails;
   final Map<String, MediaAttachment> attachments;
+  final Map<String, TrailHighlight> highlights;
   final TrailTimelineService service;
 
   @override
@@ -47,7 +50,11 @@ class TrailTimelineWidget extends StatelessWidget {
           ...days.map(
             (day) => Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: _TimelineDaySection(day: day, attachments: attachments),
+              child: _TimelineDaySection(
+                day: day,
+                attachments: attachments,
+                highlights: highlights,
+              ),
             ),
           ),
         ],
@@ -59,10 +66,15 @@ class TrailTimelineWidget extends StatelessWidget {
 void _noop() {}
 
 class _TimelineDaySection extends StatelessWidget {
-  const _TimelineDaySection({required this.day, required this.attachments});
+  const _TimelineDaySection({
+    required this.day,
+    required this.attachments,
+    required this.highlights,
+  });
 
   final TrailTimelineDay day;
   final Map<String, MediaAttachment> attachments;
+  final Map<String, TrailHighlight> highlights;
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +93,7 @@ class _TimelineDaySection extends StatelessWidget {
           (trail) => _TimelineTrailTile(
             trail: trail,
             attachment: attachments[trail.id],
+            highlight: highlights[trail.id],
           ),
         ),
       ],
@@ -89,10 +102,15 @@ class _TimelineDaySection extends StatelessWidget {
 }
 
 class _TimelineTrailTile extends StatelessWidget {
-  const _TimelineTrailTile({required this.trail, required this.attachment});
+  const _TimelineTrailTile({
+    required this.trail,
+    required this.attachment,
+    required this.highlight,
+  });
 
   final Trail trail;
   final MediaAttachment? attachment;
+  final TrailHighlight? highlight;
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +176,14 @@ class _TimelineTrailTile extends StatelessWidget {
                             color: QuestraColors.cosmicBlue,
                           ),
                         ],
+                        if (highlight?.isStarMemoryCandidate == true) ...[
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.auto_awesome,
+                            size: 16,
+                            color: QuestraColors.gold,
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -171,8 +197,54 @@ class _TimelineTrailTile extends StatelessWidget {
                       const SizedBox(height: 8),
                       _TimelineMediaChip(attachment: attachment!),
                     ],
+                    if (highlight != null) ...[
+                      const SizedBox(height: 8),
+                      _TimelineHighlightHint(highlight: highlight!),
+                    ],
                   ],
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelineHighlightHint extends StatelessWidget {
+  const _TimelineHighlightHint({required this.highlight});
+
+  final TrailHighlight highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: QuestraColors.gold.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            highlight.isStarMemoryCandidate
+                ? Icons.auto_awesome
+                : Icons.star_border,
+            size: 18,
+            color: QuestraColors.gold,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              highlight.isStarMemoryCandidate
+                  ? 'Star Memory候補: ${highlight.reason}'
+                  : highlight.reason,
+              style: const TextStyle(
+                color: QuestraColors.deepNavy,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),

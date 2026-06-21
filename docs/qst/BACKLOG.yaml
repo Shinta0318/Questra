@@ -507,7 +507,7 @@ items:
       report: reports/qst/QST-077.md
   - id: QST-078
     title: Trail Highlight System
-    status: Ready
+    status: Done
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-077, QST-029]
@@ -516,9 +516,11 @@ items:
     acceptance:
       - Trail highlights are deterministic and testable.
       - Highlight reason is visible to the user.
+    completed_by:
+      report: reports/qst/QST-078.md
   - id: QST-079
     title: Guild Quest Matching
-    status: Planned
+    status: Ready
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-066, QST-036]

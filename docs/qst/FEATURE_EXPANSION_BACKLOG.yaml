@@ -138,7 +138,7 @@ items:
   - id: QST-078
     title: Trail Highlight System
     priority: P1
-    status: Ready
+    status: Done
     dependencies: [QST-077, QST-029]
     goal: Let Arc identify meaningful Trails and mark them as Star Memory candidates.
     scope:
@@ -155,10 +155,12 @@ items:
       - apps/mobile/lib/features/trail/trail_screen.dart
       - apps/mobile/lib/features/arc_memory/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-078.md
   - id: QST-079
     title: Guild Quest Matching
     priority: P1
-    status: Planned
+    status: Ready
     dependencies: [QST-066, QST-036]
     goal: Improve Guild usefulness by connecting users with similar Quest tags and nearby goals.
     scope:
