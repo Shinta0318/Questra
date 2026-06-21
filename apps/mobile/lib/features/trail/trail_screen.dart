@@ -21,6 +21,7 @@ import '../mission/mission_model.dart';
 import 'trail_controller.dart';
 import 'trail_model.dart';
 import 'trail_sync_state.dart';
+import 'trail_timeline_widget.dart';
 
 class TrailScreen extends ConsumerWidget {
   const TrailScreen({super.key});
@@ -64,6 +65,8 @@ class TrailScreen extends ConsumerWidget {
               const SizedBox(height: 12),
             ],
             _TrailOverview(trails: trails),
+            const SizedBox(height: 16),
+            TrailTimelineWidget(trails: trails, attachments: trailMedia),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: () => _showCreateTrailSheet(context, controller),

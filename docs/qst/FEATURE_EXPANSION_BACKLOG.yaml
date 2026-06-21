@@ -115,7 +115,7 @@ items:
   - id: QST-077
     title: Trail Timeline V1
     priority: P1
-    status: Ready
+    status: Done
     dependencies: [QST-034, QST-035, QST-072]
     goal: Let users revisit Trails in a beautiful chronological timeline.
     scope:
@@ -133,10 +133,12 @@ items:
       - apps/mobile/lib/features/trail/trail_timeline_widget.dart
       - apps/mobile/lib/features/media/media_repository.dart
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-077.md
   - id: QST-078
     title: Trail Highlight System
     priority: P1
-    status: Planned
+    status: Ready
     dependencies: [QST-077, QST-029]
     goal: Let Arc identify meaningful Trails and mark them as Star Memory candidates.
     scope:

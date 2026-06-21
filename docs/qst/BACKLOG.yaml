@@ -494,7 +494,7 @@ items:
       report: reports/qst/QST-076.md
   - id: QST-077
     title: Trail Timeline V1
-    status: Ready
+    status: Done
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-034, QST-035, QST-072]
@@ -503,9 +503,11 @@ items:
     acceptance:
       - Trail Timeline renders recent Trails in chronological order.
       - Visible labels use Trail terminology.
+    completed_by:
+      report: reports/qst/QST-077.md
   - id: QST-078
     title: Trail Highlight System
-    status: Planned
+    status: Ready
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-077, QST-029]
