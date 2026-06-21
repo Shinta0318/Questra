@@ -468,7 +468,7 @@ items:
       report: reports/qst/QST-074.md
   - id: QST-075
     title: Quest Milestone System
-    status: Ready
+    status: Done
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-063, QST-065]
@@ -477,9 +477,11 @@ items:
     acceptance:
       - Quest Detail shows Milestones with status and progress.
       - Milestone status can be updated without breaking Quest progress.
+    completed_by:
+      report: reports/qst/QST-075.md
   - id: QST-076
     title: Mission Reminder / Signal MVP
-    status: Planned
+    status: Ready
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-053, QST-075]

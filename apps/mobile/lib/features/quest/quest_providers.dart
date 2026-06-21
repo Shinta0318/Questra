@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 import '../../core/config/supabase_config.dart';
 import 'quest_guide_repository.dart';
+import 'quest_milestone_repository.dart';
+import 'quest_milestone_service.dart';
 import 'quest_repository.dart';
 
 final questRepositoryProvider = Provider<QuestRepository>((ref) {
@@ -17,4 +19,17 @@ final questGuideRepositoryProvider = Provider<QuestGuideRepository>((ref) {
     return SupabaseQuestGuideRepository(Supabase.instance.client);
   }
   return InMemoryQuestGuideRepository();
+});
+
+final questMilestoneRepositoryProvider = Provider<QuestMilestoneRepository>((
+  ref,
+) {
+  if (SupabaseConfig.isConfigured) {
+    return SupabaseQuestMilestoneRepository(Supabase.instance.client);
+  }
+  return InMemoryQuestMilestoneRepository();
+});
+
+final questMilestoneServiceProvider = Provider<QuestMilestoneService>((ref) {
+  return const QuestMilestoneService();
 });

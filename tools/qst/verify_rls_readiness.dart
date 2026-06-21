@@ -13,6 +13,7 @@ const requiredRlsTables = [
   'tags',
   'entity_tags',
   'arc_emotion_events',
+  'quest_milestones',
 ];
 
 const requiredPolicies = [
@@ -49,6 +50,10 @@ const requiredPolicies = [
   'Users read their own Arc emotion events',
   'Users create their own Arc emotion events',
   'Users delete their own Arc emotion events',
+  'Quest milestone visibility follows related quest',
+  'Quest owners create milestones',
+  'Quest owners update milestones',
+  'Quest owners delete milestones',
 ];
 
 const requiredSnippets = [

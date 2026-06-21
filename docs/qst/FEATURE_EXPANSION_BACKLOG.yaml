@@ -67,7 +67,7 @@ items:
   - id: QST-075
     title: Quest Milestone System
     priority: P0
-    status: Ready
+    status: Done
     dependencies: [QST-063, QST-065]
     goal: Break Quests into visible Milestones so users can understand progress beyond a flat percentage.
     scope:
@@ -87,10 +87,12 @@ items:
       - apps/mobile/lib/features/quest/arc_quest_guide_service.dart
       - supabase/migrations/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-075.md
   - id: QST-076
     title: Mission Reminder / Signal MVP
     priority: P0
-    status: Planned
+    status: Ready
     dependencies: [QST-053, QST-075]
     goal: Introduce a lightweight Signal foundation for Mission due dates, stalled Missions, and gentle reminders.
     scope:
