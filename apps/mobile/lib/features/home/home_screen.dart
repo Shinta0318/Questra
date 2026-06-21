@@ -20,7 +20,9 @@ import '../mission/mission_controller.dart';
 import '../quest/quest_controller.dart';
 import '../signal/mission_signal_model.dart';
 import '../signal/signal_providers.dart';
+import '../star_map/star_map_recommendation_service.dart';
 import '../trail/trail_controller.dart';
+import '../trail/trail_highlight_service.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -45,6 +47,17 @@ class HomeScreen extends ConsumerWidget {
     final missionSignals = ref
         .watch(missionSignalServiceProvider)
         .generate(quests: quests, missions: missions, now: DateTime.now());
+    final trailHighlights = const TrailHighlightService().rank(
+      trails: trails,
+      attachments: const {},
+    );
+    final starMapRecommendations = const StarMapRecommendationService()
+        .recommend(
+          quests: quests,
+          missions: missions,
+          trails: trails,
+          highlights: trailHighlights,
+        );
     final greeting = ref
         .watch(arcDailyGreetingServiceProvider)
         .resolve(
@@ -114,7 +127,9 @@ class HomeScreen extends ConsumerWidget {
                 label: const Text('新しいQuestを始める'),
               ),
               const SizedBox(height: AppSpacing.xl),
-              const _StarMapPreview(),
+              _StarMapPreview(
+                recommendation: starMapRecommendations.firstOrNull,
+              ),
             ],
           ),
         ),
@@ -459,7 +474,9 @@ class _QuestTag extends StatelessWidget {
 }
 
 class _StarMapPreview extends StatelessWidget {
-  const _StarMapPreview();
+  const _StarMapPreview({required this.recommendation});
+
+  final StarMapRecommendation? recommendation;
 
   @override
   Widget build(BuildContext context) {
@@ -475,12 +492,38 @@ class _StarMapPreview extends StatelessWidget {
           const Icon(Icons.explore, color: AppColors.gold, size: 34),
           const SizedBox(width: AppSpacing.md),
           Expanded(
-            child: Text(
-              'Star Map\nQuest、Mission、Trailをつないで次の航路を見つけよう。',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.deepNavy,
-                fontWeight: FontWeight.w800,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Star Map',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.deepNavy,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  recommendation == null
+                      ? 'Quest、Mission、Trailをつないで次の航路を見つけよう。'
+                      : recommendation!.title,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.deepNavy,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (recommendation != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    recommendation!.reason,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.midnightNavy,
+                      height: 1.35,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

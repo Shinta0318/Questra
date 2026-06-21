@@ -67,8 +67,8 @@ there before new QSTs are created or reordered.
 | QST-078 | Done | Trail Highlight System | Let Arc identify meaningful Trails and mark them as Star Memory candidates. | Trail highlights are deterministic and include visible reasons. |
 | QST-079 | Done | Guild Quest Matching | Improve Guild usefulness by connecting users with similar Quest tags and nearby goals. | Matching ranks related Quests by tags without exposing private content. |
 | QST-080 | Done | Guild Safe Posting Review | Add a lightweight Arc review before Guild posting to reduce personal information and unsafe sharing. | Review flags obvious personal information and allows revision. |
-| QST-081 | Ready | Star Map Recommendation Foundation | Build a foundation for recommending the next Quest using Quest, Mission, Trail, and Tag context. | Service returns ranked Quest recommendation candidates with reasons. |
-| QST-082 | Planned | Horizon Next Challenge MVP | Let Arc suggest the next challenge based on user achievement and readiness. | Arc can suggest one next challenge without paid gating. |
+| QST-081 | Done | Star Map Recommendation Foundation | Build a foundation for recommending the next Quest using Quest, Mission, Trail, and Tag context. | Service returns ranked Quest recommendation candidates with reasons. |
+| QST-082 | Ready | Horizon Next Challenge MVP | Let Arc suggest the next challenge based on user achievement and readiness. | Arc can suggest one next challenge without paid gating. |
 | QST-083 | Planned | Arc 3D Readiness Architecture | Prepare Arc expression architecture for future PNG, Rive, and GLB/3D implementations. | Arc expression decisions return a renderer-agnostic asset descriptor. |
 | QST-084 | Planned | Arc Animation Event Layer | Add a renderer-neutral animation event interface for Arc reactions. | Animation events are centralized and testable. |
 | QST-085 | Planned | Dream Board V1 | Let users collect visual inspiration for each Quest without disrupting the core loop. | Quest Detail can show a Dream Board section with existing media constraints. |
