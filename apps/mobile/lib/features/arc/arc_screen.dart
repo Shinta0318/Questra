@@ -22,6 +22,8 @@ import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
 import 'arc_bond_growth_service.dart';
 import 'arc_chat_service.dart';
+import 'arc_emotion_timeline_controller.dart';
+import 'arc_emotion_timeline_model.dart';
 import 'arc_guidance_providers.dart';
 import 'stardust_service.dart';
 
@@ -55,6 +57,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     final missions = ref.watch(missionControllerProvider);
     final trails = ref.watch(trailControllerProvider);
     final memories = ref.watch(visibleArcMemoriesProvider);
+    final emotionEvents = ref.watch(arcEmotionTimelineControllerProvider);
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
@@ -93,6 +96,8 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                         memories: memories.asData?.value ?? const [],
                       ),
                     ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _ArcEmotionTimelineCard(events: emotionEvents),
                     if ((memories.asData?.value ?? const []).isEmpty) ...[
                       const SizedBox(height: AppSpacing.lg),
                       ArcEmptyState(
@@ -175,6 +180,13 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         _messages.add(arcMessage);
         _isThinking = false;
       });
+      ref
+          .read(arcEmotionTimelineControllerProvider.notifier)
+          .record(
+            emotion: ArcEmotion.support,
+            sourceType: ArcEmotionSourceType.arcChat,
+            reason: 'Arc Chatで今日の航路を一緒に読みました。',
+          );
       await _rememberChat(userMessage, arcMessage, context);
     } catch (_) {
       if (!mounted) {
@@ -190,6 +202,13 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         );
         _isThinking = false;
       });
+      ref
+          .read(arcEmotionTimelineControllerProvider.notifier)
+          .record(
+            emotion: ArcEmotion.worried,
+            sourceType: ArcEmotionSourceType.saveFailure,
+            reason: 'Arc Chatの応答で星雲が少し揺れました。',
+          );
     }
   }
 
@@ -419,6 +438,132 @@ class _ArcActionCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _ArcEmotionTimelineCard extends StatelessWidget {
+  const _ArcEmotionTimelineCard({required this.events});
+
+  final List<ArcEmotionEvent> events;
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleEvents = events.take(5).toList(growable: false);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.80),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.22)),
+        boxShadow: AppShadows.glassCard,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Arc Emotion Timeline',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: AppColors.white),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Arcが旅の感情を少しずつ覚えていきます。',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.parchment,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (visibleEvents.isEmpty)
+            Row(
+              children: [
+                const ArcWidget(
+                  emotion: ArcEmotion.normal,
+                  size: 42,
+                  showSpeechBubble: false,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    'まだ静かな星図です。Quest、Mission、Trailを進めると、Arcの表情もここに残ります。',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.white,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            ...visibleEvents.map(
+              (event) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: _ArcEmotionTimelineTile(event: event),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArcEmotionTimelineTile extends StatelessWidget {
+  const _ArcEmotionTimelineTile({required this.event});
+
+  final ArcEmotionEvent event;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ArcWidget(emotion: event.emotion, size: 38, showSpeechBubble: false),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      event.sourceType.label,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    _formatTime(event.createdAt),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.parchment,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                event.reason,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.white,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatTime(DateTime value) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }
 

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../arc/arc_bond_growth_service.dart';
+import '../arc/arc_emotion_timeline_controller.dart';
+import '../arc/arc_emotion_timeline_model.dart';
 import '../arc/stardust_service.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
@@ -11,6 +13,7 @@ import '../auth/auth_controller.dart';
 import '../media/media_model.dart';
 import '../media/media_providers.dart';
 import '../tagging/tagging_providers.dart';
+import '../../widgets/arc/arc_emotion.dart';
 import 'trail_model.dart';
 import 'trail_providers.dart';
 import 'trail_sync_state.dart';
@@ -89,6 +92,7 @@ class TrailController extends Notifier<List<Trail>> {
           : TrailType.missionRecord,
     );
     state = [trail, ...state];
+    _recordTrailEmotion(trail);
     unawaited(_persistTrail(trail));
     return trail;
   }
@@ -106,6 +110,7 @@ class TrailController extends Notifier<List<Trail>> {
       sourceType: 'manual',
     );
     state = [trail, ...state];
+    _recordTrailEmotion(trail);
     unawaited(_persistTrail(trail));
     return trail;
   }
@@ -115,6 +120,7 @@ class TrailController extends Notifier<List<Trail>> {
       for (final trail in state)
         if (trail.id == updatedTrail.id) updatedTrail else trail,
     ];
+    _recordTrailEmotion(updatedTrail);
     unawaited(_persistTrail(updatedTrail));
   }
 
@@ -248,7 +254,37 @@ class TrailController extends Notifier<List<Trail>> {
       sync.saved('Trail record saved.');
     } catch (error) {
       sync.failed(error);
+      ref
+          .read(arcEmotionTimelineControllerProvider.notifier)
+          .record(
+            emotion: ArcEmotion.worried,
+            sourceType: ArcEmotionSourceType.saveFailure,
+            reason: 'Trail「${trail.title}」の保存で星図が少し揺れました。',
+            sourceId: trail.id,
+            questId: trail.questId,
+            missionId: trail.missionId,
+            trailId: trail.id,
+          );
     }
+  }
+
+  void _recordTrailEmotion(Trail trail) {
+    final isReflection = trail.trailType == TrailType.arcReflection;
+    ref
+        .read(arcEmotionTimelineControllerProvider.notifier)
+        .record(
+          emotion: isReflection ? ArcEmotion.support : ArcEmotion.celebrate,
+          sourceType: isReflection
+              ? ArcEmotionSourceType.reflectionAdded
+              : ArcEmotionSourceType.trailPosted,
+          reason: isReflection
+              ? 'Trail「${trail.title}」から振り返りの星が見つかりました。'
+              : 'Trail「${trail.title}」が航路に残りました。',
+          sourceId: trail.id,
+          questId: trail.questId,
+          missionId: trail.missionId,
+          trailId: trail.id,
+        );
   }
 
   void _growBond(Trail trail) {

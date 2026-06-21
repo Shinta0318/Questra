@@ -15,8 +15,10 @@ items:
   - id: QST-073
     title: Arc Emotion Timeline
     priority: P0
-    status: Ready
+    status: Done
     dependencies: [QST-068, QST-070]
+    completed_by:
+      report: reports/qst/QST-073.md
     goal: Store and display Arc emotional history based on user journey actions.
     scope:
       - Add Arc emotion event model and repository boundary.
@@ -41,7 +43,7 @@ items:
   - id: QST-074
     title: Arc Action Trigger Rules
     priority: P0
-    status: Planned
+    status: Ready
     dependencies: [QST-073]
     goal: Automatically switch Arc expression and copy in response to key user states and actions.
     scope:

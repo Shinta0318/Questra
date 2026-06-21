@@ -441,10 +441,12 @@ items:
       - Screenshot QA readiness can be verified by script.
   - id: QST-073
     title: Arc Emotion Timeline
-    status: Ready
+    status: Done
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-068, QST-070]
+    completed_by:
+      report: reports/qst/QST-073.md
     detail: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
     scope: Store and display Arc emotional history based on user journey actions.
     acceptance:
@@ -453,7 +455,7 @@ items:
       - Empty state uses Arc-native Japanese copy.
   - id: QST-074
     title: Arc Action Trigger Rules
-    status: Planned
+    status: Ready
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-073]

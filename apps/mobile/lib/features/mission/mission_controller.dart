@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/persistence/persistence_sync_state.dart';
 import '../arc/arc_bond_growth_service.dart';
+import '../arc/arc_emotion_timeline_controller.dart';
+import '../arc/arc_emotion_timeline_model.dart';
 import '../arc/stardust_service.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
@@ -15,6 +17,7 @@ import '../tagging/tagging_providers.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_event_model.dart';
 import '../trail/trail_providers.dart';
+import '../../widgets/arc/arc_emotion.dart';
 import 'mission_generation_service.dart';
 import 'mission_model.dart';
 import 'mission_providers.dart';
@@ -77,6 +80,12 @@ class MissionController extends Notifier<List<Mission>> {
         .read(missionGenerationServiceProvider)
         .generate(quest: quest, guide: guide, advice: advice);
     state = [mission, ...state];
+    _recordMissionEmotion(
+      mission,
+      emotion: ArcEmotion.support,
+      sourceType: ArcEmotionSourceType.missionCreated,
+      reason: 'Quest「${quest.title}」に新しいMissionが生まれました。',
+    );
     unawaited(
       _persistMission(mission, sourceType: ArcMemorySourceType.missionCreated),
     );
@@ -100,6 +109,12 @@ class MissionController extends Notifier<List<Mission>> {
       status: MissionStatus.todo,
     );
     state = [mission, ...state];
+    _recordMissionEmotion(
+      mission,
+      emotion: ArcEmotion.support,
+      sourceType: ArcEmotionSourceType.missionCreated,
+      reason: 'Mission「${mission.title}」が航路に追加されました。',
+    );
     unawaited(
       _persistMission(mission, sourceType: ArcMemorySourceType.missionCreated),
     );
@@ -121,6 +136,12 @@ class MissionController extends Notifier<List<Mission>> {
       for (final mission in state)
         if (mission.id == missionId) updatedMission else mission,
     ];
+    _recordMissionEmotion(
+      updatedMission,
+      emotion: ArcEmotion.celebrate,
+      sourceType: ArcEmotionSourceType.missionCompleted,
+      reason: 'Mission「${updatedMission.title}」を達成しました。',
+    );
 
     unawaited(
       _persistMission(
@@ -192,6 +213,12 @@ class MissionController extends Notifier<List<Mission>> {
       ref
           .read(missionSyncControllerProvider.notifier)
           .failed('Mission save', 'ログインが必要です。');
+      _recordMissionEmotion(
+        mission,
+        emotion: ArcEmotion.worried,
+        sourceType: ArcEmotionSourceType.unauthenticated,
+        reason: 'Missionを保存するにはログインが必要でした。',
+      );
       return;
     }
 
@@ -211,7 +238,31 @@ class MissionController extends Notifier<List<Mission>> {
       sync.saved('Missionを保存しました。');
     } catch (error) {
       sync.failed('Mission save', error);
+      _recordMissionEmotion(
+        mission,
+        emotion: ArcEmotion.worried,
+        sourceType: ArcEmotionSourceType.saveFailure,
+        reason: 'Mission「${mission.title}」の保存で星図が少し揺れました。',
+      );
     }
+  }
+
+  void _recordMissionEmotion(
+    Mission mission, {
+    required ArcEmotion emotion,
+    required ArcEmotionSourceType sourceType,
+    required String reason,
+  }) {
+    ref
+        .read(arcEmotionTimelineControllerProvider.notifier)
+        .record(
+          emotion: emotion,
+          sourceType: sourceType,
+          reason: reason,
+          sourceId: mission.id,
+          questId: mission.questId,
+          missionId: mission.id,
+        );
   }
 
   void _growBond(ArcMemorySourceType sourceType) {
