@@ -533,7 +533,7 @@ items:
       report: reports/qst/QST-079.md
   - id: QST-080
     title: Guild Safe Posting Review
-    status: Ready
+    status: Done
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-079, QST-054]
@@ -542,9 +542,11 @@ items:
     acceptance:
       - Review flags obvious personal information.
       - User can revise before posting.
+    completed_by:
+      report: reports/qst/QST-080.md
   - id: QST-081
     title: Star Map Recommendation Foundation
-    status: Planned
+    status: Ready
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-066, QST-075, QST-078]

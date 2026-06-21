@@ -14,12 +14,18 @@ import '../quest/quest_model.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
 import 'guild_quest_matching_service.dart';
+import 'guild_safe_posting_review_service.dart';
 
 final guildQuestMatchingServiceProvider = Provider<GuildQuestMatchingService>((
   ref,
 ) {
   return const GuildQuestMatchingService();
 });
+
+final guildSafePostingReviewServiceProvider =
+    Provider<GuildSafePostingReviewService>((ref) {
+      return const GuildSafePostingReviewService();
+    });
 
 class GuildScreen extends ConsumerWidget {
   const GuildScreen({super.key});
@@ -40,6 +46,9 @@ class GuildScreen extends ConsumerWidget {
         .take(QuestraPerformanceLimits.guildTrailPreviewLimit)
         .toList(growable: false);
     final question = _buildGuildQuestion(activeQuests, openMissions);
+    final postingReview = ref
+        .watch(guildSafePostingReviewServiceProvider)
+        .review(question);
     final guildMatches = activeQuests.isEmpty
         ? const <GuildQuestMatch>[]
         : ref
@@ -68,7 +77,7 @@ class GuildScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
             ],
-            _GuildQuestionCard(question: question),
+            _GuildQuestionCard(question: question, review: postingReview),
             const SizedBox(height: 16),
             _GuildQuestMatchCard(matches: guildMatches),
             const SizedBox(height: 16),
@@ -189,9 +198,10 @@ class _GuildIntroCard extends StatelessWidget {
 }
 
 class _GuildQuestionCard extends StatelessWidget {
-  const _GuildQuestionCard({required this.question});
+  const _GuildQuestionCard({required this.question, required this.review});
 
   final String question;
+  final GuildPostingReview review;
 
   @override
   Widget build(BuildContext context) {
@@ -202,6 +212,8 @@ class _GuildQuestionCard extends StatelessWidget {
           Text('Question Draft', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(question),
+          const SizedBox(height: 12),
+          _GuildPostingReviewPanel(review: review),
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: () => _copyQuestion(context),
@@ -220,6 +232,64 @@ class _GuildQuestionCard extends StatelessWidget {
         context,
       ).showSnackBar(const SnackBar(content: Text('Guildへの質問をコピーしました。')));
     }
+  }
+}
+
+class _GuildPostingReviewPanel extends StatelessWidget {
+  const _GuildPostingReviewPanel({required this.review});
+
+  final GuildPostingReview review;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (review.severity) {
+      GuildPostingReviewSeverity.safe => Colors.green,
+      GuildPostingReviewSeverity.caution => Colors.orange,
+      GuildPostingReviewSeverity.blocked => Colors.redAccent,
+    };
+    final title = switch (review.severity) {
+      GuildPostingReviewSeverity.safe => 'Arc Review: 安全に相談できそうです',
+      GuildPostingReviewSeverity.caution => 'Arc Review: 少しだけ見直しましょう',
+      GuildPostingReviewSeverity.blocked => 'Arc Review: 投稿前に修正しましょう',
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.verified_user_outlined, color: color, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(color: color, fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
+          if (review.issues.isEmpty) ...[
+            const SizedBox(height: 6),
+            const Text('個人情報や強い表現は見つかっていません。'),
+          ] else ...[
+            const SizedBox(height: 8),
+            ...review.issues.map(
+              (issue) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text('・${issue.label}: ${issue.message}'),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
