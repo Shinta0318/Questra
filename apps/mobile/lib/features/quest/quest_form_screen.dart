@@ -14,6 +14,8 @@ import 'arc_quest_guide_controller.dart';
 import 'quest_controller.dart';
 import 'quest_guide_controller.dart';
 import 'quest_model.dart';
+import 'quest_providers.dart';
+import 'quest_template_model.dart';
 
 class QuestFormScreen extends ConsumerStatefulWidget {
   const QuestFormScreen({this.questId, super.key});
@@ -27,10 +29,12 @@ class QuestFormScreen extends ConsumerStatefulWidget {
 class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _categoryController = TextEditingController();
   QuestDifficulty _difficulty = QuestDifficulty.normal;
   QuestStatus _status = QuestStatus.draft;
   QuestVisibility _visibility = QuestVisibility.private;
   DateTime? _targetDate;
+  QuestTemplate? _selectedTemplate;
   bool _didLoad = false;
 
   bool get _isEditing => widget.questId != null;
@@ -39,12 +43,14 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _categoryController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     _loadInitialValues();
+    final templates = ref.watch(questTemplateLibraryProvider).templates;
 
     return Scaffold(
       appBar: AppBar(title: Text(_isEditing ? 'Questを編集' : 'Questを作成')),
@@ -66,6 +72,14 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
                         : 'このQuestは大切な星になりそうだね。一緒に航路を描こう。',
                   ),
                   const SizedBox(height: 16),
+                  if (!_isEditing) ...[
+                    _TemplatePicker(
+                      templates: templates,
+                      selectedTemplate: _selectedTemplate,
+                      onSelected: _applyTemplate,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   TextField(
                     controller: _titleController,
                     decoration: const InputDecoration(labelText: 'Quest名'),
@@ -76,6 +90,11 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
                     decoration: const InputDecoration(labelText: '叶えたい理由・背景'),
                     minLines: 3,
                     maxLines: 5,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _categoryController,
+                    decoration: const InputDecoration(labelText: 'カテゴリ'),
                   ),
                   const SizedBox(height: 12),
                   _EnumDropdown<QuestDifficulty>(
@@ -109,6 +128,10 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  if (_selectedTemplate != null) ...[
+                    _TemplateSuggestionPreview(template: _selectedTemplate!),
+                    const SizedBox(height: 20),
+                  ],
                   QuestraPrimaryButton(label: 'Questを保存', onPressed: _save),
                 ],
               ),
@@ -132,10 +155,23 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
     }
     _titleController.text = quest.title;
     _descriptionController.text = quest.description;
+    _categoryController.text = quest.category;
     _difficulty = quest.difficulty;
     _status = quest.status;
     _visibility = quest.visibility;
     _targetDate = quest.targetDate;
+  }
+
+  void _applyTemplate(QuestTemplate template) {
+    setState(() {
+      _selectedTemplate = template;
+      _titleController.text = template.title;
+      _descriptionController.text = template.description;
+      _categoryController.text = template.category;
+      _difficulty = template.difficulty;
+      _status = QuestStatus.draft;
+      _visibility = QuestVisibility.private;
+    });
   }
 
   Future<void> _pickTargetDate() async {
@@ -171,6 +207,9 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
           difficulty: _difficulty,
           status: _status,
           visibility: _visibility,
+          category: _categoryController.text.trim().isEmpty
+              ? current.category
+              : _categoryController.text.trim(),
           targetDate: _targetDate,
           clearTargetDate: _targetDate == null,
         ),
@@ -185,6 +224,9 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
       difficulty: _difficulty,
       status: _status,
       visibility: _visibility,
+      category: _categoryController.text.trim().isEmpty
+          ? _selectedTemplate?.category ?? '冒険'
+          : _categoryController.text.trim(),
       targetDate: _targetDate,
     );
     controller.add(quest);
@@ -195,6 +237,135 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
           .generateForQuest(quest),
     );
     context.go('${AppRoutes.quest}/${quest.id}');
+  }
+}
+
+class _TemplatePicker extends StatelessWidget {
+  const _TemplatePicker({
+    required this.templates,
+    required this.selectedTemplate,
+    required this.onSelected,
+  });
+
+  final List<QuestTemplate> templates;
+  final QuestTemplate? selectedTemplate;
+  final ValueChanged<QuestTemplate> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.16)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('テンプレートから始める', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: templates.map((template) {
+              final selected = selectedTemplate?.id == template.id;
+              return ChoiceChip(
+                selected: selected,
+                label: Text(template.category),
+                avatar: Icon(
+                  _templateIcon(template.id),
+                  size: 18,
+                  color: selected ? colorScheme.onPrimary : colorScheme.primary,
+                ),
+                onSelected: (_) => onSelected(template),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TemplateSuggestionPreview extends StatelessWidget {
+  const _TemplateSuggestionPreview({required this.template});
+
+  final QuestTemplate template;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('候補Milestone', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 8),
+          ...template.milestones.map(
+            (milestone) => _TemplateSuggestionRow(
+              icon: Icons.flag_outlined,
+              title: milestone.title,
+              description: milestone.description,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text('候補Mission', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 8),
+          ...template.missions.map(
+            (mission) => _TemplateSuggestionRow(
+              icon: Icons.check_circle_outline,
+              title: mission.title,
+              description: mission.description,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TemplateSuggestionRow extends StatelessWidget {
+  const _TemplateSuggestionRow({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                Text(description),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -228,4 +399,16 @@ class _EnumDropdown<T extends Enum> extends StatelessWidget {
       },
     );
   }
+}
+
+IconData _templateIcon(String id) {
+  return switch (id) {
+    'travel' => Icons.flight_takeoff_outlined,
+    'health' => Icons.favorite_outline,
+    'learning' => Icons.school_outlined,
+    'family' => Icons.volunteer_activism_outlined,
+    'work' => Icons.work_outline,
+    'challenge' => Icons.rocket_launch_outlined,
+    _ => Icons.explore_outlined,
+  };
 }

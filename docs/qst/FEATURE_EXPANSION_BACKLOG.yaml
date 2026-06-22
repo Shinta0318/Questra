@@ -313,7 +313,7 @@ items:
   - id: QST-086
     title: Quest Template Library
     priority: P1
-    status: Ready
+    status: Done
     dependencies: [QST-065, QST-075]
     goal: Help users start faster with Quest templates for common life areas.
     scope:
@@ -330,10 +330,12 @@ items:
       - apps/mobile/lib/features/quest/quest_template_library.dart
       - apps/mobile/lib/features/quest/quest_form_screen.dart
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-086.md
   - id: QST-087
     title: Premium Readiness Flags
     priority: P2
-    status: Planned
+    status: Ready
     dependencies: [QST-070]
     goal: Prepare future Premium feature switches without enforcing payments or harming MVP UX.
     scope:

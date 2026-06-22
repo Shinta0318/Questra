@@ -611,7 +611,7 @@ items:
       report: reports/qst/QST-085.md
   - id: QST-086
     title: Quest Template Library
-    status: Ready
+    status: Done
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-065, QST-075]
@@ -620,9 +620,11 @@ items:
     acceptance:
       - Quest creation can start from a template.
       - User can edit template output before saving.
+    completed_by:
+      report: reports/qst/QST-086.md
   - id: QST-087
     title: Premium Readiness Flags
-    status: Planned
+    status: Ready
     priority: P2
     epic: FEATURE-EXPANSION
     depends_on: [QST-070]
