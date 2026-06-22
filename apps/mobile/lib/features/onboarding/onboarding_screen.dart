@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/analytics/analytics_service.dart';
 import '../../core/router/app_routes.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
@@ -163,6 +166,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           questInterest: _questInterest,
           signalFrequency: _signalFrequency,
         );
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .onboardingCompleted(
+            userId: ref.read(authControllerProvider).profile?.id,
+            questInterest: _questInterest.storageKey,
+            signalFrequency: _signalFrequency.storageKey,
+          ),
+    );
     final quest = Quest(
       title: questTitle,
       description: '$arcNameと一緒に、はじまりの航路で作ったQuest。',

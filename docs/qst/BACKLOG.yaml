@@ -650,7 +650,7 @@ items:
       report: reports/qst/QST-088.md
   - id: QST-089
     title: Beta Analytics Events
-    status: Ready
+    status: Done
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-069, QST-071]
@@ -659,9 +659,11 @@ items:
     acceptance:
       - Analytics event names and payload rules are documented.
       - Default implementation is no-op or local-safe.
+    completed_by:
+      report: reports/qst/QST-089.md
   - id: QST-090
     title: Feature Expansion Review
-    status: Planned
+    status: Ready
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-073, QST-074, QST-075, QST-076, QST-077, QST-078, QST-079, QST-080, QST-081, QST-082, QST-083, QST-084, QST-085, QST-086, QST-087, QST-088, QST-089]

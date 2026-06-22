@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/analytics/analytics_service.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/performance/performance_limits.dart';
 import '../../widgets/arc/arc_empty_state.dart';
@@ -197,14 +198,14 @@ class _GuildIntroCard extends StatelessWidget {
   }
 }
 
-class _GuildQuestionCard extends StatelessWidget {
+class _GuildQuestionCard extends ConsumerWidget {
   const _GuildQuestionCard({required this.question, required this.review});
 
   final String question;
   final GuildPostingReview review;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return QuestraCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,7 +217,7 @@ class _GuildQuestionCard extends StatelessWidget {
           _GuildPostingReviewPanel(review: review),
           const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: () => _copyQuestion(context),
+            onPressed: () => _copyQuestion(context, ref),
             icon: const Icon(Icons.copy),
             label: const Text('Copy question'),
           ),
@@ -225,8 +226,11 @@ class _GuildQuestionCard extends StatelessWidget {
     );
   }
 
-  Future<void> _copyQuestion(BuildContext context) async {
+  Future<void> _copyQuestion(BuildContext context, WidgetRef ref) async {
     await Clipboard.setData(ClipboardData(text: question));
+    await ref
+        .read(analyticsServiceProvider)
+        .guildDraftCreated(source: 'guild_question_card');
     if (context.mounted) {
       ScaffoldMessenger.of(
         context,
