@@ -11,6 +11,8 @@ import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../dream_board/dream_board_controller.dart';
+import '../dream_board/dream_board_model.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../trail/trail_controller.dart';
@@ -105,7 +107,7 @@ class QuestDetailScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _TrailSection(quest: quest, missions: missions, trails: trails),
             const SizedBox(height: 16),
-            _DreamBoardSection(quest: quest),
+            _DreamBoardSection(quest: quest, starMap: starMap),
           ],
         ),
       ),
@@ -868,14 +870,19 @@ class _TrailSection extends ConsumerWidget {
   }
 }
 
-class _DreamBoardSection extends StatelessWidget {
-  const _DreamBoardSection({required this.quest});
+class _DreamBoardSection extends ConsumerWidget {
+  const _DreamBoardSection({required this.quest, required this.starMap});
 
   final Quest quest;
+  final List<StarMapItem> starMap;
 
   @override
-  Widget build(BuildContext context) {
-    final items = ['理想の到達点', '参考になる星', '必要な道具', '出会いたい仲間'];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items =
+        ref.watch(dreamBoardControllerProvider)[quest.id] ??
+        const <DreamBoardItem>[];
+    final controller = ref.read(dreamBoardControllerProvider.notifier);
+    final firstReference = starMap.isEmpty ? null : starMap.first;
 
     return _SectionCard(
       number: 8,
@@ -883,12 +890,189 @@ class _DreamBoardSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('「${quest.title}」を叶えるための素材置き場です。'),
+          Text('「${quest.title}」を叶えるための理想イメージと参考素材を集めます。'),
+          const SizedBox(height: 12),
+          if (items.isEmpty)
+            _DreamBoardEmptyState(
+              onAddVision: () => controller.addItem(
+                questId: quest.id,
+                title: '理想の到達点',
+                note: '${quest.title}を達成した未来の景色を置いておきます。',
+                itemType: DreamBoardItemType.vision,
+              ),
+              onAddReference: firstReference == null
+                  ? null
+                  : () => controller.addItem(
+                      questId: quest.id,
+                      title: firstReference.title,
+                      note: firstReference.description,
+                      itemType: DreamBoardItemType.reference,
+                      sourceUrl: firstReference.url,
+                      metadata: {
+                        'guide_type': firstReference.guideType.name,
+                        'content_type': firstReference.contentType,
+                      },
+                    ),
+            )
+          else ...[
+            ...items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _DreamBoardTile(
+                  item: item,
+                  onRemove: () => controller.removeItem(item),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => controller.addItem(
+                    questId: quest.id,
+                    title: '次に見たい景色',
+                    note: 'このQuestで見たい景色をもう一つ追加します。',
+                    itemType: DreamBoardItemType.vision,
+                  ),
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: const Text('理想を追加'),
+                ),
+                if (firstReference != null)
+                  OutlinedButton.icon(
+                    onPressed: () => controller.addItem(
+                      questId: quest.id,
+                      title: firstReference.title,
+                      note: firstReference.description,
+                      itemType: DreamBoardItemType.reference,
+                      sourceUrl: firstReference.url,
+                      metadata: {
+                        'guide_type': firstReference.guideType.name,
+                        'content_type': firstReference.contentType,
+                      },
+                    ),
+                    icon: const Icon(Icons.auto_awesome_outlined),
+                    label: const Text('参考星を追加'),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DreamBoardEmptyState extends StatelessWidget {
+  const _DreamBoardEmptyState({
+    required this.onAddVision,
+    required this.onAddReference,
+  });
+
+  final VoidCallback onAddVision;
+  final VoidCallback? onAddReference;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: QuestraColors.cosmicBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: QuestraColors.cosmicBlue.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ArcWidget(
+            emotion: ArcEmotion.support,
+            size: 64,
+            message: 'まだ白い星図だね。叶えたい景色をひとつ置くと、航路が少し見えやすくなるよ。',
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: items.map((item) => _ActionChip(label: item)).toList(),
+            children: [
+              FilledButton.icon(
+                onPressed: onAddVision,
+                icon: const Icon(Icons.add_photo_alternate_outlined),
+                label: const Text('理想を追加'),
+              ),
+              if (onAddReference != null)
+                OutlinedButton.icon(
+                  onPressed: onAddReference,
+                  icon: const Icon(Icons.auto_awesome_outlined),
+                  label: const Text('参考星を追加'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DreamBoardTile extends StatelessWidget {
+  const _DreamBoardTile({required this.item, required this.onRemove});
+
+  final DreamBoardItem item;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: QuestraColors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: QuestraColors.gold.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              _dreamBoardIcon(item.itemType),
+              color: QuestraColors.midnightNavy,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  style: const TextStyle(
+                    color: QuestraColors.midnightNavy,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.note,
+                  style: const TextStyle(color: QuestraColors.slate),
+                ),
+                const SizedBox(height: 8),
+                _ActionChip(label: item.itemType.label),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: '削除',
+            onPressed: onRemove,
+            icon: const Icon(Icons.close),
+            color: QuestraColors.slate,
           ),
         ],
       ),
@@ -1050,6 +1234,16 @@ List<StarMapItem> _mockStarMap(Quest quest) {
         ),
       )
       .toList();
+}
+
+IconData _dreamBoardIcon(DreamBoardItemType itemType) {
+  return switch (itemType) {
+    DreamBoardItemType.vision => Icons.landscape_outlined,
+    DreamBoardItemType.reference => Icons.auto_awesome_outlined,
+    DreamBoardItemType.tool => Icons.construction_outlined,
+    DreamBoardItemType.guild => Icons.groups_outlined,
+    DreamBoardItemType.generatedBackground => Icons.wallpaper_outlined,
+  };
 }
 
 String _guideDescription(Quest quest, GuideType guideType) {

@@ -290,7 +290,7 @@ items:
   - id: QST-085
     title: Dream Board V1
     priority: P2
-    status: Ready
+    status: Done
     dependencies: [QST-075, QST-032]
     goal: Let users collect visual inspiration for each Quest without disrupting the core loop.
     scope:
@@ -308,10 +308,12 @@ items:
       - apps/mobile/lib/features/media/
       - supabase/migrations/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-085.md
   - id: QST-086
     title: Quest Template Library
     priority: P1
-    status: Planned
+    status: Ready
     dependencies: [QST-065, QST-075]
     goal: Help users start faster with Quest templates for common life areas.
     scope:
