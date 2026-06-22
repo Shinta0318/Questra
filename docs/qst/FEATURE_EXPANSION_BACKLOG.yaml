@@ -335,7 +335,7 @@ items:
   - id: QST-087
     title: Premium Readiness Flags
     priority: P2
-    status: Ready
+    status: Done
     dependencies: [QST-070]
     goal: Prepare future Premium feature switches without enforcing payments or harming MVP UX.
     scope:
@@ -351,10 +351,12 @@ items:
       - apps/mobile/lib/core/feature_flags/
       - docs/product/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-087.md
   - id: QST-088
     title: Onboarding Personalization
     priority: P0
-    status: Planned
+    status: Ready
     dependencies: [QST-028, QST-060, QST-076]
     goal: Personalize the first-run experience with Arc name preference, Quest tendencies, and Signal frequency.
     scope:

@@ -624,7 +624,7 @@ items:
       report: reports/qst/QST-086.md
   - id: QST-087
     title: Premium Readiness Flags
-    status: Ready
+    status: Done
     priority: P2
     epic: FEATURE-EXPANSION
     depends_on: [QST-070]
@@ -633,9 +633,11 @@ items:
     acceptance:
       - All MVP/Beta core features remain enabled by default.
       - No payment UI or hard paywall is introduced.
+    completed_by:
+      report: reports/qst/QST-087.md
   - id: QST-088
     title: Onboarding Personalization
-    status: Planned
+    status: Ready
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-028, QST-060, QST-076]
