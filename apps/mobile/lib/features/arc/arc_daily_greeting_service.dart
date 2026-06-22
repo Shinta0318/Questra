@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../widgets/arc/arc_emotion.dart';
+import '../auth/auth_state.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
 import '../trail/trail_model.dart';
@@ -30,8 +31,11 @@ class ArcDailyGreetingService {
     required List<Trail> trails,
     required DateTime now,
     String? nickname,
+    String? arcName,
+    QuestInterest questInterest = QuestInterest.adventure,
   }) {
     final name = _displayName(nickname);
+    final guideName = _displayArcName(arcName);
     final today = _dateOnly(now);
     final activeQuests =
         quests.where((quest) => quest.status == QuestStatus.active).toList()
@@ -84,8 +88,8 @@ class ArcDailyGreetingService {
     if (trails.isEmpty && quests.isEmpty) {
       return ArcDailyGreeting(
         message:
-            '${_timeGreeting(now)}、$name。\nまだ空の星図です。最初のQuestをひとつ置けば、そこから航路を一緒に描けます。',
-        contextLabel: '最初の航路',
+            '${_timeGreeting(now)}、$name。\n$guideNameは${questInterest.label}の星を見ています。最初のQuestをひとつ置けば、そこから航路を一緒に描けます。',
+        contextLabel: '${questInterest.label}の最初の航路',
         emotion: ArcEmotion.excited,
       );
     }
@@ -102,6 +106,14 @@ class ArcDailyGreetingService {
     final trimmed = nickname?.trim();
     if (trimmed == null || trimmed.isEmpty) {
       return 'キャプテン';
+    }
+    return trimmed;
+  }
+
+  String _displayArcName(String? arcName) {
+    final trimmed = arcName?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return 'Arc';
     }
     return trimmed;
   }

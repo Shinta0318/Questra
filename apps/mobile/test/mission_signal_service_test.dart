@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:questra/features/auth/auth_state.dart';
 import 'package:questra/features/mission/mission_model.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
 import 'package:questra/features/quest/quest_model.dart';
@@ -72,5 +73,27 @@ void main() {
 
     expect(signals.first.type, MissionSignalType.suggestedSmallStep);
     expect(signals.first.severity, MissionSignalSeverity.calm);
+  });
+
+  test('quiet Signal frequency suppresses calm nudges', () {
+    final mission = Mission(
+      questId: 'quest-1',
+      questTitle: '富士山に登る',
+      title: '装備リストを作る',
+      description: '必要なものを確認する',
+      guideType: GuideType.resource,
+      difficulty: MissionDifficulty.easy,
+      status: MissionStatus.todo,
+      createdAt: DateTime(2026, 6, 21, 8),
+    );
+
+    final signals = service.generate(
+      quests: const [],
+      missions: [mission],
+      now: now,
+      signalFrequency: SignalFrequency.quiet,
+    );
+
+    expect(signals, isEmpty);
   });
 }

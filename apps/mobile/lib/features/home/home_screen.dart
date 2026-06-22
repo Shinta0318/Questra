@@ -17,6 +17,7 @@ import '../arc/arc_emotion_timeline_model.dart';
 import '../arc/arc_guidance_providers.dart';
 import '../arc/navigator_rank_service.dart';
 import '../auth/auth_controller.dart';
+import '../auth/auth_state.dart';
 import '../horizon/horizon_next_challenge_service.dart';
 import '../mission/mission_controller.dart';
 import '../quest/quest_controller.dart';
@@ -48,7 +49,12 @@ class HomeScreen extends ConsumerWidget {
         .resolve(trigger: ArcActionTrigger.inactiveConcern);
     final missionSignals = ref
         .watch(missionSignalServiceProvider)
-        .generate(quests: quests, missions: missions, now: DateTime.now());
+        .generate(
+          quests: quests,
+          missions: missions,
+          now: DateTime.now(),
+          signalFrequency: profile?.signalFrequency ?? SignalFrequency.balanced,
+        );
     final trailHighlights = const TrailHighlightService().rank(
       trails: trails,
       attachments: const {},
@@ -83,6 +89,8 @@ class HomeScreen extends ConsumerWidget {
           trails: trails,
           now: DateTime.now(),
           nickname: profile?.nickname,
+          arcName: profile?.arcName,
+          questInterest: profile?.questInterest ?? QuestInterest.adventure,
         );
 
     return Scaffold(

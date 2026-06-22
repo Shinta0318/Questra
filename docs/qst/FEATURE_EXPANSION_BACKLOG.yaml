@@ -356,7 +356,7 @@ items:
   - id: QST-088
     title: Onboarding Personalization
     priority: P0
-    status: Ready
+    status: Done
     dependencies: [QST-028, QST-060, QST-076]
     goal: Personalize the first-run experience with Arc name preference, Quest tendencies, and Signal frequency.
     scope:
@@ -375,10 +375,12 @@ items:
       - apps/mobile/lib/features/arc/arc_daily_greeting_service.dart
       - supabase/migrations/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-088.md
   - id: QST-089
     title: Beta Analytics Events
     priority: P0
-    status: Planned
+    status: Ready
     dependencies: [QST-069, QST-071]
     goal: Define and implement privacy-conscious event tracking boundaries for beta learning.
     scope:

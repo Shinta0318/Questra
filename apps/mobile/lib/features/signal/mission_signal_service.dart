@@ -1,3 +1,4 @@
+import '../auth/auth_state.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
 import 'mission_signal_model.dart';
@@ -9,6 +10,7 @@ class MissionSignalService {
     required List<Quest> quests,
     required List<Mission> missions,
     required DateTime now,
+    SignalFrequency signalFrequency = SignalFrequency.balanced,
   }) {
     final signals = <MissionSignal>[];
     final activeQuests = quests
@@ -91,7 +93,22 @@ class MissionSignalService {
       }
       return _rankType(b.type).compareTo(_rankType(a.type));
     });
-    return signals;
+    return _applyFrequency(signals, signalFrequency);
+  }
+
+  List<MissionSignal> _applyFrequency(
+    List<MissionSignal> signals,
+    SignalFrequency signalFrequency,
+  ) {
+    return switch (signalFrequency) {
+      SignalFrequency.quiet =>
+        signals
+            .where((signal) => signal.severity != MissionSignalSeverity.calm)
+            .take(2)
+            .toList(growable: false),
+      SignalFrequency.balanced => signals.take(3).toList(growable: false),
+      SignalFrequency.frequent => signals.take(5).toList(growable: false),
+    };
   }
 
   int _rank(MissionSignalSeverity severity) {

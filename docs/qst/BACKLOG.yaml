@@ -637,7 +637,7 @@ items:
       report: reports/qst/QST-087.md
   - id: QST-088
     title: Onboarding Personalization
-    status: Ready
+    status: Done
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-028, QST-060, QST-076]
@@ -646,9 +646,11 @@ items:
     acceptance:
       - Preferences persist to profile or local fallback.
       - Arc copy reflects the chosen name/preference.
+    completed_by:
+      report: reports/qst/QST-088.md
   - id: QST-089
     title: Beta Analytics Events
-    status: Planned
+    status: Ready
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-069, QST-071]

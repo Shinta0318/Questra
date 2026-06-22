@@ -61,6 +61,9 @@ class AuthController extends Notifier<AuthState> {
           user.id,
           email,
           nickname,
+          arcName: 'Arc',
+          questInterest: QuestInterest.adventure,
+          signalFrequency: SignalFrequency.balanced,
           onboardingCompleted: false,
         );
         state = state.copyWith(
@@ -114,7 +117,12 @@ class AuthController extends Notifier<AuthState> {
     });
   }
 
-  Future<void> completeOnboarding({required String nickname}) async {
+  Future<void> completeOnboarding({
+    required String nickname,
+    String arcName = 'Arc',
+    QuestInterest questInterest = QuestInterest.adventure,
+    SignalFrequency signalFrequency = SignalFrequency.balanced,
+  }) async {
     final profile = state.profile;
     if (profile == null) {
       return;
@@ -122,6 +130,9 @@ class AuthController extends Notifier<AuthState> {
 
     final updated = profile.copyWith(
       nickname: nickname,
+      arcName: arcName.trim().isEmpty ? 'Arc' : arcName.trim(),
+      questInterest: questInterest,
+      signalFrequency: signalFrequency,
       onboardingCompleted: true,
     );
     state = state.copyWith(profile: updated, isLoading: true, clearError: true);
@@ -132,13 +143,16 @@ class AuthController extends Notifier<AuthState> {
           updated.id,
           updated.email,
           updated.nickname,
+          arcName: updated.arcName,
+          questInterest: updated.questInterest,
+          signalFrequency: updated.signalFrequency,
           onboardingCompleted: updated.onboardingCompleted,
         );
       }
       state = state.copyWith(profile: updated, isLoading: false);
     } catch (error) {
       state = state.copyWith(
-        profile: profile,
+        profile: updated,
         isLoading: false,
         errorMessage: error.toString(),
       );
@@ -221,11 +235,17 @@ class AuthController extends Notifier<AuthState> {
     String userId,
     String email,
     String nickname, {
+    required String arcName,
+    required QuestInterest questInterest,
+    required SignalFrequency signalFrequency,
     required bool onboardingCompleted,
   }) async {
     await Supabase.instance.client.from('user_profiles').upsert({
       'id': userId,
       'nickname': nickname,
+      'arc_name': arcName,
+      'quest_interest': questInterest.storageKey,
+      'signal_frequency': signalFrequency.storageKey,
       'onboarding_completed': onboardingCompleted,
       'updated_at': DateTime.now().toIso8601String(),
     });
@@ -236,13 +256,7 @@ class AuthController extends Notifier<AuthState> {
     String email,
     String? fallbackNickname,
   ) async {
-    final row = await Supabase.instance.client
-        .from('user_profiles')
-        .select(
-          'id,nickname,onboarding_completed,arc_level,bond_score,stardust_balance,navigator_rank',
-        )
-        .eq('id', userId)
-        .maybeSingle();
+    final row = await _loadProfileRow(userId);
 
     if (row == null) {
       return UserProfile(
@@ -256,11 +270,38 @@ class AuthController extends Notifier<AuthState> {
       id: row['id'] as String,
       email: email,
       nickname: row['nickname'] as String? ?? fallbackNickname ?? 'Adventurer',
+      arcName: row['arc_name'] as String? ?? 'Arc',
+      questInterest: questInterestFromStorage(row['quest_interest'] as String?),
+      signalFrequency: signalFrequencyFromStorage(
+        row['signal_frequency'] as String?,
+      ),
       onboardingCompleted: row['onboarding_completed'] as bool? ?? false,
       arcLevel: row['arc_level'] as int? ?? 1,
       bondScore: row['bond_score'] as int? ?? 0,
       stardustBalance: row['stardust_balance'] as int? ?? 0,
       navigatorRank: row['navigator_rank'] as String? ?? 'novice',
     );
+  }
+
+  Future<Map<String, dynamic>?> _loadProfileRow(String userId) async {
+    try {
+      final row = await Supabase.instance.client
+          .from('user_profiles')
+          .select(
+            'id,nickname,arc_name,quest_interest,signal_frequency,onboarding_completed,arc_level,bond_score,stardust_balance,navigator_rank',
+          )
+          .eq('id', userId)
+          .maybeSingle();
+      return row == null ? null : Map<String, dynamic>.from(row);
+    } catch (_) {
+      final row = await Supabase.instance.client
+          .from('user_profiles')
+          .select(
+            'id,nickname,onboarding_completed,arc_level,bond_score,stardust_balance,navigator_rank',
+          )
+          .eq('id', userId)
+          .maybeSingle();
+      return row == null ? null : Map<String, dynamic>.from(row);
+    }
   }
 }
