@@ -76,7 +76,37 @@ there before new QSTs are created or reordered.
 | QST-087 | Done | Premium Readiness Flags | Prepare future Premium feature switches without enforcing payments or harming MVP UX. | MVP/Beta core features remain enabled and no paywall is introduced. |
 | QST-088 | Done | Onboarding Personalization | Personalize first-run experience with Arc name preference, Quest tendencies, and Signal frequency. | Preferences persist and Arc copy reflects them. |
 | QST-089 | Done | Beta Analytics Events | Define and implement privacy-conscious event tracking boundaries for beta learning. | Analytics event names and payload rules are documented with safe defaults. |
-| QST-090 | Ready | Feature Expansion Review | Review QST-073 through QST-089 for coherence, UX quality, MVP stability, and launch direction. | MVP/Beta stability is preserved and QST-091 through QST-100 candidates are proposed. |
+| QST-090 | Done | Feature Expansion Review | Review QST-073 through QST-089 for coherence, UX quality, MVP stability, and launch direction. | MVP/Beta stability is preserved and QST-101 through QST-130 roadmap is connected. |
+| QST-101 | Ready | Responsive Design Audit | Audit all major Questra screens for responsive layout issues. | Home, Quest, Mission, Trail, Guild, Arc Chat, Profile, and onboarding have documented layout risks. |
+| QST-102 | Planned | Responsive Layout System | Introduce shared responsive layout helpers. | Core screens use common breakpoint rules. |
+| QST-103 | Planned | Safe Area and Overflow Fix | Fix overflow, keyboard overlap, and unsafe edge spacing. | No known RenderFlex overflow remains on major MVP screens. |
+| QST-104 | Planned | Global Scroll Behavior | Standardize scroll physics, scroll containers, and refresh rules. | Major list screens scroll consistently. |
+| QST-105 | Planned | Visible Scrollbar System | Add visible scrollbars where content length is not obvious. | Long Quest, Trail, Guild, and Arc Chat surfaces clearly show scrollability. |
+| QST-106 | Planned | Menu Widget Refactor | Create shared Questra menu/list action components. | Repeated menu/action/navigation widgets are reusable. |
+| QST-107 | Planned | Bottom Navigation V2 | Improve primary navigation for Home, Quest, Trail, Guild, and Arc. | Main sections are reachable from persistent navigation. |
+| QST-108 | Planned | Adaptive Navigation Rail | Add tablet/expanded layout navigation behavior. | Wider screens can use navigation rail without breakage. |
+| QST-109 | Planned | Quick Action Menu | Add Questra-style quick creation/action entry point. | Core creation actions are reachable quickly. |
+| QST-110 | Planned | Home Information Hierarchy Polish | Improve Home layout priority and spacing. | Home content is visually ordered and not cramped. |
+| QST-111 | Planned | Quest Dashboard UX Polish | Improve Quest detail/dashboard navigation. | Mission, Trail, Arc Guide, progress, and next action are easy to find. |
+| QST-112 | Planned | Trail Timeline UX Polish | Improve DB-backed Trail browsing. | Trails are easier to scan chronologically and visually. |
+| QST-113 | Planned | Guild Feed UX Polish | Improve Guild feed readability and action clarity. | Draft question, safe review, and feed reading feel coherent. |
+| QST-114 | Planned | Arc Floating Companion Entry | Add optional Arc shortcut across key screens. | Users can reach Arc from major screens without crowding UI. |
+| QST-115 | Planned | Accessibility Pass | Improve text scaling, touch targets, labels, and contrast. | Major screens remain usable with larger text and accessible targets. |
+| QST-116 | Planned | Design System V2 Application | Apply updated spacing, radius, typography, and component rules. | UI feels consistent across major surfaces. |
+| QST-117 | Planned | Interaction Animation Pass | Polish transitions, feedback, card interactions, and Arc reactions. | Motion improves clarity without decorative excess. |
+| QST-118 | Planned | Responsive QA Automation | Add repeatable viewport validation. | Compact, medium, and expanded viewport checks are repeatable. |
+| QST-119 | Planned | Cross Device UX Validation | Create beta device validation checklist. | Android phone, small phone, large phone, and tablet checks are documented. |
+| QST-120 | Planned | UX Foundation Review | Review QST-101 through QST-119. | Responsive, scrolling, navigation, menu, and accessibility risks are summarized. |
+| QST-121 | Planned | Beta Account Setup Flow | Prepare beta tester account setup and first-run verification. | Beta users can sign in, create first Quest, and confirm persistence. |
+| QST-122 | Planned | Beta First Quest Experience | Polish first Quest creation and Arc guidance. | New beta users understand what to do within the first few minutes. |
+| QST-123 | Planned | Beta Empty State Verification | Verify empty DB state across beta accounts. | No mock content appears as user-owned data. |
+| QST-124 | Planned | Beta Feedback Entry Point | Add or document feedback route. | Beta testers can report screen, severity, and reproduction steps. |
+| QST-125 | Planned | Beta Issue Labeling Rules | Create beta issue labels and QST conversion rules. | Feedback converts into bug, UX, data, AI, Guild, Arc, or performance QSTs. |
+| QST-126 | Planned | Beta Crash and Error Capture Plan | Plan crash/error evidence collection. | Errors, failed Supabase calls, and AI fallback events have capture strategy. |
+| QST-127 | Planned | Beta Privacy and Legal Copy Check | Review beta privacy, terms, and AI/data explanations. | Beta users receive clear data and AI usage copy. |
+| QST-128 | Planned | Beta Release Notes Draft | Create beta release notes and known limitations. | Beta testers know what is ready, experimental, and how to give feedback. |
+| QST-129 | Planned | Beta Go/No-Go Checklist | Create final beta launch checklist. | Launch blockers, evidence, device checks, and rollback conditions are explicit. |
+| QST-130 | Planned | Beta Launch Readiness Review | Produce final beta readiness report. | Questra has beta readiness score, open blockers, and QST-131+ recommendations. |
 
 ## Selection Rules
 

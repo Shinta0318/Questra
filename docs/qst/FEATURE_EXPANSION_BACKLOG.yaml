@@ -405,7 +405,7 @@ items:
   - id: QST-090
     title: Feature Expansion Review
     priority: P0
-    status: Ready
+    status: Done
     dependencies: [QST-073, QST-074, QST-075, QST-076, QST-077, QST-078, QST-079, QST-080, QST-081, QST-082, QST-083, QST-084, QST-085, QST-086, QST-087, QST-088, QST-089]
     goal: Review QST-073 through QST-089 for coherence, UX quality, MVP stability, and launch direction.
     scope:
@@ -422,3 +422,5 @@ items:
       - docs/qst/BACKLOG.yaml
       - docs/product/qst_backlog.md
       - reports/qst/QST-090.md
+    completed_by:
+      report: reports/qst/QST-090.md
