@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
 import '../../core/config/supabase_config.dart';
+import '../../core/performance/performance_limits.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
@@ -107,68 +108,11 @@ class SupabaseArcChatService implements ArcChatService {
     try {
       final response = await client.functions.invoke(
         'arc-chat',
-        body: {
-          'message': userMessage,
-          'history': history
-              .take(10)
-              .map(
-                (message) => {
-                  'role': message.fromArc ? 'arc' : 'user',
-                  'text': message.text,
-                },
-              )
-              .toList(growable: false),
-          'context': {
-            'active_quests': context.activeQuests
-                .take(3)
-                .map(
-                  (quest) => {
-                    'id': quest.id,
-                    'title': quest.title,
-                    'description': quest.description,
-                    'progress': quest.progress,
-                    'category': quest.category,
-                  },
-                )
-                .toList(growable: false),
-            'recent_missions': context.recentMissions
-                .take(5)
-                .map(
-                  (mission) => {
-                    'id': mission.id,
-                    'quest_id': mission.questId,
-                    'title': mission.title,
-                    'status': mission.status.storageKey,
-                  },
-                )
-                .toList(growable: false),
-            'recent_trails': context.recentTrails
-                .take(5)
-                .map(
-                  (trail) => {
-                    'id': trail.id,
-                    'quest_id': trail.questId,
-                    'mission_id': trail.missionId,
-                    'title': trail.title,
-                    'summary': trail.summary,
-                    'trail_type': trail.trailType.storageKey,
-                  },
-                )
-                .toList(growable: false),
-            'memories': context.memories
-                .take(5)
-                .map(
-                  (memory) => {
-                    'id': memory.id,
-                    'title': memory.title,
-                    'content': memory.content,
-                    'importance_score': memory.importanceScore,
-                    'memory_type': memory.memoryType.storageKey,
-                  },
-                )
-                .toList(growable: false),
-          },
-        },
+        body: buildRequestBody(
+          userMessage: userMessage,
+          history: history,
+          context: context,
+        ),
       );
 
       final data = Map<String, dynamic>.from(response.data as Map);
@@ -188,4 +132,81 @@ class SupabaseArcChatService implements ArcChatService {
   }
 
   static const _fallbackMessage = '星雲が少しざわついているみたい。今は小さな一歩だけ一緒に選ぼう。';
+
+  static Map<String, Object?> buildRequestBody({
+    required String userMessage,
+    required List<ArcChatMessage> history,
+    required ArcChatContext context,
+  }) {
+    return {
+      'message': userMessage,
+      'history': history
+          .take(QuestraPerformanceLimits.arcChatHistoryContextLimit)
+          .map(
+            (message) => {
+              'role': message.fromArc ? 'arc' : 'user',
+              'text': _limitText(message.text),
+            },
+          )
+          .toList(growable: false),
+      'context': {
+        'active_quests': context.activeQuests
+            .take(QuestraPerformanceLimits.arcChatActiveQuestContextLimit)
+            .map(
+              (quest) => {
+                'id': quest.id,
+                'title': _limitText(quest.title),
+                'description': _limitText(quest.description),
+                'progress': quest.progress,
+                'category': _limitText(quest.category),
+              },
+            )
+            .toList(growable: false),
+        'recent_missions': context.recentMissions
+            .take(QuestraPerformanceLimits.arcChatRecentMissionContextLimit)
+            .map(
+              (mission) => {
+                'id': mission.id,
+                'quest_id': mission.questId,
+                'title': _limitText(mission.title),
+                'status': mission.status.storageKey,
+              },
+            )
+            .toList(growable: false),
+        'recent_trails': context.recentTrails
+            .take(QuestraPerformanceLimits.arcChatRecentTrailContextLimit)
+            .map(
+              (trail) => {
+                'id': trail.id,
+                'quest_id': trail.questId,
+                'mission_id': trail.missionId,
+                'title': _limitText(trail.title),
+                'summary': _limitText(trail.summary),
+                'trail_type': trail.trailType.storageKey,
+              },
+            )
+            .toList(growable: false),
+        'memories': context.memories
+            .take(QuestraPerformanceLimits.arcChatMemoryContextLimit)
+            .map(
+              (memory) => {
+                'id': memory.id,
+                'title': _limitText(memory.title),
+                'content': _limitText(memory.content),
+                'importance_score': memory.importanceScore,
+                'memory_type': memory.memoryType.storageKey,
+              },
+            )
+            .toList(growable: false),
+      },
+    };
+  }
+
+  static String _limitText(String value) {
+    const limit = QuestraPerformanceLimits.arcChatContextTextLimit;
+    if (value.length <= limit) {
+      return value;
+    }
+    return value.substring(0, limit);
+  }
 }

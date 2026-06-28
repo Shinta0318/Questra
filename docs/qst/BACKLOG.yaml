@@ -944,7 +944,82 @@ items:
     scope: Produce the final beta readiness report.
     acceptance:
       - Questra has a clear beta readiness score, open blockers, and QST-131+ recommendations.
-deferred_existing_items:
+  - id: QST-091
+    requested_id: QST-041
+    title: Arc Relationship Memory Coverage
+    status: Done
+    priority: P1
+    epic: ARC-MEMORY
+    depends_on: [QST-029, QST-064]
+    completed_by:
+      report: reports/qst/QST-091.md
+    scope: Confirm Arc Relationship Memory support and add explicit test coverage for Arc Chat relationship memory extraction.
+    acceptance:
+      - Arc Relationship Memory exists as an ArcMemoryType.
+      - Arc Chat can classify meaningful relationship context as Arc Relationship Memory.
+      - Memory importance remains above baseline for relationship memories.
+      - Flutter analyze and targeted tests pass.
+  - id: QST-092
+    requested_id: QST-042
+    title: Emotional Memory Coverage
+    status: Done
+    priority: P1
+    epic: ARC-MEMORY
+    depends_on: [QST-029, QST-064, QST-091]
+    completed_by:
+      report: reports/qst/QST-092.md
+    scope: Confirm Emotional Memory support and add explicit test coverage for worried emotional memory extraction.
+    acceptance:
+      - Emotional Memory exists as an ArcMemoryType.
+      - Arc Chat can classify emotional context as Emotional Memory.
+      - Worried tone is preserved for anxious journey context.
+      - Flutter analyze and targeted tests pass.
+  - id: QST-093
+    requested_id: QST-044
+    title: Life Event Memory Coverage
+    status: Done
+    priority: P1
+    epic: ARC-MEMORY
+    depends_on: [QST-029, QST-064, QST-091, QST-092]
+    completed_by:
+      report: reports/qst/QST-093.md
+    scope: Confirm Life Event Memory support and add explicit test coverage for major life context extraction.
+    acceptance:
+      - Life Event Memory exists as an ArcMemoryType.
+      - Arc Chat can classify major life context as Life Event Memory.
+      - Standard life event memory remains user-visible.
+      - Flutter analyze and targeted tests pass.
+  - id: QST-094
+    requested_id: QST-045
+    title: Limited Arc Chat and Memory Context
+    status: Done
+    priority: P1
+    epic: ARC-MEMORY
+    depends_on: [QST-029, QST-064, QST-091, QST-092, QST-093]
+    completed_by:
+      report: reports/qst/QST-094.md
+    scope: Add explicit payload bounds for Arc Chat conversation context and Arc Memory context sent to Supabase.
+    acceptance:
+      - Arc Chat request history is capped by a named performance limit.
+      - Quest, Mission, Trail, and Arc Memory context counts are capped by named performance limits.
+      - Long contextual text is trimmed before leaving the client boundary.
+      - Targeted Arc Chat tests and Flutter analyze pass.
+  - id: QST-095
+    source_qst: DEV-QST/QST-046
+    title: Mature Arc Memory Retrieval
+    status: Done
+    priority: P1
+    epic: ARC-MEMORY
+    depends_on: [QST-029, QST-064, QST-094]
+    completed_by:
+      report: reports/qst/QST-095.md
+    scope: Rank bounded Arc Memory context by message relevance, active Quest relationship, importance, and recency before Arc Chat invocation.
+    acceptance:
+      - Arc Memory retrieval considers message text, active Quest IDs, importance, and recency.
+      - Sensitive memories are excluded from Arc Chat context by default.
+      - Retrieval honors the named Arc Chat memory context limit.
+      - Targeted retrieval tests and Flutter analyze pass.
+ deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass
     reason: Superseded by QST-067 after Arc Experience Epic completion.

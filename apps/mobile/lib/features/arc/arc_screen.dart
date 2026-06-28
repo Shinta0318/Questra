@@ -174,7 +174,16 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
           .toList(growable: false),
       recentMissions: missions.take(5).toList(growable: false),
       recentTrails: trails.take(5).toList(growable: false),
-      memories: memories.take(5).toList(growable: false),
+      memories: ref
+          .read(arcMemoryRetrievalServiceProvider)
+          .retrieve(
+            memories: memories,
+            query: text,
+            questIds: quests
+                .where((quest) => quest.status == QuestStatus.active)
+                .map((quest) => quest.id)
+                .toSet(),
+          ),
     );
 
     try {

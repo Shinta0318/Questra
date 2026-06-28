@@ -41,6 +41,61 @@ void main() {
     expect(memories.first.sourceType, ArcMemorySourceType.arcChat);
   });
 
+  test('classifies Arc relationship memory from meaningful Arc chat', () async {
+    final repository = InMemoryArcMemoryRepository();
+    final service = MemoryExtractionService(repository: repository);
+
+    final memories = await service.extractAndSave(
+      const MemoryExtractionEvent(
+        userId: 'user-1',
+        sourceType: ArcMemorySourceType.arcChat,
+        text:
+            'Arc helped me connect today\'s Mission to the Quest I keep returning to.',
+      ),
+    );
+
+    expect(memories, hasLength(1));
+    expect(memories.first.memoryType, ArcMemoryType.arcRelationshipMemory);
+    expect(memories.first.importanceScore, greaterThan(0.5));
+  });
+
+  test('classifies emotional memory and worried tone from Arc chat', () async {
+    final repository = InMemoryArcMemoryRepository();
+    final service = MemoryExtractionService(repository: repository);
+
+    final memories = await service.extractAndSave(
+      const MemoryExtractionEvent(
+        userId: 'user-1',
+        sourceType: ArcMemorySourceType.arcChat,
+        text: '次のMissionに進むのが少し不安で、今日は足が止まりそう。',
+      ),
+    );
+
+    expect(memories, hasLength(1));
+    expect(memories.first.memoryType, ArcMemoryType.emotionalMemory);
+    expect(memories.first.emotionalTone, EmotionalTone.worried);
+    expect(memories.first.importanceScore, greaterThan(0.45));
+  });
+
+  test('classifies life event memory from major life context', () async {
+    final repository = InMemoryArcMemoryRepository();
+    final service = MemoryExtractionService(repository: repository);
+
+    final memories = await service.extractAndSave(
+      const MemoryExtractionEvent(
+        userId: 'user-1',
+        sourceType: ArcMemorySourceType.arcChat,
+        text: '来月引っ越しをするので、新しい生活に合わせてQuestを見直したい。',
+      ),
+    );
+
+    expect(memories, hasLength(1));
+    expect(memories.first.memoryType, ArcMemoryType.lifeEventMemory);
+    expect(memories.first.sensitivityLevel, SensitivityLevel.standard);
+    expect(memories.first.userVisible, isTrue);
+    expect(memories.first.importanceScore, greaterThan(0.5));
+  });
+
   test('does not save low-signal short messages', () async {
     final repository = InMemoryArcMemoryRepository();
     final service = MemoryExtractionService(repository: repository);

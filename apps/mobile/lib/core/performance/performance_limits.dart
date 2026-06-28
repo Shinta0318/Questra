@@ -10,6 +10,12 @@ class QuestraPerformanceLimits {
   static const homeRecentTrailCount = 3;
   static const homeOpenMissionCount = 5;
   static const arcMemoryVisibleLimit = 12;
+  static const arcChatHistoryContextLimit = 10;
+  static const arcChatActiveQuestContextLimit = 3;
+  static const arcChatRecentMissionContextLimit = 5;
+  static const arcChatRecentTrailContextLimit = 5;
+  static const arcChatMemoryContextLimit = 5;
+  static const arcChatContextTextLimit = 240;
   static const trailImageAttachmentLimit = 1;
 
   static const arcAssetMaxDisplaySize = 132.0;
