@@ -9,6 +9,7 @@ import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_presence.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/questra_card.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_expression_engine.dart';
@@ -52,7 +53,7 @@ class TrailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Trail')),
       body: SafeArea(
-        child: ListView(
+        child: QuestraResponsiveListView(
           padding: const EdgeInsets.all(20),
           children: [
             ArcPresence(

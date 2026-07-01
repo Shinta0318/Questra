@@ -8,6 +8,7 @@ import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/persistence_sync_banner.dart';
 import '../arc/arc_concern_service.dart';
 import '../arc/arc_guidance_providers.dart';
@@ -61,7 +62,7 @@ class QuestScreen extends ConsumerWidget {
         ],
       ),
       body: SafeArea(
-        child: ListView(
+        child: QuestraResponsiveListView(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
           children: [
             PersistenceSyncBanner(

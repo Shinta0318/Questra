@@ -10,6 +10,7 @@ import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_daily_greeting_service.dart';
 import '../arc/arc_emotion_timeline_controller.dart';
@@ -98,7 +99,7 @@ class HomeScreen extends ConsumerWidget {
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: AppGradients.adventure),
         child: SafeArea(
-          child: ListView(
+          child: QuestraResponsiveListView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
               AppSpacing.lg,

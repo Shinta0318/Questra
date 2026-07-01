@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/analytics/analytics_service.dart';
 import '../../core/router/app_routes.dart';
 import '../../widgets/questra_card.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_emotion.dart';
 import '../arc/arc_widget.dart';
@@ -44,7 +45,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('はじまりの航路')),
       body: SafeArea(
-        child: ListView(
+        child: QuestraResponsiveListView(
+          maxContentWidth: 640,
           padding: const EdgeInsets.all(20),
           children: [
             QuestraCard(child: _buildStep(context)),

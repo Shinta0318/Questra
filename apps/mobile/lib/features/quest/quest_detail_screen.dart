@@ -7,6 +7,7 @@ import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_celebration_service.dart';
@@ -73,7 +74,7 @@ class QuestDetailScreen extends ConsumerWidget {
       backgroundColor: QuestraColors.deepNavy,
       appBar: AppBar(title: const Text('Quest詳細')),
       body: SafeArea(
-        child: ListView(
+        child: QuestraResponsiveListView(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
           children: [
             _QuestHeader(quest: quest),

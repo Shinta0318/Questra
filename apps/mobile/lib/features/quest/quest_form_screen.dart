@@ -9,6 +9,7 @@ import '../../core/router/app_routes.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/questra_card.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/questra_primary_button.dart';
 import 'arc_quest_guide_controller.dart';
 import 'quest_controller.dart';
@@ -55,7 +56,8 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(_isEditing ? 'Questを編集' : 'Questを作成')),
       body: SafeArea(
-        child: ListView(
+        child: QuestraResponsiveListView(
+          maxContentWidth: 720,
           padding: const EdgeInsets.all(20),
           children: [
             QuestraCard(

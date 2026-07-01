@@ -14,6 +14,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
@@ -72,7 +73,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
             children: [
               const _ArcHeader(),
               Expanded(
-                child: ListView(
+                child: QuestraResponsiveListView(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.xl,
                     AppSpacing.md,

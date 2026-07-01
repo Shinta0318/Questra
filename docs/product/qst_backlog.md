@@ -77,9 +77,9 @@ there before new QSTs are created or reordered.
 | QST-088 | Done | Onboarding Personalization | Personalize first-run experience with Arc name preference, Quest tendencies, and Signal frequency. | Preferences persist and Arc copy reflects them. |
 | QST-089 | Done | Beta Analytics Events | Define and implement privacy-conscious event tracking boundaries for beta learning. | Analytics event names and payload rules are documented with safe defaults. |
 | QST-090 | Done | Feature Expansion Review | Review QST-073 through QST-089 for coherence, UX quality, MVP stability, and launch direction. | MVP/Beta stability is preserved and QST-101 through QST-130 roadmap is connected. |
-| QST-101 | Ready | Responsive Design Audit | Audit all major Questra screens for responsive layout issues. | Home, Quest, Mission, Trail, Guild, Arc Chat, Profile, and onboarding have documented layout risks. |
-| QST-102 | Planned | Responsive Layout System | Introduce shared responsive layout helpers. | Core screens use common breakpoint rules. |
-| QST-103 | Planned | Safe Area and Overflow Fix | Fix overflow, keyboard overlap, and unsafe edge spacing. | No known RenderFlex overflow remains on major MVP screens. |
+| QST-101 | Done | Responsive Design Audit | Audit all major Questra screens for responsive layout issues. | Home, Quest, Mission, Trail, Guild, Arc Chat, Profile, and onboarding have documented layout risks. |
+| QST-102 | Done | Responsive Layout System | Introduce shared responsive layout helpers. | Core screens use common breakpoint rules. |
+| QST-103 | Ready | Safe Area and Overflow Fix | Fix overflow, keyboard overlap, and unsafe edge spacing. | No known RenderFlex overflow remains on major MVP screens. |
 | QST-104 | Planned | Global Scroll Behavior | Standardize scroll physics, scroll containers, and refresh rules. | Major list screens scroll consistently. |
 | QST-105 | Planned | Visible Scrollbar System | Add visible scrollbars where content length is not obvious. | Long Quest, Trail, Guild, and Arc Chat surfaces clearly show scrollability. |
 | QST-106 | Planned | Menu Widget Refactor | Create shared Questra menu/list action components. | Repeated menu/action/navigation widgets are reusable. |

@@ -676,25 +676,29 @@ items:
       report: reports/qst/QST-090.md
   - id: QST-101
     title: Responsive Design Audit
-    status: Ready
+    status: Done
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-090]
     scope: Audit all major Questra screens for responsive layout issues.
     acceptance:
       - Home, Quest, Mission, Trail, Guild, Arc Chat, Profile, and onboarding have documented compact, medium, and expanded layout risks.
+    completed_by:
+      report: reports/qst/QST-101.md
   - id: QST-102
     title: Responsive Layout System
-    status: Planned
+    status: Done
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-101]
     scope: Introduce shared responsive layout helpers for compact, medium, and expanded screens.
     acceptance:
       - Core screens use common breakpoint rules instead of ad hoc layout values.
+    completed_by:
+      report: reports/qst/QST-102.md
   - id: QST-103
     title: Safe Area and Overflow Fix
-    status: Planned
+    status: Ready
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-101, QST-102]

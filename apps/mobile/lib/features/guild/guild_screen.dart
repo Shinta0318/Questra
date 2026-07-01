@@ -7,6 +7,7 @@ import '../../core/analytics/analytics_service.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/performance/performance_limits.dart';
 import '../../widgets/arc/arc_empty_state.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/questra_card.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
@@ -63,7 +64,7 @@ class GuildScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Guild')),
       body: SafeArea(
-        child: ListView(
+        child: QuestraResponsiveListView(
           padding: const EdgeInsets.all(20),
           children: [
             _GuildIntroCard(),

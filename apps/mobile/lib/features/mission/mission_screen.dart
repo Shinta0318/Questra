@@ -6,6 +6,7 @@ import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_presence.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/motion/questra_motion.dart';
 import '../../widgets/persistence_sync_banner.dart';
 import '../../widgets/questra_card.dart';
@@ -40,7 +41,7 @@ class MissionScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Mission')),
       body: SafeArea(
-        child: ListView(
+        child: QuestraResponsiveListView(
           padding: const EdgeInsets.all(20),
           children: [
             PersistenceSyncBanner(
