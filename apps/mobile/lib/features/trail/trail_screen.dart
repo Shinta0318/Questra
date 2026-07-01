@@ -54,6 +54,9 @@ class TrailScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Trail')),
       body: SafeArea(
         child: QuestraResponsiveListView(
+          onRefresh: profile == null
+              ? null
+              : () => controller.loadForUser(profile.id),
           padding: const EdgeInsets.all(20),
           children: [
             ArcPresence(

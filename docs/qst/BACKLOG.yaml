@@ -709,16 +709,18 @@ items:
       report: reports/qst/QST-103.md
   - id: QST-104
     title: Global Scroll Behavior
-    status: Ready
+    status: Done
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-102]
     scope: Standardize scroll physics, scroll containers, and pull-to-refresh rules.
     acceptance:
       - Major list screens scroll consistently and refresh safely.
+    completed_by:
+      report: reports/qst/QST-104.md
   - id: QST-105
     title: Visible Scrollbar System
-    status: Planned
+    status: Ready
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-104]

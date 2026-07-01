@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/core/layout/questra_responsive_layout.dart';
+import 'package:questra/core/layout/questra_scroll_behavior.dart';
 import 'package:questra/widgets/layout/questra_responsive_list_view.dart';
 
 void main() {
@@ -43,5 +46,33 @@ void main() {
 
     expect(tester.getSize(find.byType(ListView)).width, 960);
     expect(tester.getTopLeft(find.byType(ListView)).dx, 120);
+  });
+
+  testWidgets('refresh callback is exposed by the responsive list', (
+    tester,
+  ) async {
+    var refreshCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        scrollBehavior: const QuestraScrollBehavior(),
+        home: Scaffold(
+          body: QuestraResponsiveListView(
+            onRefresh: () async => refreshCount++,
+            children: const [Text('Refreshable content')],
+          ),
+        ),
+      ),
+    );
+
+    final indicator = tester.widget<RefreshIndicator>(
+      find.byType(RefreshIndicator),
+    );
+    await indicator.onRefresh();
+
+    expect(refreshCount, 1);
+    expect(
+      const QuestraScrollBehavior().dragDevices,
+      contains(PointerDeviceKind.mouse),
+    );
   });
 }

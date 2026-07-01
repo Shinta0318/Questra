@@ -10,6 +10,7 @@ class QuestraResponsiveListView extends StatelessWidget {
     this.padding = EdgeInsets.zero,
     this.maxContentWidth,
     this.controller,
+    this.onRefresh,
     this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.manual,
     super.key,
   });
@@ -18,6 +19,7 @@ class QuestraResponsiveListView extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final double? maxContentWidth;
   final ScrollController? controller;
+  final RefreshCallback? onRefresh;
   final ScrollViewKeyboardDismissBehavior keyboardDismissBehavior;
 
   @override
@@ -41,16 +43,20 @@ class QuestraResponsiveListView extends StatelessWidget {
           maxContentWidth ?? layout.maxContentWidth,
         );
 
+        final listView = ListView(
+          controller: controller,
+          keyboardDismissBehavior: keyboardDismissBehavior,
+          padding: effectivePadding,
+          children: children,
+        );
+
         return Align(
           alignment: Alignment.topCenter,
           child: SizedBox(
             width: contentWidth,
-            child: ListView(
-              controller: controller,
-              keyboardDismissBehavior: keyboardDismissBehavior,
-              padding: effectivePadding,
-              children: children,
-            ),
+            child: onRefresh == null
+                ? listView
+                : RefreshIndicator(onRefresh: onRefresh!, child: listView),
           ),
         );
       },

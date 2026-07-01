@@ -12,6 +12,7 @@ import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/persistence_sync_banner.dart';
 import '../arc/arc_concern_service.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../auth/auth_controller.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../trail/trail_controller.dart';
@@ -25,6 +26,7 @@ class QuestScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final quests = ref.watch(questControllerProvider);
+    final profile = ref.watch(authControllerProvider).profile;
     final missions = ref.watch(missionControllerProvider);
     final trails = ref.watch(trailControllerProvider);
     final syncState = ref.watch(questSyncControllerProvider);
@@ -63,6 +65,11 @@ class QuestScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: QuestraResponsiveListView(
+          onRefresh: profile == null
+              ? null
+              : () => ref
+                    .read(questControllerProvider.notifier)
+                    .loadForUser(profile.id),
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
           children: [
             PersistenceSyncBanner(
