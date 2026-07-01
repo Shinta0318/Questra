@@ -352,7 +352,11 @@ class _CaptainStatusBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -381,9 +385,7 @@ class _CaptainStatusBar extends StatelessWidget {
             ],
           ),
         ),
-        const Spacer(),
         const _MetricPill(icon: Icons.monetization_on, label: '2,450'),
-        const SizedBox(width: AppSpacing.sm),
         const _MetricPill(icon: Icons.auto_awesome, label: '18'),
       ],
     );

@@ -563,7 +563,11 @@ class _TrailCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -582,53 +586,57 @@ class _TrailCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const Spacer(),
-              Text(DateFormat.MMMd('ja').format(trail.createdAt)),
-              PopupMenuButton<_TrailAction>(
-                tooltip: 'Trail actions',
-                onSelected: (action) {
-                  switch (action) {
-                    case _TrailAction.edit:
-                      onEdit();
-                    case _TrailAction.reflect:
-                      onReflect();
-                    case _TrailAction.attachImage:
-                      onAttachImage();
-                    case _TrailAction.replaceImage:
-                      onReplaceImage?.call();
-                    case _TrailAction.removeImage:
-                      onRemoveImage?.call();
-                    case _TrailAction.delete:
-                      onDelete();
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: _TrailAction.edit,
-                    child: Text('Edit'),
-                  ),
-                  const PopupMenuItem(
-                    value: _TrailAction.reflect,
-                    child: Text('Reflect'),
-                  ),
-                  if (attachment == null)
-                    const PopupMenuItem(
-                      value: _TrailAction.attachImage,
-                      child: Text('Attach image'),
-                    )
-                  else ...const [
-                    PopupMenuItem(
-                      value: _TrailAction.replaceImage,
-                      child: Text('Replace image'),
-                    ),
-                    PopupMenuItem(
-                      value: _TrailAction.removeImage,
-                      child: Text('Remove image'),
-                    ),
-                  ],
-                  const PopupMenuItem(
-                    value: _TrailAction.delete,
-                    child: Text('Delete'),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(DateFormat.MMMd('ja').format(trail.createdAt)),
+                  PopupMenuButton<_TrailAction>(
+                    tooltip: 'Trail actions',
+                    onSelected: (action) {
+                      switch (action) {
+                        case _TrailAction.edit:
+                          onEdit();
+                        case _TrailAction.reflect:
+                          onReflect();
+                        case _TrailAction.attachImage:
+                          onAttachImage();
+                        case _TrailAction.replaceImage:
+                          onReplaceImage?.call();
+                        case _TrailAction.removeImage:
+                          onRemoveImage?.call();
+                        case _TrailAction.delete:
+                          onDelete();
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: _TrailAction.edit,
+                        child: Text('Edit'),
+                      ),
+                      const PopupMenuItem(
+                        value: _TrailAction.reflect,
+                        child: Text('Reflect'),
+                      ),
+                      if (attachment == null)
+                        const PopupMenuItem(
+                          value: _TrailAction.attachImage,
+                          child: Text('Attach image'),
+                        )
+                      else ...const [
+                        PopupMenuItem(
+                          value: _TrailAction.replaceImage,
+                          child: Text('Replace image'),
+                        ),
+                        PopupMenuItem(
+                          value: _TrailAction.removeImage,
+                          child: Text('Remove image'),
+                        ),
+                      ],
+                      const PopupMenuItem(
+                        value: _TrailAction.delete,
+                        child: Text('Delete'),
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -698,16 +698,18 @@ items:
       report: reports/qst/QST-102.md
   - id: QST-103
     title: Safe Area and Overflow Fix
-    status: Ready
+    status: Done
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-101, QST-102]
     scope: Fix visible overflow, keyboard overlap, and unsafe edge spacing.
     acceptance:
       - No known RenderFlex overflow remains on major MVP screens.
+    completed_by:
+      report: reports/qst/QST-103.md
   - id: QST-104
     title: Global Scroll Behavior
-    status: Planned
+    status: Ready
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-102]

@@ -153,7 +153,10 @@ class _TimelineTrailTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6,
+                      runSpacing: 6,
                       children: [
                         Text(
                           timeLabel,
@@ -162,28 +165,20 @@ class _TimelineTrailTile extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(width: 8),
                         _TimelinePill(label: trail.trailType.label),
-                        if (hasReflection) ...[
-                          const SizedBox(width: 6),
-                          const _TimelinePill(label: 'Arc'),
-                        ],
-                        if (hasMedia) ...[
-                          const SizedBox(width: 6),
+                        if (hasReflection) const _TimelinePill(label: 'Arc'),
+                        if (hasMedia)
                           const Icon(
                             Icons.image_outlined,
                             size: 16,
                             color: QuestraColors.cosmicBlue,
                           ),
-                        ],
-                        if (highlight?.isStarMemoryCandidate == true) ...[
-                          const SizedBox(width: 6),
+                        if (highlight?.isStarMemoryCandidate == true)
                           const Icon(
                             Icons.auto_awesome,
                             size: 16,
                             color: QuestraColors.gold,
                           ),
-                        ],
                       ],
                     ),
                     const SizedBox(height: 8),
