@@ -720,16 +720,18 @@ items:
       report: reports/qst/QST-104.md
   - id: QST-105
     title: Visible Scrollbar System
-    status: Ready
+    status: Done
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-104]
     scope: Add visible scrollbars where content length is not obvious.
     acceptance:
       - Quest List, Trail Timeline/List, Guild Feed, and Arc Chat history clearly show scrollable content.
+    completed_by:
+      report: reports/qst/QST-105.md
   - id: QST-106
     title: Menu Widget Refactor
-    status: Planned
+    status: Ready
     priority: P2
     epic: UX-FOUNDATION
     depends_on: [QST-102]

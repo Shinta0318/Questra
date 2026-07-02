@@ -75,4 +75,33 @@ void main() {
       contains(PointerDeviceKind.mouse),
     );
   });
+
+  testWidgets('visible scrollbar shares the list scroll controller', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            height: 240,
+            child: QuestraResponsiveListView(
+              showScrollbar: true,
+              children: List.generate(
+                20,
+                (index) =>
+                    SizedBox(height: 48, child: Text('Scrollable item $index')),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final scrollbar = tester.widget<Scrollbar>(find.byType(Scrollbar));
+    final listView = tester.widget<ListView>(find.byType(ListView));
+
+    expect(scrollbar.thumbVisibility, isTrue);
+    expect(scrollbar.interactive, isTrue);
+    expect(scrollbar.controller, same(listView.controller));
+  });
 }

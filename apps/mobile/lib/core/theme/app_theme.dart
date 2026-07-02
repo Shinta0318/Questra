@@ -88,6 +88,19 @@ abstract final class AppTheme {
           ),
         ),
       ),
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.hovered)
+              ? AppColors.gold
+              : AppColors.gold.withValues(alpha: 0.72),
+        ),
+        trackColor: WidgetStatePropertyAll(
+          AppColors.white.withValues(alpha: 0.08),
+        ),
+        thickness: const WidgetStatePropertyAll(6),
+        radius: const Radius.circular(3),
+        interactive: true,
+      ),
       extensions: <ThemeExtension<dynamic>>[const QuestraThemeTokens()],
     );
   }

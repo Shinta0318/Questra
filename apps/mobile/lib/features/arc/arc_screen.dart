@@ -74,6 +74,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
               const _ArcHeader(),
               Expanded(
                 child: QuestraResponsiveListView(
+                  showScrollbar: true,
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.xl,
                     AppSpacing.md,

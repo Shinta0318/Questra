@@ -81,8 +81,8 @@ there before new QSTs are created or reordered.
 | QST-102 | Done | Responsive Layout System | Introduce shared responsive layout helpers. | Core screens use common breakpoint rules. |
 | QST-103 | Done | Safe Area and Overflow Fix | Fix overflow, keyboard overlap, and unsafe edge spacing. | No known RenderFlex overflow remains on major MVP screens. |
 | QST-104 | Done | Global Scroll Behavior | Standardize scroll physics, scroll containers, and refresh rules. | Major list screens scroll consistently. |
-| QST-105 | Ready | Visible Scrollbar System | Add visible scrollbars where content length is not obvious. | Long Quest, Trail, Guild, and Arc Chat surfaces clearly show scrollability. |
-| QST-106 | Planned | Menu Widget Refactor | Create shared Questra menu/list action components. | Repeated menu/action/navigation widgets are reusable. |
+| QST-105 | Done | Visible Scrollbar System | Add visible scrollbars where content length is not obvious. | Long Quest, Trail, Guild, and Arc Chat surfaces clearly show scrollability. |
+| QST-106 | Ready | Menu Widget Refactor | Create shared Questra menu/list action components. | Repeated menu/action/navigation widgets are reusable. |
 | QST-107 | Planned | Bottom Navigation V2 | Improve primary navigation for Home, Quest, Trail, Guild, and Arc. | Main sections are reachable from persistent navigation. |
 | QST-108 | Planned | Adaptive Navigation Rail | Add tablet/expanded layout navigation behavior. | Wider screens can use navigation rail without breakage. |
 | QST-109 | Planned | Quick Action Menu | Add Questra-style quick creation/action entry point. | Core creation actions are reachable quickly. |

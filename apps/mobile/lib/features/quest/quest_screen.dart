@@ -65,6 +65,7 @@ class QuestScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: QuestraResponsiveListView(
+          showScrollbar: true,
           onRefresh: profile == null
               ? null
               : () => ref

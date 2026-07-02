@@ -65,6 +65,7 @@ class GuildScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Guild')),
       body: SafeArea(
         child: QuestraResponsiveListView(
+          showScrollbar: true,
           padding: const EdgeInsets.all(20),
           children: [
             _GuildIntroCard(),
