@@ -5,6 +5,7 @@ enum QuestraWindowClass { compact, medium, expanded }
 abstract final class QuestraBreakpoints {
   static const medium = 600.0;
   static const expanded = 1024.0;
+  static const extendedNavigation = 1200.0;
 }
 
 class QuestraLayoutSpec {

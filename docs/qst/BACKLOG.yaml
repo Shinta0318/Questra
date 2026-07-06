@@ -753,16 +753,18 @@ items:
       report: reports/qst/QST-107.md
   - id: QST-108
     title: Adaptive Navigation Rail
-    status: Ready
+    status: Done
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-102, QST-107]
     scope: Add tablet and expanded layout navigation behavior.
     acceptance:
       - Wider screens can switch from bottom navigation to navigation rail without layout breakage.
+    completed_by:
+      report: reports/qst/QST-108.md
   - id: QST-109
     title: Quick Action Menu
-    status: Planned
+    status: Ready
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-107]
