@@ -1,8 +1,62 @@
 import 'package:flutter/material.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
 import '../arc/arc_emotion.dart';
 import '../arc/arc_widget.dart';
+
+enum QuestraNavigationDestination {
+  home(
+    label: 'ホーム',
+    route: AppRoutes.home,
+    icon: Icons.home_outlined,
+    selectedIcon: Icons.home,
+  ),
+  quest(
+    label: 'Quest',
+    route: AppRoutes.quest,
+    icon: Icons.explore_outlined,
+    selectedIcon: Icons.explore,
+  ),
+  trail(
+    label: 'Trail',
+    route: AppRoutes.trail,
+    icon: Icons.timeline_outlined,
+    selectedIcon: Icons.timeline,
+  ),
+  guild(
+    label: 'Guild',
+    route: AppRoutes.guild,
+    icon: Icons.groups_outlined,
+    selectedIcon: Icons.groups,
+  ),
+  arc(
+    label: 'Arc',
+    route: AppRoutes.arc,
+    icon: Icons.auto_awesome_outlined,
+    selectedIcon: Icons.auto_awesome,
+  ),
+  profile(
+    label: 'プロフィール',
+    route: AppRoutes.profile,
+    icon: Icons.person_outline,
+    selectedIcon: Icons.person,
+  );
+
+  const QuestraNavigationDestination({
+    required this.label,
+    required this.route,
+    required this.icon,
+    required this.selectedIcon,
+  });
+
+  final String label;
+  final String route;
+  final IconData icon;
+  final IconData selectedIcon;
+
+  bool get isArc => this == QuestraNavigationDestination.arc;
+}
 
 class QuestraBottomNavigation extends StatelessWidget {
   const QuestraBottomNavigation({
@@ -39,45 +93,22 @@ class QuestraBottomNavigation extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Row(
               children: [
-                _NavItem(
-                  icon: Icons.home_outlined,
-                  selectedIcon: Icons.home,
-                  label: 'ホーム',
-                  selected: currentIndex == 0,
-                  onTap: () => onDestinationSelected(0),
-                ),
-                _NavItem(
-                  icon: Icons.explore_outlined,
-                  selectedIcon: Icons.explore,
-                  label: 'Quest',
-                  selected: currentIndex == 1,
-                  onTap: () => onDestinationSelected(1),
-                ),
-                _NavItem(
-                  icon: Icons.timeline_outlined,
-                  selectedIcon: Icons.timeline,
-                  label: 'Trail',
-                  selected: currentIndex == 2,
-                  onTap: () => onDestinationSelected(2),
-                ),
-                _NavItem(
-                  icon: Icons.groups_outlined,
-                  selectedIcon: Icons.groups,
-                  label: 'Guild',
-                  selected: currentIndex == 3,
-                  onTap: () => onDestinationSelected(3),
-                ),
-                _ArcNavItem(
-                  selected: currentIndex == 4,
-                  onTap: () => onDestinationSelected(4),
-                ),
-                _NavItem(
-                  icon: Icons.person_outline,
-                  selectedIcon: Icons.person,
-                  label: 'プロフィール',
-                  selected: currentIndex == 5,
-                  onTap: () => onDestinationSelected(5),
-                ),
+                for (final destination in QuestraNavigationDestination.values)
+                  if (destination.isArc)
+                    _ArcNavItem(
+                      key: ValueKey('nav-${destination.name}'),
+                      selected: currentIndex == destination.index,
+                      onTap: () => onDestinationSelected(destination.index),
+                    )
+                  else
+                    _NavItem(
+                      key: ValueKey('nav-${destination.name}'),
+                      icon: destination.icon,
+                      selectedIcon: destination.selectedIcon,
+                      label: destination.label,
+                      selected: currentIndex == destination.index,
+                      onTap: () => onDestinationSelected(destination.index),
+                    ),
               ],
             ),
           ),
@@ -94,6 +125,7 @@ class _NavItem extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    super.key,
   });
 
   final IconData icon;
@@ -107,40 +139,53 @@ class _NavItem extends StatelessWidget {
     final color = selected ? QuestraColors.gold : QuestraColors.white;
 
     return Expanded(
-      child: Tooltip(
-        message: label,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            height: 58,
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            decoration: BoxDecoration(
-              color: selected
-                  ? QuestraColors.cosmicBlue.withValues(alpha: 0.22)
-                  : Colors.transparent,
+      child: Semantics(
+        label: label,
+        button: true,
+        selected: selected,
+        child: ExcludeSemantics(
+          child: Tooltip(
+            message: label,
+            child: InkWell(
               borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(selected ? selectedIcon : icon, color: color, size: 22),
-                const SizedBox(height: 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 11,
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                      letterSpacing: 0,
-                    ),
-                  ),
+              onTap: onTap,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                height: 58,
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? QuestraColors.cosmicBlue.withValues(alpha: 0.22)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ],
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      selected ? selectedIcon : icon,
+                      color: color,
+                      size: 22,
+                    ),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 11,
+                          fontWeight: selected
+                              ? FontWeight.w800
+                              : FontWeight.w600,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -150,7 +195,7 @@ class _NavItem extends StatelessWidget {
 }
 
 class _ArcNavItem extends StatelessWidget {
-  const _ArcNavItem({required this.selected, required this.onTap});
+  const _ArcNavItem({required this.selected, required this.onTap, super.key});
 
   final bool selected;
   final VoidCallback onTap;
@@ -158,55 +203,62 @@ class _ArcNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Tooltip(
-        message: 'Arc',
-        child: InkWell(
-          borderRadius: BorderRadius.circular(28),
-          onTap: onTap,
-          child: SizedBox(
-            height: 72,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  width: selected ? 60 : 54,
-                  height: selected ? 60 : 54,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: QuestraColors.white.withValues(alpha: 0.08),
-                    border: Border.all(color: QuestraColors.gold, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: QuestraColors.gold.withValues(
-                          alpha: selected ? 0.34 : 0.18,
-                        ),
-                        blurRadius: selected ? 22 : 14,
-                        offset: const Offset(0, 8),
+      child: Semantics(
+        label: 'Arc',
+        button: true,
+        selected: selected,
+        child: ExcludeSemantics(
+          child: Tooltip(
+            message: 'Arc',
+            child: InkWell(
+              borderRadius: BorderRadius.circular(28),
+              onTap: onTap,
+              child: SizedBox(
+                height: 72,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: selected ? 60 : 54,
+                      height: selected ? 60 : 54,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: QuestraColors.white.withValues(alpha: 0.08),
+                        border: Border.all(color: QuestraColors.gold, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: QuestraColors.gold.withValues(
+                              alpha: selected ? 0.34 : 0.18,
+                            ),
+                            blurRadius: selected ? 22 : 14,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: const ArcWidget(
-                    emotion: ArcEmotion.normal,
-                    size: 42,
-                    showSpeechBubble: false,
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  child: Text(
-                    'Arc',
-                    style: TextStyle(
-                      color: selected
-                          ? QuestraColors.gold
-                          : QuestraColors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0,
+                      child: const ArcWidget(
+                        emotion: ArcEmotion.normal,
+                        size: 42,
+                        showSpeechBubble: false,
+                      ),
                     ),
-                  ),
+                    Positioned(
+                      bottom: 0,
+                      child: Text(
+                        'Arc',
+                        style: TextStyle(
+                          color: selected
+                              ? QuestraColors.gold
+                              : QuestraColors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

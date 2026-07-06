@@ -742,16 +742,18 @@ items:
       report: reports/qst/QST-106.md
   - id: QST-107
     title: Bottom Navigation V2
-    status: Ready
+    status: Done
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-101]
     scope: Improve primary navigation for Home, Quest, Trail, Guild, and Arc.
     acceptance:
       - Main sections are reachable from persistent navigation without confusing duplicate routes.
+    completed_by:
+      report: reports/qst/QST-107.md
   - id: QST-108
     title: Adaptive Navigation Rail
-    status: Planned
+    status: Ready
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-102, QST-107]
