@@ -764,16 +764,18 @@ items:
       report: reports/qst/QST-108.md
   - id: QST-109
     title: Quick Action Menu
-    status: Ready
+    status: Done
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-107]
     scope: Add a Questra-style quick action entry point for creating Quest, Trail, opening Arc, and Guild posting.
     acceptance:
       - Core creation actions are reachable quickly without crowding Home.
+    completed_by:
+      report: reports/qst/QST-109.md
   - id: QST-110
     title: Home Information Hierarchy Polish
-    status: Planned
+    status: Ready
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-101, QST-102]

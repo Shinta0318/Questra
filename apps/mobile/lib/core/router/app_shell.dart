@@ -5,6 +5,8 @@ import '../layout/questra_responsive_layout.dart';
 import '../theme/questra_colors.dart';
 import '../../widgets/navigation/questra_bottom_navigation.dart';
 import '../../widgets/navigation/questra_navigation_rail.dart';
+import '../../widgets/navigation/questra_quick_action_menu.dart';
+import 'app_routes.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({required this.navigationShell, super.key});
@@ -44,6 +46,11 @@ class AppShell extends StatelessWidget {
                   currentIndex: navigationShell.currentIndex,
                   onDestinationSelected: _selectDestination,
                 ),
+          floatingActionButton: QuestraQuickActionMenu(
+            extended: extendedRail,
+            onSelected: (action) => _selectQuickAction(context, action),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         );
       },
     );
@@ -54,5 +61,18 @@ class AppShell extends StatelessWidget {
       index,
       initialLocation: index == navigationShell.currentIndex,
     );
+  }
+
+  void _selectQuickAction(BuildContext context, QuestraQuickAction action) {
+    switch (action) {
+      case QuestraQuickAction.createQuest:
+        context.go('${AppRoutes.quest}/create');
+      case QuestraQuickAction.createTrail:
+        context.go(AppRoutes.trail);
+      case QuestraQuickAction.openArc:
+        context.go(AppRoutes.arc);
+      case QuestraQuickAction.openGuild:
+        context.go(AppRoutes.guild);
+    }
   }
 }
