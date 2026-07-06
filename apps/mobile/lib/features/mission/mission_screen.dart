@@ -7,6 +7,7 @@ import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_presence.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/menu/questra_action_menu.dart';
 import '../../widgets/motion/questra_motion.dart';
 import '../../widgets/persistence_sync_banner.dart';
 import '../../widgets/questra_card.dart';
@@ -103,7 +104,7 @@ class MissionScreen extends ConsumerWidget {
                         Text('Quest: ${mission.questTitle}'),
                         Text('Guide: ${mission.guideType.label}'),
                         const SizedBox(height: 12),
-                        OutlinedButton.icon(
+                        QuestraActionButton(
                           onPressed: mission.status == MissionStatus.completed
                               ? null
                               : () => _completeMission(context, ref, mission),

@@ -731,16 +731,18 @@ items:
       report: reports/qst/QST-105.md
   - id: QST-106
     title: Menu Widget Refactor
-    status: Ready
+    status: Done
     priority: P2
     epic: UX-FOUNDATION
     depends_on: [QST-102]
     scope: Create shared Questra menu/list action components.
     acceptance:
       - Repeated menu tiles, action cards, and navigation buttons are replaced with reusable widgets.
+    completed_by:
+      report: reports/qst/QST-106.md
   - id: QST-107
     title: Bottom Navigation V2
-    status: Planned
+    status: Ready
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-101]

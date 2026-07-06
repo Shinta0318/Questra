@@ -9,6 +9,7 @@ import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/menu/questra_action_menu.dart';
 import '../../widgets/persistence_sync_banner.dart';
 import '../arc/arc_concern_service.dart';
 import '../arc/arc_guidance_providers.dart';
@@ -190,7 +191,7 @@ class _QuestConcernCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(concern.message),
                 const SizedBox(height: 12),
-                OutlinedButton.icon(
+                QuestraActionButton(
                   onPressed: () => _openConcernTarget(context),
                   icon: const Icon(Icons.near_me_outlined),
                   label: Text(concern.actionLabel),
@@ -354,7 +355,7 @@ class _QuestProgressDashboard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(arcComment),
           const SizedBox(height: 12),
-          OutlinedButton.icon(
+          QuestraActionButton(
             onPressed: onOpenQuest,
             icon: const Icon(Icons.open_in_new),
             label: const Text('Quest詳細へ'),

@@ -10,6 +10,7 @@ import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_presence.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/menu/questra_action_menu.dart';
 import '../../widgets/questra_card.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_expression_engine.dart';
@@ -594,8 +595,8 @@ class _TrailCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(DateFormat.MMMd('ja').format(trail.createdAt)),
-                  PopupMenuButton<_TrailAction>(
-                    tooltip: 'Trail actions',
+                  QuestraPopupMenu<_TrailAction>(
+                    tooltip: 'Trailメニュー',
                     onSelected: (action) {
                       switch (action) {
                         case _TrailAction.edit:
@@ -612,33 +613,40 @@ class _TrailCard extends StatelessWidget {
                           onDelete();
                       }
                     },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
+                    items: [
+                      const QuestraMenuItem(
                         value: _TrailAction.edit,
-                        child: Text('Edit'),
+                        label: '編集',
+                        icon: Icons.edit_outlined,
                       ),
-                      const PopupMenuItem(
+                      const QuestraMenuItem(
                         value: _TrailAction.reflect,
-                        child: Text('Reflect'),
+                        label: '振り返る',
+                        icon: Icons.auto_awesome_outlined,
                       ),
                       if (attachment == null)
-                        const PopupMenuItem(
+                        const QuestraMenuItem(
                           value: _TrailAction.attachImage,
-                          child: Text('Attach image'),
+                          label: '画像を追加',
+                          icon: Icons.add_photo_alternate_outlined,
                         )
                       else ...const [
-                        PopupMenuItem(
+                        QuestraMenuItem(
                           value: _TrailAction.replaceImage,
-                          child: Text('Replace image'),
+                          label: '画像を置換',
+                          icon: Icons.find_replace_outlined,
                         ),
-                        PopupMenuItem(
+                        QuestraMenuItem(
                           value: _TrailAction.removeImage,
-                          child: Text('Remove image'),
+                          label: '画像を削除',
+                          icon: Icons.hide_image_outlined,
                         ),
                       ],
-                      const PopupMenuItem(
+                      const QuestraMenuItem(
                         value: _TrailAction.delete,
-                        child: Text('Delete'),
+                        label: 'Trailを削除',
+                        icon: Icons.delete_outline,
+                        destructive: true,
                       ),
                     ],
                   ),
