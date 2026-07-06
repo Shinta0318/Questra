@@ -1,8 +1,10 @@
 # QST Backlog
 
-This backlog mirrors the Questra Project Planner source in
-`C:\Users\shint\OneDrive\ドキュメント\Questra` and should follow the Master Spec
-there before new QSTs are created or reordered.
+This backlog follows
+[`QUESTRA_MASTER_SPEC_V2.md`](../QUESTRA_MASTER_SPEC_V2.md) as Questra's
+highest-level product constitution. The Project Planner and legacy Master Spec
+under `C:\Users\shint\OneDrive\ドキュメント\Questra` remain subordinate planning
+references where they do not conflict with v2.
 
 | QST ID | Status | Title | Scope | Acceptance |
 | --- | --- | --- | --- | --- |

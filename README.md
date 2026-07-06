@@ -5,6 +5,13 @@ Trail, Guild, and Arc Memory systems, with supporting backend, product, AI,
 worldbuilding, branding, architecture, analytics, and design documentation
 spaces.
 
+## Product Constitution
+
+[Questra Master Spec v2.0](docs/QUESTRA_MASTER_SPEC_V2.md) is the
+highest-level product constitution for product, Arc, domain, AI, technical,
+security, business, and QST decisions. Legacy Master Spec documents remain
+available as subordinate references where they do not conflict with v2.
+
 ## Project Structure
 
 ```text
