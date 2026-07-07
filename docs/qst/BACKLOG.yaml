@@ -841,16 +841,18 @@ items:
       report: reports/qst/QST-115.md
   - id: QST-116
     title: Design System V2 Application
-    status: Ready
+    status: Done
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-102, QST-115]
     scope: Apply updated spacing, radius, typography, and component rules.
     acceptance:
       - UI feels consistent across Home, Quest, Trail, Guild, Arc, and Profile.
+    completed_by:
+      report: reports/qst/QST-116.md
   - id: QST-117
     title: Interaction Animation Pass
-    status: Planned
+    status: Ready
     priority: P2
     epic: UX-FOUNDATION
     depends_on: [QST-116]
