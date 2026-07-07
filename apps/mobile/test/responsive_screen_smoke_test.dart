@@ -113,6 +113,39 @@ void main() {
     expect(find.text('Arc Guide'), findsWidgets);
   });
 
+  testWidgets('Guild feed exposes coherent Japanese support sections', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: GuildScreen())),
+    );
+    await tester.pump();
+
+    expect(find.text('Guildの現在地'), findsOneWidget);
+    expect(find.text('相談ドラフト'), findsOneWidget);
+    expect(find.text('Question Draft'), findsNothing);
+    expect(find.text('Copy question'), findsNothing);
+
+    await tester.scrollUntilVisible(
+      find.text('近いQuest'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('近いQuest'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.text('共有しやすいTrail'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('共有しやすいTrail'), findsOneWidget);
+    expect(find.text('Safe Trail Reflections'), findsNothing);
+  });
+
   testWidgets('Arc input remains above the keyboard inset', (tester) async {
     tester.view.physicalSize = const Size(320, 700);
     tester.view.devicePixelRatio = 1;

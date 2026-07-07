@@ -808,16 +808,18 @@ items:
       report: reports/qst/QST-112.md
   - id: QST-113
     title: Guild Feed UX Polish
-    status: Ready
+    status: Done
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-101]
     scope: Improve Guild feed readability and action clarity.
     acceptance:
       - Draft question, safe reflection review, and feed reading feel coherent.
+    completed_by:
+      report: reports/qst/QST-113.md
   - id: QST-114
     title: Arc Floating Companion Entry
-    status: Planned
+    status: Ready
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-107]
