@@ -89,8 +89,8 @@ references where they do not conflict with v2.
 | QST-108 | Done | Adaptive Navigation Rail | Add tablet/expanded layout navigation behavior. | Wider screens can use navigation rail without breakage. |
 | QST-109 | Done | Quick Action Menu | Add Questra-style quick creation/action entry point. | Core creation actions are reachable quickly. |
 | QST-110 | Done | Home Information Hierarchy Polish | Improve Home layout priority and spacing. | Home content is visually ordered and not cramped. |
-| QST-111 | Ready | Quest Dashboard UX Polish | Improve Quest detail/dashboard navigation. | Mission, Trail, Arc Guide, progress, and next action are easy to find. |
-| QST-112 | Planned | Trail Timeline UX Polish | Improve DB-backed Trail browsing. | Trails are easier to scan chronologically and visually. |
+| QST-111 | Done | Quest Dashboard UX Polish | Improve Quest detail/dashboard navigation. | Mission, Trail, Arc Guide, progress, and next action are easy to find. |
+| QST-112 | Ready | Trail Timeline UX Polish | Improve DB-backed Trail browsing. | Trails are easier to scan chronologically and visually. |
 | QST-113 | Planned | Guild Feed UX Polish | Improve Guild feed readability and action clarity. | Draft question, safe review, and feed reading feel coherent. |
 | QST-114 | Planned | Arc Floating Companion Entry | Add optional Arc shortcut across key screens. | Users can reach Arc from major screens without crowding UI. |
 | QST-115 | Planned | Accessibility Pass | Improve text scaling, touch targets, labels, and contrast. | Major screens remain usable with larger text and accessible targets. |

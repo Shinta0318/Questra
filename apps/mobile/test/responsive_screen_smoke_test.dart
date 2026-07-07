@@ -7,6 +7,8 @@ import 'package:questra/features/guild/guild_screen.dart';
 import 'package:questra/features/home/home_screen.dart';
 import 'package:questra/features/mission/mission_screen.dart';
 import 'package:questra/features/onboarding/onboarding_screen.dart';
+import 'package:questra/features/quest/quest_controller.dart';
+import 'package:questra/features/quest/quest_detail_screen.dart';
 import 'package:questra/features/profile/profile_screen.dart';
 import 'package:questra/features/quest/quest_screen.dart';
 import 'package:questra/features/trail/trail_screen.dart';
@@ -79,6 +81,36 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Guild Activity'), findsOneWidget);
+  });
+
+  testWidgets('Quest Detail exposes journey overview and next action', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Consumer(
+            builder: (context, ref, child) {
+              final questId = ref.watch(questControllerProvider).first.id;
+              return QuestDetailScreen(questId: questId);
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Journey Overview'), findsOneWidget);
+    expect(find.text('Next Action'), findsOneWidget);
+    expect(find.text('Progress'), findsWidgets);
+    expect(find.text('Mission'), findsWidgets);
+    expect(find.text('Trail'), findsWidgets);
+    expect(find.text('Arc Guide'), findsWidgets);
   });
 
   testWidgets('Arc input remains above the keyboard inset', (tester) async {
