@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../layout/questra_responsive_layout.dart';
 import '../theme/questra_colors.dart';
+import '../../widgets/navigation/questra_arc_floating_entry.dart';
 import '../../widgets/navigation/questra_bottom_navigation.dart';
 import '../../widgets/navigation/questra_navigation_rail.dart';
 import '../../widgets/navigation/questra_quick_action_menu.dart';
@@ -46,9 +47,14 @@ class AppShell extends StatelessWidget {
                   currentIndex: navigationShell.currentIndex,
                   onDestinationSelected: _selectDestination,
                 ),
-          floatingActionButton: QuestraQuickActionMenu(
+          floatingActionButton: _ShellFloatingActions(
+            showArcEntry:
+                navigationShell.currentIndex !=
+                QuestraNavigationDestination.arc.index,
             extended: extendedRail,
-            onSelected: (action) => _selectQuickAction(context, action),
+            onOpenArc: () => context.go(AppRoutes.arc),
+            onQuickActionSelected: (action) =>
+                _selectQuickAction(context, action),
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         );
@@ -74,5 +80,37 @@ class AppShell extends StatelessWidget {
       case QuestraQuickAction.openGuild:
         context.go(AppRoutes.guild);
     }
+  }
+}
+
+class _ShellFloatingActions extends StatelessWidget {
+  const _ShellFloatingActions({
+    required this.showArcEntry,
+    required this.extended,
+    required this.onOpenArc,
+    required this.onQuickActionSelected,
+  });
+
+  final bool showArcEntry;
+  final bool extended;
+  final VoidCallback onOpenArc;
+  final ValueChanged<QuestraQuickAction> onQuickActionSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (showArcEntry) ...[
+          QuestraArcFloatingEntry(extended: extended, onPressed: onOpenArc),
+          const SizedBox(height: 10),
+        ],
+        QuestraQuickActionMenu(
+          extended: extended,
+          onSelected: onQuickActionSelected,
+        ),
+      ],
+    );
   }
 }

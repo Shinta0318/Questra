@@ -819,16 +819,18 @@ items:
       report: reports/qst/QST-113.md
   - id: QST-114
     title: Arc Floating Companion Entry
-    status: Ready
+    status: Done
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-107]
     scope: Add optional Arc shortcut or presence pattern across key screens.
     acceptance:
       - Users can reach Arc from major screens without making the UI feel crowded.
+    completed_by:
+      report: reports/qst/QST-114.md
   - id: QST-115
     title: Accessibility Pass
-    status: Planned
+    status: Ready
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-101, QST-103]

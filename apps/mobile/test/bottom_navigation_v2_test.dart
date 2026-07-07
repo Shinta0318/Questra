@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/core/router/app_router.dart';
 import 'package:questra/core/router/app_routes.dart';
 import 'package:questra/features/mission/mission_screen.dart';
+import 'package:questra/widgets/navigation/questra_arc_floating_entry.dart';
 import 'package:questra/widgets/navigation/questra_bottom_navigation.dart';
 import 'package:questra/widgets/navigation/questra_navigation_rail.dart';
 import 'package:questra/widgets/navigation/questra_quick_action_menu.dart';
@@ -170,6 +171,45 @@ void main() {
     expect(find.text('Arcと話す'), findsOneWidget);
     expect(find.text('Guildへ相談'), findsOneWidget);
   });
+
+  testWidgets(
+    'Arc floating entry opens Arc without duplicating on Arc screen',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final router = container.read(appRouterProvider);
+      addTearDown(router.dispose);
+      router.go(AppRoutes.home);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(QuestraArcFloatingEntry), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('questra-arc-floating-entry')),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('questra-arc-floating-entry')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(QuestraArcFloatingEntry), findsNothing);
+      expect(find.text('Arc'), findsWidgets);
+    },
+  );
 
   testWidgets('quick action can open Quest creation', (tester) async {
     tester.view.physicalSize = const Size(390, 800);
