@@ -49,6 +49,38 @@ void main() {
     });
   }
 
+  testWidgets('Home orders beta journey sections without mock ownership', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: HomeScreen())),
+    );
+    await tester.pump();
+
+    expect(find.text('今日のMission'), findsOneWidget);
+    expect(find.text('Active Quest'), findsOneWidget);
+    expect(find.text('Missionへ'), findsOneWidget);
+    expect(find.text('すべて見る'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Recent Trails'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Recent Trails'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Guild Activity'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Guild Activity'), findsOneWidget);
+  });
+
   testWidgets('Arc input remains above the keyboard inset', (tester) async {
     tester.view.physicalSize = const Size(320, 700);
     tester.view.devicePixelRatio = 1;

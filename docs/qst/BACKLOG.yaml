@@ -775,16 +775,18 @@ items:
       report: reports/qst/QST-109.md
   - id: QST-110
     title: Home Information Hierarchy Polish
-    status: Ready
+    status: Done
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-101, QST-102]
     scope: Improve Home layout priority and spacing.
     acceptance:
       - Arc greeting, Today's Mission, active Quest, recent Trail, and Guild activity are visually ordered and not cramped.
+    completed_by:
+      report: reports/qst/QST-110.md
   - id: QST-111
     title: Quest Dashboard UX Polish
-    status: Planned
+    status: Ready
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-101]
