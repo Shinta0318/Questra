@@ -199,6 +199,11 @@ void main() {
         find.byKey(const ValueKey('questra-arc-floating-entry')),
         findsOneWidget,
       );
+      final arcEntrySize = tester.getSize(
+        find.byKey(const ValueKey('questra-arc-floating-entry')),
+      );
+      expect(arcEntrySize.width, greaterThanOrEqualTo(48));
+      expect(arcEntrySize.height, greaterThanOrEqualTo(48));
 
       await tester.tap(
         find.byKey(const ValueKey('questra-arc-floating-entry')),
@@ -234,6 +239,14 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('questra-quick-action-menu')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
+    final questActionTile = find.ancestor(
+      of: find.text('Questを始める'),
+      matching: find.byType(InkWell),
+    );
+    expect(
+      tester.getSize(questActionTile.first).height,
+      greaterThanOrEqualTo(56),
+    );
     await tester.tap(find.text('Questを始める'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));

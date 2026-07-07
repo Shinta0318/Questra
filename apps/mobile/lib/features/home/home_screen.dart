@@ -612,48 +612,57 @@ class _ActiveQuestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final progressPercent = (quest.progress * 100).round().clamp(0, 100);
 
-    return InkWell(
-      borderRadius: AppRadius.card,
-      onTap: onTap,
-      child: _HomeGlassCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              quest.title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.white,
-                fontWeight: FontWeight.w900,
+    return Semantics(
+      button: true,
+      label: '${quest.title}のQuestを開く',
+      value: '進捗$progressPercentパーセント',
+      child: InkWell(
+        borderRadius: AppRadius.card,
+        onTap: onTap,
+        child: _HomeGlassCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                quest.title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-              child: LinearProgressIndicator(
-                value: quest.progress.clamp(0, 1),
-                minHeight: 8,
-                backgroundColor: AppColors.deepNavy,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                _QuestTag(label: quest.category),
-                _QuestTag(label: quest.difficulty.label),
-                Text(
-                  '$progressPercent%',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w900,
+              const SizedBox(height: AppSpacing.sm),
+              ExcludeSemantics(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  child: LinearProgressIndicator(
+                    value: quest.progress.clamp(0, 1),
+                    minHeight: 8,
+                    backgroundColor: AppColors.deepNavy,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppColors.gold,
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.xs,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  _QuestTag(label: quest.category),
+                  _QuestTag(label: quest.difficulty.label),
+                  Text(
+                    '$progressPercent%',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

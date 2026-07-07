@@ -403,115 +403,122 @@ class _QuestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final progressPercent = (quest.progress.clamp(0, 1) * 100).round();
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(26),
-      onTap: onTap,
-      child: Ink(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: QuestraColors.white,
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(
-            color: QuestraColors.cosmicBlue.withValues(alpha: 0.20),
+    return Semantics(
+      button: true,
+      label: '${quest.title}のQuestを開く',
+      value: '進捗$progressPercentパーセント',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(26),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: QuestraColors.white,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(
+              color: QuestraColors.cosmicBlue.withValues(alpha: 0.20),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: QuestraColors.skyBlue.withValues(alpha: 0.14),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: QuestraColors.skyBlue.withValues(alpha: 0.14),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: QuestraColors.deepNavy,
-                    borderRadius: BorderRadius.circular(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: QuestraColors.deepNavy,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.travel_explore,
+                      color: QuestraColors.gold,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.travel_explore,
-                    color: QuestraColors.gold,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          quest.title,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          quest.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        quest.title,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        quest.description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: LinearProgressIndicator(
-                      value: quest.progress.clamp(0, 1),
-                      minHeight: 9,
-                      backgroundColor: QuestraColors.cloud,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        QuestraColors.gold,
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ExcludeSemantics(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: quest.progress.clamp(0, 1),
+                          minHeight: 9,
+                          backgroundColor: QuestraColors.cloud,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            QuestraColors.gold,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  '$progressPercent%',
-                  style: const TextStyle(
-                    color: QuestraColors.deepNavy,
-                    fontWeight: FontWeight.w800,
+                  const SizedBox(width: 12),
+                  Text(
+                    '$progressPercent%',
+                    style: const TextStyle(
+                      color: QuestraColors.deepNavy,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _QuestPill(
-                  icon: Icons.flag_outlined,
-                  label: quest.status.label,
-                  emphasized: quest.status == QuestStatus.active,
-                ),
-                _QuestPill(
-                  icon: Icons.fitness_center_outlined,
-                  label: quest.difficulty.label,
-                ),
-                _QuestPill(
-                  icon: Icons.category_outlined,
-                  label: quest.category,
-                ),
-                if (quest.targetDate != null)
+                ],
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
                   _QuestPill(
-                    icon: Icons.event_outlined,
-                    label: DateFormat.MMMd('ja').format(quest.targetDate!),
+                    icon: Icons.flag_outlined,
+                    label: quest.status.label,
+                    emphasized: quest.status == QuestStatus.active,
                   ),
-              ],
-            ),
-          ],
+                  _QuestPill(
+                    icon: Icons.fitness_center_outlined,
+                    label: quest.difficulty.label,
+                  ),
+                  _QuestPill(
+                    icon: Icons.category_outlined,
+                    label: quest.category,
+                  ),
+                  if (quest.targetDate != null)
+                    _QuestPill(
+                      icon: Icons.event_outlined,
+                      label: DateFormat.MMMd('ja').format(quest.targetDate!),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

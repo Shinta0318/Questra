@@ -830,16 +830,18 @@ items:
       report: reports/qst/QST-114.md
   - id: QST-115
     title: Accessibility Pass
-    status: Ready
+    status: Done
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-101, QST-103]
     scope: Improve text scaling, touch targets, labels, and contrast.
     acceptance:
       - Major MVP screens remain usable with larger text and accessible tap targets.
+    completed_by:
+      report: reports/qst/QST-115.md
   - id: QST-116
     title: Design System V2 Application
-    status: Planned
+    status: Ready
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-102, QST-115]

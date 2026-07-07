@@ -113,6 +113,32 @@ void main() {
     expect(find.text('Arc Guide'), findsWidgets);
   });
 
+  testWidgets('Quest cards expose accessible labels and progress values', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: QuestScreen())),
+    );
+    await tester.pump();
+
+    final questCardSemantics = tester.widgetList<Semantics>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            (widget.properties.label ?? '').contains('Questを開く'),
+      ),
+    );
+
+    expect(questCardSemantics, isNotEmpty);
+    expect(questCardSemantics.first.properties.value, contains('進捗'));
+    expect(questCardSemantics.first.properties.button, isTrue);
+  });
+
   testWidgets('Guild feed exposes coherent Japanese support sections', (
     tester,
   ) async {
