@@ -17,35 +17,67 @@ class TrailTimelineWidget extends StatelessWidget {
     super.key,
     this.highlights = const {},
     this.service = const TrailTimelineService(),
+    this.onCreateTrail,
   });
 
   final List<Trail> trails;
   final Map<String, MediaAttachment> attachments;
   final Map<String, TrailHighlight> highlights;
   final TrailTimelineService service;
+  final VoidCallback? onCreateTrail;
 
   @override
   Widget build(BuildContext context) {
     if (trails.isEmpty) {
-      return const ArcEmptyState(
+      return ArcEmptyState(
         title: 'Timelineはまだ静かです',
         emotion: ArcEmotion.normal,
         message: 'Trailを残すと、日付ごとの航路としてここに並びます。',
         actionLabel: 'Trailを残す',
         icon: Icons.timeline_outlined,
-        onAction: _noop,
+        onAction: onCreateTrail ?? _noop,
       );
     }
 
     final days = service.groupByDay(trails);
+    final reflectionCount = trails
+        .where((trail) => trail.trailType == TrailType.arcReflection)
+        .length;
+    final starCandidateCount = highlights.values
+        .where((highlight) => highlight.isStarMemoryCandidate)
+        .length;
+    final mediaCount = attachments.length;
+
     return QuestraCard(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Trail Timeline', style: Theme.of(context).textTheme.titleLarge),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Trail Timeline',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              if (onCreateTrail != null)
+                OutlinedButton.icon(
+                  onPressed: onCreateTrail,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Trailを残す'),
+                ),
+            ],
+          ),
           const SizedBox(height: 8),
           const Text('QuestとMissionの足あとを、日付ごとに戻れる航路として見返せます。'),
+          const SizedBox(height: 14),
+          _TimelineSummary(
+            trailCount: trails.length,
+            reflectionCount: reflectionCount,
+            starCandidateCount: starCandidateCount,
+            mediaCount: mediaCount,
+          ),
           const SizedBox(height: 16),
           ...days.map(
             (day) => Padding(
@@ -81,12 +113,19 @@ class _TimelineDaySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          day.dateLabel,
-          style: const TextStyle(
-            color: QuestraColors.cosmicBlue,
-            fontWeight: FontWeight.w900,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                day.dateLabel,
+                style: const TextStyle(
+                  color: QuestraColors.cosmicBlue,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            _TimelinePill(label: '${day.trails.length} Trails'),
+          ],
         ),
         const SizedBox(height: 10),
         ...day.trails.map(
@@ -97,6 +136,109 @@ class _TimelineDaySection extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TimelineSummary extends StatelessWidget {
+  const _TimelineSummary({
+    required this.trailCount,
+    required this.reflectionCount,
+    required this.starCandidateCount,
+    required this.mediaCount,
+  });
+
+  final int trailCount;
+  final int reflectionCount;
+  final int starCandidateCount;
+  final int mediaCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _TimelineSummaryChip(
+          icon: Icons.timeline_outlined,
+          label: 'Trails',
+          value: trailCount.toString(),
+        ),
+        _TimelineSummaryChip(
+          icon: Icons.auto_awesome_outlined,
+          label: 'Reflection',
+          value: reflectionCount.toString(),
+        ),
+        _TimelineSummaryChip(
+          icon: Icons.star_border,
+          label: 'Star候補',
+          value: starCandidateCount.toString(),
+        ),
+        _TimelineSummaryChip(
+          icon: Icons.image_outlined,
+          label: 'Media',
+          value: mediaCount.toString(),
+        ),
+      ],
+    );
+  }
+}
+
+class _TimelineSummaryChip extends StatelessWidget {
+  const _TimelineSummaryChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 118,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: QuestraColors.cosmicBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: QuestraColors.cosmicBlue.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: QuestraColors.cosmicBlue),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: QuestraColors.deepNavy,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: QuestraColors.slate,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -797,16 +797,18 @@ items:
       report: reports/qst/QST-111.md
   - id: QST-112
     title: Trail Timeline UX Polish
-    status: Ready
+    status: Done
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-101]
     scope: Improve real DB-backed Trail browsing.
     acceptance:
       - Trails are easier to scan chronologically and visually.
+    completed_by:
+      report: reports/qst/QST-112.md
   - id: QST-113
     title: Guild Feed UX Polish
-    status: Planned
+    status: Ready
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-101]

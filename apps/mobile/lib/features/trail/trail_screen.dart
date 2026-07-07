@@ -83,6 +83,7 @@ class TrailScreen extends ConsumerWidget {
             TrailTimelineWidget(
               trails: trails,
               attachments: trailMedia,
+              onCreateTrail: () => _showCreateTrailSheet(context, controller),
               highlights: {
                 for (final highlight in trailHighlights)
                   highlight.trailId: highlight,

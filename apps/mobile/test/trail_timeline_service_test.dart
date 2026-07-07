@@ -1,8 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:questra/features/trail/trail_highlight_service.dart';
 import 'package:questra/features/trail/trail_model.dart';
 import 'package:questra/features/trail/trail_timeline_service.dart';
+import 'package:questra/features/trail/trail_timeline_widget.dart';
 
 void main() {
+  setUpAll(() => initializeDateFormatting('ja_JP'));
+
   test('groups Trails by day in newest-first chronological order', () {
     final service = TrailTimelineService();
     final older = Trail(
@@ -35,5 +41,51 @@ void main() {
       '新しいTrail',
     ]);
     expect(days.last.trails.single.title, '古いTrail');
+  });
+
+  testWidgets('timeline shows summary metrics and day counts', (tester) async {
+    final reflection = Trail(
+      title: 'Reflection Trail',
+      summary: '今日の学び',
+      content: 'content',
+      trailType: TrailType.arcReflection,
+      createdAt: DateTime(2026, 6, 21, 9),
+    );
+    final questTrail = Trail(
+      title: 'Quest Trail',
+      summary: 'Questの前進',
+      content: 'content',
+      trailType: TrailType.questRecord,
+      createdAt: DateTime(2026, 6, 21, 10),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: TrailTimelineWidget(
+              trails: [reflection, questTrail],
+              attachments: const {},
+              highlights: {
+                reflection.id: TrailHighlight(
+                  trailId: reflection.id,
+                  score: 12,
+                  reason: 'Reflectionが深いTrailです。',
+                  isStarMemoryCandidate: true,
+                ),
+              },
+              onCreateTrail: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Trails'), findsOneWidget);
+    expect(find.text('Reflection'), findsOneWidget);
+    expect(find.text('Star候補'), findsOneWidget);
+    expect(find.text('Media'), findsOneWidget);
+    expect(find.text('2 Trails'), findsOneWidget);
+    expect(find.text('Trailを残す'), findsOneWidget);
   });
 }
