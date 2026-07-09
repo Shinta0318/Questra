@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/accessibility/questra_accessibility.dart';
 import '../../core/theme/questra_colors.dart';
+import '../motion/questra_pressable.dart';
 
 enum QuestraQuickAction {
   createQuest(
@@ -157,61 +158,64 @@ class _QuickActionTile extends StatelessWidget {
       child: ExcludeSemantics(
         child: Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: onTap,
-            child: ConstrainedBox(
-              constraints: QuestraAccessibility.comfortableTapTargetConstraints,
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: QuestraColors.white.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: QuestraColors.cosmicBlue.withValues(alpha: 0.24),
+          child: QuestraPressable(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: onTap,
+              child: ConstrainedBox(
+                constraints:
+                    QuestraAccessibility.comfortableTapTargetConstraints,
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: QuestraColors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: QuestraColors.cosmicBlue.withValues(alpha: 0.24),
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: QuestraColors.gold.withValues(alpha: 0.18),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: QuestraColors.gold.withValues(alpha: 0.18),
+                        ),
+                        child: Icon(action.icon, color: QuestraColors.gold),
                       ),
-                      child: Icon(action.icon, color: QuestraColors.gold),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            action.label,
-                            style: const TextStyle(
-                              color: QuestraColors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              action.label,
+                              style: const TextStyle(
+                                color: QuestraColors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            action.subtitle,
-                            style: const TextStyle(
-                              color: QuestraColors.parchment,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                            const SizedBox(height: 3),
+                            Text(
+                              action.subtitle,
+                              style: const TextStyle(
+                                color: QuestraColors.parchment,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right,
-                      color: QuestraColors.parchment,
-                    ),
-                  ],
+                      const Icon(
+                        Icons.chevron_right,
+                        color: QuestraColors.parchment,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

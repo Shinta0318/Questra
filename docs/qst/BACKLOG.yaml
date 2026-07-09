@@ -852,16 +852,18 @@ items:
       report: reports/qst/QST-116.md
   - id: QST-117
     title: Interaction Animation Pass
-    status: Ready
+    status: Done
     priority: P2
     epic: UX-FOUNDATION
     depends_on: [QST-116]
     scope: Polish page transitions, button feedback, card interactions, and Arc reactions.
     acceptance:
       - Motion improves clarity without decorative excess.
+    completed_by:
+      report: reports/qst/QST-117.md
   - id: QST-118
     title: Responsive QA Automation
-    status: Planned
+    status: Ready
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-101, QST-102]

@@ -8,6 +8,7 @@ import 'package:questra/widgets/navigation/questra_arc_floating_entry.dart';
 import 'package:questra/widgets/navigation/questra_bottom_navigation.dart';
 import 'package:questra/widgets/navigation/questra_navigation_rail.dart';
 import 'package:questra/widgets/navigation/questra_quick_action_menu.dart';
+import 'package:questra/widgets/motion/questra_pressable.dart';
 
 void main() {
   test('navigation destination order stays aligned with shell branches', () {
@@ -197,6 +198,13 @@ void main() {
       expect(find.byType(QuestraArcFloatingEntry), findsOneWidget);
       expect(
         find.byKey(const ValueKey('questra-arc-floating-entry')),
+        findsOneWidget,
+      );
+      expect(
+        find.ancestor(
+          of: find.byKey(const ValueKey('questra-arc-floating-entry')),
+          matching: find.byType(QuestraPressable),
+        ),
         findsOneWidget,
       );
       final arcEntrySize = tester.getSize(
