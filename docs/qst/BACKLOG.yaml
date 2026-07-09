@@ -885,16 +885,18 @@ items:
       report: reports/qst/QST-119.md
   - id: QST-120
     title: UX Foundation Review
-    status: Ready
+    status: Done
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-101, QST-102, QST-103, QST-104, QST-105, QST-106, QST-107, QST-108, QST-109, QST-110, QST-111, QST-112, QST-113, QST-114, QST-115, QST-116, QST-117, QST-118, QST-119]
     scope: Review QST-101 through QST-119.
     acceptance:
       - Responsive, scrolling, navigation, menu widgets, and accessibility risks are summarized with remaining blockers.
+    completed_by:
+      report: reports/qst/QST-120.md
   - id: QST-121
     title: Beta Account Setup Flow
-    status: Planned
+    status: Ready
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-120]
