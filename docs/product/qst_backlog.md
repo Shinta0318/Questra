@@ -111,6 +111,7 @@ references where they do not conflict with v2.
 | QST-130 | Planned | Beta Launch Readiness Review | Produce final beta readiness report. | Questra has beta readiness score, open blockers, and QST-131+ recommendations. |
 | QST-131 | Done | Navigation and Creative UI Refresh | Reframe the primary product flow around Home -> Arc -> Quest and reduce generated UI feel. | Navigation, Home, Arc, Quest, and replayable first-use tour support an Arc-centered beta experience. |
 | QST-132 | Done | Onboarding Tour Polish | Harden the Arc onboarding tour state machine after the creative navigation refresh. | First-use guidance appears after profile restore, stays dismissed within a session, and remains replayable. |
+| QST-133 | Done | Quest Theme Card Redesign | Make Quest cards category-aware and reusable through theme metadata. | Quest cards show theme identity, Quest DNA labels, Arc hints, and tested theme resolution. |
 
 ## Selection Rules
 

@@ -1019,6 +1019,20 @@ items:
       - Dismissed tour does not reappear in the same session.
       - Settings replay behavior remains supported by the controller.
       - UserProfile preserves has_seen_onboarding_tour state.
+  - id: QST-133
+    title: Quest Theme Card Redesign
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-131]
+    completed_by:
+      report: reports/qst/QST-133.md
+    scope: Extract Quest theme card rules from screen-local styling and apply category-aware visual identity, Quest DNA labels, and Arc hints to Quest list cards.
+    acceptance:
+      - Quest card theme styling is resolved through a reusable QuestThemeResolver.
+      - Learning, builder, active, family, adventure, and fallback Quest themes have distinct visual metadata.
+      - Quest cards show theme name, Quest DNA label, and Arc hint without Story terminology.
+      - Theme resolver behavior is covered by unit tests.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

@@ -20,6 +20,7 @@ import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
 import 'quest_controller.dart';
 import 'quest_model.dart';
+import 'quest_theme_card.dart';
 
 class QuestScreen extends ConsumerWidget {
   const QuestScreen({super.key});
@@ -414,6 +415,7 @@ class _QuestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progressPercent = (quest.progress.clamp(0, 1) * 100).round();
+    final theme = const QuestThemeResolver().resolve(quest);
 
     return Semantics(
       button: true,
@@ -425,22 +427,12 @@ class _QuestCard extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                QuestraColors.midnightNavy,
-                QuestraColors.cosmicBlue.withValues(alpha: 0.82),
-                QuestraColors.deepNavy,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: theme.backgroundGradient,
             borderRadius: BorderRadius.circular(26),
-            border: Border.all(
-              color: QuestraColors.gold.withValues(alpha: 0.24),
-            ),
+            border: Border.all(color: theme.accent.withValues(alpha: 0.28)),
             boxShadow: [
               BoxShadow(
-                color: QuestraColors.cosmicBlue.withValues(alpha: 0.28),
+                color: theme.secondary.withValues(alpha: 0.30),
                 blurRadius: 28,
                 offset: const Offset(0, 16),
               ),
@@ -456,20 +448,10 @@ class _QuestCard extends StatelessWidget {
                     width: 58,
                     height: 76,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          QuestraColors.gold.withValues(alpha: 0.88),
-                          QuestraColors.skyBlue.withValues(alpha: 0.62),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
+                      gradient: theme.posterGradient,
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: const Icon(
-                      Icons.travel_explore,
-                      color: QuestraColors.deepNavy,
-                    ),
+                    child: Icon(theme.icon, color: QuestraColors.deepNavy),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -532,7 +514,7 @@ class _QuestCard extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 nextMission == null
-                    ? 'Arc: 次のMissionを一緒に選ぼう。'
+                    ? 'Arc: ${theme.arcHint}'
                     : '次のMission: ${nextMission!.title}',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -558,8 +540,9 @@ class _QuestCard extends StatelessWidget {
                   ),
                   _QuestPill(
                     icon: Icons.category_outlined,
-                    label: quest.category,
+                    label: theme.dnaLabel,
                   ),
+                  _QuestPill(icon: Icons.palette_outlined, label: theme.name),
                   if (quest.targetDate != null)
                     _QuestPill(
                       icon: Icons.event_outlined,
