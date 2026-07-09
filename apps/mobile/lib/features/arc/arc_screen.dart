@@ -82,6 +82,23 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                     AppSpacing.xl,
                   ),
                   children: [
+                    _ArcCommandCenterCard(
+                      activeQuestCount: quests
+                          .where((quest) => quest.status == QuestStatus.active)
+                          .length,
+                      missionCount: missions.length,
+                      trailCount: trails.length,
+                      onOpenQuest: () => context.go(AppRoutes.quest),
+                      onOpenTrail: () => context.go(AppRoutes.trail),
+                      onHorizon: () => _send(
+                        '次の挑戦の候補を一緒に探したい。',
+                        quests: quests,
+                        missions: missions,
+                        trails: trails,
+                        memories: memories.asData?.value ?? const [],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
                     ..._messages.map(
                       (message) => _ArcMessageBubble(
                         text: message.text,
@@ -459,6 +476,159 @@ class _ArcActionCard extends StatelessWidget {
                 onTap: () => onQuickAction('今の不安を小さな一歩に分けたい。'),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArcCommandCenterCard extends StatelessWidget {
+  const _ArcCommandCenterCard({
+    required this.activeQuestCount,
+    required this.missionCount,
+    required this.trailCount,
+    required this.onOpenQuest,
+    required this.onOpenTrail,
+    required this.onHorizon,
+  });
+
+  final int activeQuestCount;
+  final int missionCount;
+  final int trailCount;
+  final VoidCallback onOpenQuest;
+  final VoidCallback onOpenTrail;
+  final VoidCallback onHorizon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.midnightNavy.withValues(alpha: 0.90),
+            AppColors.cosmicBlue.withValues(alpha: 0.34),
+            AppColors.gold.withValues(alpha: 0.12),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.28)),
+        boxShadow: AppShadows.goldGlow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const ArcWidget(
+                emotion: ArcEmotion.support,
+                size: 96,
+                showSpeechBubble: false,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '旅の司令室',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Quest、Mission、Trailをつないで、次の一歩を一緒に見つける場所です。',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.parchment,
+                        height: 1.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              _CommandMetric(label: 'Quest', value: '$activeQuestCount'),
+              _CommandMetric(label: 'Mission', value: '$missionCount'),
+              _CommandMetric(label: 'Trail', value: '$trailCount'),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              FilledButton.icon(
+                onPressed: onOpenQuest,
+                icon: const Icon(Icons.explore_outlined),
+                label: const Text('Quest Guide'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onOpenTrail,
+                icon: const Icon(Icons.timeline_outlined),
+                label: const Text('Reflection'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onHorizon,
+                icon: const Icon(Icons.public),
+                label: const Text('Horizon'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CommandMetric extends StatelessWidget {
+  const _CommandMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 94,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.deepNavy.withValues(alpha: 0.46),
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppColors.gold,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.parchment,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

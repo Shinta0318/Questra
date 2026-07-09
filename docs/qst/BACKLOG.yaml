@@ -988,6 +988,23 @@ items:
     scope: Produce the final beta readiness report.
     acceptance:
       - Questra has a clear beta readiness score, open blockers, and QST-131+ recommendations.
+  - id: QST-131
+    requested_id: QST-XXX
+    title: Navigation and Creative UI Refresh
+    status: Done
+    priority: P0
+    epic: BETA-UX
+    depends_on: [QST-122]
+    completed_by:
+      report: reports/qst/QST-131.md
+    scope: Reframe the primary product flow around Home -> Arc -> Quest, refresh Home, Arc, and Quest UI quality, and add a replayable Arc onboarding tour.
+    acceptance:
+      - Home -> Arc -> Quest is reflected in navigation order and first-use guidance.
+      - Home makes Arc, today's Mission, active Quest, Trail, Guild, Star Map, and Horizon visible.
+      - Arc screen works as a journey command center, not only a chat surface.
+      - Quest list uses richer poster-style cards with progress, next Mission, and Quest DNA cues.
+      - First-use Arc tutorial can be skipped and replayed from Settings.
+      - Story terminology is not introduced.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

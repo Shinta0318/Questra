@@ -52,6 +52,7 @@ class UserProfile {
     this.questInterest = QuestInterest.adventure,
     this.signalFrequency = SignalFrequency.balanced,
     this.onboardingCompleted = false,
+    this.hasSeenOnboardingTour = false,
     this.arcLevel = 1,
     this.bondScore = 0,
     this.stardustBalance = 0,
@@ -65,6 +66,7 @@ class UserProfile {
   final QuestInterest questInterest;
   final SignalFrequency signalFrequency;
   final bool onboardingCompleted;
+  final bool hasSeenOnboardingTour;
   final int arcLevel;
   final int bondScore;
   final int stardustBalance;
@@ -78,6 +80,7 @@ class UserProfile {
     QuestInterest? questInterest,
     SignalFrequency? signalFrequency,
     bool? onboardingCompleted,
+    bool? hasSeenOnboardingTour,
     int? arcLevel,
     int? bondScore,
     int? stardustBalance,
@@ -91,6 +94,8 @@ class UserProfile {
       questInterest: questInterest ?? this.questInterest,
       signalFrequency: signalFrequency ?? this.signalFrequency,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
+      hasSeenOnboardingTour:
+          hasSeenOnboardingTour ?? this.hasSeenOnboardingTour,
       arcLevel: arcLevel ?? this.arcLevel,
       bondScore: bondScore ?? this.bondScore,
       stardustBalance: stardustBalance ?? this.stardustBalance,

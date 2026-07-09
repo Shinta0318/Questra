@@ -147,6 +147,7 @@ class AuthController extends Notifier<AuthState> {
           questInterest: updated.questInterest,
           signalFrequency: updated.signalFrequency,
           onboardingCompleted: updated.onboardingCompleted,
+          hasSeenOnboardingTour: updated.hasSeenOnboardingTour,
         );
       }
       state = state.copyWith(profile: updated, isLoading: false);
@@ -156,6 +157,32 @@ class AuthController extends Notifier<AuthState> {
         isLoading: false,
         errorMessage: error.toString(),
       );
+    }
+  }
+
+  Future<void> markOnboardingTourSeen({bool seen = true}) async {
+    final profile = state.profile;
+    if (profile == null) {
+      return;
+    }
+
+    final updated = profile.copyWith(hasSeenOnboardingTour: seen);
+    state = state.copyWith(profile: updated, clearError: true);
+
+    if (!SupabaseConfig.isConfigured) {
+      return;
+    }
+
+    try {
+      await Supabase.instance.client
+          .from('user_profiles')
+          .update({
+            'has_seen_onboarding_tour': seen,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', updated.id);
+    } catch (error) {
+      state = state.copyWith(errorMessage: error.toString());
     }
   }
 
@@ -239,6 +266,7 @@ class AuthController extends Notifier<AuthState> {
     required QuestInterest questInterest,
     required SignalFrequency signalFrequency,
     required bool onboardingCompleted,
+    bool hasSeenOnboardingTour = false,
   }) async {
     await Supabase.instance.client.from('user_profiles').upsert({
       'id': userId,
@@ -247,6 +275,7 @@ class AuthController extends Notifier<AuthState> {
       'quest_interest': questInterest.storageKey,
       'signal_frequency': signalFrequency.storageKey,
       'onboarding_completed': onboardingCompleted,
+      'has_seen_onboarding_tour': hasSeenOnboardingTour,
       'updated_at': DateTime.now().toIso8601String(),
     });
   }
@@ -276,6 +305,7 @@ class AuthController extends Notifier<AuthState> {
         row['signal_frequency'] as String?,
       ),
       onboardingCompleted: row['onboarding_completed'] as bool? ?? false,
+      hasSeenOnboardingTour: row['has_seen_onboarding_tour'] as bool? ?? false,
       arcLevel: row['arc_level'] as int? ?? 1,
       bondScore: row['bond_score'] as int? ?? 0,
       stardustBalance: row['stardust_balance'] as int? ?? 0,
@@ -288,7 +318,7 @@ class AuthController extends Notifier<AuthState> {
       final row = await Supabase.instance.client
           .from('user_profiles')
           .select(
-            'id,nickname,arc_name,quest_interest,signal_frequency,onboarding_completed,arc_level,bond_score,stardust_balance,navigator_rank',
+            'id,nickname,arc_name,quest_interest,signal_frequency,onboarding_completed,has_seen_onboarding_tour,arc_level,bond_score,stardust_balance,navigator_rank',
           )
           .eq('id', userId)
           .maybeSingle();

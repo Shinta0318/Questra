@@ -109,6 +109,7 @@ references where they do not conflict with v2.
 | QST-128 | Planned | Beta Release Notes Draft | Create beta release notes and known limitations. | Beta testers know what is ready, experimental, and how to give feedback. |
 | QST-129 | Planned | Beta Go/No-Go Checklist | Create final beta launch checklist. | Launch blockers, evidence, device checks, and rollback conditions are explicit. |
 | QST-130 | Planned | Beta Launch Readiness Review | Produce final beta readiness report. | Questra has beta readiness score, open blockers, and QST-131+ recommendations. |
+| QST-131 | Done | Navigation and Creative UI Refresh | Reframe the primary product flow around Home -> Arc -> Quest and reduce generated UI feel. | Navigation, Home, Arc, Quest, and replayable first-use tour support an Arc-centered beta experience. |
 
 ## Selection Rules
 

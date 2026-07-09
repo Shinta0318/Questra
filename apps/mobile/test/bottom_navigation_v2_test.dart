@@ -14,10 +14,10 @@ void main() {
   test('navigation destination order stays aligned with shell branches', () {
     expect(QuestraNavigationDestination.values.map((item) => item.route), [
       AppRoutes.home,
+      AppRoutes.arc,
       AppRoutes.quest,
       AppRoutes.trail,
       AppRoutes.guild,
-      AppRoutes.arc,
       AppRoutes.profile,
     ]);
   });

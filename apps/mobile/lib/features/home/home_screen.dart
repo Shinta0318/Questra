@@ -120,6 +120,14 @@ class HomeScreen extends ConsumerWidget {
               const _CaptainStatusBar(),
               const SizedBox(height: AppSpacing.lg),
               _ArcHero(greeting: greeting),
+              const SizedBox(height: AppSpacing.md),
+              _JourneyFlowCard(
+                activeQuest: activeQuests.firstOrNull,
+                mission: todayMission,
+                onOpenArc: () => context.go(AppRoutes.arc),
+                onOpenQuest: () => context.go(AppRoutes.quest),
+                onCreateQuest: () => context.go('${AppRoutes.quest}/create'),
+              ),
               const SizedBox(height: AppSpacing.lg),
               _ArcSignalCard(
                 emotion: latestEvent?.emotion ?? inactiveDecision.emotion,
@@ -529,6 +537,161 @@ class _HomeSectionHeader extends StatelessWidget {
         ),
         TextButton(onPressed: onAction, child: Text(actionLabel)),
       ],
+    );
+  }
+}
+
+class _JourneyFlowCard extends StatelessWidget {
+  const _JourneyFlowCard({
+    required this.activeQuest,
+    required this.mission,
+    required this.onOpenArc,
+    required this.onOpenQuest,
+    required this.onCreateQuest,
+  });
+
+  final Quest? activeQuest;
+  final Mission? mission;
+  final VoidCallback onOpenArc;
+  final VoidCallback onOpenQuest;
+  final VoidCallback onCreateQuest;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = ((activeQuest?.progress ?? 0) * 100).round().clamp(0, 100);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.white.withValues(alpha: 0.14),
+            AppColors.cosmicBlue.withValues(alpha: 0.20),
+            AppColors.gold.withValues(alpha: 0.10),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.18)),
+        boxShadow: AppShadows.glassCard,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Home → Arc → Quest',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.gold,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Arcと一緒に今日の一歩を進める',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppColors.white,
+              fontWeight: FontWeight.w900,
+              height: 1.25,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              _FlowStepPill(
+                icon: Icons.home_outlined,
+                label: '現在地',
+                value: mission?.title ?? '今日のMissionを準備中',
+              ),
+              _FlowStepPill(
+                icon: Icons.auto_awesome,
+                label: 'Arc',
+                value: '次の航路を相談',
+              ),
+              _FlowStepPill(
+                icon: Icons.explore_outlined,
+                label: 'Quest',
+                value: activeQuest == null ? '新しい挑戦へ' : '$progress%進行中',
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              FilledButton.icon(
+                onPressed: onOpenArc,
+                icon: const Icon(Icons.auto_awesome),
+                label: const Text('Arcに相談する'),
+              ),
+              OutlinedButton.icon(
+                onPressed: activeQuest == null ? onCreateQuest : onOpenQuest,
+                icon: const Icon(Icons.explore_outlined),
+                label: Text(activeQuest == null ? '新しいQuestを始める' : 'Questを見る'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FlowStepPill extends StatelessWidget {
+  const _FlowStepPill({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 150),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.deepNavy.withValues(alpha: 0.44),
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.20)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: AppColors.gold, size: 18),
+          const SizedBox(width: AppSpacing.sm),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.parchment,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

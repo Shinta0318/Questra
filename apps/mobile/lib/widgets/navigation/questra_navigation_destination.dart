@@ -9,6 +9,12 @@ enum QuestraNavigationDestination {
     icon: Icons.home_outlined,
     selectedIcon: Icons.home,
   ),
+  arc(
+    label: 'Arc',
+    route: AppRoutes.arc,
+    icon: Icons.auto_awesome_outlined,
+    selectedIcon: Icons.auto_awesome,
+  ),
   quest(
     label: 'Quest',
     route: AppRoutes.quest,
@@ -26,12 +32,6 @@ enum QuestraNavigationDestination {
     route: AppRoutes.guild,
     icon: Icons.groups_outlined,
     selectedIcon: Icons.groups,
-  ),
-  arc(
-    label: 'Arc',
-    route: AppRoutes.arc,
-    icon: Icons.auto_awesome_outlined,
-    selectedIcon: Icons.auto_awesome,
   ),
   profile(
     label: 'プロフィール',

@@ -125,6 +125,13 @@ class QuestScreen extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 14),
                   child: _QuestCard(
                     quest: quest,
+                    nextMission: missions
+                        .where(
+                          (mission) =>
+                              mission.questId == quest.id &&
+                              mission.status != MissionStatus.completed,
+                        )
+                        .firstOrNull,
                     onTap: () => context.go('${AppRoutes.quest}/${quest.id}'),
                   ),
                 ),
@@ -394,9 +401,14 @@ class _DashboardMetric extends StatelessWidget {
 }
 
 class _QuestCard extends StatelessWidget {
-  const _QuestCard({required this.quest, required this.onTap});
+  const _QuestCard({
+    required this.quest,
+    required this.nextMission,
+    required this.onTap,
+  });
 
   final Quest quest;
+  final Mission? nextMission;
   final VoidCallback onTap;
 
   @override
@@ -411,18 +423,26 @@ class _QuestCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(26),
         onTap: onTap,
         child: Ink(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: QuestraColors.white,
+            gradient: LinearGradient(
+              colors: [
+                QuestraColors.midnightNavy,
+                QuestraColors.cosmicBlue.withValues(alpha: 0.82),
+                QuestraColors.deepNavy,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(26),
             border: Border.all(
-              color: QuestraColors.cosmicBlue.withValues(alpha: 0.20),
+              color: QuestraColors.gold.withValues(alpha: 0.24),
             ),
             boxShadow: [
               BoxShadow(
-                color: QuestraColors.skyBlue.withValues(alpha: 0.14),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: QuestraColors.cosmicBlue.withValues(alpha: 0.28),
+                blurRadius: 28,
+                offset: const Offset(0, 16),
               ),
             ],
           ),
@@ -433,15 +453,22 @@ class _QuestCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 58,
+                    height: 76,
                     decoration: BoxDecoration(
-                      color: QuestraColors.deepNavy,
-                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [
+                          QuestraColors.gold.withValues(alpha: 0.88),
+                          QuestraColors.skyBlue.withValues(alpha: 0.62),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
                     ),
                     child: const Icon(
                       Icons.travel_explore,
-                      color: QuestraColors.gold,
+                      color: QuestraColors.deepNavy,
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -451,13 +478,23 @@ class _QuestCard extends StatelessWidget {
                       children: [
                         Text(
                           quest.title,
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: QuestraColors.white,
+                                fontWeight: FontWeight.w900,
+                              ),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           quest.description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: QuestraColors.parchment,
+                                height: 1.45,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ],
                     ),
@@ -474,7 +511,7 @@ class _QuestCard extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: quest.progress.clamp(0, 1),
                           minHeight: 9,
-                          backgroundColor: QuestraColors.cloud,
+                          backgroundColor: QuestraColors.deepNavy,
                           valueColor: const AlwaysStoppedAnimation<Color>(
                             QuestraColors.gold,
                           ),
@@ -486,11 +523,24 @@ class _QuestCard extends StatelessWidget {
                   Text(
                     '$progressPercent%',
                     style: const TextStyle(
-                      color: QuestraColors.deepNavy,
+                      color: QuestraColors.gold,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                nextMission == null
+                    ? 'Arc: 次のMissionを一緒に選ぼう。'
+                    : '次のMission: ${nextMission!.title}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: QuestraColors.white,
+                  height: 1.45,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 14),
               Wrap(

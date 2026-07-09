@@ -57,6 +57,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: AppRoutes.arc,
+                builder: (context, state) => const ArcScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: AppRoutes.quest,
                 builder: (context, state) => const QuestScreen(),
                 routes: [
@@ -99,14 +107,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.guild,
                 builder: (context, state) => const GuildScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.arc,
-                builder: (context, state) => const ArcScreen(),
               ),
             ],
           ),

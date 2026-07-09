@@ -64,9 +64,15 @@ void main() {
     );
     await tester.pump();
 
+    expect(find.text('Home → Arc → Quest'), findsOneWidget);
     expect(find.text('今日のMission'), findsOneWidget);
-    expect(find.text('進行中のQuest'), findsOneWidget);
     expect(find.text('Missionへ'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('進行中のQuest'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('進行中のQuest'), findsOneWidget);
     expect(find.text('すべて見る'), findsOneWidget);
 
     await tester.scrollUntilVisible(
