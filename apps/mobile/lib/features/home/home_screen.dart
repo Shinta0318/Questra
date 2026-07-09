@@ -144,7 +144,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.xl),
               _HomeSectionHeader(
-                title: 'Active Quest',
+                title: '進行中のQuest',
                 actionLabel: 'すべて見る',
                 onAction: () => context.go(AppRoutes.quest),
               ),
@@ -172,7 +172,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
               const SizedBox(height: AppSpacing.lg),
               _HomeSectionHeader(
-                title: 'Recent Trails',
+                title: '最近のTrail',
                 actionLabel: 'Trailへ',
                 onAction: () => context.go(AppRoutes.trail),
               ),
@@ -763,7 +763,7 @@ class _GuildActivitySummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Guild Activity',
+                  'Guildの動き',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.white,
                     fontWeight: FontWeight.w900,
@@ -958,7 +958,7 @@ class _StarMapPreview extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   recommendation == null
-                      ? 'Quest、Mission、Trailをつないで次の航路を見つけよう。'
+                      ? 'Quest、Mission、Trailをつないで、次の一歩を見つけよう。'
                       : recommendation!.title,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.deepNavy,

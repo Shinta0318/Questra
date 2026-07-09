@@ -330,9 +330,9 @@ class _QuestProgressDashboard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              _DashboardMetric(label: 'Progress', value: '$questProgress%'),
+              _DashboardMetric(label: '進捗', value: '$questProgress%'),
               _DashboardMetric(
-                label: 'Missions',
+                label: 'Mission',
                 value: '$completedMissions/${questMissions.length}',
               ),
               _DashboardMetric(label: 'Trails', value: trailCount.toString()),

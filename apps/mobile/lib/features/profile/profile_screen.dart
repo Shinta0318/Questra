@@ -52,7 +52,7 @@ class ProfileScreen extends ConsumerWidget {
         );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: const Text('プロフィール')),
       body: SafeArea(
         child: QuestraResponsiveListView(
           maxContentWidth: 720,
@@ -127,15 +127,15 @@ class ProfileScreen extends ConsumerWidget {
                     runSpacing: 12,
                     children: [
                       _ProfileMetric(
-                        label: 'Active Quests',
+                        label: '進行中のQuest',
                         value: activeQuestCount.toString(),
                       ),
                       _ProfileMetric(
-                        label: 'Open Missions',
+                        label: '未完了のMission',
                         value: openMissionCount.toString(),
                       ),
                       _ProfileMetric(
-                        label: 'Trails',
+                        label: 'Trail',
                         value: trails.length.toString(),
                       ),
                     ],

@@ -98,7 +98,7 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
               questId: quest.id,
               sourceId: quest.id,
               sourceType: ArcMemorySourceType.questUpdated,
-              title: 'Arc Guide generated',
+              title: 'Arcガイドを生成',
               text:
                   '${guide.summary}\n${guide.path}\n'
                   '${guide.missionCandidates.map((candidate) => candidate.title).join(' / ')}',

@@ -72,7 +72,7 @@ class GuildScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             if (!hasGuildContext) ...[
               ArcEmptyState(
-                title: 'Guildに持ち寄る航路を準備しましょう',
+                title: 'Guildで相談する準備をしましょう',
                 message: 'QuestかTrailがひとつあるだけで、Guildへの相談はぐっと具体的になります。',
                 actionLabel: 'Questを始める',
                 icon: Icons.groups_outlined,
@@ -105,11 +105,11 @@ class GuildScreen extends ConsumerWidget {
   ) {
     if (openMissions.isNotEmpty) {
       final mission = openMissions.first;
-      return '「${mission.questTitle}」で「${mission.title}」を進めたいです。小さく始めるために、どこから手をつけるとよさそうですか？';
+      return '「${mission.questTitle}」で「${mission.title}」を進めたいです。小さく始めるなら、どこから手をつけるのがよいでしょうか？';
     }
     if (activeQuests.isNotEmpty) {
       final quest = activeQuests.first;
-      return '「${quest.title}」を進めたいです。最初のMissionを小さくするなら、どんな一歩がよさそうですか？';
+      return '「${quest.title}」を進めたいです。最初のMissionを小さくするなら、どんな一歩がよいでしょうか？';
     }
     return 'これから始めたいQuestがあります。まだ形が曖昧なので、最初の小さなMissionを一緒に考えてほしいです。';
   }
@@ -144,7 +144,7 @@ class _GuildOverviewCard extends StatelessWidget {
         children: [
           Text('Guildの現在地', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          const Text('相談の材料、安全確認、近いQuestをまとめて見渡せます。競争ではなく、前へ進むための助け合いです。'),
+          const Text('相談の材料、安全確認、近いQuestをまとめて見渡せます。競争ではなく、前へ進むために支え合う場所です。'),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -375,7 +375,7 @@ class _GuildPostingReviewPanel extends StatelessWidget {
       GuildPostingReviewSeverity.blocked => Colors.redAccent,
     };
     final title = switch (review.severity) {
-      GuildPostingReviewSeverity.safe => 'Arcの確認: 安全に相談できそうです',
+      GuildPostingReviewSeverity.safe => 'Arcの確認: 安心して相談できそうです',
       GuildPostingReviewSeverity.caution => 'Arcの確認: 少しだけ見直しましょう',
       GuildPostingReviewSeverity.blocked => 'Arcの確認: 投稿前に修正しましょう',
     };

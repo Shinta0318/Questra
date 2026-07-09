@@ -7,7 +7,7 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: QuestraApp()));
 
     expect(find.text('Questra'), findsWidgets);
-    expect(find.text('Adventure begins here.'), findsOneWidget);
-    expect(find.text('Enter'), findsOneWidget);
+    expect(find.text('冒険はここから始まります。'), findsOneWidget);
+    expect(find.text('はじめる'), findsOneWidget);
   });
 }

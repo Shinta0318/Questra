@@ -263,7 +263,7 @@ class _QuestJourneyOverview extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Journey Overview',
+                      '旅路の概要',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -288,7 +288,7 @@ class _QuestJourneyOverview extends ConsumerWidget {
             children: [
               _OverviewMetric(
                 icon: Icons.trending_up,
-                label: 'Progress',
+                label: '進捗',
                 value: '$progressPercent%',
               ),
               _OverviewMetric(
@@ -303,8 +303,8 @@ class _QuestJourneyOverview extends ConsumerWidget {
               ),
               _OverviewMetric(
                 icon: Icons.auto_awesome_outlined,
-                label: 'Arc Guide',
-                value: hasArcGuide ? 'Ready' : '未生成',
+                label: 'Arcガイド',
+                value: hasArcGuide ? '準備済み' : '未生成',
               ),
             ],
           ),
@@ -333,7 +333,7 @@ class _QuestJourneyOverview extends ConsumerWidget {
       return '次は「${openMissions.first.title}」を進めると、このQuestが動き出します。';
     }
     if (!hasArcGuide) {
-      return 'Arc Guideを生成すると、Missionと進め方が見つけやすくなります。';
+      return 'Arcガイドを生成すると、Missionと進め方が見つけやすくなります。';
     }
     if (trails.isEmpty) {
       return '最初のTrailを残すと、このQuestの航跡が見返せるようになります。';
@@ -419,7 +419,7 @@ class _NextStepPanel extends StatelessWidget {
         ? openMission!.title
         : hasArcGuide
         ? latestTrail?.title ?? 'Trailを残す'
-        : 'Arc Guideを生成';
+        : 'Arcガイドを生成';
     final message = openMission != null
         ? openMission!.description
         : hasArcGuide
@@ -429,7 +429,7 @@ class _NextStepPanel extends StatelessWidget {
         ? 'Missionへ'
         : hasArcGuide
         ? 'Trailへ'
-        : 'Arc Guideを生成';
+        : 'Arcガイドを生成';
     final actionIcon = openMission != null
         ? Icons.task_alt_outlined
         : hasArcGuide
@@ -447,7 +447,7 @@ class _NextStepPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Next Action',
+            '次の一歩',
             style: TextStyle(
               color: QuestraColors.deepNavy,
               fontWeight: FontWeight.w900,
@@ -508,7 +508,7 @@ class _ProgressSection extends StatelessWidget {
 
     return _SectionCard(
       number: 2,
-      title: 'Progress',
+      title: '進捗',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -706,7 +706,7 @@ class _ArcQuestGuidePanel extends ConsumerWidget {
 
     return _SectionCard(
       number: 4,
-      title: 'Arc Guide',
+      title: 'Arcガイド',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -740,7 +740,7 @@ class _ArcQuestGuidePanel extends ConsumerWidget {
                   .read(arcQuestGuideControllerProvider.notifier)
                   .generateForQuest(quest),
               icon: const Icon(Icons.auto_awesome_outlined),
-              label: const Text('Arc Guideを生成'),
+              label: const Text('Arcガイドを生成'),
             ),
           ] else ...[
             ArcWidget(
@@ -1082,7 +1082,7 @@ class _TrailSection extends ConsumerWidget {
     final trailSteps = [
       'Questを作成',
       '6つのGuideへ分解',
-      'Arc Adviceを確認',
+      'Arcの助言を確認',
       'Missionで今日の一歩へ',
     ];
 

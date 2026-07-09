@@ -65,22 +65,22 @@ void main() {
     await tester.pump();
 
     expect(find.text('今日のMission'), findsOneWidget);
-    expect(find.text('Active Quest'), findsOneWidget);
+    expect(find.text('進行中のQuest'), findsOneWidget);
     expect(find.text('Missionへ'), findsOneWidget);
     expect(find.text('すべて見る'), findsOneWidget);
 
     await tester.scrollUntilVisible(
-      find.text('Recent Trails'),
+      find.text('最近のTrail'),
       180,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Recent Trails'), findsOneWidget);
+    expect(find.text('最近のTrail'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('Guild Activity'),
+      find.text('Guildの動き'),
       180,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Guild Activity'), findsOneWidget);
+    expect(find.text('Guildの動き'), findsOneWidget);
   });
 
   testWidgets('Quest Detail exposes journey overview and next action', (
@@ -105,12 +105,12 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Journey Overview'), findsOneWidget);
-    expect(find.text('Next Action'), findsOneWidget);
-    expect(find.text('Progress'), findsWidgets);
+    expect(find.text('旅路の概要'), findsOneWidget);
+    expect(find.text('次の一歩'), findsOneWidget);
+    expect(find.text('進捗'), findsWidgets);
     expect(find.text('Mission'), findsWidgets);
     expect(find.text('Trail'), findsWidgets);
-    expect(find.text('Arc Guide'), findsWidgets);
+    expect(find.text('Arcガイド'), findsWidgets);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (
@@ -210,7 +210,10 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.text('Trailを残す'));
+    final createTrailAction = find.text('Trailを残す').first;
+    await tester.ensureVisible(createTrailAction);
+    await tester.pumpAndSettle();
+    await tester.tap(createTrailAction);
     await tester.pumpAndSettle();
 
     tester.view.viewInsets = const FakeViewPadding(bottom: 300);
