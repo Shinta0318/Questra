@@ -863,16 +863,18 @@ items:
       report: reports/qst/QST-117.md
   - id: QST-118
     title: Responsive QA Automation
-    status: Ready
+    status: Done
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-101, QST-102]
     scope: Add screenshot, golden, or manual viewport validation for important screens.
     acceptance:
       - Compact, medium, and expanded viewport checks are repeatable.
+    completed_by:
+      report: reports/qst/QST-118.md
   - id: QST-119
     title: Cross Device UX Validation
-    status: Planned
+    status: Ready
     priority: P1
     epic: UX-FOUNDATION
     depends_on: [QST-118]

@@ -96,8 +96,8 @@ references where they do not conflict with v2.
 | QST-115 | Done | Accessibility Pass | Improve text scaling, touch targets, labels, and contrast. | Major screens remain usable with larger text and accessible targets. |
 | QST-116 | Done | Design System V2 Application | Apply updated spacing, radius, typography, and component rules. | UI feels consistent across major surfaces. |
 | QST-117 | Done | Interaction Animation Pass | Polish transitions, feedback, card interactions, and Arc reactions. | Motion improves clarity without decorative excess. |
-| QST-118 | Ready | Responsive QA Automation | Add repeatable viewport validation. | Compact, medium, and expanded viewport checks are repeatable. |
-| QST-119 | Planned | Cross Device UX Validation | Create beta device validation checklist. | Android phone, small phone, large phone, and tablet checks are documented. |
+| QST-118 | Done | Responsive QA Automation | Add repeatable viewport validation. | Compact, medium, and expanded viewport checks are repeatable. |
+| QST-119 | Ready | Cross Device UX Validation | Create beta device validation checklist. | Android phone, small phone, large phone, and tablet checks are documented. |
 | QST-120 | Planned | UX Foundation Review | Review QST-101 through QST-119. | Responsive, scrolling, navigation, menu, and accessibility risks are summarized. |
 | QST-121 | Planned | Beta Account Setup Flow | Prepare beta tester account setup and first-run verification. | Beta users can sign in, create first Quest, and confirm persistence. |
 | QST-122 | Planned | Beta First Quest Experience | Polish first Quest creation and Arc guidance. | New beta users understand what to do within the first few minutes. |
