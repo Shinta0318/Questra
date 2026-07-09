@@ -1033,6 +1033,20 @@ items:
       - Learning, builder, active, family, adventure, and fallback Quest themes have distinct visual metadata.
       - Quest cards show theme name, Quest DNA label, and Arc hint without Story terminology.
       - Theme resolver behavior is covered by unit tests.
+  - id: QST-134
+    title: Quest Detail Theme Application
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-133]
+    completed_by:
+      report: reports/qst/QST-134.md
+    scope: Apply QuestThemeResolver metadata to Quest detail header and journey overview so list and detail surfaces share Quest identity.
+    acceptance:
+      - Quest detail header uses resolved theme gradient, icon, theme name, Quest DNA label, and Arc hint.
+      - Quest journey overview displays the resolved Quest DNA label and theme name.
+      - Existing journey overview metrics remain visible.
+      - Responsive smoke coverage verifies the themed detail copy.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

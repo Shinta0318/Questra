@@ -27,6 +27,7 @@ import 'quest_milestone_controller.dart';
 import 'quest_milestone_model.dart';
 import 'quest_model.dart';
 import 'quest_providers.dart';
+import 'quest_theme_card.dart';
 
 class QuestDetailScreen extends ConsumerWidget {
   const QuestDetailScreen({required this.questId, super.key});
@@ -131,16 +132,14 @@ class _QuestHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = const QuestThemeResolver().resolve(quest);
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          colors: [QuestraColors.midnightNavy, QuestraColors.cosmicBlue],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.34)),
+        gradient: theme.backgroundGradient,
+        border: Border.all(color: theme.accent.withValues(alpha: 0.34)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,7 +148,7 @@ class _QuestHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const ArcWidget(
-                emotion: ArcEmotion.serious,
+                emotion: ArcEmotion.support,
                 size: 78,
                 showSpeechBubble: false,
               ),
@@ -158,12 +157,22 @@ class _QuestHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '1 Quest Header',
-                      style: TextStyle(
-                        color: QuestraColors.gold,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    Row(
+                      children: [
+                        Icon(theme.icon, color: theme.accent, size: 18),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            theme.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: theme.accent,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -176,6 +185,15 @@ class _QuestHeader extends StatelessWidget {
                       quest.description,
                       style: const TextStyle(color: QuestraColors.parchment),
                     ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Arc: ${theme.arcHint}',
+                      style: const TextStyle(
+                        color: QuestraColors.white,
+                        fontWeight: FontWeight.w700,
+                        height: 1.45,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -186,7 +204,7 @@ class _QuestHeader extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _MetaPill(label: quest.category, icon: Icons.category_outlined),
+              _MetaPill(label: theme.dnaLabel, icon: Icons.category_outlined),
               _MetaPill(label: quest.status.label, icon: Icons.flag_outlined),
               _MetaPill(
                 label: quest.difficulty.label,
@@ -244,6 +262,7 @@ class _QuestJourneyOverview extends ConsumerWidget {
         : (trails.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
               .first;
     final nextAction = _nextActionLabel(openMissions, hasArcGuide, trails);
+    final theme = const QuestThemeResolver().resolve(quest);
 
     return QuestraCard(
       child: Column(
@@ -263,7 +282,7 @@ class _QuestJourneyOverview extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '旅路の概要',
+                      '旅路の概要 / ${theme.dnaLabel}',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -303,8 +322,8 @@ class _QuestJourneyOverview extends ConsumerWidget {
               ),
               _OverviewMetric(
                 icon: Icons.auto_awesome_outlined,
-                label: 'Arcガイド',
-                value: hasArcGuide ? '準備済み' : '未生成',
+                label: 'Theme',
+                value: theme.name,
               ),
             ],
           ),

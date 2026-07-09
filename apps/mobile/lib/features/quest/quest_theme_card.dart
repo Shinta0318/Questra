@@ -90,7 +90,14 @@ class QuestThemeResolver {
         arcHint: '大切な人との時間も、君の星図の中心だよ。',
       );
     }
-    if (_containsAny(source, const ['旅', '旅行', 'travel', '富士', '冒険'])) {
+    if (_containsAny(source, const [
+      '旅',
+      '旅行',
+      'travel',
+      '富士',
+      '冒険',
+      'adventure',
+    ])) {
       return const QuestThemeCard(
         name: 'Adventure Map',
         icon: Icons.travel_explore,

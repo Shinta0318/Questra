@@ -111,12 +111,13 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('旅路の概要'), findsOneWidget);
+    expect(find.textContaining('旅路の概要 /'), findsOneWidget);
     expect(find.text('次の一歩'), findsOneWidget);
     expect(find.text('進捗'), findsWidgets);
     expect(find.text('Mission'), findsWidgets);
     expect(find.text('Trail'), findsWidgets);
-    expect(find.text('Arcガイド'), findsWidgets);
+    expect(find.text('Theme'), findsWidgets);
+    expect(find.text('Adventure Map'), findsWidgets);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (
