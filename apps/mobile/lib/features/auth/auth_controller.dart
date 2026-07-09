@@ -55,7 +55,7 @@ class AuthController extends Notifier<AuthState> {
         );
         final user = response.user;
         if (user == null) {
-          throw const AuthException('Signup did not return a user.');
+          throw const AuthException('アカウント作成に失敗しました。');
         }
         await _upsertProfile(
           user.id,
@@ -87,7 +87,7 @@ class AuthController extends Notifier<AuthState> {
         );
         final user = response.user;
         if (user == null) {
-          throw const AuthException('Login did not return a user.');
+          throw const AuthException('ログインに失敗しました。');
         }
         final profile = await _loadProfile(
           user.id,
@@ -262,14 +262,14 @@ class AuthController extends Notifier<AuthState> {
       return UserProfile(
         id: userId,
         email: email,
-        nickname: fallbackNickname ?? 'Adventurer',
+        nickname: fallbackNickname ?? 'キャプテン',
       );
     }
 
     return UserProfile(
       id: row['id'] as String,
       email: email,
-      nickname: row['nickname'] as String? ?? fallbackNickname ?? 'Adventurer',
+      nickname: row['nickname'] as String? ?? fallbackNickname ?? 'キャプテン',
       arcName: row['arc_name'] as String? ?? 'Arc',
       questInterest: questInterestFromStorage(row['quest_interest'] as String?),
       signalFrequency: signalFrequencyFromStorage(

@@ -896,13 +896,15 @@ items:
       report: reports/qst/QST-120.md
   - id: QST-121
     title: Beta Account Setup Flow
-    status: Ready
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-120]
     scope: Prepare beta tester account setup and first-run verification.
     acceptance:
       - Beta users can sign in, create first Quest, and confirm persistence without developer help.
+    completed_by:
+      report: reports/qst/QST-121.md
   - id: QST-122
     title: Beta First Quest Experience
     status: Planned

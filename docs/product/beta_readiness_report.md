@@ -15,6 +15,7 @@ Internal beta candidate, not public release ready.
 - RLS behavior harness: implemented
 - Performance readiness check: passed
 - Beta feedback operations: ready
+- Beta account setup flow: prepared
 - Release assets/legal drafts: tracked
 - Arc Experience Epic: completed for internal beta
 - App source terminology check: passed
@@ -53,7 +54,10 @@ Internal beta candidate, not public release ready.
    public release.
 5. OneDrive generated backlog still contains future-scope items that should stay
    deferred during MVP/beta execution.
-6. Real-device beta validation and screenshot QA still need to be run on the
+6. Beta account setup has a runbook and Japanese UI copy, but final beta
+   approval still requires real Supabase project evidence for sign-in, profile
+   creation, first Quest persistence, and cross-account isolation.
+7. Real-device beta validation and screenshot QA still need to be run on the
    current candidate build.
 
 ## Completed Beta Foundation QSTs
@@ -72,6 +76,7 @@ Internal beta candidate, not public release ready.
 - QST-059: Arc Relationship Review.
 - QST-067: Performance Measurement Pass.
 - QST-069: Beta Feedback Operations.
+- QST-121: Beta Account Setup Flow.
 
 ## Deferred Beta Operations
 
@@ -83,5 +88,6 @@ Internal beta candidate, not public release ready.
 Questra is suitable for internal beta preparation, but not public release. The
 core Quest -> Mission -> Trail loop is working across Home, Quest, Mission,
 Trail, Guild, Arc Chat, Arc Memory, Profile, media readiness, and RLS readiness.
-Release work should now focus on database-backed verification, media lifecycle,
-assets/legal copy, final screenshot QA, and real-device beta validation.
+Release work should now focus on real Supabase account/persistence evidence,
+database-backed verification, media lifecycle, assets/legal copy, final
+screenshot QA, and real-device beta validation.

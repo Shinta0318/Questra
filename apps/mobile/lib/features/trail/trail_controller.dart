@@ -143,12 +143,12 @@ class TrailController extends Notifier<List<Trail>> {
     if (userId == null) {
       ref
           .read(trailSyncControllerProvider.notifier)
-          .failed('Login is required to attach Trail media.');
+          .failed('Trail画像を追加するにはログインが必要です。');
       return null;
     }
 
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Uploading Trail image...');
+    sync.loading('Trail画像をアップロードしています...');
     try {
       final attachment = await ref
           .read(mediaRepositoryProvider)
@@ -188,12 +188,12 @@ class TrailController extends Notifier<List<Trail>> {
     if (userId == null) {
       ref
           .read(trailSyncControllerProvider.notifier)
-          .failed('Login is required to replace Trail media.');
+          .failed('Trail画像を差し替えるにはログインが必要です。');
       return null;
     }
 
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Replacing Trail image...');
+    sync.loading('Trail画像を差し替えています...');
     try {
       final attachment = await ref
           .read(mediaRepositoryProvider)
@@ -224,12 +224,12 @@ class TrailController extends Notifier<List<Trail>> {
     if (userId == null) {
       ref
           .read(trailSyncControllerProvider.notifier)
-          .failed('Login is required to remove Trail media.');
+          .failed('Trail画像を削除するにはログインが必要です。');
       return false;
     }
 
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Removing Trail image...');
+    sync.loading('Trail画像を削除しています...');
     try {
       await ref
           .read(mediaRepositoryProvider)

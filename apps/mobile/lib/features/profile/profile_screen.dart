@@ -85,7 +85,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 20),
                   QuestraPrimaryButton(
-                    label: profile == null ? 'Login' : 'Logout',
+                    label: profile == null ? 'ログイン' : 'ログアウト',
                     onPressed: () async {
                       if (profile == null) {
                         context.go(AppRoutes.login);

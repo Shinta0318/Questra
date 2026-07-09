@@ -32,7 +32,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Signup')),
+      appBar: AppBar(title: const Text('アカウント作成')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -42,34 +42,39 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Create your profile',
+                    'ベータアカウントを作成',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
+                  const SizedBox(height: 8),
+                  const Text('最初のQuestを保存できるように、プロフィールを作成します。'),
                   const SizedBox(height: 20),
                   TextField(
                     controller: _nicknameController,
-                    decoration: const InputDecoration(labelText: 'Nickname'),
+                    decoration: const InputDecoration(labelText: '表示名'),
+                    autofillHints: const [AutofillHints.nickname],
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    decoration: const InputDecoration(labelText: 'メールアドレス'),
                     keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.email],
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(labelText: 'Password'),
+                    decoration: const InputDecoration(labelText: 'パスワード'),
                     obscureText: true,
+                    autofillHints: const [AutofillHints.newPassword],
                   ),
                   const SizedBox(height: 20),
                   QuestraPrimaryButton(
-                    label: auth.isLoading ? 'Creating...' : 'Signup',
+                    label: auth.isLoading ? '作成しています...' : 'アカウントを作成',
                     onPressed: auth.isLoading ? null : _submit,
                   ),
                   TextButton(
                     onPressed: () => context.go(AppRoutes.login),
-                    child: const Text('Already have an account? Login'),
+                    child: const Text('すでにアカウントがある場合はログイン'),
                   ),
                   if (auth.errorMessage != null) ...[
                     const SizedBox(height: 8),
@@ -96,7 +101,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           email: _emailController.text.trim(),
           password: _passwordController.text,
           nickname: _nicknameController.text.trim().isEmpty
-              ? 'Adventurer'
+              ? 'キャプテン'
               : _nicknameController.text.trim(),
         );
 
