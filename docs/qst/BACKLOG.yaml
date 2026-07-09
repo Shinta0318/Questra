@@ -907,13 +907,15 @@ items:
       report: reports/qst/QST-121.md
   - id: QST-122
     title: Beta First Quest Experience
-    status: Planned
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-121]
     scope: Polish the first Quest creation and Arc guidance flow.
     acceptance:
       - A new beta user can understand what to do within the first few minutes.
+    completed_by:
+      report: reports/qst/QST-122.md
   - id: QST-123
     title: Beta Empty State Verification
     status: Planned

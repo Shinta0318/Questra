@@ -16,6 +16,7 @@ Internal beta candidate, not public release ready.
 - Performance readiness check: passed
 - Beta feedback operations: ready
 - Beta account setup flow: prepared
+- Beta first Quest experience: polished
 - Release assets/legal drafts: tracked
 - Arc Experience Epic: completed for internal beta
 - App source terminology check: passed
@@ -77,6 +78,7 @@ Internal beta candidate, not public release ready.
 - QST-067: Performance Measurement Pass.
 - QST-069: Beta Feedback Operations.
 - QST-121: Beta Account Setup Flow.
+- QST-122: Beta First Quest Experience.
 
 ## Deferred Beta Operations
 

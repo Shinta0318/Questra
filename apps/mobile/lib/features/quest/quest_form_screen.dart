@@ -71,9 +71,13 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
                     size: 72,
                     message: _isEditing
                         ? '航路を整えよう。Questは進みながら磨いていけるよ。'
-                        : 'このQuestは大切な星になりそうだね。一緒に航路を描こう。',
+                        : '叶えたい景色を一文で置けば、Arcが最初のMission候補まで一緒に探します。',
                   ),
                   const SizedBox(height: 16),
+                  if (!_isEditing) ...[
+                    const _FirstQuestGuideCard(),
+                    const SizedBox(height: 16),
+                  ],
                   if (!_isEditing) ...[
                     _TemplatePicker(
                       templates: templates,
@@ -84,12 +88,19 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
                   ],
                   TextField(
                     controller: _titleController,
-                    decoration: const InputDecoration(labelText: 'Quest名'),
+                    decoration: const InputDecoration(
+                      labelText: 'Quest名',
+                      hintText: '例: 富士山に登る / 英語で自己紹介できるようになる',
+                      helperText: 'まずは一文で大丈夫です。',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _descriptionController,
-                    decoration: const InputDecoration(labelText: '叶えたい理由・背景'),
+                    decoration: const InputDecoration(
+                      labelText: '叶えたい理由・背景',
+                      hintText: 'なぜ大切なのか、今の気持ちを短く残しましょう。',
+                    ),
                     minLines: 3,
                     maxLines: 5,
                   ),
@@ -135,6 +146,10 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
                     const SizedBox(height: 20),
                   ],
                   QuestraPrimaryButton(label: 'Questを保存', onPressed: _save),
+                  if (!_isEditing) ...[
+                    const SizedBox(height: 8),
+                    const Text('保存後にArcガイドとMission候補を生成します。候補はあとで採用・編集できます。'),
+                  ],
                 ],
               ),
             ),
@@ -192,6 +207,9 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
   void _save() {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Quest名を一文で入力してください。')));
       return;
     }
 
@@ -239,6 +257,39 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
           .generateForQuest(quest),
     );
     context.go('${AppRoutes.quest}/${quest.id}');
+  }
+}
+
+class _FirstQuestGuideCard extends StatelessWidget {
+  const _FirstQuestGuideCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Theme.of(
+            context,
+          ).colorScheme.secondary.withValues(alpha: 0.18),
+        ),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '最初のQuestは小さく始めましょう',
+            style: TextStyle(fontWeight: FontWeight.w900),
+          ),
+          SizedBox(height: 8),
+          Text('1. 叶えたい景色を一文で置く'),
+          Text('2. 理由や背景を短く残す'),
+          Text('3. 保存後、Arcガイドから最初のMissionを選ぶ'),
+        ],
+      ),
+    );
   }
 }
 

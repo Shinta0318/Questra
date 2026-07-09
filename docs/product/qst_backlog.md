@@ -100,7 +100,7 @@ references where they do not conflict with v2.
 | QST-119 | Done | Cross Device UX Validation | Create beta device validation checklist. | Android phone, small phone, large phone, and tablet checks are documented. |
 | QST-120 | Done | UX Foundation Review | Review QST-101 through QST-119. | Responsive, scrolling, navigation, menu, and accessibility risks are summarized. |
 | QST-121 | Done | Beta Account Setup Flow | Prepare beta tester account setup and first-run verification. | Beta users can sign in, create first Quest, and confirm persistence. |
-| QST-122 | Planned | Beta First Quest Experience | Polish first Quest creation and Arc guidance. | New beta users understand what to do within the first few minutes. |
+| QST-122 | Done | Beta First Quest Experience | Polish first Quest creation and Arc guidance. | New beta users understand what to do within the first few minutes. |
 | QST-123 | Planned | Beta Empty State Verification | Verify empty DB state across beta accounts. | No mock content appears as user-owned data. |
 | QST-124 | Planned | Beta Feedback Entry Point | Add or document feedback route. | Beta testers can report screen, severity, and reproduction steps. |
 | QST-125 | Planned | Beta Issue Labeling Rules | Create beta issue labels and QST conversion rules. | Feedback converts into bug, UX, data, AI, Guild, Arc, or performance QSTs. |
