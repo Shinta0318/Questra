@@ -113,6 +113,7 @@ references where they do not conflict with v2.
 | QST-132 | Done | Onboarding Tour Polish | Harden the Arc onboarding tour state machine after the creative navigation refresh. | First-use guidance appears after profile restore, stays dismissed within a session, and remains replayable. |
 | QST-133 | Done | Quest Theme Card Redesign | Make Quest cards category-aware and reusable through theme metadata. | Quest cards show theme identity, Quest DNA labels, Arc hints, and tested theme resolution. |
 | QST-134 | Done | Quest Detail Theme Application | Apply Quest theme metadata to the detail header and journey overview. | Quest detail shares the same theme identity, Quest DNA label, and Arc hint as Quest cards. |
+| QST-135 | Done | Quest DNA Snapshot | Display an MVP-safe Quest DNA snapshot derived from existing Quest fields. | Quest detail distinguishes user input from inferred context without collecting sensitive new attributes. |
 
 ## Selection Rules
 

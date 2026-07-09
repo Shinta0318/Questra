@@ -25,6 +25,7 @@ import 'quest_guide_controller.dart';
 import 'quest_guide_model.dart';
 import 'quest_milestone_controller.dart';
 import 'quest_milestone_model.dart';
+import 'quest_dna_snapshot.dart';
 import 'quest_model.dart';
 import 'quest_providers.dart';
 import 'quest_theme_card.dart';
@@ -87,6 +88,8 @@ class QuestDetailScreen extends ConsumerWidget {
               trails: trails,
               hasArcGuide: arcGuide != null,
             ),
+            const SizedBox(height: 16),
+            _QuestDnaSnapshotSection(quest: quest),
             const SizedBox(height: 16),
             _ProgressSection(quest: quest),
             const SizedBox(height: 16),
@@ -407,6 +410,113 @@ class _OverviewMetric extends StatelessWidget {
               color: QuestraColors.slate,
               fontSize: 12,
               fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuestDnaSnapshotSection extends StatelessWidget {
+  const _QuestDnaSnapshotSection({required this.quest});
+
+  final Quest quest;
+
+  @override
+  Widget build(BuildContext context) {
+    final snapshot = const QuestDnaSnapshotResolver().resolve(quest);
+
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Quest DNA Snapshot',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '入力済みの情報と、Arcが航路整理のために推定した文脈です。',
+            style: TextStyle(
+              color: QuestraColors.slate,
+              fontWeight: FontWeight.w700,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (final attribute in snapshot.attributes)
+                _DnaAttributeChip(attribute: attribute),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DnaAttributeChip extends StatelessWidget {
+  const _DnaAttributeChip({required this.attribute});
+
+  final QuestDnaAttribute attribute;
+
+  @override
+  Widget build(BuildContext context) {
+    final isUserInput = attribute.source == QuestDnaSource.userInput;
+
+    return Container(
+      width: 150,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isUserInput
+            ? QuestraColors.gold.withValues(alpha: 0.14)
+            : QuestraColors.cosmicBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isUserInput
+              ? QuestraColors.gold.withValues(alpha: 0.36)
+              : QuestraColors.cosmicBlue.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            attribute.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: QuestraColors.slate,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            attribute.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            isUserInput ? '入力' : '推定',
+            style: TextStyle(
+              color: isUserInput
+                  ? QuestraColors.gold
+                  : QuestraColors.cosmicBlue,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
             ),
           ),
         ],

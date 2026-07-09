@@ -118,6 +118,13 @@ void main() {
     expect(find.text('Trail'), findsWidgets);
     expect(find.text('Theme'), findsWidgets);
     expect(find.text('Adventure Map'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.text('Quest DNA Snapshot'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Quest DNA Snapshot'), findsOneWidget);
+    expect(find.text('推定'), findsWidgets);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (

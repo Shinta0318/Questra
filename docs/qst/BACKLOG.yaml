@@ -1047,6 +1047,20 @@ items:
       - Quest journey overview displays the resolved Quest DNA label and theme name.
       - Existing journey overview metrics remain visible.
       - Responsive smoke coverage verifies the themed detail copy.
+  - id: QST-135
+    title: Quest DNA Snapshot
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-134]
+    completed_by:
+      report: reports/qst/QST-135.md
+    scope: Add an MVP-safe Quest DNA snapshot derived from existing Quest fields and display it on Quest detail without collecting new sensitive attributes.
+    acceptance:
+      - Quest DNA Snapshot distinguishes user input from inferred context.
+      - Snapshot includes category, theme, difficulty, duration, motivation, social, and risk attributes.
+      - Quest detail displays the snapshot with clear input/inferred labels.
+      - Resolver behavior is covered by unit tests.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage
