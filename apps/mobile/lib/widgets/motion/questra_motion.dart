@@ -7,4 +7,5 @@ class QuestraMotion {
   static const Duration medium = Duration(milliseconds: 260);
   static const Curve standard = Curves.easeOutCubic;
   static const Curve gentle = Curves.easeInOutSine;
+  static const double pressedScale = 0.97;
 }

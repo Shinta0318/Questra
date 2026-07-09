@@ -6,6 +6,7 @@ import '../auth/auth_controller.dart';
 import '../tagging/tagging_providers.dart';
 import 'arc_memory_model.dart';
 import 'arc_memory_repository.dart';
+import 'arc_memory_retrieval_service.dart';
 import 'memory_extraction_service.dart';
 
 final arcMemoryRepositoryProvider = Provider<ArcMemoryRepository>((ref) {
@@ -22,6 +23,12 @@ final memoryExtractionServiceProvider = Provider<MemoryExtractionService>((
     repository: ref.watch(arcMemoryRepositoryProvider),
     taggingService: ref.watch(taggingServiceProvider),
   );
+});
+
+final arcMemoryRetrievalServiceProvider = Provider<ArcMemoryRetrievalService>((
+  ref,
+) {
+  return const ArcMemoryRetrievalService();
 });
 
 final visibleArcMemoriesProvider = FutureProvider<List<ArcMemory>>((ref) async {

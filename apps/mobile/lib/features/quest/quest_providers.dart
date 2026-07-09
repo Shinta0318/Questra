@@ -6,6 +6,7 @@ import 'quest_guide_repository.dart';
 import 'quest_milestone_repository.dart';
 import 'quest_milestone_service.dart';
 import 'quest_repository.dart';
+import 'quest_template_library.dart';
 
 final questRepositoryProvider = Provider<QuestRepository>((ref) {
   if (SupabaseConfig.isConfigured) {
@@ -32,4 +33,8 @@ final questMilestoneRepositoryProvider = Provider<QuestMilestoneRepository>((
 
 final questMilestoneServiceProvider = Provider<QuestMilestoneService>((ref) {
   return const QuestMilestoneService();
+});
+
+final questTemplateLibraryProvider = Provider<QuestTemplateLibrary>((ref) {
+  return const QuestTemplateLibrary();
 });

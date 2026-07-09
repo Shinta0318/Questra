@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../accessibility/questra_accessibility.dart';
 import 'app_colors.dart';
 import 'app_gradients.dart';
 import 'app_radius.dart';
 import 'app_shadows.dart';
+import 'app_spacing.dart';
 import 'app_typography.dart';
 
 abstract final class AppTheme {
@@ -19,6 +21,8 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      visualDensity: VisualDensity.standard,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
       scaffoldBackgroundColor: AppColors.cloud,
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.deepNavy,
@@ -44,6 +48,23 @@ abstract final class AppTheme {
           elevation: 0,
           shadowColor: AppColors.gold.withValues(alpha: 0.24),
         ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          foregroundColor: AppColors.cosmicBlue,
+          minimumSize: const Size.square(QuestraAccessibility.minTapTarget),
+          tapTargetSize: MaterialTapTargetSize.padded,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+        ),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.gold,
+        foregroundColor: AppColors.deepNavy,
+        elevation: 6,
+        focusElevation: 8,
+        hoverElevation: 8,
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -73,6 +94,56 @@ abstract final class AppTheme {
           borderSide: const BorderSide(color: AppColors.gold, width: 1.6),
         ),
       ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.midnightNavy,
+        contentTextStyle: const TextStyle(
+          color: AppColors.white,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.button),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: AppColors.midnightNavy,
+          borderRadius: AppRadius.button,
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.28)),
+        ),
+        textStyle: const TextStyle(
+          color: AppColors.white,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0,
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: AppColors.cosmicBlue.withValues(alpha: 0.18),
+        thickness: 1,
+        space: AppSpacing.xl,
+      ),
+      listTileTheme: ListTileThemeData(
+        minVerticalPadding: AppSpacing.md,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.sm,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
+        iconColor: AppColors.cosmicBlue,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: AppColors.gold,
+        linearTrackColor: AppColors.cosmicBlue.withValues(alpha: 0.12),
+      ),
       textTheme: AppTypography.textTheme,
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.deepNavy,
@@ -88,6 +159,19 @@ abstract final class AppTheme {
           ),
         ),
       ),
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.hovered)
+              ? AppColors.gold
+              : AppColors.gold.withValues(alpha: 0.72),
+        ),
+        trackColor: WidgetStatePropertyAll(
+          AppColors.white.withValues(alpha: 0.08),
+        ),
+        thickness: const WidgetStatePropertyAll(6),
+        radius: const Radius.circular(3),
+        interactive: true,
+      ),
       extensions: <ThemeExtension<dynamic>>[const QuestraThemeTokens()],
     );
   }
@@ -99,6 +183,13 @@ class QuestraThemeTokens extends ThemeExtension<QuestraThemeTokens> {
   LinearGradient get adventureGradient => AppGradients.adventure;
   LinearGradient get glassGradient => AppGradients.glass;
   List<BoxShadow> get glassShadow => AppShadows.glassCard;
+  BorderRadius get cardRadius => AppRadius.card;
+  BorderRadius get glassCardRadius => AppRadius.glassCard;
+  BorderRadius get buttonRadius => AppRadius.button;
+  EdgeInsets get cardPadding => const EdgeInsets.all(AppSpacing.xl);
+  EdgeInsets get compactCardPadding => const EdgeInsets.all(AppSpacing.lg);
+  double get sectionGap => AppSpacing.xl;
+  double get componentGap => AppSpacing.md;
 
   @override
   ThemeExtension<QuestraThemeTokens> copyWith() {

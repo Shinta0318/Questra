@@ -7,10 +7,13 @@ import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../dream_board/dream_board_controller.dart';
+import '../dream_board/dream_board_model.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../trail/trail_controller.dart';
@@ -66,15 +69,23 @@ class QuestDetailScreen extends ConsumerWidget {
     final milestones = storedMilestones.isEmpty
         ? generatedMilestones
         : storedMilestones;
+    final arcGuide = arcGuideState.guideFor(quest.id);
 
     return Scaffold(
       backgroundColor: QuestraColors.deepNavy,
       appBar: AppBar(title: const Text('Quest詳細')),
       body: SafeArea(
-        child: ListView(
+        child: QuestraResponsiveListView(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
           children: [
             _QuestHeader(quest: quest),
+            const SizedBox(height: 16),
+            _QuestJourneyOverview(
+              quest: quest,
+              missions: missions,
+              trails: trails,
+              hasArcGuide: arcGuide != null,
+            ),
             const SizedBox(height: 16),
             _ProgressSection(quest: quest),
             const SizedBox(height: 16),
@@ -105,7 +116,7 @@ class QuestDetailScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _TrailSection(quest: quest, missions: missions, trails: trails),
             const SizedBox(height: 16),
-            _DreamBoardSection(quest: quest),
+            _DreamBoardSection(quest: quest, starMap: starMap),
           ],
         ),
       ),
@@ -198,6 +209,286 @@ class _QuestHeader extends StatelessWidget {
                       context.go('${AppRoutes.quest}/${quest.id}/edit'),
                 ),
               ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuestJourneyOverview extends ConsumerWidget {
+  const _QuestJourneyOverview({
+    required this.quest,
+    required this.missions,
+    required this.trails,
+    required this.hasArcGuide,
+  });
+
+  final Quest quest;
+  final List<Mission> missions;
+  final List<Trail> trails;
+  final bool hasArcGuide;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progressPercent = (quest.progress.clamp(0, 1) * 100).round();
+    final openMissions = missions
+        .where((mission) => mission.status == MissionStatus.todo)
+        .toList(growable: false);
+    final completedMissions = missions
+        .where((mission) => mission.status == MissionStatus.completed)
+        .length;
+    final latestTrail = trails.isEmpty
+        ? null
+        : (trails.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
+              .first;
+    final nextAction = _nextActionLabel(openMissions, hasArcGuide, trails);
+
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const ArcWidget(
+                emotion: ArcEmotion.support,
+                size: 72,
+                showSpeechBubble: false,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Journey Overview',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      nextAction,
+                      style: const TextStyle(
+                        color: QuestraColors.slate,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _OverviewMetric(
+                icon: Icons.trending_up,
+                label: 'Progress',
+                value: '$progressPercent%',
+              ),
+              _OverviewMetric(
+                icon: Icons.task_alt_outlined,
+                label: 'Mission',
+                value: '$completedMissions/${missions.length}',
+              ),
+              _OverviewMetric(
+                icon: Icons.timeline_outlined,
+                label: 'Trail',
+                value: trails.length.toString(),
+              ),
+              _OverviewMetric(
+                icon: Icons.auto_awesome_outlined,
+                label: 'Arc Guide',
+                value: hasArcGuide ? 'Ready' : '未生成',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _NextStepPanel(
+            openMission: openMissions.firstOrNull,
+            latestTrail: latestTrail,
+            hasArcGuide: hasArcGuide,
+            onOpenMission: () => context.go(AppRoutes.mission),
+            onOpenTrail: () => context.go(AppRoutes.trail),
+            onGenerateGuide: () => ref
+                .read(arcQuestGuideControllerProvider.notifier)
+                .generateForQuest(quest),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _nextActionLabel(
+    List<Mission> openMissions,
+    bool hasArcGuide,
+    List<Trail> trails,
+  ) {
+    if (openMissions.isNotEmpty) {
+      return '次は「${openMissions.first.title}」を進めると、このQuestが動き出します。';
+    }
+    if (!hasArcGuide) {
+      return 'Arc Guideを生成すると、Missionと進め方が見つけやすくなります。';
+    }
+    if (trails.isEmpty) {
+      return '最初のTrailを残すと、このQuestの航跡が見返せるようになります。';
+    }
+    return '進捗、Mission、Trailが揃っています。次の小さな一歩を選びましょう。';
+  }
+}
+
+class _OverviewMetric extends StatelessWidget {
+  const _OverviewMetric({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 132,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: QuestraColors.cosmicBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: QuestraColors.cosmicBlue.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: QuestraColors.cosmicBlue, size: 20),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: QuestraColors.slate,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NextStepPanel extends StatelessWidget {
+  const _NextStepPanel({
+    required this.openMission,
+    required this.latestTrail,
+    required this.hasArcGuide,
+    required this.onOpenMission,
+    required this.onOpenTrail,
+    required this.onGenerateGuide,
+  });
+
+  final Mission? openMission;
+  final Trail? latestTrail;
+  final bool hasArcGuide;
+  final VoidCallback onOpenMission;
+  final VoidCallback onOpenTrail;
+  final VoidCallback onGenerateGuide;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = openMission != null
+        ? openMission!.title
+        : hasArcGuide
+        ? latestTrail?.title ?? 'Trailを残す'
+        : 'Arc Guideを生成';
+    final message = openMission != null
+        ? openMission!.description
+        : hasArcGuide
+        ? latestTrail?.summary ?? '今日の進み方を短く残して、次のMissionにつなげましょう。'
+        : 'Questの要約、進め方、最初のMission候補をArcがまとめます。';
+    final actionLabel = openMission != null
+        ? 'Missionへ'
+        : hasArcGuide
+        ? 'Trailへ'
+        : 'Arc Guideを生成';
+    final actionIcon = openMission != null
+        ? Icons.task_alt_outlined
+        : hasArcGuide
+        ? Icons.timeline_outlined
+        : Icons.auto_awesome_outlined;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: QuestraColors.gold.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.26)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Next Action',
+            style: TextStyle(
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(message, style: const TextStyle(color: QuestraColors.slate)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                onPressed: openMission != null
+                    ? onOpenMission
+                    : hasArcGuide
+                    ? onOpenTrail
+                    : onGenerateGuide,
+                icon: Icon(actionIcon),
+                label: Text(actionLabel),
+              ),
+              if (openMission != null || hasArcGuide)
+                OutlinedButton.icon(
+                  onPressed: onOpenTrail,
+                  icon: const Icon(Icons.timeline_outlined),
+                  label: const Text('Trailを残す'),
+                ),
+              if (hasArcGuide)
+                OutlinedButton.icon(
+                  onPressed: onGenerateGuide,
+                  icon: const Icon(Icons.refresh_outlined),
+                  label: const Text('Guideを更新'),
+                ),
             ],
           ),
         ],
@@ -868,14 +1159,19 @@ class _TrailSection extends ConsumerWidget {
   }
 }
 
-class _DreamBoardSection extends StatelessWidget {
-  const _DreamBoardSection({required this.quest});
+class _DreamBoardSection extends ConsumerWidget {
+  const _DreamBoardSection({required this.quest, required this.starMap});
 
   final Quest quest;
+  final List<StarMapItem> starMap;
 
   @override
-  Widget build(BuildContext context) {
-    final items = ['理想の到達点', '参考になる星', '必要な道具', '出会いたい仲間'];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items =
+        ref.watch(dreamBoardControllerProvider)[quest.id] ??
+        const <DreamBoardItem>[];
+    final controller = ref.read(dreamBoardControllerProvider.notifier);
+    final firstReference = starMap.isEmpty ? null : starMap.first;
 
     return _SectionCard(
       number: 8,
@@ -883,12 +1179,189 @@ class _DreamBoardSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('「${quest.title}」を叶えるための素材置き場です。'),
+          Text('「${quest.title}」を叶えるための理想イメージと参考素材を集めます。'),
+          const SizedBox(height: 12),
+          if (items.isEmpty)
+            _DreamBoardEmptyState(
+              onAddVision: () => controller.addItem(
+                questId: quest.id,
+                title: '理想の到達点',
+                note: '${quest.title}を達成した未来の景色を置いておきます。',
+                itemType: DreamBoardItemType.vision,
+              ),
+              onAddReference: firstReference == null
+                  ? null
+                  : () => controller.addItem(
+                      questId: quest.id,
+                      title: firstReference.title,
+                      note: firstReference.description,
+                      itemType: DreamBoardItemType.reference,
+                      sourceUrl: firstReference.url,
+                      metadata: {
+                        'guide_type': firstReference.guideType.name,
+                        'content_type': firstReference.contentType,
+                      },
+                    ),
+            )
+          else ...[
+            ...items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _DreamBoardTile(
+                  item: item,
+                  onRemove: () => controller.removeItem(item),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => controller.addItem(
+                    questId: quest.id,
+                    title: '次に見たい景色',
+                    note: 'このQuestで見たい景色をもう一つ追加します。',
+                    itemType: DreamBoardItemType.vision,
+                  ),
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: const Text('理想を追加'),
+                ),
+                if (firstReference != null)
+                  OutlinedButton.icon(
+                    onPressed: () => controller.addItem(
+                      questId: quest.id,
+                      title: firstReference.title,
+                      note: firstReference.description,
+                      itemType: DreamBoardItemType.reference,
+                      sourceUrl: firstReference.url,
+                      metadata: {
+                        'guide_type': firstReference.guideType.name,
+                        'content_type': firstReference.contentType,
+                      },
+                    ),
+                    icon: const Icon(Icons.auto_awesome_outlined),
+                    label: const Text('参考星を追加'),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DreamBoardEmptyState extends StatelessWidget {
+  const _DreamBoardEmptyState({
+    required this.onAddVision,
+    required this.onAddReference,
+  });
+
+  final VoidCallback onAddVision;
+  final VoidCallback? onAddReference;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: QuestraColors.cosmicBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: QuestraColors.cosmicBlue.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ArcWidget(
+            emotion: ArcEmotion.support,
+            size: 64,
+            message: 'まだ白い星図だね。叶えたい景色をひとつ置くと、航路が少し見えやすくなるよ。',
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: items.map((item) => _ActionChip(label: item)).toList(),
+            children: [
+              FilledButton.icon(
+                onPressed: onAddVision,
+                icon: const Icon(Icons.add_photo_alternate_outlined),
+                label: const Text('理想を追加'),
+              ),
+              if (onAddReference != null)
+                OutlinedButton.icon(
+                  onPressed: onAddReference,
+                  icon: const Icon(Icons.auto_awesome_outlined),
+                  label: const Text('参考星を追加'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DreamBoardTile extends StatelessWidget {
+  const _DreamBoardTile({required this.item, required this.onRemove});
+
+  final DreamBoardItem item;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: QuestraColors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: QuestraColors.gold.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              _dreamBoardIcon(item.itemType),
+              color: QuestraColors.midnightNavy,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  style: const TextStyle(
+                    color: QuestraColors.midnightNavy,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.note,
+                  style: const TextStyle(color: QuestraColors.slate),
+                ),
+                const SizedBox(height: 8),
+                _ActionChip(label: item.itemType.label),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: '削除',
+            onPressed: onRemove,
+            icon: const Icon(Icons.close),
+            color: QuestraColors.slate,
           ),
         ],
       ),
@@ -1050,6 +1523,16 @@ List<StarMapItem> _mockStarMap(Quest quest) {
         ),
       )
       .toList();
+}
+
+IconData _dreamBoardIcon(DreamBoardItemType itemType) {
+  return switch (itemType) {
+    DreamBoardItemType.vision => Icons.landscape_outlined,
+    DreamBoardItemType.reference => Icons.auto_awesome_outlined,
+    DreamBoardItemType.tool => Icons.construction_outlined,
+    DreamBoardItemType.guild => Icons.groups_outlined,
+    DreamBoardItemType.generatedBackground => Icons.wallpaper_outlined,
+  };
 }
 
 String _guideDescription(Quest quest, GuideType guideType) {

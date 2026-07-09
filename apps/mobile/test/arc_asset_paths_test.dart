@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/core/performance/performance_limits.dart';
 import 'package:questra/widgets/arc/arc_asset_paths.dart';
 import 'package:questra/widgets/arc/arc_emotion.dart';
+import 'package:questra/widgets/arc/arc_visual_asset.dart';
 import 'package:questra/widgets/arc/arc_widget.dart';
 
 void main() {
@@ -31,6 +32,20 @@ void main() {
       ArcAssetPaths.fromEmotion(ArcEmotion.celebrate),
       ArcAssetPaths.celebrate,
     );
+  });
+
+  test('Arc visual asset descriptor keeps PNG default future-ready', () {
+    final asset = ArcAssetPaths.assetForEmotion(ArcEmotion.normal);
+    const futureGlb = ArcVisualAsset(
+      type: ArcVisualAssetType.glb,
+      path: 'assets/characters/arc/arc_future.glb',
+      semanticLabel: 'Future 3D Arc',
+    );
+
+    expect(asset.type, ArcVisualAssetType.png);
+    expect(asset.path, ArcAssetPaths.normal);
+    expect(asset.semanticLabel, contains('PNG'));
+    expect(futureGlb.isPng, isFalse);
   });
 
   testWidgets('ArcWidget displays the normal expression asset', (tester) async {

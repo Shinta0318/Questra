@@ -1,5 +1,7 @@
+import '../../widgets/arc/arc_animation_event.dart';
 import '../../widgets/arc/arc_asset_paths.dart';
 import '../../widgets/arc/arc_emotion.dart';
+import '../../widgets/arc/arc_visual_asset.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
 import '../trail/trail_model.dart';
@@ -38,13 +40,17 @@ class ArcExpressionContext {
 class ArcExpressionDecision {
   const ArcExpressionDecision({
     required this.emotion,
-    required this.assetPath,
+    required this.asset,
+    required this.animationEvent,
     required this.reason,
   });
 
   final ArcEmotion emotion;
-  final String assetPath;
+  final ArcVisualAsset asset;
+  final ArcAnimationEvent animationEvent;
   final String reason;
+
+  String get assetPath => asset.path;
 }
 
 class ArcExpressionEngine {
@@ -54,7 +60,8 @@ class ArcExpressionEngine {
     final emotion = _resolveEmotion(context);
     return ArcExpressionDecision(
       emotion: emotion,
-      assetPath: ArcAssetPaths.fromEmotion(emotion),
+      asset: ArcAssetPaths.assetForEmotion(emotion),
+      animationEvent: _animationEventFor(context, emotion),
       reason: _reasonFor(context, emotion),
     );
   }
@@ -164,6 +171,29 @@ class ArcExpressionEngine {
       return ArcEmotion.lonely;
     }
     return ArcEmotion.support;
+  }
+
+  ArcAnimationEvent _animationEventFor(
+    ArcExpressionContext context,
+    ArcEmotion emotion,
+  ) {
+    if (context.moment == ArcExpressionMoment.celebration ||
+        emotion == ArcEmotion.celebrate) {
+      return ArcAnimationEvents.celebrate;
+    }
+    if (context.moment == ArcExpressionMoment.concern ||
+        emotion == ArcEmotion.worried) {
+      return ArcAnimationEvents.concern;
+    }
+    if (context.moment == ArcExpressionMoment.questFocus ||
+        context.moment == ArcExpressionMoment.missionFocus) {
+      return ArcAnimationEvents.transition;
+    }
+    if (context.moment == ArcExpressionMoment.trailReflection ||
+        context.moment == ArcExpressionMoment.bondGrowth) {
+      return ArcAnimationEvents.blink;
+    }
+    return ArcAnimationEventResolver.forEmotion(emotion);
   }
 
   bool _isQuestStalled(Quest? quest, DateTime? now) {

@@ -8,9 +8,12 @@ import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/menu/questra_action_menu.dart';
 import '../../widgets/persistence_sync_banner.dart';
 import '../arc/arc_concern_service.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../auth/auth_controller.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../trail/trail_controller.dart';
@@ -24,6 +27,7 @@ class QuestScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final quests = ref.watch(questControllerProvider);
+    final profile = ref.watch(authControllerProvider).profile;
     final missions = ref.watch(missionControllerProvider);
     final trails = ref.watch(trailControllerProvider);
     final syncState = ref.watch(questSyncControllerProvider);
@@ -61,7 +65,13 @@ class QuestScreen extends ConsumerWidget {
         ],
       ),
       body: SafeArea(
-        child: ListView(
+        child: QuestraResponsiveListView(
+          showScrollbar: true,
+          onRefresh: profile == null
+              ? null
+              : () => ref
+                    .read(questControllerProvider.notifier)
+                    .loadForUser(profile.id),
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
           children: [
             PersistenceSyncBanner(
@@ -181,7 +191,7 @@ class _QuestConcernCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(concern.message),
                 const SizedBox(height: 12),
-                OutlinedButton.icon(
+                QuestraActionButton(
                   onPressed: () => _openConcernTarget(context),
                   icon: const Icon(Icons.near_me_outlined),
                   label: Text(concern.actionLabel),
@@ -345,7 +355,7 @@ class _QuestProgressDashboard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(arcComment),
           const SizedBox(height: 12),
-          OutlinedButton.icon(
+          QuestraActionButton(
             onPressed: onOpenQuest,
             icon: const Icon(Icons.open_in_new),
             label: const Text('Quest詳細へ'),
@@ -393,115 +403,122 @@ class _QuestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final progressPercent = (quest.progress.clamp(0, 1) * 100).round();
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(26),
-      onTap: onTap,
-      child: Ink(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: QuestraColors.white,
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(
-            color: QuestraColors.cosmicBlue.withValues(alpha: 0.20),
+    return Semantics(
+      button: true,
+      label: '${quest.title}のQuestを開く',
+      value: '進捗$progressPercentパーセント',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(26),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: QuestraColors.white,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(
+              color: QuestraColors.cosmicBlue.withValues(alpha: 0.20),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: QuestraColors.skyBlue.withValues(alpha: 0.14),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: QuestraColors.skyBlue.withValues(alpha: 0.14),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: QuestraColors.deepNavy,
-                    borderRadius: BorderRadius.circular(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: QuestraColors.deepNavy,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.travel_explore,
+                      color: QuestraColors.gold,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.travel_explore,
-                    color: QuestraColors.gold,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          quest.title,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          quest.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        quest.title,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        quest.description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: LinearProgressIndicator(
-                      value: quest.progress.clamp(0, 1),
-                      minHeight: 9,
-                      backgroundColor: QuestraColors.cloud,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        QuestraColors.gold,
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ExcludeSemantics(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: quest.progress.clamp(0, 1),
+                          minHeight: 9,
+                          backgroundColor: QuestraColors.cloud,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            QuestraColors.gold,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  '$progressPercent%',
-                  style: const TextStyle(
-                    color: QuestraColors.deepNavy,
-                    fontWeight: FontWeight.w800,
+                  const SizedBox(width: 12),
+                  Text(
+                    '$progressPercent%',
+                    style: const TextStyle(
+                      color: QuestraColors.deepNavy,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _QuestPill(
-                  icon: Icons.flag_outlined,
-                  label: quest.status.label,
-                  emphasized: quest.status == QuestStatus.active,
-                ),
-                _QuestPill(
-                  icon: Icons.fitness_center_outlined,
-                  label: quest.difficulty.label,
-                ),
-                _QuestPill(
-                  icon: Icons.category_outlined,
-                  label: quest.category,
-                ),
-                if (quest.targetDate != null)
+                ],
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
                   _QuestPill(
-                    icon: Icons.event_outlined,
-                    label: DateFormat.MMMd('ja').format(quest.targetDate!),
+                    icon: Icons.flag_outlined,
+                    label: quest.status.label,
+                    emphasized: quest.status == QuestStatus.active,
                   ),
-              ],
-            ),
-          ],
+                  _QuestPill(
+                    icon: Icons.fitness_center_outlined,
+                    label: quest.difficulty.label,
+                  ),
+                  _QuestPill(
+                    icon: Icons.category_outlined,
+                    label: quest.category,
+                  ),
+                  if (quest.targetDate != null)
+                    _QuestPill(
+                      icon: Icons.event_outlined,
+                      label: DateFormat.MMMd('ja').format(quest.targetDate!),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

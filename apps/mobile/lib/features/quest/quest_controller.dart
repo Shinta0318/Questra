@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/analytics/analytics_service.dart';
 import '../../core/persistence/persistence_sync_state.dart';
 import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_bond_growth_service.dart';
@@ -92,6 +93,16 @@ class QuestController extends Notifier<List<Quest>> {
   void add(Quest quest) {
     state = [...state, quest];
     _recordQuestAction(ArcActionTrigger.questCreated, quest);
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .questCreated(
+            userId: ref.read(authControllerProvider).profile?.id,
+            category: quest.category,
+            difficulty: quest.difficulty.storageKey,
+            visibility: quest.visibility.storageKey,
+          ),
+    );
     unawaited(
       _persistQuest(quest, sourceType: ArcMemorySourceType.questCreated),
     );

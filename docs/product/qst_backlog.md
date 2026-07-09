@@ -1,8 +1,10 @@
 # QST Backlog
 
-This backlog mirrors the Questra Project Planner source in
-`C:\Users\shint\OneDrive\ドキュメント\Questra` and should follow the Master Spec
-there before new QSTs are created or reordered.
+This backlog follows
+[`QUESTRA_MASTER_SPEC_V2.md`](../QUESTRA_MASTER_SPEC_V2.md) as Questra's
+highest-level product constitution. The Project Planner and legacy Master Spec
+under `C:\Users\shint\OneDrive\ドキュメント\Questra` remain subordinate planning
+references where they do not conflict with v2.
 
 | QST ID | Status | Title | Scope | Acceptance |
 | --- | --- | --- | --- | --- |
@@ -67,16 +69,46 @@ there before new QSTs are created or reordered.
 | QST-078 | Done | Trail Highlight System | Let Arc identify meaningful Trails and mark them as Star Memory candidates. | Trail highlights are deterministic and include visible reasons. |
 | QST-079 | Done | Guild Quest Matching | Improve Guild usefulness by connecting users with similar Quest tags and nearby goals. | Matching ranks related Quests by tags without exposing private content. |
 | QST-080 | Done | Guild Safe Posting Review | Add a lightweight Arc review before Guild posting to reduce personal information and unsafe sharing. | Review flags obvious personal information and allows revision. |
-| QST-081 | Ready | Star Map Recommendation Foundation | Build a foundation for recommending the next Quest using Quest, Mission, Trail, and Tag context. | Service returns ranked Quest recommendation candidates with reasons. |
-| QST-082 | Planned | Horizon Next Challenge MVP | Let Arc suggest the next challenge based on user achievement and readiness. | Arc can suggest one next challenge without paid gating. |
-| QST-083 | Planned | Arc 3D Readiness Architecture | Prepare Arc expression architecture for future PNG, Rive, and GLB/3D implementations. | Arc expression decisions return a renderer-agnostic asset descriptor. |
-| QST-084 | Planned | Arc Animation Event Layer | Add a renderer-neutral animation event interface for Arc reactions. | Animation events are centralized and testable. |
-| QST-085 | Planned | Dream Board V1 | Let users collect visual inspiration for each Quest without disrupting the core loop. | Quest Detail can show a Dream Board section with existing media constraints. |
-| QST-086 | Planned | Quest Template Library | Help users start faster with Quest templates for common life areas. | Quest creation can start from editable templates. |
-| QST-087 | Planned | Premium Readiness Flags | Prepare future Premium feature switches without enforcing payments or harming MVP UX. | MVP/Beta core features remain enabled and no paywall is introduced. |
-| QST-088 | Planned | Onboarding Personalization | Personalize first-run experience with Arc name preference, Quest tendencies, and Signal frequency. | Preferences persist and Arc copy reflects them. |
-| QST-089 | Planned | Beta Analytics Events | Define and implement privacy-conscious event tracking boundaries for beta learning. | Analytics event names and payload rules are documented with safe defaults. |
-| QST-090 | Planned | Feature Expansion Review | Review QST-073 through QST-089 for coherence, UX quality, MVP stability, and launch direction. | MVP/Beta stability is preserved and QST-091 through QST-100 candidates are proposed. |
+| QST-081 | Done | Star Map Recommendation Foundation | Build a foundation for recommending the next Quest using Quest, Mission, Trail, and Tag context. | Service returns ranked Quest recommendation candidates with reasons. |
+| QST-082 | Done | Horizon Next Challenge MVP | Let Arc suggest the next challenge based on user achievement and readiness. | Arc can suggest one next challenge without paid gating. |
+| QST-083 | Done | Arc 3D Readiness Architecture | Prepare Arc expression architecture for future PNG, Rive, and GLB/3D implementations. | Arc expression decisions return a renderer-agnostic asset descriptor. |
+| QST-084 | Done | Arc Animation Event Layer | Add a renderer-neutral animation event interface for Arc reactions. | Animation events are centralized and testable. |
+| QST-085 | Done | Dream Board V1 | Let users collect visual inspiration for each Quest without disrupting the core loop. | Quest Detail can show a Dream Board section with existing media constraints. |
+| QST-086 | Done | Quest Template Library | Help users start faster with Quest templates for common life areas. | Quest creation can start from editable templates. |
+| QST-087 | Done | Premium Readiness Flags | Prepare future Premium feature switches without enforcing payments or harming MVP UX. | MVP/Beta core features remain enabled and no paywall is introduced. |
+| QST-088 | Done | Onboarding Personalization | Personalize first-run experience with Arc name preference, Quest tendencies, and Signal frequency. | Preferences persist and Arc copy reflects them. |
+| QST-089 | Done | Beta Analytics Events | Define and implement privacy-conscious event tracking boundaries for beta learning. | Analytics event names and payload rules are documented with safe defaults. |
+| QST-090 | Done | Feature Expansion Review | Review QST-073 through QST-089 for coherence, UX quality, MVP stability, and launch direction. | MVP/Beta stability is preserved and QST-101 through QST-130 roadmap is connected. |
+| QST-101 | Done | Responsive Design Audit | Audit all major Questra screens for responsive layout issues. | Home, Quest, Mission, Trail, Guild, Arc Chat, Profile, and onboarding have documented layout risks. |
+| QST-102 | Done | Responsive Layout System | Introduce shared responsive layout helpers. | Core screens use common breakpoint rules. |
+| QST-103 | Done | Safe Area and Overflow Fix | Fix overflow, keyboard overlap, and unsafe edge spacing. | No known RenderFlex overflow remains on major MVP screens. |
+| QST-104 | Done | Global Scroll Behavior | Standardize scroll physics, scroll containers, and refresh rules. | Major list screens scroll consistently. |
+| QST-105 | Done | Visible Scrollbar System | Add visible scrollbars where content length is not obvious. | Long Quest, Trail, Guild, and Arc Chat surfaces clearly show scrollability. |
+| QST-106 | Done | Menu Widget Refactor | Create shared Questra menu/list action components. | Repeated menu/action/navigation widgets are reusable. |
+| QST-107 | Done | Bottom Navigation V2 | Improve primary navigation for Home, Quest, Trail, Guild, and Arc. | Main sections are reachable from persistent navigation. |
+| QST-108 | Done | Adaptive Navigation Rail | Add tablet/expanded layout navigation behavior. | Wider screens can use navigation rail without breakage. |
+| QST-109 | Done | Quick Action Menu | Add Questra-style quick creation/action entry point. | Core creation actions are reachable quickly. |
+| QST-110 | Done | Home Information Hierarchy Polish | Improve Home layout priority and spacing. | Home content is visually ordered and not cramped. |
+| QST-111 | Done | Quest Dashboard UX Polish | Improve Quest detail/dashboard navigation. | Mission, Trail, Arc Guide, progress, and next action are easy to find. |
+| QST-112 | Done | Trail Timeline UX Polish | Improve DB-backed Trail browsing. | Trails are easier to scan chronologically and visually. |
+| QST-113 | Done | Guild Feed UX Polish | Improve Guild feed readability and action clarity. | Draft question, safe review, and feed reading feel coherent. |
+| QST-114 | Done | Arc Floating Companion Entry | Add optional Arc shortcut across key screens. | Users can reach Arc from major screens without crowding UI. |
+| QST-115 | Done | Accessibility Pass | Improve text scaling, touch targets, labels, and contrast. | Major screens remain usable with larger text and accessible targets. |
+| QST-116 | Done | Design System V2 Application | Apply updated spacing, radius, typography, and component rules. | UI feels consistent across major surfaces. |
+| QST-117 | Done | Interaction Animation Pass | Polish transitions, feedback, card interactions, and Arc reactions. | Motion improves clarity without decorative excess. |
+| QST-118 | Done | Responsive QA Automation | Add repeatable viewport validation. | Compact, medium, and expanded viewport checks are repeatable. |
+| QST-119 | Done | Cross Device UX Validation | Create beta device validation checklist. | Android phone, small phone, large phone, and tablet checks are documented. |
+| QST-120 | Ready | UX Foundation Review | Review QST-101 through QST-119. | Responsive, scrolling, navigation, menu, and accessibility risks are summarized. |
+| QST-121 | Planned | Beta Account Setup Flow | Prepare beta tester account setup and first-run verification. | Beta users can sign in, create first Quest, and confirm persistence. |
+| QST-122 | Planned | Beta First Quest Experience | Polish first Quest creation and Arc guidance. | New beta users understand what to do within the first few minutes. |
+| QST-123 | Planned | Beta Empty State Verification | Verify empty DB state across beta accounts. | No mock content appears as user-owned data. |
+| QST-124 | Planned | Beta Feedback Entry Point | Add or document feedback route. | Beta testers can report screen, severity, and reproduction steps. |
+| QST-125 | Planned | Beta Issue Labeling Rules | Create beta issue labels and QST conversion rules. | Feedback converts into bug, UX, data, AI, Guild, Arc, or performance QSTs. |
+| QST-126 | Planned | Beta Crash and Error Capture Plan | Plan crash/error evidence collection. | Errors, failed Supabase calls, and AI fallback events have capture strategy. |
+| QST-127 | Planned | Beta Privacy and Legal Copy Check | Review beta privacy, terms, and AI/data explanations. | Beta users receive clear data and AI usage copy. |
+| QST-128 | Planned | Beta Release Notes Draft | Create beta release notes and known limitations. | Beta testers know what is ready, experimental, and how to give feedback. |
+| QST-129 | Planned | Beta Go/No-Go Checklist | Create final beta launch checklist. | Launch blockers, evidence, device checks, and rollback conditions are explicit. |
+| QST-130 | Planned | Beta Launch Readiness Review | Produce final beta readiness report. | Questra has beta readiness score, open blockers, and QST-131+ recommendations. |
 
 ## Selection Rules
 

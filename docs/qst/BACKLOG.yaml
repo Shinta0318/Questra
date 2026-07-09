@@ -546,7 +546,7 @@ items:
       report: reports/qst/QST-080.md
   - id: QST-081
     title: Star Map Recommendation Foundation
-    status: Ready
+    status: Done
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-066, QST-075, QST-078]
@@ -555,9 +555,11 @@ items:
     acceptance:
       - Service returns ranked Quest recommendation candidates.
       - Each recommendation has reason text.
+    completed_by:
+      report: reports/qst/QST-081.md
   - id: QST-082
     title: Horizon Next Challenge MVP
-    status: Planned
+    status: Done
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-081, QST-058]
@@ -566,9 +568,11 @@ items:
     acceptance:
       - Arc can suggest one next challenge with reason.
       - No paid gating is introduced.
+    completed_by:
+      report: reports/qst/QST-082.md
   - id: QST-083
     title: Arc 3D Readiness Architecture
-    status: Planned
+    status: Done
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-047, QST-073]
@@ -577,9 +581,11 @@ items:
     acceptance:
       - Arc expression decisions return a renderer-agnostic asset descriptor.
       - Existing ArcWidget still renders current PNG assets.
+    completed_by:
+      report: reports/qst/QST-083.md
   - id: QST-084
     title: Arc Animation Event Layer
-    status: Planned
+    status: Done
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-083]
@@ -588,9 +594,11 @@ items:
     acceptance:
       - Animation events are centralized and testable.
       - No new heavy animation engine is required.
+    completed_by:
+      report: reports/qst/QST-084.md
   - id: QST-085
     title: Dream Board V1
-    status: Planned
+    status: Done
     priority: P2
     epic: FEATURE-EXPANSION
     depends_on: [QST-075, QST-032]
@@ -599,9 +607,11 @@ items:
     acceptance:
       - Quest Detail can show a Dream Board section.
       - Media handling follows existing Trail media constraints.
+    completed_by:
+      report: reports/qst/QST-085.md
   - id: QST-086
     title: Quest Template Library
-    status: Planned
+    status: Done
     priority: P1
     epic: FEATURE-EXPANSION
     depends_on: [QST-065, QST-075]
@@ -610,9 +620,11 @@ items:
     acceptance:
       - Quest creation can start from a template.
       - User can edit template output before saving.
+    completed_by:
+      report: reports/qst/QST-086.md
   - id: QST-087
     title: Premium Readiness Flags
-    status: Planned
+    status: Done
     priority: P2
     epic: FEATURE-EXPANSION
     depends_on: [QST-070]
@@ -621,9 +633,11 @@ items:
     acceptance:
       - All MVP/Beta core features remain enabled by default.
       - No payment UI or hard paywall is introduced.
+    completed_by:
+      report: reports/qst/QST-087.md
   - id: QST-088
     title: Onboarding Personalization
-    status: Planned
+    status: Done
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-028, QST-060, QST-076]
@@ -632,9 +646,11 @@ items:
     acceptance:
       - Preferences persist to profile or local fallback.
       - Arc copy reflects the chosen name/preference.
+    completed_by:
+      report: reports/qst/QST-088.md
   - id: QST-089
     title: Beta Analytics Events
-    status: Planned
+    status: Done
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-069, QST-071]
@@ -643,9 +659,11 @@ items:
     acceptance:
       - Analytics event names and payload rules are documented.
       - Default implementation is no-op or local-safe.
+    completed_by:
+      report: reports/qst/QST-089.md
   - id: QST-090
     title: Feature Expansion Review
-    status: Planned
+    status: Done
     priority: P0
     epic: FEATURE-EXPANSION
     depends_on: [QST-073, QST-074, QST-075, QST-076, QST-077, QST-078, QST-079, QST-080, QST-081, QST-082, QST-083, QST-084, QST-085, QST-086, QST-087, QST-088, QST-089]
@@ -653,8 +671,393 @@ items:
     scope: Review QST-073 through QST-089 for coherence, UX quality, MVP stability, and launch direction.
     acceptance:
       - MVP/Beta stability is preserved.
-      - QST-091 through QST-100 candidates are proposed.
-deferred_existing_items:
+      - QST-101 through QST-130 roadmap is connected.
+    completed_by:
+      report: reports/qst/QST-090.md
+  - id: QST-101
+    title: Responsive Design Audit
+    status: Done
+    priority: P0
+    epic: UX-FOUNDATION
+    depends_on: [QST-090]
+    scope: Audit all major Questra screens for responsive layout issues.
+    acceptance:
+      - Home, Quest, Mission, Trail, Guild, Arc Chat, Profile, and onboarding have documented compact, medium, and expanded layout risks.
+    completed_by:
+      report: reports/qst/QST-101.md
+  - id: QST-102
+    title: Responsive Layout System
+    status: Done
+    priority: P0
+    epic: UX-FOUNDATION
+    depends_on: [QST-101]
+    scope: Introduce shared responsive layout helpers for compact, medium, and expanded screens.
+    acceptance:
+      - Core screens use common breakpoint rules instead of ad hoc layout values.
+    completed_by:
+      report: reports/qst/QST-102.md
+  - id: QST-103
+    title: Safe Area and Overflow Fix
+    status: Done
+    priority: P0
+    epic: UX-FOUNDATION
+    depends_on: [QST-101, QST-102]
+    scope: Fix visible overflow, keyboard overlap, and unsafe edge spacing.
+    acceptance:
+      - No known RenderFlex overflow remains on major MVP screens.
+    completed_by:
+      report: reports/qst/QST-103.md
+  - id: QST-104
+    title: Global Scroll Behavior
+    status: Done
+    priority: P1
+    epic: UX-FOUNDATION
+    depends_on: [QST-102]
+    scope: Standardize scroll physics, scroll containers, and pull-to-refresh rules.
+    acceptance:
+      - Major list screens scroll consistently and refresh safely.
+    completed_by:
+      report: reports/qst/QST-104.md
+  - id: QST-105
+    title: Visible Scrollbar System
+    status: Done
+    priority: P1
+    epic: UX-FOUNDATION
+    depends_on: [QST-104]
+    scope: Add visible scrollbars where content length is not obvious.
+    acceptance:
+      - Quest List, Trail Timeline/List, Guild Feed, and Arc Chat history clearly show scrollable content.
+    completed_by:
+      report: reports/qst/QST-105.md
+  - id: QST-106
+    title: Menu Widget Refactor
+    status: Done
+    priority: P2
+    epic: UX-FOUNDATION
+    depends_on: [QST-102]
+    scope: Create shared Questra menu/list action components.
+    acceptance:
+      - Repeated menu tiles, action cards, and navigation buttons are replaced with reusable widgets.
+    completed_by:
+      report: reports/qst/QST-106.md
+  - id: QST-107
+    title: Bottom Navigation V2
+    status: Done
+    priority: P0
+    epic: UX-FOUNDATION
+    depends_on: [QST-101]
+    scope: Improve primary navigation for Home, Quest, Trail, Guild, and Arc.
+    acceptance:
+      - Main sections are reachable from persistent navigation without confusing duplicate routes.
+    completed_by:
+      report: reports/qst/QST-107.md
+  - id: QST-108
+    title: Adaptive Navigation Rail
+    status: Done
+    priority: P1
+    epic: UX-FOUNDATION
+    depends_on: [QST-102, QST-107]
+    scope: Add tablet and expanded layout navigation behavior.
+    acceptance:
+      - Wider screens can switch from bottom navigation to navigation rail without layout breakage.
+    completed_by:
+      report: reports/qst/QST-108.md
+  - id: QST-109
+    title: Quick Action Menu
+    status: Done
+    priority: P1
+    epic: UX-FOUNDATION
+    depends_on: [QST-107]
+    scope: Add a Questra-style quick action entry point for creating Quest, Trail, opening Arc, and Guild posting.
+    acceptance:
+      - Core creation actions are reachable quickly without crowding Home.
+    completed_by:
+      report: reports/qst/QST-109.md
+  - id: QST-110
+    title: Home Information Hierarchy Polish
+    status: Done
+    priority: P0
+    epic: UX-FOUNDATION
+    depends_on: [QST-101, QST-102]
+    scope: Improve Home layout priority and spacing.
+    acceptance:
+      - Arc greeting, Today's Mission, active Quest, recent Trail, and Guild activity are visually ordered and not cramped.
+    completed_by:
+      report: reports/qst/QST-110.md
+  - id: QST-111
+    title: Quest Dashboard UX Polish
+    status: Done
+    priority: P1
+    epic: UX-FOUNDATION
+    depends_on: [QST-101]
+    scope: Improve Quest detail and dashboard navigation.
+    acceptance:
+      - Mission, Trail, Arc Guide, progress, and next action are easy to find.
+    completed_by:
+      report: reports/qst/QST-111.md
+  - id: QST-112
+    title: Trail Timeline UX Polish
+    status: Done
+    priority: P1
+    epic: UX-FOUNDATION
+    depends_on: [QST-101]
+    scope: Improve real DB-backed Trail browsing.
+    acceptance:
+      - Trails are easier to scan chronologically and visually.
+    completed_by:
+      report: reports/qst/QST-112.md
+  - id: QST-113
+    title: Guild Feed UX Polish
+    status: Done
+    priority: P1
+    epic: UX-FOUNDATION
+    depends_on: [QST-101]
+    scope: Improve Guild feed readability and action clarity.
+    acceptance:
+      - Draft question, safe reflection review, and feed reading feel coherent.
+    completed_by:
+      report: reports/qst/QST-113.md
+  - id: QST-114
+    title: Arc Floating Companion Entry
+    status: Done
+    priority: P1
+    epic: UX-FOUNDATION
+    depends_on: [QST-107]
+    scope: Add optional Arc shortcut or presence pattern across key screens.
+    acceptance:
+      - Users can reach Arc from major screens without making the UI feel crowded.
+    completed_by:
+      report: reports/qst/QST-114.md
+  - id: QST-115
+    title: Accessibility Pass
+    status: Done
+    priority: P0
+    epic: UX-FOUNDATION
+    depends_on: [QST-101, QST-103]
+    scope: Improve text scaling, touch targets, labels, and contrast.
+    acceptance:
+      - Major MVP screens remain usable with larger text and accessible tap targets.
+    completed_by:
+      report: reports/qst/QST-115.md
+  - id: QST-116
+    title: Design System V2 Application
+    status: Done
+    priority: P1
+    epic: UX-FOUNDATION
+    depends_on: [QST-102, QST-115]
+    scope: Apply updated spacing, radius, typography, and component rules.
+    acceptance:
+      - UI feels consistent across Home, Quest, Trail, Guild, Arc, and Profile.
+    completed_by:
+      report: reports/qst/QST-116.md
+  - id: QST-117
+    title: Interaction Animation Pass
+    status: Done
+    priority: P2
+    epic: UX-FOUNDATION
+    depends_on: [QST-116]
+    scope: Polish page transitions, button feedback, card interactions, and Arc reactions.
+    acceptance:
+      - Motion improves clarity without decorative excess.
+    completed_by:
+      report: reports/qst/QST-117.md
+  - id: QST-118
+    title: Responsive QA Automation
+    status: Done
+    priority: P1
+    epic: UX-FOUNDATION
+    depends_on: [QST-101, QST-102]
+    scope: Add screenshot, golden, or manual viewport validation for important screens.
+    acceptance:
+      - Compact, medium, and expanded viewport checks are repeatable.
+    completed_by:
+      report: reports/qst/QST-118.md
+  - id: QST-119
+    title: Cross Device UX Validation
+    status: Done
+    priority: P1
+    epic: UX-FOUNDATION
+    depends_on: [QST-118]
+    scope: Create beta device validation checklist.
+    acceptance:
+      - Android phone, small phone, large phone, and tablet validation steps are documented.
+    completed_by:
+      report: reports/qst/QST-119.md
+  - id: QST-120
+    title: UX Foundation Review
+    status: Ready
+    priority: P0
+    epic: UX-FOUNDATION
+    depends_on: [QST-101, QST-102, QST-103, QST-104, QST-105, QST-106, QST-107, QST-108, QST-109, QST-110, QST-111, QST-112, QST-113, QST-114, QST-115, QST-116, QST-117, QST-118, QST-119]
+    scope: Review QST-101 through QST-119.
+    acceptance:
+      - Responsive, scrolling, navigation, menu widgets, and accessibility risks are summarized with remaining blockers.
+  - id: QST-121
+    title: Beta Account Setup Flow
+    status: Planned
+    priority: P0
+    epic: BETA-LAUNCH
+    depends_on: [QST-120]
+    scope: Prepare beta tester account setup and first-run verification.
+    acceptance:
+      - Beta users can sign in, create first Quest, and confirm persistence without developer help.
+  - id: QST-122
+    title: Beta First Quest Experience
+    status: Planned
+    priority: P0
+    epic: BETA-LAUNCH
+    depends_on: [QST-121]
+    scope: Polish the first Quest creation and Arc guidance flow.
+    acceptance:
+      - A new beta user can understand what to do within the first few minutes.
+  - id: QST-123
+    title: Beta Empty State Verification
+    status: Planned
+    priority: P0
+    epic: BETA-LAUNCH
+    depends_on: [QST-121]
+    scope: Verify empty DB state across beta accounts.
+    acceptance:
+      - No mock Quest, Mission, Trail, or Guild content appears as if it belongs to the user.
+  - id: QST-124
+    title: Beta Feedback Entry Point
+    status: Planned
+    priority: P1
+    epic: BETA-LAUNCH
+    depends_on: [QST-121]
+    scope: Add or document an in-app/manual feedback route.
+    acceptance:
+      - Beta testers have a clear way to report issues with screen, severity, and reproduction steps.
+  - id: QST-125
+    title: Beta Issue Labeling Rules
+    status: Planned
+    priority: P1
+    epic: BETA-LAUNCH
+    depends_on: [QST-124]
+    scope: Create beta issue labels and QST conversion rules.
+    acceptance:
+      - Feedback can be converted into bug, UX, data, AI, Guild, Arc, or performance QSTs.
+  - id: QST-126
+    title: Beta Crash and Error Capture Plan
+    status: Planned
+    priority: P1
+    epic: BETA-LAUNCH
+    depends_on: [QST-124]
+    scope: Plan crash and error evidence collection for beta.
+    acceptance:
+      - Errors, failed Supabase calls, and AI fallback events have a capture strategy.
+  - id: QST-127
+    title: Beta Privacy and Legal Copy Check
+    status: Planned
+    priority: P0
+    epic: BETA-LAUNCH
+    depends_on: [QST-121]
+    scope: Review beta-facing privacy, terms, and AI/data explanations.
+    acceptance:
+      - Beta users receive clear, non-misleading data and AI usage copy.
+  - id: QST-128
+    title: Beta Release Notes Draft
+    status: Planned
+    priority: P1
+    epic: BETA-LAUNCH
+    depends_on: [QST-121, QST-127]
+    scope: Create beta release notes and known limitations.
+    acceptance:
+      - Beta testers know what is ready, what is experimental, and how to give feedback.
+  - id: QST-129
+    title: Beta Go/No-Go Checklist
+    status: Planned
+    priority: P0
+    epic: BETA-LAUNCH
+    depends_on: [QST-121, QST-122, QST-123, QST-124, QST-125, QST-126, QST-127, QST-128]
+    scope: Create final beta launch checklist.
+    acceptance:
+      - Launch blockers, required evidence, device checks, and rollback conditions are explicit.
+  - id: QST-130
+    title: Beta Launch Readiness Review
+    status: Planned
+    priority: P0
+    epic: BETA-LAUNCH
+    depends_on: [QST-129]
+    scope: Produce the final beta readiness report.
+    acceptance:
+      - Questra has a clear beta readiness score, open blockers, and QST-131+ recommendations.
+  - id: QST-091
+    requested_id: QST-041
+    title: Arc Relationship Memory Coverage
+    status: Done
+    priority: P1
+    epic: ARC-MEMORY
+    depends_on: [QST-029, QST-064]
+    completed_by:
+      report: reports/qst/QST-091.md
+    scope: Confirm Arc Relationship Memory support and add explicit test coverage for Arc Chat relationship memory extraction.
+    acceptance:
+      - Arc Relationship Memory exists as an ArcMemoryType.
+      - Arc Chat can classify meaningful relationship context as Arc Relationship Memory.
+      - Memory importance remains above baseline for relationship memories.
+      - Flutter analyze and targeted tests pass.
+  - id: QST-092
+    requested_id: QST-042
+    title: Emotional Memory Coverage
+    status: Done
+    priority: P1
+    epic: ARC-MEMORY
+    depends_on: [QST-029, QST-064, QST-091]
+    completed_by:
+      report: reports/qst/QST-092.md
+    scope: Confirm Emotional Memory support and add explicit test coverage for worried emotional memory extraction.
+    acceptance:
+      - Emotional Memory exists as an ArcMemoryType.
+      - Arc Chat can classify emotional context as Emotional Memory.
+      - Worried tone is preserved for anxious journey context.
+      - Flutter analyze and targeted tests pass.
+  - id: QST-093
+    requested_id: QST-044
+    title: Life Event Memory Coverage
+    status: Done
+    priority: P1
+    epic: ARC-MEMORY
+    depends_on: [QST-029, QST-064, QST-091, QST-092]
+    completed_by:
+      report: reports/qst/QST-093.md
+    scope: Confirm Life Event Memory support and add explicit test coverage for major life context extraction.
+    acceptance:
+      - Life Event Memory exists as an ArcMemoryType.
+      - Arc Chat can classify major life context as Life Event Memory.
+      - Standard life event memory remains user-visible.
+      - Flutter analyze and targeted tests pass.
+  - id: QST-094
+    requested_id: QST-045
+    title: Limited Arc Chat and Memory Context
+    status: Done
+    priority: P1
+    epic: ARC-MEMORY
+    depends_on: [QST-029, QST-064, QST-091, QST-092, QST-093]
+    completed_by:
+      report: reports/qst/QST-094.md
+    scope: Add explicit payload bounds for Arc Chat conversation context and Arc Memory context sent to Supabase.
+    acceptance:
+      - Arc Chat request history is capped by a named performance limit.
+      - Quest, Mission, Trail, and Arc Memory context counts are capped by named performance limits.
+      - Long contextual text is trimmed before leaving the client boundary.
+      - Targeted Arc Chat tests and Flutter analyze pass.
+  - id: QST-095
+    source_qst: DEV-QST/QST-046
+    title: Mature Arc Memory Retrieval
+    status: Done
+    priority: P1
+    epic: ARC-MEMORY
+    depends_on: [QST-029, QST-064, QST-094]
+    completed_by:
+      report: reports/qst/QST-095.md
+    scope: Rank bounded Arc Memory context by message relevance, active Quest relationship, importance, and recency before Arc Chat invocation.
+    acceptance:
+      - Arc Memory retrieval considers message text, active Quest IDs, importance, and recency.
+      - Sensitive memories are excluded from Arc Chat context by default.
+      - Retrieval honors the named Arc Chat memory context limit.
+      - Targeted retrieval tests and Flutter analyze pass.
+ deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass
     reason: Superseded by QST-067 after Arc Experience Epic completion.

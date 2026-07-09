@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/supabase_config.dart';
+import 'core/layout/questra_scroll_behavior.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/questra_theme.dart';
 
@@ -30,6 +31,7 @@ class QuestraApp extends ConsumerWidget {
       title: 'Questra',
       debugShowCheckedModeBanner: false,
       theme: QuestraTheme.light,
+      scrollBehavior: const QuestraScrollBehavior(),
       routerConfig: router,
     );
   }

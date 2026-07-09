@@ -80,6 +80,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                 ],
               ),
+              GoRoute(
+                path: AppRoutes.mission,
+                builder: (context, state) => const MissionScreen(),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -115,10 +119,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
-      ),
-      GoRoute(
-        path: AppRoutes.mission,
-        builder: (context, state) => const MissionScreen(),
       ),
     ],
   );

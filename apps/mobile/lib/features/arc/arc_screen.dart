@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/analytics/analytics_service.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
@@ -11,6 +14,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
@@ -69,7 +73,8 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
             children: [
               const _ArcHeader(),
               Expanded(
-                child: ListView(
+                child: QuestraResponsiveListView(
+                  showScrollbar: true,
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.xl,
                     AppSpacing.md,
@@ -155,6 +160,15 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       _messages.add(userMessage);
       _isThinking = true;
     });
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .arcChatSent(
+            userId: ref.read(authControllerProvider).profile?.id,
+            hasQuest: quests.any((quest) => quest.status == QuestStatus.active),
+            hasTrail: trails.isNotEmpty,
+          ),
+    );
 
     final context = ArcChatContext(
       activeQuests: quests
@@ -162,7 +176,16 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
           .toList(growable: false),
       recentMissions: missions.take(5).toList(growable: false),
       recentTrails: trails.take(5).toList(growable: false),
-      memories: memories.take(5).toList(growable: false),
+      memories: ref
+          .read(arcMemoryRetrievalServiceProvider)
+          .retrieve(
+            memories: memories,
+            query: text,
+            questIds: quests
+                .where((quest) => quest.status == QuestStatus.active)
+                .map((quest) => quest.id)
+                .toSet(),
+          ),
     );
 
     try {

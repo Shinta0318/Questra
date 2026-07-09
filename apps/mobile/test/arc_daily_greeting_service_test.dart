@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:questra/features/auth/auth_state.dart';
 import 'package:questra/features/arc/arc_daily_greeting_service.dart';
 import 'package:questra/features/mission/mission_model.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
@@ -18,9 +19,26 @@ void main() {
       now: now,
     );
 
-    expect(greeting.contextLabel, '最初の航路');
+    expect(greeting.contextLabel, '冒険の最初の航路');
     expect(greeting.message, contains('最初のQuest'));
     expect(greeting.emotion, ArcEmotion.excited);
+  });
+
+  test('uses Arc name and Quest interest in first greeting', () {
+    final greeting = service.resolve(
+      quests: const [],
+      missions: const [],
+      trails: const [],
+      now: now,
+      nickname: 'Shinta',
+      arcName: 'アーク',
+      questInterest: QuestInterest.learning,
+    );
+
+    expect(greeting.contextLabel, '学習の最初の航路');
+    expect(greeting.message, contains('Shinta'));
+    expect(greeting.message, contains('アーク'));
+    expect(greeting.message, contains('学習'));
   });
 
   test('prioritizes a recent Trail over active work', () {

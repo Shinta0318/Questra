@@ -6,12 +6,15 @@ import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_presence.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/menu/questra_action_menu.dart';
 import '../../widgets/motion/questra_motion.dart';
 import '../../widgets/persistence_sync_banner.dart';
 import '../../widgets/questra_card.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_expression_engine.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../auth/auth_controller.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../signal/mission_signal_model.dart';
@@ -26,6 +29,7 @@ class MissionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final missions = ref.watch(missionControllerProvider);
     final quests = ref.watch(questControllerProvider);
+    final profile = ref.watch(authControllerProvider).profile;
     final syncState = ref.watch(missionSyncControllerProvider);
     final signals = ref
         .watch(missionSignalServiceProvider)
@@ -40,7 +44,14 @@ class MissionScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Mission')),
       body: SafeArea(
-        child: ListView(
+        child: QuestraResponsiveListView(
+          onRefresh: profile == null
+              ? null
+              : () => ref
+                    .read(missionControllerProvider.notifier)
+                    .loadForQuests(
+                      quests.map((quest) => quest.id).toList(growable: false),
+                    ),
           padding: const EdgeInsets.all(20),
           children: [
             PersistenceSyncBanner(
@@ -93,7 +104,7 @@ class MissionScreen extends ConsumerWidget {
                         Text('Quest: ${mission.questTitle}'),
                         Text('Guide: ${mission.guideType.label}'),
                         const SizedBox(height: 12),
-                        OutlinedButton.icon(
+                        QuestraActionButton(
                           onPressed: mission.status == MissionStatus.completed
                               ? null
                               : () => _completeMission(context, ref, mission),

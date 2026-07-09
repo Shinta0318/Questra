@@ -9,6 +9,8 @@ import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_presence.dart';
+import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/menu/questra_action_menu.dart';
 import '../../widgets/questra_card.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_expression_engine.dart';
@@ -52,7 +54,11 @@ class TrailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Trail')),
       body: SafeArea(
-        child: ListView(
+        child: QuestraResponsiveListView(
+          showScrollbar: true,
+          onRefresh: profile == null
+              ? null
+              : () => controller.loadForUser(profile.id),
           padding: const EdgeInsets.all(20),
           children: [
             ArcPresence(
@@ -77,6 +83,7 @@ class TrailScreen extends ConsumerWidget {
             TrailTimelineWidget(
               trails: trails,
               attachments: trailMedia,
+              onCreateTrail: () => _showCreateTrailSheet(context, controller),
               highlights: {
                 for (final highlight in trailHighlights)
                   highlight.trailId: highlight,
@@ -562,7 +569,11 @@ class _TrailCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -581,53 +592,64 @@ class _TrailCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const Spacer(),
-              Text(DateFormat.MMMd('ja').format(trail.createdAt)),
-              PopupMenuButton<_TrailAction>(
-                tooltip: 'Trail actions',
-                onSelected: (action) {
-                  switch (action) {
-                    case _TrailAction.edit:
-                      onEdit();
-                    case _TrailAction.reflect:
-                      onReflect();
-                    case _TrailAction.attachImage:
-                      onAttachImage();
-                    case _TrailAction.replaceImage:
-                      onReplaceImage?.call();
-                    case _TrailAction.removeImage:
-                      onRemoveImage?.call();
-                    case _TrailAction.delete:
-                      onDelete();
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: _TrailAction.edit,
-                    child: Text('Edit'),
-                  ),
-                  const PopupMenuItem(
-                    value: _TrailAction.reflect,
-                    child: Text('Reflect'),
-                  ),
-                  if (attachment == null)
-                    const PopupMenuItem(
-                      value: _TrailAction.attachImage,
-                      child: Text('Attach image'),
-                    )
-                  else ...const [
-                    PopupMenuItem(
-                      value: _TrailAction.replaceImage,
-                      child: Text('Replace image'),
-                    ),
-                    PopupMenuItem(
-                      value: _TrailAction.removeImage,
-                      child: Text('Remove image'),
-                    ),
-                  ],
-                  const PopupMenuItem(
-                    value: _TrailAction.delete,
-                    child: Text('Delete'),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(DateFormat.MMMd('ja').format(trail.createdAt)),
+                  QuestraPopupMenu<_TrailAction>(
+                    tooltip: 'Trailメニュー',
+                    onSelected: (action) {
+                      switch (action) {
+                        case _TrailAction.edit:
+                          onEdit();
+                        case _TrailAction.reflect:
+                          onReflect();
+                        case _TrailAction.attachImage:
+                          onAttachImage();
+                        case _TrailAction.replaceImage:
+                          onReplaceImage?.call();
+                        case _TrailAction.removeImage:
+                          onRemoveImage?.call();
+                        case _TrailAction.delete:
+                          onDelete();
+                      }
+                    },
+                    items: [
+                      const QuestraMenuItem(
+                        value: _TrailAction.edit,
+                        label: '編集',
+                        icon: Icons.edit_outlined,
+                      ),
+                      const QuestraMenuItem(
+                        value: _TrailAction.reflect,
+                        label: '振り返る',
+                        icon: Icons.auto_awesome_outlined,
+                      ),
+                      if (attachment == null)
+                        const QuestraMenuItem(
+                          value: _TrailAction.attachImage,
+                          label: '画像を追加',
+                          icon: Icons.add_photo_alternate_outlined,
+                        )
+                      else ...const [
+                        QuestraMenuItem(
+                          value: _TrailAction.replaceImage,
+                          label: '画像を置換',
+                          icon: Icons.find_replace_outlined,
+                        ),
+                        QuestraMenuItem(
+                          value: _TrailAction.removeImage,
+                          label: '画像を削除',
+                          icon: Icons.hide_image_outlined,
+                        ),
+                      ],
+                      const QuestraMenuItem(
+                        value: _TrailAction.delete,
+                        label: 'Trailを削除',
+                        icon: Icons.delete_outline,
+                        destructive: true,
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/analytics/analytics_service.dart';
 import '../../core/persistence/persistence_sync_state.dart';
 import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_bond_growth_service.dart';
@@ -129,6 +130,15 @@ class MissionController extends Notifier<List<Mission>> {
     _recordMissionEmotion(
       updatedMission,
       trigger: ArcActionTrigger.missionCompleted,
+    );
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .missionCompleted(
+            userId: ref.read(authControllerProvider).profile?.id,
+            difficulty: updatedMission.difficulty.name,
+            hasQuest: updatedMission.questId.isNotEmpty,
+          ),
     );
 
     unawaited(

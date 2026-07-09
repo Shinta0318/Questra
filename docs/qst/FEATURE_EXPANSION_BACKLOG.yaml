@@ -203,7 +203,7 @@ items:
   - id: QST-081
     title: Star Map Recommendation Foundation
     priority: P0
-    status: Ready
+    status: Done
     dependencies: [QST-066, QST-075, QST-078]
     goal: Build a foundation for recommending the next Quest using Quest, Mission, Trail, and Tag context.
     scope:
@@ -220,10 +220,12 @@ items:
       - apps/mobile/lib/features/tagging/
       - apps/mobile/lib/features/quest/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-081.md
   - id: QST-082
     title: Horizon Next Challenge MVP
     priority: P1
-    status: Planned
+    status: Done
     dependencies: [QST-081, QST-058]
     goal: Let Arc suggest the next challenge based on user achievement and readiness.
     scope:
@@ -240,10 +242,12 @@ items:
       - apps/mobile/lib/features/home/home_screen.dart
       - apps/mobile/lib/features/star_map/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-082.md
   - id: QST-083
     title: Arc 3D Readiness Architecture
     priority: P1
-    status: Planned
+    status: Done
     dependencies: [QST-047, QST-073]
     goal: Prepare Arc expression architecture for future PNG, Rive, and GLB/3D implementations.
     scope:
@@ -259,10 +263,12 @@ items:
       - apps/mobile/lib/widgets/arc/
       - apps/mobile/lib/features/arc/arc_expression_engine.dart
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-083.md
   - id: QST-084
     title: Arc Animation Event Layer
     priority: P1
-    status: Planned
+    status: Done
     dependencies: [QST-083]
     goal: Add a renderer-neutral animation event interface for Arc reactions.
     scope:
@@ -279,10 +285,12 @@ items:
       - apps/mobile/lib/widgets/arc/arc_widget.dart
       - apps/mobile/lib/features/arc/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-084.md
   - id: QST-085
     title: Dream Board V1
     priority: P2
-    status: Planned
+    status: Done
     dependencies: [QST-075, QST-032]
     goal: Let users collect visual inspiration for each Quest without disrupting the core loop.
     scope:
@@ -300,10 +308,12 @@ items:
       - apps/mobile/lib/features/media/
       - supabase/migrations/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-085.md
   - id: QST-086
     title: Quest Template Library
     priority: P1
-    status: Planned
+    status: Done
     dependencies: [QST-065, QST-075]
     goal: Help users start faster with Quest templates for common life areas.
     scope:
@@ -320,10 +330,12 @@ items:
       - apps/mobile/lib/features/quest/quest_template_library.dart
       - apps/mobile/lib/features/quest/quest_form_screen.dart
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-086.md
   - id: QST-087
     title: Premium Readiness Flags
     priority: P2
-    status: Planned
+    status: Done
     dependencies: [QST-070]
     goal: Prepare future Premium feature switches without enforcing payments or harming MVP UX.
     scope:
@@ -339,10 +351,12 @@ items:
       - apps/mobile/lib/core/feature_flags/
       - docs/product/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-087.md
   - id: QST-088
     title: Onboarding Personalization
     priority: P0
-    status: Planned
+    status: Done
     dependencies: [QST-028, QST-060, QST-076]
     goal: Personalize the first-run experience with Arc name preference, Quest tendencies, and Signal frequency.
     scope:
@@ -361,10 +375,12 @@ items:
       - apps/mobile/lib/features/arc/arc_daily_greeting_service.dart
       - supabase/migrations/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-088.md
   - id: QST-089
     title: Beta Analytics Events
     priority: P0
-    status: Planned
+    status: Done
     dependencies: [QST-069, QST-071]
     goal: Define and implement privacy-conscious event tracking boundaries for beta learning.
     scope:
@@ -384,10 +400,12 @@ items:
       - apps/mobile/lib/features/trail/
       - docs/analytics/
       - apps/mobile/test/
+    completed_by:
+      report: reports/qst/QST-089.md
   - id: QST-090
     title: Feature Expansion Review
     priority: P0
-    status: Planned
+    status: Done
     dependencies: [QST-073, QST-074, QST-075, QST-076, QST-077, QST-078, QST-079, QST-080, QST-081, QST-082, QST-083, QST-084, QST-085, QST-086, QST-087, QST-088, QST-089]
     goal: Review QST-073 through QST-089 for coherence, UX quality, MVP stability, and launch direction.
     scope:
@@ -404,3 +422,5 @@ items:
       - docs/qst/BACKLOG.yaml
       - docs/product/qst_backlog.md
       - reports/qst/QST-090.md
+    completed_by:
+      report: reports/qst/QST-090.md

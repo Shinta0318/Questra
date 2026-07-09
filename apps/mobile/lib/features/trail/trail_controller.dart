@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/analytics/analytics_service.dart';
 import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_bond_growth_service.dart';
 import '../arc/arc_emotion_timeline_controller.dart';
@@ -93,6 +94,7 @@ class TrailController extends Notifier<List<Trail>> {
     );
     state = [trail, ...state];
     _recordTrailEmotion(trail);
+    _trackTrailPosted(trail, surface: 'quest');
     unawaited(_persistTrail(trail));
     return trail;
   }
@@ -111,6 +113,7 @@ class TrailController extends Notifier<List<Trail>> {
     );
     state = [trail, ...state];
     _recordTrailEmotion(trail);
+    _trackTrailPosted(trail, surface: 'manual');
     unawaited(_persistTrail(trail));
     return trail;
   }
@@ -159,6 +162,15 @@ class TrailController extends Notifier<List<Trail>> {
       ref
           .read(trailMediaControllerProvider.notifier)
           .setAttachment(trail.id, attachment);
+      unawaited(
+        ref
+            .read(analyticsServiceProvider)
+            .mediaAttached(
+              userId: userId,
+              mediaType: attachment.mediaType.storageKey,
+              surface: 'trail',
+            ),
+      );
       sync.saved('Trail image attached.');
       return attachment;
     } catch (error) {
@@ -291,6 +303,19 @@ class TrailController extends Notifier<List<Trail>> {
             trailId: trail.id,
           );
     }
+  }
+
+  void _trackTrailPosted(Trail trail, {required String surface}) {
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .trailPosted(
+            userId: ref.read(authControllerProvider).profile?.id,
+            surface: surface,
+            hasQuest: trail.questId != null,
+            hasMission: trail.missionId != null,
+          ),
+    );
   }
 
   void _recordTrailEmotion(Trail trail) {
