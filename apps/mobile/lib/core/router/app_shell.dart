@@ -42,6 +42,17 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(authControllerProvider.select((state) => state.profile), (
+      previous,
+      next,
+    ) {
+      if (next == null || previous?.id == next.id) {
+        return;
+      }
+      ref
+          .read(onboardingTourControllerProvider.notifier)
+          .showIfNeeded(profileHasSeenTour: next.hasSeenOnboardingTour);
+    });
     final tourVisible = ref.watch(onboardingTourControllerProvider).isVisible;
     final navigationShell = widget.navigationShell;
 

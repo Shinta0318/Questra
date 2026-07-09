@@ -1005,6 +1005,20 @@ items:
       - Quest list uses richer poster-style cards with progress, next Mission, and Quest DNA cues.
       - First-use Arc tutorial can be skipped and replayed from Settings.
       - Story terminology is not introduced.
+  - id: QST-132
+    title: Onboarding Tour Polish
+    status: Done
+    priority: P0
+    epic: BETA-UX
+    depends_on: [QST-131]
+    completed_by:
+      report: reports/qst/QST-132.md
+    scope: Harden the Arc onboarding tour state machine so first-use guidance appears after profile restore, stays dismissed within a session, and remains replayable.
+    acceptance:
+      - Arc onboarding tour can appear after asynchronous profile restore.
+      - Dismissed tour does not reappear in the same session.
+      - Settings replay behavior remains supported by the controller.
+      - UserProfile preserves has_seen_onboarding_tour state.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage
