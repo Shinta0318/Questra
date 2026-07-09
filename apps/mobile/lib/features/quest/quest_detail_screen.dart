@@ -456,8 +456,108 @@ class _QuestDnaSnapshotSection extends StatelessWidget {
                 _DnaAttributeChip(attribute: attribute),
             ],
           ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _showDnaReviewSheet(context, snapshot),
+                icon: const Icon(Icons.fact_check_outlined),
+                label: const Text('Quest DNAを見直す'),
+              ),
+              TextButton.icon(
+                onPressed: () =>
+                    context.go('${AppRoutes.quest}/${quest.id}/edit'),
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('入力情報を編集'),
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  void _showDnaReviewSheet(BuildContext context, QuestDnaSnapshot snapshot) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quest DNAの見直し',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '入力はQuest編集から変更できます。推定は保存せず、入力情報から毎回再計算します。',
+                  style: TextStyle(
+                    color: QuestraColors.slate,
+                    fontWeight: FontWeight.w700,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        for (final attribute in snapshot.attributes)
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(
+                              attribute.source == QuestDnaSource.userInput
+                                  ? Icons.edit_note_outlined
+                                  : Icons.auto_awesome_outlined,
+                              color:
+                                  attribute.source == QuestDnaSource.userInput
+                                  ? QuestraColors.gold
+                                  : QuestraColors.cosmicBlue,
+                            ),
+                            title: Text(attribute.label),
+                            subtitle: Text(
+                              attribute.source == QuestDnaSource.userInput
+                                  ? '入力値'
+                                  : '推定値・未保存',
+                            ),
+                            trailing: Text(
+                              attribute.value,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      context.go('${AppRoutes.quest}/${quest.id}/edit');
+                    },
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text('Quest編集で修正する'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

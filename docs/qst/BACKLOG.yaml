@@ -1061,6 +1061,20 @@ items:
       - Snapshot includes category, theme, difficulty, duration, motivation, social, and risk attributes.
       - Quest detail displays the snapshot with clear input/inferred labels.
       - Resolver behavior is covered by unit tests.
+  - id: QST-136
+    title: Quest DNA Review Controls
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-135]
+    completed_by:
+      report: reports/qst/QST-136.md
+    scope: Add review controls that explain Quest DNA input versus inferred values and route users to Quest editing for correction.
+    acceptance:
+      - Quest DNA Snapshot includes a visible review action.
+      - Review sheet explains inferred values are recalculated and not separately persisted.
+      - User can navigate from Quest DNA review to Quest editing.
+      - Responsive smoke coverage verifies the review sheet.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

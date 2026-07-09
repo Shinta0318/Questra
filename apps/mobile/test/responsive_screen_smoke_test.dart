@@ -125,6 +125,19 @@ void main() {
     );
     expect(find.text('Quest DNA Snapshot'), findsOneWidget);
     expect(find.text('推定'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.text('Quest DNAを見直す'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Quest DNAを見直す'), findsOneWidget);
+    await tester.ensureVisible(find.text('Quest DNAを見直す'));
+    await tester.pump();
+    await tester.tap(find.text('Quest DNAを見直す'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Quest DNAの見直し'), findsOneWidget);
+    expect(find.text('推定値・未保存'), findsWidgets);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (
