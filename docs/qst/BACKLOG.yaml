@@ -1104,6 +1104,21 @@ items:
       - Growing Trail graphs suggest Reflection when no Reflection Trail exists.
       - Quest detail displays Arc Graph Insight without introducing backend or graph database changes.
       - Service and responsive smoke tests cover the new insight layer.
+  - id: QST-139
+    title: Star Map Graph Bridge
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-138]
+    completed_by:
+      report: reports/qst/QST-139.md
+    scope: Connect Challenge Graph insights to Star Map recommendations so graph gaps can become explainable next-step candidates.
+    acceptance:
+      - Star Map Recommendation Service accepts Challenge Graph insights without breaking existing callers.
+      - Graph insights can produce Star Map recommendation candidates with explainable source types.
+      - Home passes active Quest graph insights into Star Map recommendations.
+      - No backend, paid feature, or graph database dependency is introduced.
+      - Unit tests cover graph-backed Star Map candidates.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

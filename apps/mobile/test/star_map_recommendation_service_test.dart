@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:questra/features/challenge_graph/challenge_graph_preview_service.dart';
 import 'package:questra/features/mission/mission_model.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
 import 'package:questra/features/quest/quest_model.dart';
@@ -92,6 +93,38 @@ void main() {
     expect(
       recommendations.map((recommendation) => recommendation.sourceType),
       contains('completed_quest'),
+    );
+  });
+
+  test('bridges Challenge Graph insights into Star Map candidates', () {
+    final recommendations = service.recommend(
+      quests: const [],
+      missions: const [],
+      trails: const [],
+      highlights: const [],
+      graphInsights: const [
+        ChallengeGraphInsight(
+          type: ChallengeGraphInsightType.missionGap,
+          title: 'Missionの星を足す',
+          message: 'このQuestには、まだ具体的な一歩が結ばれていません。',
+          suggestedAction: 'Arc Guideから最初のMissionを3つ作る',
+          priority: 90,
+        ),
+      ],
+    );
+
+    expect(
+      recommendations.map((recommendation) => recommendation.sourceType),
+      contains('challenge_graph_missionGap'),
+    );
+    expect(
+      recommendations
+          .firstWhere(
+            (recommendation) =>
+                recommendation.sourceType == 'challenge_graph_missionGap',
+          )
+          .reason,
+      contains('具体的な一歩'),
     );
   });
 }

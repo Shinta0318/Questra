@@ -19,6 +19,7 @@ import '../arc/arc_guidance_providers.dart';
 import '../arc/navigator_rank_service.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_state.dart';
+import '../challenge_graph/challenge_graph_preview_service.dart';
 import '../horizon/horizon_next_challenge_service.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
@@ -57,12 +58,23 @@ class HomeScreen extends ConsumerWidget {
       trails: trails,
       attachments: const {},
     );
+    final graphInsights = quests
+        .where((quest) => quest.status == QuestStatus.active)
+        .expand(
+          (quest) => const ChallengeGraphPreviewService().insightsForQuest(
+            quest: quest,
+            missions: missions,
+            trails: trails,
+          ),
+        )
+        .toList(growable: false);
     final starMapRecommendations = const StarMapRecommendationService()
         .recommend(
           quests: quests,
           missions: missions,
           trails: trails,
           highlights: trailHighlights,
+          graphInsights: graphInsights,
         );
     final navigatorRank = ref
         .watch(navigatorRankServiceProvider)
