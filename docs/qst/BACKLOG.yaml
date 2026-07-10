@@ -1119,6 +1119,21 @@ items:
       - Home passes active Quest graph insights into Star Map recommendations.
       - No backend, paid feature, or graph database dependency is introduced.
       - Unit tests cover graph-backed Star Map candidates.
+  - id: QST-140
+    title: Horizon Graph Readiness
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-139]
+    completed_by:
+      report: reports/qst/QST-140.md
+    scope: Use Challenge Graph insights to keep Horizon recommendations focused on strengthening active Quest context before proposing unrelated next challenges.
+    acceptance:
+      - Horizon service accepts optional Challenge Graph insights without breaking existing callers.
+      - Active Quest graph gaps can become Horizon suggestions.
+      - Completed Quest momentum still takes precedence for high-readiness users.
+      - Home passes active Quest graph insights into Horizon readiness.
+      - Unit tests cover graph-backed Horizon suggestions.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/features/arc/navigator_rank_service.dart';
+import 'package:questra/features/challenge_graph/challenge_graph_preview_service.dart';
 import 'package:questra/features/horizon/horizon_next_challenge_service.dart';
 import 'package:questra/features/mission/mission_model.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
@@ -57,6 +58,29 @@ void main() {
 
     expect(suggestion.readinessLabel, 'High readiness');
     expect(suggestion.title, contains(quest.category));
+  });
+
+  test('uses Challenge Graph insight before suggesting a new Horizon', () {
+    final quest = _quest(status: QuestStatus.active, progress: 0.4);
+    final suggestion = service.suggest(
+      rank: _rank(NavigatorRank.stargazer),
+      quests: [quest],
+      missions: const [],
+      trails: const [],
+      graphInsights: const [
+        ChallengeGraphInsight(
+          type: ChallengeGraphInsightType.missionGap,
+          title: 'Missionの星を足す',
+          message: 'このQuestには、まだ具体的な一歩が結ばれていません。',
+          suggestedAction: 'Arc Guideから最初のMissionを3つ作る',
+          priority: 90,
+        ),
+      ],
+    );
+
+    expect(suggestion.readinessLabel, 'Graph readiness');
+    expect(suggestion.title, 'Missionの星を足す');
+    expect(suggestion.suggestedAction, contains('Mission'));
   });
 }
 

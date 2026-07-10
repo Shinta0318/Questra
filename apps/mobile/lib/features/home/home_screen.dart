@@ -90,6 +90,7 @@ class HomeScreen extends ConsumerWidget {
       quests: quests,
       missions: missions,
       trails: trails,
+      graphInsights: graphInsights,
     );
     final greeting = ref
         .watch(arcDailyGreetingServiceProvider)

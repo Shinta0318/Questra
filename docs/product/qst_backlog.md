@@ -118,6 +118,7 @@ references where they do not conflict with v2.
 | QST-137 | Done | Challenge Graph Preview Foundation | Preview Challenge Graph nodes and edges from existing Quest context. | Quest detail shows MVP-safe graph counts for Quest, Mission, Trail, Theme, and Interest without graph database complexity. |
 | QST-138 | Done | Challenge Graph Insight Layer | Add Arc-facing insights from Challenge Graph gaps. | Quest detail surfaces prioritized Mission, Trail, and Reflection guidance from existing Quest context. |
 | QST-139 | Done | Star Map Graph Bridge | Connect Challenge Graph insights to Star Map recommendation candidates. | Home can surface explainable Star Map candidates from active Quest graph gaps without backend or graph DB changes. |
+| QST-140 | Done | Horizon Graph Readiness | Use Challenge Graph insights in Horizon readiness. | Home can keep Horizon suggestions focused on active Quest graph gaps before proposing unrelated next challenges. |
 
 ## Selection Rules
 
