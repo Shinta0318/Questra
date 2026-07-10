@@ -146,6 +146,7 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Challenge Graph Preview'), findsOneWidget);
+    expect(find.text('星図ノード'), findsOneWidget);
     expect(find.text('Nodes'), findsWidgets);
     expect(find.text('Edges'), findsWidgets);
     expect(find.text('Arc Graph Insight'), findsOneWidget);

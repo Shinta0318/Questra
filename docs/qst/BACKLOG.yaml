@@ -1134,6 +1134,21 @@ items:
       - Completed Quest momentum still takes precedence for high-readiness users.
       - Home passes active Quest graph insights into Horizon readiness.
       - Unit tests cover graph-backed Horizon suggestions.
+  - id: QST-141
+    title: Challenge Graph Visual Polish
+    status: Done
+    priority: P2
+    epic: BETA-UX
+    depends_on: [QST-140]
+    completed_by:
+      report: reports/qst/QST-141.md
+    scope: Polish the Quest detail Challenge Graph Preview so it reads as a lightweight star-map surface rather than only numeric metrics.
+    acceptance:
+      - Quest detail shows a star-map inspired Challenge Graph node surface.
+      - The primary Quest node and surrounding Theme, Interest, Mission, and Trail nodes are visually distinguishable.
+      - The new UI uses Japanese visible copy for added labels.
+      - Existing Graph metrics and Arc Graph Insight remain visible.
+      - Responsive smoke coverage verifies the visual node surface.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

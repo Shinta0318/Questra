@@ -677,6 +677,8 @@ class _ChallengeGraphPreviewSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
+          _GraphConstellationPreview(preview: preview),
+          const SizedBox(height: 14),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -720,6 +722,157 @@ class _ChallengeGraphPreviewSection extends StatelessWidget {
             (insight) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: _GraphInsightTile(insight: insight),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GraphConstellationPreview extends StatelessWidget {
+  const _GraphConstellationPreview({required this.preview});
+
+  final ChallengeGraphPreview preview;
+
+  @override
+  Widget build(BuildContext context) {
+    final quest = preview.nodes.firstWhere(
+      (node) => node.type == ChallengeGraphNodeType.quest,
+    );
+    final orbitNodes = preview.nodes
+        .where((node) => node.type != ChallengeGraphNodeType.quest)
+        .take(6)
+        .toList(growable: false);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            QuestraColors.deepNavy,
+            QuestraColors.cosmicBlue.withValues(alpha: 0.88),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.28)),
+        boxShadow: [
+          BoxShadow(
+            color: QuestraColors.cosmicBlue.withValues(alpha: 0.18),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: QuestraColors.gold.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: QuestraColors.gold.withValues(alpha: 0.42),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: QuestraColors.gold,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '星図ノード',
+                      style: TextStyle(
+                        color: QuestraColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      quest.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: QuestraColors.white.withValues(alpha: 0.74),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _GraphNodeChip(node: quest, isPrimary: true),
+              ...orbitNodes.map((node) => _GraphNodeChip(node: node)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '${preview.edges.length}件のつながりをArcが案内に使えます',
+            style: TextStyle(
+              color: QuestraColors.white.withValues(alpha: 0.72),
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GraphNodeChip extends StatelessWidget {
+  const _GraphNodeChip({required this.node, this.isPrimary = false});
+
+  final ChallengeGraphNode node;
+  final bool isPrimary;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _graphNodeColor(node.type);
+
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isPrimary ? 0.24 : 0.14),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.46)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(_graphNodeIcon(node.type), color: color, size: 15),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              node.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: QuestraColors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],
@@ -844,6 +997,26 @@ class _GraphMetric extends StatelessWidget {
       ),
     );
   }
+}
+
+IconData _graphNodeIcon(ChallengeGraphNodeType type) {
+  return switch (type) {
+    ChallengeGraphNodeType.quest => Icons.explore_outlined,
+    ChallengeGraphNodeType.mission => Icons.task_alt_outlined,
+    ChallengeGraphNodeType.trail => Icons.timeline_outlined,
+    ChallengeGraphNodeType.theme => Icons.auto_awesome_outlined,
+    ChallengeGraphNodeType.interest => Icons.interests_outlined,
+  };
+}
+
+Color _graphNodeColor(ChallengeGraphNodeType type) {
+  return switch (type) {
+    ChallengeGraphNodeType.quest => QuestraColors.gold,
+    ChallengeGraphNodeType.mission => QuestraColors.skyBlue,
+    ChallengeGraphNodeType.trail => const Color(0xFF8BE28B),
+    ChallengeGraphNodeType.theme => const Color(0xFFFFA85C),
+    ChallengeGraphNodeType.interest => const Color(0xFFA78BFA),
+  };
 }
 
 class _NextStepPanel extends StatelessWidget {

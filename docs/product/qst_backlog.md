@@ -119,6 +119,7 @@ references where they do not conflict with v2.
 | QST-138 | Done | Challenge Graph Insight Layer | Add Arc-facing insights from Challenge Graph gaps. | Quest detail surfaces prioritized Mission, Trail, and Reflection guidance from existing Quest context. |
 | QST-139 | Done | Star Map Graph Bridge | Connect Challenge Graph insights to Star Map recommendation candidates. | Home can surface explainable Star Map candidates from active Quest graph gaps without backend or graph DB changes. |
 | QST-140 | Done | Horizon Graph Readiness | Use Challenge Graph insights in Horizon readiness. | Home can keep Horizon suggestions focused on active Quest graph gaps before proposing unrelated next challenges. |
+| QST-141 | Done | Challenge Graph Visual Polish | Make the Quest detail graph preview feel like a lightweight star-map surface. | Quest detail visually distinguishes Quest, Theme, Interest, Mission, and Trail nodes while keeping metrics and Arc insight visible. |
 
 ## Selection Rules
 
