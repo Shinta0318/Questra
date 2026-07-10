@@ -148,6 +148,7 @@ void main() {
     expect(find.text('Challenge Graph Preview'), findsOneWidget);
     expect(find.text('Nodes'), findsWidgets);
     expect(find.text('Edges'), findsWidgets);
+    expect(find.text('Arc Graph Insight'), findsOneWidget);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (

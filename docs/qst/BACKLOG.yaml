@@ -1089,6 +1089,21 @@ items:
       - Unrelated Mission and Trail records are excluded.
       - Quest detail displays node and edge counts.
       - Service behavior is covered by unit tests.
+  - id: QST-138
+    title: Challenge Graph Insight Layer
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-137]
+    completed_by:
+      report: reports/qst/QST-138.md
+    scope: Add Arc-facing Challenge Graph insights that identify Mission, Trail, and Reflection gaps from existing Quest context.
+    acceptance:
+      - Challenge Graph can produce prioritized insights from Quest, Mission, and Trail state.
+      - Empty Quest graphs suggest Mission creation.
+      - Growing Trail graphs suggest Reflection when no Reflection Trail exists.
+      - Quest detail displays Arc Graph Insight without introducing backend or graph database changes.
+      - Service and responsive smoke tests cover the new insight layer.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

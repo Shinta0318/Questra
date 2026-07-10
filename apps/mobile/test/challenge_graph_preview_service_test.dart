@@ -99,4 +99,70 @@ void main() {
     expect(preview.countNodes(ChallengeGraphNodeType.trail), 0);
     expect(preview.nodes.length, 3);
   });
+
+  test('suggests Mission creation when graph has no Mission nodes', () {
+    final quest = Quest(
+      title: '家族旅行を計画する',
+      description: '夏に行く',
+      difficulty: QuestDifficulty.easy,
+      status: QuestStatus.active,
+      visibility: QuestVisibility.private,
+      category: '旅行',
+    );
+
+    final insights = service.insightsForQuest(
+      quest: quest,
+      missions: const [],
+      trails: const [],
+    );
+
+    expect(insights.first.type, ChallengeGraphInsightType.missionGap);
+    expect(insights.first.suggestedAction, contains('Mission'));
+  });
+
+  test('suggests Trail reflection when records have grown', () {
+    final quest = Quest(
+      title: '富士山に登る',
+      description: '登頂する',
+      difficulty: QuestDifficulty.hard,
+      status: QuestStatus.active,
+      visibility: QuestVisibility.guild,
+      category: '挑戦',
+    );
+    final mission = Mission(
+      questId: quest.id,
+      questTitle: quest.title,
+      title: '装備を確認する',
+      description: '足りないものを見る',
+      guideType: GuideType.resource,
+      difficulty: MissionDifficulty.easy,
+      status: MissionStatus.completed,
+    );
+
+    final insights = service.insightsForQuest(
+      quest: quest,
+      missions: [mission],
+      trails: [
+        Trail(
+          questId: quest.id,
+          title: '装備チェック',
+          summary: '準備できた',
+          content: '靴と雨具を確認した',
+          trailType: TrailType.missionRecord,
+        ),
+        Trail(
+          questId: quest.id,
+          title: '登山計画',
+          summary: 'ルートを決めた',
+          content: '休憩地点を決めた',
+          trailType: TrailType.questRecord,
+        ),
+      ],
+    );
+
+    expect(
+      insights.map((insight) => insight.type),
+      contains(ChallengeGraphInsightType.reflectionGap),
+    );
+  });
 }

@@ -650,6 +650,11 @@ class _ChallengeGraphPreviewSection extends StatelessWidget {
       missions: missions,
       trails: trails,
     );
+    final insights = const ChallengeGraphPreviewService().insightsForQuest(
+      quest: quest,
+      missions: missions,
+      trails: trails,
+    );
 
     return QuestraCard(
       child: Column(
@@ -701,6 +706,90 @@ class _ChallengeGraphPreviewSection extends StatelessWidget {
                 icon: Icons.timeline_outlined,
               ),
             ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Arc Graph Insight',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...insights.map(
+            (insight) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _GraphInsightTile(insight: insight),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GraphInsightTile extends StatelessWidget {
+  const _GraphInsightTile({required this.insight});
+
+  final ChallengeGraphInsight insight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: QuestraColors.deepNavy.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: QuestraColors.gold.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.auto_awesome_outlined,
+              color: QuestraColors.deepNavy,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  insight.title,
+                  style: const TextStyle(
+                    color: QuestraColors.deepNavy,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  insight.message,
+                  style: const TextStyle(
+                    color: QuestraColors.slate,
+                    fontWeight: FontWeight.w700,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  insight.suggestedAction,
+                  style: const TextStyle(
+                    color: QuestraColors.cosmicBlue,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
