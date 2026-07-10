@@ -12,6 +12,7 @@ import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../challenge_graph/challenge_graph_preview_service.dart';
 import '../dream_board/dream_board_controller.dart';
 import '../dream_board/dream_board_model.dart';
 import '../mission/mission_controller.dart';
@@ -90,6 +91,12 @@ class QuestDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             _QuestDnaSnapshotSection(quest: quest),
+            const SizedBox(height: 16),
+            _ChallengeGraphPreviewSection(
+              quest: quest,
+              missions: missions,
+              trails: trails,
+            ),
             const SizedBox(height: 16),
             _ProgressSection(quest: quest),
             const SizedBox(height: 16),
@@ -617,6 +624,131 @@ class _DnaAttributeChip extends StatelessWidget {
                   : QuestraColors.cosmicBlue,
               fontSize: 11,
               fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChallengeGraphPreviewSection extends StatelessWidget {
+  const _ChallengeGraphPreviewSection({
+    required this.quest,
+    required this.missions,
+    required this.trails,
+  });
+
+  final Quest quest;
+  final List<Mission> missions;
+  final List<Trail> trails;
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = const ChallengeGraphPreviewService().buildForQuest(
+      quest: quest,
+      missions: missions,
+      trails: trails,
+    );
+
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Challenge Graph Preview',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Quest、Mission、Trail、Theme、Interestをつないだ将来の星図プレビューです。',
+            style: TextStyle(
+              color: QuestraColors.slate,
+              fontWeight: FontWeight.w700,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _GraphMetric(
+                label: 'Nodes',
+                value: preview.nodes.length.toString(),
+                icon: Icons.hub_outlined,
+              ),
+              _GraphMetric(
+                label: 'Edges',
+                value: preview.edges.length.toString(),
+                icon: Icons.schema_outlined,
+              ),
+              _GraphMetric(
+                label: 'Mission',
+                value: preview
+                    .countNodes(ChallengeGraphNodeType.mission)
+                    .toString(),
+                icon: Icons.task_alt_outlined,
+              ),
+              _GraphMetric(
+                label: 'Trail',
+                value: preview
+                    .countNodes(ChallengeGraphNodeType.trail)
+                    .toString(),
+                icon: Icons.timeline_outlined,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GraphMetric extends StatelessWidget {
+  const _GraphMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 132,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: QuestraColors.cosmicBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: QuestraColors.cosmicBlue.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: QuestraColors.cosmicBlue, size: 20),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          Text(
+            label,
+            style: const TextStyle(
+              color: QuestraColors.slate,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],

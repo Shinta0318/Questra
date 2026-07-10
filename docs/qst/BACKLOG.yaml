@@ -1075,6 +1075,20 @@ items:
       - Review sheet explains inferred values are recalculated and not separately persisted.
       - User can navigate from Quest DNA review to Quest editing.
       - Responsive smoke coverage verifies the review sheet.
+  - id: QST-137
+    title: Challenge Graph Preview Foundation
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-135]
+    completed_by:
+      report: reports/qst/QST-137.md
+    scope: Add an MVP-safe Challenge Graph preview that connects Quest, Mission, Trail, Theme, and Interest nodes without introducing graph database complexity.
+    acceptance:
+      - Challenge Graph Preview builds nodes and edges from existing Quest, Mission, Trail, and Quest DNA context.
+      - Unrelated Mission and Trail records are excluded.
+      - Quest detail displays node and edge counts.
+      - Service behavior is covered by unit tests.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

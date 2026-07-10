@@ -115,6 +115,7 @@ references where they do not conflict with v2.
 | QST-134 | Done | Quest Detail Theme Application | Apply Quest theme metadata to the detail header and journey overview. | Quest detail shares the same theme identity, Quest DNA label, and Arc hint as Quest cards. |
 | QST-135 | Done | Quest DNA Snapshot | Display an MVP-safe Quest DNA snapshot derived from existing Quest fields. | Quest detail distinguishes user input from inferred context without collecting sensitive new attributes. |
 | QST-136 | Done | Quest DNA Review Controls | Add review controls for Quest DNA input and inferred values. | Users can inspect inferred values, see that they are not separately persisted, and jump to Quest editing. |
+| QST-137 | Done | Challenge Graph Preview Foundation | Preview Challenge Graph nodes and edges from existing Quest context. | Quest detail shows MVP-safe graph counts for Quest, Mission, Trail, Theme, and Interest without graph database complexity. |
 
 ## Selection Rules
 

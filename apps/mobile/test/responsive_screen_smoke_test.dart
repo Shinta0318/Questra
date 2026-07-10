@@ -138,6 +138,16 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Quest DNAの見直し'), findsOneWidget);
     expect(find.text('推定値・未保存'), findsWidgets);
+    Navigator.of(tester.element(find.text('Quest DNAの見直し'))).pop();
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.text('Challenge Graph Preview'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Challenge Graph Preview'), findsOneWidget);
+    expect(find.text('Nodes'), findsWidgets);
+    expect(find.text('Edges'), findsWidgets);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (
