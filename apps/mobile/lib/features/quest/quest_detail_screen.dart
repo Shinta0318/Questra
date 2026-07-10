@@ -15,6 +15,7 @@ import '../arc/arc_guidance_providers.dart';
 import '../challenge_graph/challenge_graph_preview_service.dart';
 import '../dream_board/dream_board_controller.dart';
 import '../dream_board/dream_board_model.dart';
+import '../enterprise_support/quest_support_boundary_service.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../trail/trail_controller.dart';
@@ -97,6 +98,8 @@ class QuestDetailScreen extends ConsumerWidget {
               missions: missions,
               trails: trails,
             ),
+            const SizedBox(height: 16),
+            _QuestSupportBoundarySection(quest: quest),
             const SizedBox(height: 16),
             _ProgressSection(quest: quest),
             const SizedBox(height: 16),
@@ -1017,6 +1020,215 @@ Color _graphNodeColor(ChallengeGraphNodeType type) {
     ChallengeGraphNodeType.theme => const Color(0xFFFFA85C),
     ChallengeGraphNodeType.interest => const Color(0xFFA78BFA),
   };
+}
+
+class _QuestSupportBoundarySection extends StatelessWidget {
+  const _QuestSupportBoundarySection({required this.quest});
+
+  final Quest quest;
+
+  @override
+  Widget build(BuildContext context) {
+    final boundary = const QuestSupportBoundaryService().resolve(quest: quest);
+
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: QuestraColors.gold.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: QuestraColors.gold.withValues(alpha: 0.34),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.verified_user_outlined,
+                  color: QuestraColors.deepNavy,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Quest支援の透明性',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: QuestraColors.deepNavy,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      boundary.statusLabel,
+                      style: const TextStyle(
+                        color: QuestraColors.cosmicBlue,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            boundary.summary,
+            style: const TextStyle(
+              color: QuestraColors.slate,
+              fontWeight: FontWeight.w700,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: boundary.roles
+                .map((role) => _QuestSupportRoleChip(role: role))
+                .toList(growable: false),
+          ),
+          const SizedBox(height: 14),
+          _SupportChecklistBlock(
+            title: '表示前に必要な透明性',
+            items: boundary.transparencyChecklist,
+            icon: Icons.fact_check_outlined,
+          ),
+          const SizedBox(height: 10),
+          _SupportChecklistBlock(
+            title: '守る境界',
+            items: boundary.guardrails,
+            icon: Icons.shield_outlined,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuestSupportRoleChip extends StatelessWidget {
+  const _QuestSupportRoleChip({required this.role});
+
+  final QuestSupportRole role;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 220),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: QuestraColors.cosmicBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: QuestraColors.cosmicBlue.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            role.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: QuestraColors.deepNavy,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            role.description,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: QuestraColors.slate,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SupportChecklistBlock extends StatelessWidget {
+  const _SupportChecklistBlock({
+    required this.title,
+    required this.items,
+    required this.icon,
+  });
+
+  final String title;
+  final List<String> items;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: QuestraColors.deepNavy.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: QuestraColors.deepNavy.withValues(alpha: 0.08),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: QuestraColors.deepNavy, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: QuestraColors.deepNavy,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: items
+                .map(
+                  (item) => Chip(
+                    label: Text(item),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: QuestraColors.white.withValues(
+                      alpha: 0.72,
+                    ),
+                    side: BorderSide(
+                      color: QuestraColors.gold.withValues(alpha: 0.2),
+                    ),
+                    labelStyle: const TextStyle(
+                      color: QuestraColors.deepNavy,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _NextStepPanel extends StatelessWidget {

@@ -150,6 +150,13 @@ void main() {
     expect(find.text('Nodes'), findsWidgets);
     expect(find.text('Edges'), findsWidgets);
     expect(find.text('Arc Graph Insight'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Quest支援の透明性'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Quest支援の透明性'), findsOneWidget);
+    expect(find.text('Betaでは未接続'), findsOneWidget);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (
