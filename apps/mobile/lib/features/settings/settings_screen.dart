@@ -9,6 +9,7 @@ import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../arc_memory/arc_memory_management_preview_service.dart';
 import '../onboarding/onboarding_tour_controller.dart';
+import '../trust/data_request_copy_service.dart';
 import '../trust/trust_privacy_review_service.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
@@ -21,6 +22,7 @@ class SettingsScreen extends ConsumerWidget {
     final trustReview = const TrustPrivacyReviewService().buildReview();
     final memoryPreview = const ArcMemoryManagementPreviewService()
         .buildPreview();
+    final dataRequests = const DataRequestCopyService().buildReview();
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
@@ -97,9 +99,223 @@ class SettingsScreen extends ConsumerWidget {
               _TrustPrivacyCard(review: trustReview),
               const SizedBox(height: AppSpacing.lg),
               _ArcMemoryManagementPreviewCard(preview: memoryPreview),
+              const SizedBox(height: AppSpacing.lg),
+              _DataRequestCopyCard(review: dataRequests),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DataRequestCopyCard extends StatelessWidget {
+  const _DataRequestCopyCard({required this.review});
+
+  final DataRequestCopyReview review;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.84),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.34),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.assignment_outlined,
+                  color: AppColors.gold,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      review.heading,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      review.summary,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.parchment,
+                        height: 1.55,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          ...review.requests.map(
+            (request) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: _DataRequestTile(request: request),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _SafetyNoteBlock(notes: review.safetyNotes),
+        ],
+      ),
+    );
+  }
+}
+
+class _DataRequestTile extends StatelessWidget {
+  const _DataRequestTile({required this.request});
+
+  final DataRequestCopy request;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.deepNavy.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(_dataRequestIcon(request.type), color: AppColors.skyBlue),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  request.title,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                request.statusLabel,
+                style: const TextStyle(
+                  color: AppColors.gold,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            request.summary,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.parchment,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: request.scope
+                .map(
+                  (scope) => Chip(
+                    label: Text(scope),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: AppColors.white.withValues(alpha: 0.1),
+                    side: BorderSide(
+                      color: AppColors.skyBlue.withValues(alpha: 0.2),
+                    ),
+                    labelStyle: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SafetyNoteBlock extends StatelessWidget {
+  const _SafetyNoteBlock({required this.notes});
+
+  final List<String> notes;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.verified_user_outlined,
+                color: AppColors.gold,
+                size: 18,
+              ),
+              SizedBox(width: AppSpacing.sm),
+              Text(
+                '安全な実装条件',
+                style: TextStyle(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ...notes.map(
+            (note) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Text(
+                note,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.parchment,
+                  height: 1.35,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -493,5 +709,14 @@ IconData _arcMemoryActionIcon(ArcMemoryManagementAction action) {
     ArcMemoryManagementAction.delete => Icons.delete_outline,
     ArcMemoryManagementAction.sensitivity => Icons.tune_outlined,
     ArcMemoryManagementAction.export => Icons.file_download_outlined,
+  };
+}
+
+IconData _dataRequestIcon(DataRequestType type) {
+  return switch (type) {
+    DataRequestType.export => Icons.file_download_outlined,
+    DataRequestType.deletion => Icons.delete_outline,
+    DataRequestType.correction => Icons.edit_note_outlined,
+    DataRequestType.withdrawal => Icons.undo_outlined,
   };
 }

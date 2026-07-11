@@ -123,6 +123,7 @@ references where they do not conflict with v2.
 | QST-142 | Done | Enterprise Support Boundary UI | Add an MVP-safe transparency boundary for future Quest Support. | Quest detail states Enterprise support is inactive in Beta and lists required transparency and guardrails before any future sponsor data exists. |
 | QST-143 | Done | Trust and Privacy Review Surface | Add a Settings surface for Master Spec trust and privacy principles. | Settings explains Quest data, Arc Memory, Arc generation, Quest Support, and owner-boundary rules plus future user controls. |
 | QST-144 | Done | Arc Memory Management Preview | Preview future Arc Memory review and control actions in Settings. | Settings explains Arc Memory categories and planned review, delete, sensitivity, and export controls without mutating stored memory data. |
+| QST-145 | Done | Data Export and Deletion Request Copy | Add Settings copy for future data request controls. | Settings explains export, deletion, correction, and consent review requests without mutating data or persisting consent. |
 
 ## Selection Rules
 

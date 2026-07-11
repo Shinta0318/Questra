@@ -1194,6 +1194,22 @@ items:
       - Future review, deletion, sensitivity, and export actions are visible with non-active statuses.
       - No real Arc Memory deletion, export, or sensitivity mutation is implemented in this QST.
       - Service and responsive smoke tests cover the preview.
+  - id: QST-145
+    title: Data Export and Deletion Request Copy
+    status: Done
+    priority: P1
+    epic: BETA-TRUST
+    depends_on: [QST-144]
+    completed_by:
+      report: reports/qst/QST-145.md
+    scope: Add Settings copy for data export, deletion, correction, and consent review request flows before implementing the underlying data operations.
+    acceptance:
+      - Settings exposes a Data Request section.
+      - Export, deletion, correction, and consent review request types are visible.
+      - Request scopes mention Quest, Mission, Trail, Arc Memory, Profile, Media, Quest Support, and external connection where appropriate.
+      - Safety notes state that deletion and export are basic free controls and require safe implementation.
+      - No data mutation, deletion, export, or consent persistence is implemented in this QST.
+      - Service and responsive smoke tests cover the copy.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage
