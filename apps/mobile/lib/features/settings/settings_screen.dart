@@ -12,6 +12,7 @@ import '../onboarding/onboarding_tour_controller.dart';
 import '../trust/consent_purpose_registry_service.dart';
 import '../trust/data_request_copy_service.dart';
 import '../trust/trust_privacy_review_service.dart';
+import 'settings_information_architecture_service.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
 
@@ -26,6 +27,8 @@ class SettingsScreen extends ConsumerWidget {
     final dataRequests = const DataRequestCopyService().buildReview();
     final consentRegistry = const ConsentPurposeRegistryService()
         .buildRegistry();
+    final settingsMap = const SettingsInformationArchitectureService()
+        .buildOverview();
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
@@ -42,6 +45,8 @@ class SettingsScreen extends ConsumerWidget {
                   fontWeight: FontWeight.w900,
                 ),
               ),
+              const SizedBox(height: AppSpacing.lg),
+              _SettingsMapCard(map: settingsMap),
               const SizedBox(height: AppSpacing.lg),
               Container(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -109,6 +114,145 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SettingsMapCard extends StatelessWidget {
+  const _SettingsMapCard({required this.map});
+
+  final SettingsInformationArchitecture map;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.84),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.skyBlue.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppColors.skyBlue.withValues(alpha: 0.34),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.map_outlined,
+                  color: AppColors.skyBlue,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      map.heading,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      map.summary,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.parchment,
+                        height: 1.55,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          ...map.sections.map(
+            (section) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: _SettingsMapTile(section: section),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsMapTile extends StatelessWidget {
+  const _SettingsMapTile({required this.section});
+
+  final SettingsSectionOverview section;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.deepNavy.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(_settingsSectionIcon(section.type), color: AppColors.gold),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  section.title,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  section.summary,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.parchment,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 72),
+            child: Text(
+              section.statusLabel,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: AppColors.skyBlue,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -244,12 +388,18 @@ class _ConsentPurposeTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                purpose.defaultStateLabel,
-                style: const TextStyle(
-                  color: AppColors.skyBlue,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 92),
+                child: Text(
+                  purpose.defaultStateLabel,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    color: AppColors.skyBlue,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
@@ -401,12 +551,18 @@ class _DataRequestTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                request.statusLabel,
-                style: const TextStyle(
-                  color: AppColors.gold,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 72),
+                child: Text(
+                  request.statusLabel,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    color: AppColors.gold,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
@@ -679,12 +835,18 @@ class _ArcMemoryActionTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          Text(
-            action.statusLabel,
-            style: const TextStyle(
-              color: AppColors.skyBlue,
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 72),
+            child: Text(
+              action.statusLabel,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: AppColors.skyBlue,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],
@@ -909,5 +1071,15 @@ IconData _consentPurposeIcon(ConsentPurpose purpose) {
     ConsentPurpose.productAnalytics => Icons.query_stats_outlined,
     ConsentPurpose.aiQualityReview => Icons.auto_fix_high_outlined,
     ConsentPurpose.externalConnection => Icons.link_outlined,
+  };
+}
+
+IconData _settingsSectionIcon(SettingsSectionType type) {
+  return switch (type) {
+    SettingsSectionType.tutorial => Icons.auto_awesome_outlined,
+    SettingsSectionType.trust => Icons.shield_outlined,
+    SettingsSectionType.arcMemory => Icons.psychology_alt_outlined,
+    SettingsSectionType.dataRequest => Icons.assignment_outlined,
+    SettingsSectionType.consent => Icons.rule_outlined,
   };
 }

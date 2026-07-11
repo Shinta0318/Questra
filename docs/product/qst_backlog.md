@@ -125,6 +125,7 @@ references where they do not conflict with v2.
 | QST-144 | Done | Arc Memory Management Preview | Preview future Arc Memory review and control actions in Settings. | Settings explains Arc Memory categories and planned review, delete, sensitivity, and export controls without mutating stored memory data. |
 | QST-145 | Done | Data Export and Deletion Request Copy | Add Settings copy for future data request controls. | Settings explains export, deletion, correction, and consent review requests without mutating data or persisting consent. |
 | QST-146 | Done | Consent Purpose Registry | Define purpose-specific consent categories before persistence. | Settings separates Quest Support, analytics, Arc quality review, and external connection consent purposes without storing opt-in state. |
+| QST-147 | Done | Trust Settings Information Architecture | Add a Settings Map for trust-related areas. | Settings now orients beta users across Arc tutorial, Trust & Privacy, Arc Memory, data requests, and consent without adding new mutations. |
 
 ## Selection Rules
 

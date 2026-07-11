@@ -1226,6 +1226,21 @@ items:
       - Guardrails state that consent can be withdrawn and that sensitive secondary uses are not allowed without explicit consent.
       - No consent persistence, opt-in mutation, or external connection is implemented in this QST.
       - Service and responsive smoke tests cover the registry.
+  - id: QST-147
+    title: Trust Settings Information Architecture
+    status: Done
+    priority: P2
+    epic: BETA-TRUST
+    depends_on: [QST-146]
+    completed_by:
+      report: reports/qst/QST-147.md
+    scope: Add a Settings Map that organizes Arc tutorial, Trust & Privacy, Arc Memory, Data Request, and Consent areas for beta users.
+    acceptance:
+      - Settings exposes a top-level Settings Map.
+      - The map lists tutorial, trust/privacy, Arc Memory, data request, and consent areas in a clear order.
+      - Each area has a status label and short explanation.
+      - The map does not introduce new data mutation, consent persistence, or navigation complexity.
+      - Service and responsive smoke tests cover the map.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

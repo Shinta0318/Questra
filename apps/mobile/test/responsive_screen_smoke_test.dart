@@ -175,15 +175,21 @@ void main() {
     await tester.pump();
 
     expect(find.text('設定'), findsOneWidget);
-    expect(find.text('Arcチュートリアル'), findsOneWidget);
+    expect(find.text('Settings Map'), findsOneWidget);
+    expect(find.text('Arcチュートリアル'), findsWidgets);
     await tester.scrollUntilVisible(
       find.text('Trust & Privacy'),
       180,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Trust & Privacy'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Quest / Mission / Trail'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Quest / Mission / Trail'), findsOneWidget);
-    expect(find.text('Arc Memory'), findsOneWidget);
+    expect(find.text('Arc Memory'), findsWidgets);
     expect(find.text('Betaでは未接続'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Arc Memory管理プレビュー'),
