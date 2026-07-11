@@ -121,6 +121,7 @@ references where they do not conflict with v2.
 | QST-140 | Done | Horizon Graph Readiness | Use Challenge Graph insights in Horizon readiness. | Home can keep Horizon suggestions focused on active Quest graph gaps before proposing unrelated next challenges. |
 | QST-141 | Done | Challenge Graph Visual Polish | Make the Quest detail graph preview feel like a lightweight star-map surface. | Quest detail visually distinguishes Quest, Theme, Interest, Mission, and Trail nodes while keeping metrics and Arc insight visible. |
 | QST-142 | Done | Enterprise Support Boundary UI | Add an MVP-safe transparency boundary for future Quest Support. | Quest detail states Enterprise support is inactive in Beta and lists required transparency and guardrails before any future sponsor data exists. |
+| QST-143 | Done | Trust and Privacy Review Surface | Add a Settings surface for Master Spec trust and privacy principles. | Settings explains Quest data, Arc Memory, Arc generation, Quest Support, and owner-boundary rules plus future user controls. |
 
 ## Selection Rules
 

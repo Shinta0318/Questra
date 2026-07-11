@@ -11,6 +11,7 @@ import 'package:questra/features/quest/quest_controller.dart';
 import 'package:questra/features/quest/quest_detail_screen.dart';
 import 'package:questra/features/profile/profile_screen.dart';
 import 'package:questra/features/quest/quest_screen.dart';
+import 'package:questra/features/settings/settings_screen.dart';
 import 'package:questra/features/trail/trail_screen.dart';
 
 void main() {
@@ -24,6 +25,7 @@ void main() {
     'Guild': const GuildScreen(),
     'Arc Chat': const ArcScreen(),
     'Profile': const ProfileScreen(),
+    'Settings': const SettingsScreen(),
     'Onboarding': const OnboardingScreen(),
   };
 
@@ -156,6 +158,32 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Quest支援の透明性'), findsOneWidget);
+    expect(find.text('Betaでは未接続'), findsOneWidget);
+  });
+
+  testWidgets('Settings exposes trust and privacy review surface', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: SettingsScreen())),
+    );
+    await tester.pump();
+
+    expect(find.text('設定'), findsOneWidget);
+    expect(find.text('Arcチュートリアル'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Trust & Privacy'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Trust & Privacy'), findsOneWidget);
+    expect(find.text('Quest / Mission / Trail'), findsOneWidget);
+    expect(find.text('Arc Memory'), findsOneWidget);
     expect(find.text('Betaでは未接続'), findsOneWidget);
   });
 

@@ -1164,6 +1164,21 @@ items:
       - Quest detail displays transparency requirements and guardrails.
       - The UI states that support is not connected in Beta.
       - Tests verify inactive state and Quest detail visibility.
+  - id: QST-143
+    title: Trust and Privacy Review Surface
+    status: Done
+    priority: P1
+    epic: BETA-TRUST
+    depends_on: [QST-142]
+    completed_by:
+      report: reports/qst/QST-143.md
+    scope: Add a Settings surface that summarizes Master Spec trust, privacy, consent, Arc Memory, AI transparency, Quest Support, and owner-boundary principles.
+    acceptance:
+      - Settings exposes a Trust & Privacy review card.
+      - The review covers Quest/Mission/Trail data, Arc Memory, Arc-generated or inferred output, Quest Support, and RLS/owner boundaries.
+      - The UI explains that Quest Support remains disconnected in Beta.
+      - Future user controls for export, deletion, Arc Memory management, and correction reporting are visible as planned actions.
+      - Service and responsive smoke tests cover the review surface.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage
