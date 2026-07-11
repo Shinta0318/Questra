@@ -1210,6 +1210,22 @@ items:
       - Safety notes state that deletion and export are basic free controls and require safe implementation.
       - No data mutation, deletion, export, or consent persistence is implemented in this QST.
       - Service and responsive smoke tests cover the copy.
+  - id: QST-146
+    title: Consent Purpose Registry
+    status: Done
+    priority: P1
+    epic: BETA-TRUST
+    depends_on: [QST-145]
+    completed_by:
+      report: reports/qst/QST-146.md
+    scope: Define purpose-specific consent categories for Quest Support, product analytics, Arc quality review, and external connection before implementing consent persistence.
+    acceptance:
+      - Settings exposes a purpose-specific consent registry.
+      - Consent purposes are separated instead of relying on broad bundled consent.
+      - Quest Support, product analytics, Arc quality review, and external connection are represented.
+      - Guardrails state that consent can be withdrawn and that sensitive secondary uses are not allowed without explicit consent.
+      - No consent persistence, opt-in mutation, or external connection is implemented in this QST.
+      - Service and responsive smoke tests cover the registry.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

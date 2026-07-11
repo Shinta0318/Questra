@@ -9,6 +9,7 @@ import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../arc_memory/arc_memory_management_preview_service.dart';
 import '../onboarding/onboarding_tour_controller.dart';
+import '../trust/consent_purpose_registry_service.dart';
 import '../trust/data_request_copy_service.dart';
 import '../trust/trust_privacy_review_service.dart';
 import '../../widgets/arc/arc_emotion.dart';
@@ -23,6 +24,8 @@ class SettingsScreen extends ConsumerWidget {
     final memoryPreview = const ArcMemoryManagementPreviewService()
         .buildPreview();
     final dataRequests = const DataRequestCopyService().buildReview();
+    final consentRegistry = const ConsentPurposeRegistryService()
+        .buildRegistry();
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
@@ -101,9 +104,188 @@ class SettingsScreen extends ConsumerWidget {
               _ArcMemoryManagementPreviewCard(preview: memoryPreview),
               const SizedBox(height: AppSpacing.lg),
               _DataRequestCopyCard(review: dataRequests),
+              const SizedBox(height: AppSpacing.lg),
+              _ConsentPurposeRegistryCard(registry: consentRegistry),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ConsentPurposeRegistryCard extends StatelessWidget {
+  const _ConsentPurposeRegistryCard({required this.registry});
+
+  final ConsentPurposeRegistry registry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.84),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.skyBlue.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppColors.skyBlue.withValues(alpha: 0.34),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.rule_outlined,
+                  color: AppColors.skyBlue,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      registry.heading,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      registry.summary,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.parchment,
+                        height: 1.55,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          ...registry.purposes.map(
+            (purpose) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: _ConsentPurposeTile(purpose: purpose),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: registry.guardrails
+                .map(
+                  (guardrail) => Chip(
+                    label: Text(guardrail),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: AppColors.gold.withValues(alpha: 0.12),
+                    side: BorderSide(
+                      color: AppColors.gold.withValues(alpha: 0.24),
+                    ),
+                    labelStyle: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConsentPurposeTile extends StatelessWidget {
+  const _ConsentPurposeTile({required this.purpose});
+
+  final ConsentPurposeDefinition purpose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.deepNavy.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(_consentPurposeIcon(purpose.purpose), color: AppColors.gold),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  purpose.title,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                purpose.defaultStateLabel,
+                style: const TextStyle(
+                  color: AppColors.skyBlue,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            purpose.summary,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.parchment,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: purpose.dataScope
+                .map(
+                  (scope) => Chip(
+                    label: Text(scope),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: AppColors.white.withValues(alpha: 0.1),
+                    side: BorderSide(
+                      color: AppColors.skyBlue.withValues(alpha: 0.2),
+                    ),
+                    labelStyle: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
       ),
     );
   }
@@ -718,5 +900,14 @@ IconData _dataRequestIcon(DataRequestType type) {
     DataRequestType.deletion => Icons.delete_outline,
     DataRequestType.correction => Icons.edit_note_outlined,
     DataRequestType.withdrawal => Icons.undo_outlined,
+  };
+}
+
+IconData _consentPurposeIcon(ConsentPurpose purpose) {
+  return switch (purpose) {
+    ConsentPurpose.questSupport => Icons.volunteer_activism_outlined,
+    ConsentPurpose.productAnalytics => Icons.query_stats_outlined,
+    ConsentPurpose.aiQualityReview => Icons.auto_fix_high_outlined,
+    ConsentPurpose.externalConnection => Icons.link_outlined,
   };
 }
