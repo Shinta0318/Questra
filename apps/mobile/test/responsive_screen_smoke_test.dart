@@ -185,6 +185,14 @@ void main() {
     expect(find.text('Quest / Mission / Trail'), findsOneWidget);
     expect(find.text('Arc Memory'), findsOneWidget);
     expect(find.text('Betaでは未接続'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Arc Memory管理プレビュー'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Arc Memory管理プレビュー'), findsOneWidget);
+    expect(find.text('記憶を確認'), findsOneWidget);
+    expect(find.text('記憶を削除'), findsOneWidget);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (

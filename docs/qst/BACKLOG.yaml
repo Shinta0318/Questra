@@ -1179,6 +1179,21 @@ items:
       - The UI explains that Quest Support remains disconnected in Beta.
       - Future user controls for export, deletion, Arc Memory management, and correction reporting are visible as planned actions.
       - Service and responsive smoke tests cover the review surface.
+  - id: QST-144
+    title: Arc Memory Management Preview
+    status: Done
+    priority: P1
+    epic: BETA-TRUST
+    depends_on: [QST-143]
+    completed_by:
+      report: reports/qst/QST-144.md
+    scope: Add a Settings preview for future Arc Memory review, deletion, sensitivity, and export controls without mutating stored memory data.
+    acceptance:
+      - Settings exposes an Arc Memory management preview.
+      - The preview explains key memory categories such as Quest, Mission, Trail, Bond, and Emotion Memory.
+      - Future review, deletion, sensitivity, and export actions are visible with non-active statuses.
+      - No real Arc Memory deletion, export, or sensitivity mutation is implemented in this QST.
+      - Service and responsive smoke tests cover the preview.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage
