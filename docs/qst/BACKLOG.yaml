@@ -1241,6 +1241,21 @@ items:
       - Each area has a status label and short explanation.
       - The map does not introduce new data mutation, consent persistence, or navigation complexity.
       - Service and responsive smoke tests cover the map.
+  - id: QST-148
+    title: Settings Component Extraction
+    status: Done
+    priority: P2
+    epic: BETA-TRUST
+    depends_on: [QST-147]
+    completed_by:
+      report: reports/qst/QST-148.md
+    scope: Extract the Arc tutorial presentation from the growing Settings screen while preserving parent-owned state and navigation.
+    acceptance:
+      - Arc tutorial presentation is implemented as a reusable Settings widget.
+      - Replay and Quest navigation actions remain owned by SettingsScreen and are injected as callbacks.
+      - Existing Settings copy and visual behavior remain unchanged.
+      - Widget and responsive smoke tests cover the extracted component.
+      - Flutter analyze passes.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage
