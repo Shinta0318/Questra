@@ -1256,6 +1256,21 @@ items:
       - Existing Settings copy and visual behavior remain unchanged.
       - Widget and responsive smoke tests cover the extracted component.
       - Flutter analyze passes.
+  - id: QST-149
+    title: Trust Settings Card Extraction
+    status: Done
+    priority: P2
+    epic: BETA-TRUST
+    depends_on: [QST-148]
+    completed_by:
+      report: reports/qst/QST-149.md
+    scope: Extract the Trust & Privacy card from SettingsScreen without changing review content, user controls, or future-action visibility.
+    acceptance:
+      - Trust & Privacy presentation is implemented as a reusable Settings widget.
+      - The review heading, trust areas, user controls, and future actions remain visible.
+      - SettingsScreen continues to own review creation and screen ordering.
+      - Widget and responsive smoke tests cover the extracted presentation.
+      - Flutter analyze passes.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage

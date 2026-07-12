@@ -127,6 +127,7 @@ references where they do not conflict with v2.
 | QST-146 | Done | Consent Purpose Registry | Define purpose-specific consent categories before persistence. | Settings separates Quest Support, analytics, Arc quality review, and external connection consent purposes without storing opt-in state. |
 | QST-147 | Done | Trust Settings Information Architecture | Add a Settings Map for trust-related areas. | Settings now orients beta users across Arc tutorial, Trust & Privacy, Arc Memory, data requests, and consent without adding new mutations. |
 | QST-148 | Done | Settings Component Extraction | Separate Settings presentation from orchestration incrementally. | Arc tutorial presentation now lives in a reusable widget while SettingsScreen retains state and routing ownership. |
+| QST-149 | Done | Trust Settings Card Extraction | Extract Trust & Privacy presentation from Settings incrementally. | The Trust & Privacy review card is now reusable while the Settings screen retains review creation and screen composition. |
 
 ## Selection Rules
 
