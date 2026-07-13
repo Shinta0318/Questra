@@ -1271,6 +1271,21 @@ items:
       - SettingsScreen continues to own review creation and screen ordering.
       - Widget and responsive smoke tests cover the extracted presentation.
       - Flutter analyze passes.
+  - id: QST-150
+    title: Arc Memory Settings Card Extraction
+    status: Done
+    priority: P2
+    epic: BETA-TRUST
+    depends_on: [QST-149]
+    completed_by:
+      report: reports/qst/QST-150.md
+    scope: Extract the Arc Memory management preview from SettingsScreen without changing memory types, management actions, or status visibility.
+    acceptance:
+      - Arc Memory management presentation is implemented as a reusable Settings widget.
+      - Memory type previews and management actions remain visible.
+      - SettingsScreen continues to own preview creation and screen ordering.
+      - Widget and responsive smoke tests cover the extracted presentation.
+      - Flutter analyze passes.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage
