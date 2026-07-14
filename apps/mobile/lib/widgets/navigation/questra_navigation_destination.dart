@@ -9,23 +9,17 @@ enum QuestraNavigationDestination {
     icon: Icons.home_outlined,
     selectedIcon: Icons.home,
   ),
-  arc(
-    label: 'Arc',
-    route: AppRoutes.arc,
-    icon: Icons.auto_awesome_outlined,
-    selectedIcon: Icons.auto_awesome,
-  ),
   quest(
     label: 'Quest',
     route: AppRoutes.quest,
     icon: Icons.explore_outlined,
     selectedIcon: Icons.explore,
   ),
-  trail(
-    label: 'Trail',
-    route: AppRoutes.trail,
-    icon: Icons.timeline_outlined,
-    selectedIcon: Icons.timeline,
+  arc(
+    label: 'Arc',
+    route: AppRoutes.arc,
+    icon: Icons.auto_awesome_outlined,
+    selectedIcon: Icons.auto_awesome,
   ),
   guild(
     label: 'Guild',

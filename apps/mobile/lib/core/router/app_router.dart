@@ -42,6 +42,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
       ),
+      GoRoute(
+        path: AppRoutes.trail,
+        builder: (context, state) => const TrailScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),
@@ -51,14 +55,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoutes.home,
                 builder: (context, state) => const HomeScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.arc,
-                builder: (context, state) => const ArcScreen(),
               ),
             ],
           ),
@@ -97,8 +93,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.trail,
-                builder: (context, state) => const TrailScreen(),
+                path: AppRoutes.arc,
+                builder: (context, state) => const ArcScreen(),
               ),
             ],
           ),

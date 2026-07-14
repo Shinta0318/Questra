@@ -129,6 +129,14 @@ references where they do not conflict with v2.
 | QST-148 | Done | Settings Component Extraction | Separate Settings presentation from orchestration incrementally. | Arc tutorial presentation now lives in a reusable widget while SettingsScreen retains state and routing ownership. |
 | QST-149 | Done | Trust Settings Card Extraction | Extract Trust & Privacy presentation from Settings incrementally. | The Trust & Privacy review card is now reusable while the Settings screen retains review creation and screen composition. |
 | QST-150 | Done | Arc Memory Settings Card Extraction | Extract Arc Memory management presentation from Settings incrementally. | The Arc Memory preview is now reusable while the Settings screen retains preview creation and screen composition. |
+| QST-151 | Done | Current Screen and Flow Audit | Audit the app before simplification without deleting implementation or data. | Screens, routes, navigation, persistence, mock data, duplicated flows, and progress gaps are documented in `docs/qst/QST-141-screen-audit.md`. |
+| QST-152 | Done | Navigation Simplification | Reduce primary navigation to Home, Quest, Arc, Guild, and Profile. | Compact and wide navigation now share five destinations; Trail remains a hidden route and duplicate Shell actions are removed. |
+| QST-153 | Ready | Common UI Simplification | Unify the five primary screens around shared layout and state rules. | Standardize backgrounds, headings, cards, actions, progress, empty/loading/error, and Coming Soon surfaces. |
+| QST-154 | Planned | Home Simplification | Make today's next action obvious. | Show only Arc message/CTA, current Missions, and active Quests. |
+| QST-155 | Planned | Arc-led Quest Creation | Make Arc the primary Quest creation entry. | Generate editable Quest candidates and persist only after explicit confirmation. |
+| QST-156 | Planned | Quest Mission Decomposition Simplification | Focus Quest detail on actionable Missions. | Generate and edit Mission candidates before persistence using existing models. |
+| QST-157 | Planned | Unified Quest Progress | Derive Quest progress from Mission completion everywhere. | Home, Quest list, and detail share one calculation and persisted result. |
+| QST-158 | Planned | Guild and Trail Coming Soon Review | Hide unfinished community and Trail interactions during simplification. | Preserve code/data while presenting shared Coming Soon surfaces and running the end-to-end review. |
 
 ## Selection Rules
 

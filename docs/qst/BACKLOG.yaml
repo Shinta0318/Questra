@@ -1286,6 +1286,108 @@ items:
       - SettingsScreen continues to own preview creation and screen ordering.
       - Widget and responsive smoke tests cover the extracted presentation.
       - Flutter analyze passes.
+  - id: QST-151
+    requested_id: QST-141
+    title: Current Screen and Flow Audit
+    status: Done
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-150]
+    completed_by:
+      report: reports/qst/QST-151.md
+    scope: Audit screens, routes, navigation, primary actions, persistence, mock data, unfinished features, duplicated flows, and UI inconsistencies without deleting code or data.
+    acceptance:
+      - All screens and routes are classified as keep, simplify, Coming Soon, or hidden.
+      - Mock data, duplicated entry points, incomplete features, and progress inconsistencies are documented.
+      - Database tables are categorized without changing migrations or user data.
+      - docs/qst/QST-141-screen-audit.md defines the next implementation scope.
+  - id: QST-152
+    requested_id: QST-142
+    title: Navigation Simplification
+    status: Done
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-151]
+    completed_by:
+      report: reports/qst/QST-152.md
+    scope: Standardize primary navigation to Home, Quest, Arc, Guild, and Profile while preserving hidden Trail routes and implementation.
+    acceptance:
+      - Compact and wide navigation use the same five destinations and order.
+      - Trail is removed from primary navigation without deleting its route or data.
+      - Quest creation points to Arc as the primary entry.
+      - Incomplete features are not opened from quick actions.
+  - id: QST-153
+    requested_id: QST-143
+    title: Common UI Simplification
+    status: Ready
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-152]
+    scope: Unify page background, AppBar, cards, actions, headings, progress, states, and Coming Soon presentation across the five primary screens.
+    acceptance:
+      - Home, Quest, Arc, Guild, and Profile use shared layout rules.
+      - Primary actions and states have consistent presentation.
+      - Compact layouts and dark-theme contrast remain valid.
+  - id: QST-154
+    requested_id: QST-144
+    title: Home Simplification
+    status: Planned
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-153]
+    scope: Limit Home to a short Arc message, one Arc CTA, up to five current Missions, and up to three active Quests.
+    acceptance:
+      - Arc is reachable in one tap.
+      - Home can complete a Mission and open Quest detail.
+      - Guild, Trail, Horizon, rankings, offers, and mock cards are not shown.
+  - id: QST-155
+    requested_id: QST-145
+    title: Arc-led Quest Creation
+    status: Planned
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-154]
+    scope: Make Arc natural-language input the primary Quest creation flow with editable 3-7 Quest candidates and explicit confirmation before persistence.
+    acceptance:
+      - Candidates can be edited, added, removed, reordered, and regenerated.
+      - Only confirmed Quests are saved.
+      - Input survives AI failure and manual fallback remains available.
+  - id: QST-156
+    requested_id: QST-146
+    title: Quest Mission Decomposition Simplification
+    status: Planned
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-155]
+    scope: Focus Quest detail on description, progress, editable Missions, Mission generation, and Quest editing using existing models.
+    acceptance:
+      - Mission generation creates editable 3-10 action-sized candidates before save.
+      - Missions can be added, edited, deleted, reordered, completed, and marked for today.
+      - Saved Missions remain after reload.
+  - id: QST-157
+    requested_id: QST-147
+    title: Unified Quest Progress
+    status: Planned
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-156]
+    scope: Use completed Mission count divided by all Mission count as the single Quest progress rule across Home, Quest list, and Quest detail.
+    acceptance:
+      - Zero Missions produce zero percent progress.
+      - All three surfaces show the same percent and completed/total counts.
+      - Mission completion updates and persists Quest progress.
+  - id: QST-158
+    requested_id: QST-148
+    title: Guild and Trail Coming Soon Review
+    status: Planned
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-157]
+    scope: Replace Guild and Trail primary surfaces with a shared Coming Soon experience and run the end-to-end simplification review without deleting existing implementation or data.
+    acceptance:
+      - Guild and Trail show only feature name, short copy, Questra imagery, Coming Soon, and Home action.
+      - Mock posts, comments, rankings, creation controls, and filters are hidden.
+      - The Arc-to-Quest-to-Mission-to-progress flow passes integration review.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage
