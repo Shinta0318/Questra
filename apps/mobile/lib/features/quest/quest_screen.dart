@@ -9,6 +9,7 @@ import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/layout/questra_screen_surface.dart';
 import '../../widgets/menu/questra_action_menu.dart';
 import '../../widgets/persistence_sync_banner.dart';
 import '../arc/arc_concern_service.dart';
@@ -65,7 +66,7 @@ class QuestScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SafeArea(
+      body: QuestraScreenSurface(
         child: QuestraResponsiveListView(
           showScrollbar: true,
           onRefresh: profile == null

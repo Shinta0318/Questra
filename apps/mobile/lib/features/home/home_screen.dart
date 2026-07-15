@@ -11,6 +11,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/layout/questra_screen_surface.dart';
 import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_daily_greeting_service.dart';
 import '../arc/arc_emotion_timeline_controller.dart';
@@ -119,102 +120,97 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: AppGradients.adventure),
-        child: SafeArea(
-          child: QuestraResponsiveListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              AppSpacing.lg,
-              AppSpacing.xl,
-              AppSpacing.xxl,
+      body: QuestraScreenSurface(
+        child: QuestraResponsiveListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.lg,
+            AppSpacing.xl,
+            AppSpacing.xxl,
+          ),
+          children: [
+            const _CaptainStatusBar(),
+            const SizedBox(height: AppSpacing.lg),
+            _ArcHero(greeting: greeting),
+            const SizedBox(height: AppSpacing.md),
+            _JourneyFlowCard(
+              activeQuest: activeQuests.firstOrNull,
+              mission: todayMission,
+              onOpenArc: () => context.go(AppRoutes.arc),
+              onOpenQuest: () => context.go(AppRoutes.quest),
+              onCreateQuest: () => context.go('${AppRoutes.quest}/create'),
             ),
-            children: [
-              const _CaptainStatusBar(),
-              const SizedBox(height: AppSpacing.lg),
-              _ArcHero(greeting: greeting),
+            const SizedBox(height: AppSpacing.lg),
+            _ArcSignalCard(
+              emotion: latestEvent?.emotion ?? inactiveDecision.emotion,
+              label: latestEvent?.sourceType.label ?? 'Arc Signal',
+              message: latestEvent?.reason ?? inactiveDecision.message,
+            ),
+            if (missionSignals.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.md),
-              _JourneyFlowCard(
-                activeQuest: activeQuests.firstOrNull,
-                mission: todayMission,
-                onOpenArc: () => context.go(AppRoutes.arc),
-                onOpenQuest: () => context.go(AppRoutes.quest),
-                onCreateQuest: () => context.go('${AppRoutes.quest}/create'),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _ArcSignalCard(
-                emotion: latestEvent?.emotion ?? inactiveDecision.emotion,
-                label: latestEvent?.sourceType.label ?? 'Arc Signal',
-                message: latestEvent?.reason ?? inactiveDecision.message,
-              ),
-              if (missionSignals.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.md),
-                _MissionSignalCard(signal: missionSignals.first),
-              ],
-              const SizedBox(height: AppSpacing.xl),
-              _HomeSectionHeader(
-                title: '今日のMission',
-                actionLabel: 'Missionへ',
-                onAction: () => context.go(AppRoutes.mission),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _TodayMissionCard(
-                mission: todayMission,
-                onOpenMission: () => context.go(AppRoutes.mission),
-                onCreateQuest: () => context.go('${AppRoutes.quest}/create'),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              _HomeSectionHeader(
-                title: '進行中のQuest',
-                actionLabel: 'すべて見る',
-                onAction: () => context.go(AppRoutes.quest),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              if (activeQuests.isEmpty)
-                _HomeEmptyActionCard(
-                  icon: Icons.flag_outlined,
-                  title: 'まだ進行中のQuestはありません',
-                  message: '最初のQuestを灯すと、ArcがMissionとTrailへの航路を一緒に描きます。',
-                  actionLabel: '新しいQuestを始める',
-                  onAction: () => context.go('${AppRoutes.quest}/create'),
-                )
-              else
-                ...activeQuests
-                    .take(2)
-                    .map(
-                      (quest) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                        child: _ActiveQuestCard(
-                          quest: quest,
-                          onTap: () =>
-                              context.go('${AppRoutes.quest}/${quest.id}'),
-                        ),
+              _MissionSignalCard(signal: missionSignals.first),
+            ],
+            const SizedBox(height: AppSpacing.xl),
+            _HomeSectionHeader(
+              title: '今日のMission',
+              actionLabel: 'Missionへ',
+              onAction: () => context.go(AppRoutes.mission),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _TodayMissionCard(
+              mission: todayMission,
+              onOpenMission: () => context.go(AppRoutes.mission),
+              onCreateQuest: () => context.go('${AppRoutes.quest}/create'),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            _HomeSectionHeader(
+              title: '進行中のQuest',
+              actionLabel: 'すべて見る',
+              onAction: () => context.go(AppRoutes.quest),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            if (activeQuests.isEmpty)
+              _HomeEmptyActionCard(
+                icon: Icons.flag_outlined,
+                title: 'まだ進行中のQuestはありません',
+                message: '最初のQuestを灯すと、ArcがMissionとTrailへの航路を一緒に描きます。',
+                actionLabel: '新しいQuestを始める',
+                onAction: () => context.go('${AppRoutes.quest}/create'),
+              )
+            else
+              ...activeQuests
+                  .take(2)
+                  .map(
+                    (quest) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: _ActiveQuestCard(
+                        quest: quest,
+                        onTap: () =>
+                            context.go('${AppRoutes.quest}/${quest.id}'),
                       ),
                     ),
-              const SizedBox(height: AppSpacing.lg),
-              _HomeSectionHeader(
-                title: '最近のTrail',
-                actionLabel: 'Trailへ',
-                onAction: () => context.go(AppRoutes.trail),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _RecentTrailsCard(
-                trails: visibleRecentTrails,
-                onOpenTrail: () => context.go(AppRoutes.trail),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _GuildActivitySummary(
-                contextCount: guildContextCount,
-                onOpenGuild: () => context.go(AppRoutes.guild),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              _StarMapPreview(
-                recommendation: starMapRecommendations.firstOrNull,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _HorizonChallengeCard(challenge: horizonChallenge),
-            ],
-          ),
+                  ),
+            const SizedBox(height: AppSpacing.lg),
+            _HomeSectionHeader(
+              title: '最近のTrail',
+              actionLabel: 'Trailへ',
+              onAction: () => context.go(AppRoutes.trail),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _RecentTrailsCard(
+              trails: visibleRecentTrails,
+              onOpenTrail: () => context.go(AppRoutes.trail),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _GuildActivitySummary(
+              contextCount: guildContextCount,
+              onOpenGuild: () => context.go(AppRoutes.guild),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            _StarMapPreview(recommendation: starMapRecommendations.firstOrNull),
+            const SizedBox(height: AppSpacing.lg),
+            _HorizonChallengeCard(challenge: horizonChallenge),
+          ],
         ),
       ),
     );

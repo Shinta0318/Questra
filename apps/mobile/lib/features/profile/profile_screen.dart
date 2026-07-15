@@ -7,6 +7,7 @@ import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/layout/questra_screen_surface.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_bond_service.dart';
@@ -53,7 +54,7 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('プロフィール')),
-      body: SafeArea(
+      body: QuestraScreenSurface(
         child: QuestraResponsiveListView(
           maxContentWidth: 720,
           padding: const EdgeInsets.all(20),

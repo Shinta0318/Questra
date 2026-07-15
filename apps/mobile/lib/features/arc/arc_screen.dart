@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/analytics/analytics_service.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_gradients.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
@@ -15,6 +14,7 @@ import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/layout/questra_screen_surface.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
@@ -66,89 +66,86 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(gradient: AppGradients.adventure),
-        child: SafeArea(
-          child: Column(
-            children: [
-              const _ArcHeader(),
-              Expanded(
-                child: QuestraResponsiveListView(
-                  showScrollbar: true,
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.xl,
-                    AppSpacing.md,
-                    AppSpacing.xl,
-                    AppSpacing.xl,
-                  ),
-                  children: [
-                    _ArcCommandCenterCard(
-                      activeQuestCount: quests
-                          .where((quest) => quest.status == QuestStatus.active)
-                          .length,
-                      missionCount: missions.length,
-                      trailCount: trails.length,
-                      onOpenQuest: () => context.go(AppRoutes.quest),
-                      onOpenTrail: () => context.go(AppRoutes.trail),
-                      onHorizon: () => _send(
-                        '次の挑戦の候補を一緒に探したい。',
-                        quests: quests,
-                        missions: missions,
-                        trails: trails,
-                        memories: memories.asData?.value ?? const [],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    ..._messages.map(
-                      (message) => _ArcMessageBubble(
-                        text: message.text,
-                        fromArc: message.fromArc,
-                        emotion: message.fromArc
-                            ? ArcEmotion.support
-                            : ArcEmotion.normal,
-                      ),
-                    ),
-                    if (_isThinking) const _ArcThinkingBubble(),
-                    const _ShootingStarDivider(),
-                    _ArcActionCard(
-                      onQuickAction: (text) => _send(
-                        text,
-                        quests: quests,
-                        missions: missions,
-                        trails: trails,
-                        memories: memories.asData?.value ?? const [],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _ArcEmotionTimelineCard(events: emotionEvents),
-                    if ((memories.asData?.value ?? const []).isEmpty) ...[
-                      const SizedBox(height: AppSpacing.lg),
-                      ArcEmptyState(
-                        title: 'Arc Memoryはまだ静かな星図です',
-                        message:
-                            'Quest、Mission、Trailを進めると、Arcが大切な手がかりを少しずつ覚えていきます。',
-                        actionLabel: 'Questを進める',
-                        icon: Icons.travel_explore_outlined,
-                        onAction: () => context.go(AppRoutes.quest),
-                      ),
-                    ],
-                  ],
+      body: QuestraScreenSurface(
+        child: Column(
+          children: [
+            const _ArcHeader(),
+            Expanded(
+              child: QuestraResponsiveListView(
+                showScrollbar: true,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.md,
+                  AppSpacing.xl,
+                  AppSpacing.xl,
                 ),
+                children: [
+                  _ArcCommandCenterCard(
+                    activeQuestCount: quests
+                        .where((quest) => quest.status == QuestStatus.active)
+                        .length,
+                    missionCount: missions.length,
+                    trailCount: trails.length,
+                    onOpenQuest: () => context.go(AppRoutes.quest),
+                    onOpenTrail: () => context.go(AppRoutes.trail),
+                    onHorizon: () => _send(
+                      '次の挑戦の候補を一緒に探したい。',
+                      quests: quests,
+                      missions: missions,
+                      trails: trails,
+                      memories: memories.asData?.value ?? const [],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  ..._messages.map(
+                    (message) => _ArcMessageBubble(
+                      text: message.text,
+                      fromArc: message.fromArc,
+                      emotion: message.fromArc
+                          ? ArcEmotion.support
+                          : ArcEmotion.normal,
+                    ),
+                  ),
+                  if (_isThinking) const _ArcThinkingBubble(),
+                  const _ShootingStarDivider(),
+                  _ArcActionCard(
+                    onQuickAction: (text) => _send(
+                      text,
+                      quests: quests,
+                      missions: missions,
+                      trails: trails,
+                      memories: memories.asData?.value ?? const [],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _ArcEmotionTimelineCard(events: emotionEvents),
+                  if ((memories.asData?.value ?? const []).isEmpty) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    ArcEmptyState(
+                      title: 'Arc Memoryはまだ静かな星図です',
+                      message:
+                          'Quest、Mission、Trailを進めると、Arcが大切な手がかりを少しずつ覚えていきます。',
+                      actionLabel: 'Questを進める',
+                      icon: Icons.travel_explore_outlined,
+                      onAction: () => context.go(AppRoutes.quest),
+                    ),
+                  ],
+                ],
               ),
-              _ArcInputBar(
-                controller: _controller,
-                onSend: () {
-                  _send(
-                    _controller.text,
-                    quests: quests,
-                    missions: missions,
-                    trails: trails,
-                    memories: memories.asData?.value ?? const [],
-                  );
-                },
-              ),
-            ],
-          ),
+            ),
+            _ArcInputBar(
+              controller: _controller,
+              onSend: () {
+                _send(
+                  _controller.text,
+                  quests: quests,
+                  missions: missions,
+                  trails: trails,
+                  memories: memories.asData?.value ?? const [],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

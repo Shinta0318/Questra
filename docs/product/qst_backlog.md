@@ -131,8 +131,8 @@ references where they do not conflict with v2.
 | QST-150 | Done | Arc Memory Settings Card Extraction | Extract Arc Memory management presentation from Settings incrementally. | The Arc Memory preview is now reusable while the Settings screen retains preview creation and screen composition. |
 | QST-151 | Done | Current Screen and Flow Audit | Audit the app before simplification without deleting implementation or data. | Screens, routes, navigation, persistence, mock data, duplicated flows, and progress gaps are documented in `docs/qst/QST-141-screen-audit.md`. |
 | QST-152 | Done | Navigation Simplification | Reduce primary navigation to Home, Quest, Arc, Guild, and Profile. | Compact and wide navigation now share five destinations; Trail remains a hidden route and duplicate Shell actions are removed. |
-| QST-153 | Ready | Common UI Simplification | Unify the five primary screens around shared layout and state rules. | Standardize backgrounds, headings, cards, actions, progress, empty/loading/error, and Coming Soon surfaces. |
-| QST-154 | Planned | Home Simplification | Make today's next action obvious. | Show only Arc message/CTA, current Missions, and active Quests. |
+| QST-153 | Done | Common UI Simplification | Unify the five primary screens around shared layout and state rules. | Home, Quest, Arc, Guild, and Profile now share one background/SafeArea surface, with a reusable Coming Soon state ready for deferred features. |
+| QST-154 | Ready | Home Simplification | Make today's next action obvious. | Show only Arc message/CTA, current Missions, and active Quests. |
 | QST-155 | Planned | Arc-led Quest Creation | Make Arc the primary Quest creation entry. | Generate editable Quest candidates and persist only after explicit confirmation. |
 | QST-156 | Planned | Quest Mission Decomposition Simplification | Focus Quest detail on actionable Missions. | Generate and edit Mission candidates before persistence using existing models. |
 | QST-157 | Planned | Unified Quest Progress | Derive Quest progress from Mission completion everywhere. | Home, Quest list, and detail share one calculation and persisted result. |

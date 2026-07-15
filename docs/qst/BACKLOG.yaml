@@ -1319,10 +1319,12 @@ items:
   - id: QST-153
     requested_id: QST-143
     title: Common UI Simplification
-    status: Ready
+    status: Done
     priority: P0
     epic: SIMPLIFICATION
     depends_on: [QST-152]
+    completed_by:
+      report: reports/qst/QST-153.md
     scope: Unify page background, AppBar, cards, actions, headings, progress, states, and Coming Soon presentation across the five primary screens.
     acceptance:
       - Home, Quest, Arc, Guild, and Profile use shared layout rules.
@@ -1331,7 +1333,7 @@ items:
   - id: QST-154
     requested_id: QST-144
     title: Home Simplification
-    status: Planned
+    status: Ready
     priority: P0
     epic: SIMPLIFICATION
     depends_on: [QST-153]
