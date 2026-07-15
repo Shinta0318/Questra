@@ -12,25 +12,16 @@ import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
-import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_daily_greeting_service.dart';
-import '../arc/arc_emotion_timeline_controller.dart';
-import '../arc/arc_emotion_timeline_model.dart';
-import '../arc/arc_guidance_providers.dart';
-import '../arc/navigator_rank_service.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_state.dart';
-import '../challenge_graph/challenge_graph_preview_service.dart';
 import '../horizon/horizon_next_challenge_service.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_model.dart';
 import '../signal/mission_signal_model.dart';
-import '../signal/signal_providers.dart';
 import '../star_map/star_map_recommendation_service.dart';
-import '../trail/trail_controller.dart';
-import '../trail/trail_highlight_service.dart';
 import '../trail/trail_model.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -41,64 +32,12 @@ class HomeScreen extends ConsumerWidget {
     final profile = ref.watch(authControllerProvider).profile;
     final quests = ref.watch(questControllerProvider);
     final missions = ref.watch(missionControllerProvider);
-    final trails = ref.watch(trailControllerProvider);
-    final emotionEvents = ref.watch(arcEmotionTimelineControllerProvider);
-    final latestEvent = emotionEvents.firstOrNull;
-    final inactiveDecision = ref
-        .watch(arcActionTriggerServiceProvider)
-        .resolve(trigger: ArcActionTrigger.inactiveConcern);
-    final missionSignals = ref
-        .watch(missionSignalServiceProvider)
-        .generate(
-          quests: quests,
-          missions: missions,
-          now: DateTime.now(),
-          signalFrequency: profile?.signalFrequency ?? SignalFrequency.balanced,
-        );
-    final trailHighlights = const TrailHighlightService().rank(
-      trails: trails,
-      attachments: const {},
-    );
-    final graphInsights = quests
-        .where((quest) => quest.status == QuestStatus.active)
-        .expand(
-          (quest) => const ChallengeGraphPreviewService().insightsForQuest(
-            quest: quest,
-            missions: missions,
-            trails: trails,
-          ),
-        )
-        .toList(growable: false);
-    final starMapRecommendations = const StarMapRecommendationService()
-        .recommend(
-          quests: quests,
-          missions: missions,
-          trails: trails,
-          highlights: trailHighlights,
-          graphInsights: graphInsights,
-        );
-    final navigatorRank = ref
-        .watch(navigatorRankServiceProvider)
-        .resolve(
-          quests: quests,
-          missions: missions,
-          trails: trails,
-          bondScore: profile?.bondScore ?? 0,
-          stardustBalance: profile?.stardustBalance ?? 0,
-        );
-    final horizonChallenge = const HorizonNextChallengeService().suggest(
-      rank: navigatorRank,
-      quests: quests,
-      missions: missions,
-      trails: trails,
-      graphInsights: graphInsights,
-    );
     final greeting = ref
         .watch(arcDailyGreetingServiceProvider)
         .resolve(
           quests: quests,
           missions: missions,
-          trails: trails,
+          trails: const [],
           now: DateTime.now(),
           nickname: profile?.nickname,
           arcName: profile?.arcName,
@@ -107,16 +46,10 @@ class HomeScreen extends ConsumerWidget {
     final activeQuests =
         quests.where((quest) => quest.status == QuestStatus.active).toList()
           ..sort((a, b) => b.progress.compareTo(a.progress));
-    final todayMission = missions
+    final todayMissions = missions
         .where((mission) => mission.status == MissionStatus.todo)
-        .firstOrNull;
-    final recentTrails = trails.toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final visibleRecentTrails = recentTrails.take(2).toList(growable: false);
-    final guildContextCount =
-        activeQuests.length +
-        visibleRecentTrails.length +
-        missionSignals.length;
+        .take(5)
+        .toList(growable: false);
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
@@ -129,87 +62,51 @@ class HomeScreen extends ConsumerWidget {
             AppSpacing.xxl,
           ),
           children: [
-            const _CaptainStatusBar(),
-            const SizedBox(height: AppSpacing.lg),
-            _ArcHero(greeting: greeting),
-            const SizedBox(height: AppSpacing.md),
-            _JourneyFlowCard(
-              activeQuest: activeQuests.firstOrNull,
-              mission: todayMission,
+            _SimplifiedArcHero(
+              message: greeting.message,
               onOpenArc: () => context.go(AppRoutes.arc),
-              onOpenQuest: () => context.go(AppRoutes.quest),
-              onCreateQuest: () => context.go('${AppRoutes.quest}/create'),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            _ArcSignalCard(
-              emotion: latestEvent?.emotion ?? inactiveDecision.emotion,
-              label: latestEvent?.sourceType.label ?? 'Arc Signal',
-              message: latestEvent?.reason ?? inactiveDecision.message,
-            ),
-            if (missionSignals.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.md),
-              _MissionSignalCard(signal: missionSignals.first),
-            ],
             const SizedBox(height: AppSpacing.xl),
-            _HomeSectionHeader(
-              title: '今日のMission',
-              actionLabel: 'Missionへ',
-              onAction: () => context.go(AppRoutes.mission),
-            ),
+            const _SimpleSectionTitle(title: '今日やるMission'),
             const SizedBox(height: AppSpacing.md),
-            _TodayMissionCard(
-              mission: todayMission,
-              onOpenMission: () => context.go(AppRoutes.mission),
-              onCreateQuest: () => context.go('${AppRoutes.quest}/create'),
+            _HomeMissionList(
+              missions: todayMissions,
+              onComplete: (mission) => ref
+                  .read(missionControllerProvider.notifier)
+                  .completeMission(mission.id),
+              onOpenArc: () => context.go(AppRoutes.arc),
             ),
             const SizedBox(height: AppSpacing.xl),
-            _HomeSectionHeader(
-              title: '進行中のQuest',
-              actionLabel: 'すべて見る',
-              onAction: () => context.go(AppRoutes.quest),
-            ),
+            const _SimpleSectionTitle(title: '進行中のQuest'),
             const SizedBox(height: AppSpacing.md),
             if (activeQuests.isEmpty)
               _HomeEmptyActionCard(
                 icon: Icons.flag_outlined,
                 title: 'まだ進行中のQuestはありません',
-                message: '最初のQuestを灯すと、ArcがMissionとTrailへの航路を一緒に描きます。',
-                actionLabel: '新しいQuestを始める',
-                onAction: () => context.go('${AppRoutes.quest}/create'),
+                message: 'Arcに叶えたいことを話して、最初のQuestを見つけましょう。',
+                actionLabel: 'Arcに話す',
+                onAction: () => context.go(AppRoutes.arc),
               )
             else
               ...activeQuests
-                  .take(2)
+                  .take(3)
                   .map(
                     (quest) => Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.md),
                       child: _ActiveQuestCard(
                         quest: quest,
+                        nextMission: missions
+                            .where(
+                              (mission) =>
+                                  mission.questId == quest.id &&
+                                  mission.status == MissionStatus.todo,
+                            )
+                            .firstOrNull,
                         onTap: () =>
                             context.go('${AppRoutes.quest}/${quest.id}'),
                       ),
                     ),
                   ),
-            const SizedBox(height: AppSpacing.lg),
-            _HomeSectionHeader(
-              title: '最近のTrail',
-              actionLabel: 'Trailへ',
-              onAction: () => context.go(AppRoutes.trail),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _RecentTrailsCard(
-              trails: visibleRecentTrails,
-              onOpenTrail: () => context.go(AppRoutes.trail),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            _GuildActivitySummary(
-              contextCount: guildContextCount,
-              onOpenGuild: () => context.go(AppRoutes.guild),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            _StarMapPreview(recommendation: starMapRecommendations.firstOrNull),
-            const SizedBox(height: AppSpacing.lg),
-            _HorizonChallengeCard(challenge: horizonChallenge),
           ],
         ),
       ),
@@ -217,6 +114,8 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
+// Kept for the post-simplification Horizon phase.
+// ignore: unused_element
 class _HorizonChallengeCard extends StatelessWidget {
   const _HorizonChallengeCard({required this.challenge});
 
@@ -282,6 +181,8 @@ class _HorizonChallengeCard extends StatelessWidget {
   }
 }
 
+// Kept for the post-simplification Signal phase.
+// ignore: unused_element
 class _MissionSignalCard extends StatelessWidget {
   const _MissionSignalCard({required this.signal});
 
@@ -344,6 +245,8 @@ class _MissionSignalCard extends StatelessWidget {
   }
 }
 
+// Kept for the post-simplification Arc signal phase.
+// ignore: unused_element
 class _ArcSignalCard extends StatelessWidget {
   const _ArcSignalCard({
     required this.emotion,
@@ -398,6 +301,8 @@ class _ArcSignalCard extends StatelessWidget {
   }
 }
 
+// Kept for the post-simplification progression phase.
+// ignore: unused_element
 class _CaptainStatusBar extends StatelessWidget {
   const _CaptainStatusBar();
 
@@ -475,6 +380,165 @@ class _MetricPill extends StatelessWidget {
   }
 }
 
+class _SimplifiedArcHero extends StatelessWidget {
+  const _SimplifiedArcHero({required this.message, required this.onOpenArc});
+
+  final String message;
+  final VoidCallback onOpenArc;
+
+  @override
+  Widget build(BuildContext context) {
+    return _HomeGlassCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ArcWidget(
+            emotion: ArcEmotion.support,
+            size: 100,
+            showSpeechBubble: false,
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '今日は何を叶えたい？',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  message,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.parchment,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                FilledButton.icon(
+                  onPressed: onOpenArc,
+                  icon: const Icon(Icons.auto_awesome),
+                  label: const Text('Arcに話す'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SimpleSectionTitle extends StatelessWidget {
+  const _SimpleSectionTitle({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+        color: AppColors.white,
+        fontWeight: FontWeight.w900,
+      ),
+    );
+  }
+}
+
+class _HomeMissionList extends StatelessWidget {
+  const _HomeMissionList({
+    required this.missions,
+    required this.onComplete,
+    required this.onOpenArc,
+  });
+
+  final List<Mission> missions;
+  final ValueChanged<Mission> onComplete;
+  final VoidCallback onOpenArc;
+
+  @override
+  Widget build(BuildContext context) {
+    if (missions.isEmpty) {
+      return _HomeEmptyActionCard(
+        icon: Icons.task_alt_outlined,
+        title: '今日やるMissionはまだありません',
+        message: 'Arcに叶えたいことを話すと、最初の一歩を一緒に整理できます。',
+        actionLabel: 'Arcに話す',
+        onAction: onOpenArc,
+      );
+    }
+
+    return _HomeGlassCard(
+      child: Column(
+        children: [
+          for (var index = 0; index < missions.length; index++) ...[
+            _HomeMissionTile(
+              mission: missions[index],
+              onComplete: () => onComplete(missions[index]),
+            ),
+            if (index != missions.length - 1)
+              Divider(color: AppColors.skyBlue.withValues(alpha: 0.18)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeMissionTile extends StatelessWidget {
+  const _HomeMissionTile({required this.mission, required this.onComplete});
+
+  final Mission mission;
+  final VoidCallback onComplete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Checkbox(
+          value: false,
+          onChanged: (_) => onComplete(),
+          semanticLabel: '${mission.title}を完了',
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                mission.title,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                mission.questTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.skyBlue,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Kept as the richer Home hero variant for a later phase.
+// ignore: unused_element
 class _ArcHero extends StatelessWidget {
   const _ArcHero({required this.greeting});
 
@@ -520,6 +584,8 @@ class _ArcHero extends StatelessWidget {
   }
 }
 
+// Kept for secondary Home sections after the center flow is stable.
+// ignore: unused_element
 class _HomeSectionHeader extends StatelessWidget {
   const _HomeSectionHeader({
     required this.title,
@@ -550,6 +616,8 @@ class _HomeSectionHeader extends StatelessWidget {
   }
 }
 
+// Kept for a later journey overview phase.
+// ignore: unused_element
 class _JourneyFlowCard extends StatelessWidget {
   const _JourneyFlowCard({
     required this.activeQuest,
@@ -705,6 +773,8 @@ class _FlowStepPill extends StatelessWidget {
   }
 }
 
+// Kept as a detailed single-Mission variant.
+// ignore: unused_element
 class _TodayMissionCard extends StatelessWidget {
   const _TodayMissionCard({
     required this.mission,
@@ -775,9 +845,14 @@ class _TodayMissionCard extends StatelessWidget {
 }
 
 class _ActiveQuestCard extends StatelessWidget {
-  const _ActiveQuestCard({required this.quest, required this.onTap});
+  const _ActiveQuestCard({
+    required this.quest,
+    required this.nextMission,
+    required this.onTap,
+  });
 
   final Quest quest;
+  final Mission? nextMission;
   final VoidCallback onTap;
 
   @override
@@ -802,6 +877,18 @@ class _ActiveQuestCard extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
               ),
+              if (nextMission != null) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  '次のMission: ${nextMission!.title}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.parchment,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.sm),
               ExcludeSemantics(
                 child: ClipRRect(
@@ -841,6 +928,8 @@ class _ActiveQuestCard extends StatelessWidget {
   }
 }
 
+// Kept for the post-simplification Trail phase.
+// ignore: unused_element
 class _RecentTrailsCard extends StatelessWidget {
   const _RecentTrailsCard({required this.trails, required this.onOpenTrail});
 
@@ -911,6 +1000,8 @@ class _RecentTrailsCard extends StatelessWidget {
   }
 }
 
+// Kept for the post-simplification Guild phase.
+// ignore: unused_element
 class _GuildActivitySummary extends StatelessWidget {
   const _GuildActivitySummary({
     required this.contextCount,
@@ -1098,6 +1189,8 @@ class _QuestTag extends StatelessWidget {
   }
 }
 
+// Kept for the post-simplification Star Map phase.
+// ignore: unused_element
 class _StarMapPreview extends StatelessWidget {
   const _StarMapPreview({required this.recommendation});
 

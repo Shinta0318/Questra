@@ -1333,10 +1333,12 @@ items:
   - id: QST-154
     requested_id: QST-144
     title: Home Simplification
-    status: Ready
+    status: Done
     priority: P0
     epic: SIMPLIFICATION
     depends_on: [QST-153]
+    completed_by:
+      report: reports/qst/QST-154.md
     scope: Limit Home to a short Arc message, one Arc CTA, up to five current Missions, and up to three active Quests.
     acceptance:
       - Arc is reachable in one tap.
@@ -1345,7 +1347,7 @@ items:
   - id: QST-155
     requested_id: QST-145
     title: Arc-led Quest Creation
-    status: Planned
+    status: Ready
     priority: P0
     epic: SIMPLIFICATION
     depends_on: [QST-154]

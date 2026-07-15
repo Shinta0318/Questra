@@ -53,7 +53,7 @@ void main() {
     });
   }
 
-  testWidgets('Home orders beta journey sections without mock ownership', (
+  testWidgets('Home exposes only Arc, Mission, and active Quest sections', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 900);
@@ -66,29 +66,19 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Home → Arc → Quest'), findsOneWidget);
-    expect(find.text('今日のMission'), findsOneWidget);
-    expect(find.text('Missionへ'), findsOneWidget);
+    expect(find.text('今日は何を叶えたい？'), findsOneWidget);
+    expect(find.text('Arcに話す'), findsWidgets);
+    expect(find.text('今日やるMission'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('進行中のQuest'),
       180,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('進行中のQuest'), findsOneWidget);
-    expect(find.text('すべて見る'), findsOneWidget);
-
-    await tester.scrollUntilVisible(
-      find.text('最近のTrail'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('最近のTrail'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Guildの動き'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Guildの動き'), findsOneWidget);
+    expect(find.text('最近のTrail'), findsNothing);
+    expect(find.text('Guildの動き'), findsNothing);
+    expect(find.text('Star Map'), findsNothing);
+    expect(find.text('Horizon'), findsNothing);
   });
 
   testWidgets('Quest Detail exposes journey overview and next action', (
