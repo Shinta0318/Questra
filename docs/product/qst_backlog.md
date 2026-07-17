@@ -139,7 +139,7 @@ references where they do not conflict with v2.
 | QST-158 | Done | Guild and Trail Coming Soon Review | Hide unfinished community and Trail interactions during simplification. | Guild and Trail now use the shared Coming Soon surface, while existing implementation and data remain preserved outside the production flow. |
 | QST-159 | Done | Beta Candidate Manifest Automation | Make candidate identity and automated evidence reproducible. | Validated source and rollback commits plus nine automated gates are recorded; missing artifact and external evidence keep distribution disabled. |
 | QST-160 | In Progress | Supabase Beta Project Bootstrap | Establish the real Beta Supabase environment. | Local bootstrap and strict evidence gate are ready; hosted project, migration, function, and secret-name evidence remain pending. |
-| QST-161 | Planned | Cloud Migration and RLS Evidence | Run migrations and RLS checks against the Beta database. | Database-backed owner and cross-account checks pass. |
+| QST-161 | Planned | Cloud Migration and RLS Evidence | Run migrations and RLS checks against the Beta database. | Secure runner and evidence gate are prepared; hosted execution waits for QST-160. |
 | QST-162 | Planned | Dual Account Persistence Acceptance | Prove persistence and isolation with two accounts. | Account A data survives re-login and remains invisible to Account B. |
 | QST-163 | Planned | Real Device Beta Validation Evidence | Validate the candidate on target devices. | Candidate-specific Android/Web and responsive evidence has no P0 failure. |
 | QST-164 | Planned | Beta Support Operations Activation | Activate feedback and incident operations. | Contact, channel, owner, SLA, and S0/S1 register are operational. |

@@ -1,0 +1,27 @@
+version: 1
+status: evidence_missing
+updated_at_utc: null
+candidate_source_commit: null
+project_ref: null
+migrations:
+  status: not_verified
+  latest_local: "202607170001_mission_planning_fields.sql"
+  remote_head: null
+  command: "supabase migration list --linked"
+rls_behavior:
+  status: not_verified
+  test_file: "supabase/tests/rls_behavior.sql"
+  test_sha256: null
+  assertion_count: null
+  owner_checks: not_verified
+  cross_account_checks: not_verified
+  write_denial_checks: not_verified
+  transaction_rolled_back: false
+  executed_at_utc: null
+  psql_version: null
+guardrails:
+  database_url_recorded: false
+  database_password_recorded: false
+  private_journey_content_recorded: false
+  local_database_is_cloud_evidence: false
+  requires_verified_supabase_project: true

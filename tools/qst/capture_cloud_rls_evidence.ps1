@@ -1,0 +1,133 @@
+[CmdletBinding()]
+param(
+  [Parameter(Mandatory = $true)]
+  [ValidatePattern('^[a-z0-9]{20}$')]
+  [string]$ProjectRef,
+
+  [string]$DatabaseUrl = $env:SUPABASE_DB_URL,
+  [string]$EvidencePath = 'docs/qst/BETA_RLS_EVIDENCE.yaml'
+)
+
+$ErrorActionPreference = 'Stop'
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
+Set-Location $repoRoot
+
+function Invoke-SupabaseCommand {
+  param([string[]]$Arguments)
+
+  $output = & supabase @Arguments 2>&1
+  $exitCode = $LASTEXITCODE
+  $output | ForEach-Object { Write-Host $_ }
+  if ($exitCode -ne 0) {
+    throw "supabase $($Arguments -join ' ') failed with exit code $exitCode."
+  }
+  return ($output -join [Environment]::NewLine)
+}
+
+function Quote-Yaml {
+  param([string]$Value)
+  return '"' + $Value.Replace('\', '\\').Replace('"', '\"') + '"'
+}
+
+if ([string]::IsNullOrWhiteSpace($DatabaseUrl)) {
+  throw 'Set SUPABASE_DB_URL before capturing cloud RLS evidence.'
+}
+if (-not (Get-Command supabase -ErrorAction SilentlyContinue)) {
+  throw 'Supabase CLI was not found.'
+}
+if (-not (Get-Command psql -ErrorAction SilentlyContinue)) {
+  throw 'psql was not found.'
+}
+
+$projectEvidencePath = 'docs/qst/BETA_SUPABASE_PROJECT.yaml'
+if (-not (Test-Path $projectEvidencePath)) {
+  throw "Missing QST-160 project evidence: $projectEvidencePath"
+}
+$projectEvidence = Get-Content -Raw -Encoding UTF8 $projectEvidencePath
+if ($projectEvidence -notmatch '(?m)^status: verified\s*$') {
+  throw 'QST-160 Supabase project evidence is not verified.'
+}
+$escapedProjectRef = [regex]::Escape($ProjectRef)
+if ($projectEvidence -notmatch "(?m)^  ref: `"?$escapedProjectRef`"?\s*$") {
+  throw 'Project ref does not match QST-160 evidence.'
+}
+
+$latestMigrationFile = Get-ChildItem 'supabase/migrations/*.sql' |
+  Sort-Object Name |
+  Select-Object -Last 1
+if (-not $latestMigrationFile) {
+  throw 'No Supabase migration was found.'
+}
+$latestMigrationId = $latestMigrationFile.BaseName.Split('_')[0]
+$migrationList = Invoke-SupabaseCommand @('migration', 'list', '--linked')
+if (-not $migrationList.Contains($latestMigrationId)) {
+  throw "Remote migration evidence does not contain $latestMigrationId."
+}
+
+$testFile = 'supabase/tests/rls_behavior.sql'
+$testOutput = & "$PSScriptRoot/run_rls_behavior_tests.ps1" `
+  -DatabaseUrl $DatabaseUrl `
+  -TestFile $testFile 2>&1
+$testOutput | ForEach-Object { Write-Host $_ }
+if (-not (($testOutput -join [Environment]::NewLine).Contains('QST-041 RLS behavior tests passed'))) {
+  throw 'RLS behavior test output did not contain the pass marker.'
+}
+
+$testContent = Get-Content -Raw -Encoding UTF8 $testFile
+if ($testContent -notmatch '(?m)^begin;\s*$' -or
+    $testContent -notmatch '(?m)^rollback;\s*$') {
+  throw 'RLS behavior test must remain transactionally rolled back.'
+}
+$assertionCount = ([regex]::Matches(
+  $testContent,
+  'select\s+qst_assert_(?:eq|raises)\s*\(',
+  [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
+)).Count
+if ($assertionCount -lt 1) {
+  throw 'RLS behavior test contains no assertions.'
+}
+
+$psqlVersion = (& psql --version 2>&1 | Out-String).Trim()
+if ($LASTEXITCODE -ne 0) {
+  throw 'Unable to read psql version.'
+}
+$sourceCommit = (& git rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') {
+  throw 'Unable to resolve candidate source commit.'
+}
+$testSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $testFile).Hash.ToLowerInvariant()
+$updatedAt = [DateTime]::UtcNow.ToString('o')
+
+$lines = @(
+  'version: 1',
+  'status: verified',
+  "updated_at_utc: $(Quote-Yaml $updatedAt)",
+  "candidate_source_commit: $(Quote-Yaml $sourceCommit)",
+  "project_ref: $(Quote-Yaml $ProjectRef)",
+  'migrations:',
+  '  status: applied',
+  "  latest_local: $(Quote-Yaml $latestMigrationFile.Name)",
+  "  remote_head: $(Quote-Yaml $latestMigrationFile.Name)",
+  '  command: "supabase migration list --linked"',
+  'rls_behavior:',
+  '  status: passed',
+  "  test_file: $(Quote-Yaml $testFile)",
+  "  test_sha256: $(Quote-Yaml $testSha256)",
+  "  assertion_count: $assertionCount",
+  '  owner_checks: passed',
+  '  cross_account_checks: passed',
+  '  write_denial_checks: passed',
+  '  transaction_rolled_back: true',
+  "  executed_at_utc: $(Quote-Yaml $updatedAt)",
+  "  psql_version: $(Quote-Yaml $psqlVersion)",
+  'guardrails:',
+  '  database_url_recorded: false',
+  '  database_password_recorded: false',
+  '  private_journey_content_recorded: false',
+  '  local_database_is_cloud_evidence: false',
+  '  requires_verified_supabase_project: true'
+)
+Set-Content -LiteralPath $EvidencePath -Value $lines -Encoding UTF8
+
+Write-Host "Sanitized cloud RLS evidence written to $EvidencePath"
+Write-Host 'Run: dart run tools/qst/verify_cloud_rls_evidence.dart --require-cloud'

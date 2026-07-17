@@ -47,6 +47,7 @@ p0_blockers:
     title: Persistence and Cross-Account RLS
     owner: Engineering Owner
     status: evidence_missing
+    progress: QST-161 prepared password-safe database execution and candidate-bound RLS evidence capture; hosted execution remains pending QST-160.
     resolution_qst: QST-161,QST-162
   - id: BLK-003
     title: Candidate Artifact and Device Evidence

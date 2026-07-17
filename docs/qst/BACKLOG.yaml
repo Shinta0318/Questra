@@ -1538,6 +1538,9 @@ items:
     acceptance:
       - Required migrations are applied to the named Beta project.
       - Database-backed owner and cross-account RLS checks pass with sanitized evidence.
+    progress:
+      - Secure database runner, evidence capture, runbook, and strict verifier are prepared.
+      - Cloud execution remains pending the QST-160 hosted project dependency.
   - id: QST-162
     title: Dual Account Persistence Acceptance
     status: Planned

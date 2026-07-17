@@ -81,6 +81,8 @@ Scoreは実装量ではなく、現在のcandidateを安全に配布できる証
 - Tester AでProfile、Quest、Missionを保存し、再login後に残る実証がない。
 - Tester BからAのPrivate Quest、Mission、Arc Memoryが見えない実証がない。
 - SQL behavior harnessはあるが、実databaseで未実行。
+- QST-161でpassword-safe runner、migration/RLS evidence capture、strict cloud gateは準備済み。
+- hosted project未認証のため実行証跡はなく、QST-160完了後もNO-GOを維持する。
 
 ### BLK-003 Candidate Artifact and Device Evidence
 
