@@ -40,6 +40,10 @@ Issue labels, priority, stop conditions, and QST conversion are defined in
 `docs/product/beta_issue_labeling_rules.md`. The Flutter triage service applies
 the same deterministic rules without sending feedback text to an external AI.
 
+Crash、Supabase失敗、認証・Media失敗、Arc fallbackの証跡契約は
+`docs/product/beta_crash_error_capture_plan.md`を参照する。外部collectorは
+QST-127のPrivacy Review前には有効化せず、挑戦内容やArc会話本文を自動収集しない。
+
 ## Triage Rhythm
 
 - Daily during internal beta: review S0 and S1 feedback.
@@ -83,3 +87,4 @@ Internal beta can expand only when:
 - Performance readiness script passes.
 - RLS readiness script passes.
 - Latest feedback batch has been triaged into fix, defer, or QST candidate.
+- Crash/error evidence follows the approved schema and contains no prohibited payload.

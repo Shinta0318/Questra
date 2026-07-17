@@ -110,3 +110,49 @@ automation:
     - stops_beta_expansion
   deterministic: true
   external_ai_required: false
+error_capture:
+  status: prepared
+  plan: docs/product/beta_crash_error_capture_plan.md
+  external_provider: disabled_until_privacy_review
+  privacy_gate: QST-127
+  event_types:
+    - app_crash
+    - flutter_framework_error
+    - unhandled_async_error
+    - persistence_failure
+    - auth_failure
+    - media_failure
+    - ai_fallback
+  required_evidence:
+    - event_id
+    - occurred_at
+    - build_version
+    - environment
+    - platform
+    - surface
+    - operation
+    - event_type
+    - severity
+    - error_code
+    - fingerprint
+    - correlation_id
+    - handled
+    - fallback_used
+  prohibited_payloads:
+    - auth_tokens_or_api_keys
+    - personal_contact_details
+    - quest_mission_trail_or_reflection_text
+    - arc_chat_prompt_history_or_response
+    - image_or_signed_url
+    - database_rows_or_raw_request_bodies
+    - raw_exception_messages
+  retention_days: 30
+  access_roles:
+    - Release Manager
+    - Assigned Engineering owner
+  capture_points:
+    - Flutter framework errors
+    - Unhandled asynchronous errors
+    - Supabase persistence boundaries
+    - Auth and media boundaries
+    - Arc Chat and Quest Guide fallback boundaries

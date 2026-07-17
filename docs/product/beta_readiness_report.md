@@ -17,6 +17,7 @@ Internal beta candidate, not public release ready.
 - Beta feedback operations: ready
 - In-app Beta feedback entry: ready
 - Beta issue labeling and QST conversion: ready
+- Beta crash/error capture strategy: prepared
 - Beta account setup flow: prepared
 - Beta first Quest experience: polished
 - Beta empty-state owner boundary: automated verification passed
@@ -63,6 +64,8 @@ Internal beta candidate, not public release ready.
    creation, first Quest persistence, and cross-account isolation.
 7. Real-device beta validation and screenshot QA still need to be run on the
    current candidate build.
+8. Crash/error evidence schema and privacy boundary are prepared, but an external
+   collector remains intentionally disabled until QST-127 review and provider approval.
 
 ## Completed Beta Foundation QSTs
 
@@ -85,6 +88,7 @@ Internal beta candidate, not public release ready.
 - QST-123: Beta Empty State Verification.
 - QST-124: Beta Feedback Entry Point.
 - QST-125: Beta Issue Labeling Rules.
+- QST-126: Beta Crash and Error Capture Plan.
 
 ## Deferred Beta Operations
 

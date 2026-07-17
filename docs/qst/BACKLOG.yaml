@@ -951,16 +951,18 @@ items:
       report: reports/qst/QST-125.md
   - id: QST-126
     title: Beta Crash and Error Capture Plan
-    status: Ready
+    status: Done
     priority: P1
     epic: BETA-LAUNCH
     depends_on: [QST-124]
     scope: Plan crash and error evidence collection for beta.
     acceptance:
       - Errors, failed Supabase calls, and AI fallback events have a capture strategy.
+    completed_by:
+      report: reports/qst/QST-126.md
   - id: QST-127
     title: Beta Privacy and Legal Copy Check
-    status: Planned
+    status: Ready
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-121]
