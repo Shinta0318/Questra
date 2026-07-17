@@ -27,12 +27,16 @@ class TrustPrivacyReview {
     required this.heading,
     required this.summary,
     required this.items,
+    required this.betaNotices,
+    required this.legalStatus,
     required this.futureActions,
   });
 
   final String heading;
   final String summary;
   final List<TrustPrivacyReviewItem> items;
+  final List<String> betaNotices;
+  final String legalStatus;
   final List<String> futureActions;
 }
 
@@ -41,29 +45,33 @@ class TrustPrivacyReviewService {
 
   TrustPrivacyReview buildReview() {
     return const TrustPrivacyReview(
-      heading: 'Trust & Privacy',
-      summary: 'Questraでは、挑戦データを本人の意思と同意を前提に扱います。Arcの記憶や推薦も、必要な範囲に絞って透明に説明します。',
+      heading: 'データとプライバシー',
+      summary:
+          'Questraは、Questを進めるために必要なデータだけを扱います。保存される内容と、Arcの生成時に外部で処理される内容を分けて説明します。',
       items: [
         TrustPrivacyReviewItem(
           area: TrustPrivacyArea.journeyData,
           title: 'Quest / Mission / Trail',
-          summary: '挑戦の進行に必要なデータだけを扱い、Privateを安全な既定値にします。',
-          statusLabel: '所有者境界あり',
-          userControl: '今後、閲覧・訂正・削除・エクスポート導線を拡張します。',
+          summary:
+              '接続済みのBeta環境では、Profileと挑戦データをSupabaseへ保存します。未接続のデモ環境では端末上の一時データとして動作します。',
+          statusLabel: '非公開が既定',
+          userControl: 'Guildや企業へ自動共有しません。公開範囲を変える機能は現在未提供です。',
         ),
         TrustPrivacyReviewItem(
           area: TrustPrivacyArea.arcMemory,
           title: 'Arc Memory',
-          summary: 'Arcが旅路を理解するための記憶です。Guildや企業支援へ勝手に共有しません。',
+          summary:
+              'Quest、Mission、Trail、Reflection、Arcとの対話から、旅路を支える記憶を作成・保存する場合があります。',
           statusLabel: '本人専用',
-          userControl: '重要な記憶の確認と削除導線を強化予定です。',
+          userControl: 'Guildや企業支援へ自動共有しません。確認・個別削除は現在プレビュー段階です。',
         ),
         TrustPrivacyReviewItem(
           area: TrustPrivacyArea.aiTransparency,
-          title: 'Arcの生成・推定',
-          summary: 'Arcが生成した提案や推定は、理由を説明できる形で扱います。',
-          statusLabel: '説明可能性を優先',
-          userControl: '誤りの報告と訂正導線を追加予定です。',
+          title: 'Arcの生成機能',
+          summary:
+              '外部生成が有効な場合、入力、直近の会話、進行中のQuest、最近のMission・Trail、選ばれたArc MemoryをSupabase Edge Function経由でOpenAI APIへ送ります。',
+          statusLabel: '外部処理あり',
+          userControl: '未設定・失敗時は端末内の応答へ切り替わります。生成内容は誤ることがあるため、重要な判断では確認してください。',
         ),
         TrustPrivacyReviewItem(
           area: TrustPrivacyArea.questSupport,
@@ -80,6 +88,12 @@ class TrustPrivacyReviewService {
           userControl: 'Beta前にRLS検証と実クラウド環境確認を継続します。',
         ),
       ],
+      betaNotices: [
+        'Betaフィードバックはレポートをクリップボードへコピーするだけで、自動送信しません。',
+        'クラッシュ情報の外部自動送信は無効です。障害証跡はプライバシー確認後に導入判断します。',
+        'データのエクスポート、アカウント削除、同意撤回の実処理は、このビルドではまだ利用できません。',
+      ],
+      legalStatus: 'これは内部Beta向けの説明です。利用規約とプライバシーポリシーは草案で、外部配布前に人による法務確認が必要です。',
       futureActions: ['データ削除リクエスト', 'データエクスポート', 'Arc Memory管理', 'AI提案の訂正報告'],
     );
   }

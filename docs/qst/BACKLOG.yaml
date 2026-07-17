@@ -962,16 +962,18 @@ items:
       report: reports/qst/QST-126.md
   - id: QST-127
     title: Beta Privacy and Legal Copy Check
-    status: Ready
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-121]
     scope: Review beta-facing privacy, terms, and AI/data explanations.
     acceptance:
       - Beta users receive clear, non-misleading data and AI usage copy.
+    completed_by:
+      report: reports/qst/QST-127.md
   - id: QST-128
     title: Beta Release Notes Draft
-    status: Planned
+    status: Ready
     priority: P1
     epic: BETA-LAUNCH
     depends_on: [QST-121, QST-127]

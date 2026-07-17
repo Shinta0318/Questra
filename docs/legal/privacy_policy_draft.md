@@ -5,20 +5,32 @@
 This is a product draft for internal beta planning. It requires human legal
 review before any public release or external distribution.
 
-## Data We Collect
+## Data We Store
 
 Questra may collect and store:
 
 - Account profile data such as nickname, email, onboarding state, and profile
   settings.
-- Quest, Mission, Trail, Reflection, Guild, and Arc Chat content created by the
-  user.
+- Quest, Mission, Trail, Reflection, and Guild content created by the user.
 - Arc Memory records generated from the user's Questra activity.
 - Private Trail media and related media metadata.
 - Subscription, business account, notification, report, and block records when
   those features are enabled.
 - Basic analytics events and generation logs needed to operate and improve the
   service.
+
+## Data Processed For Arc Generation
+
+When remote generation is configured, Arc Chat may process the user's message,
+recent conversation history, active Quest, recent Missions and Trails, and a
+limited set of relevant Arc Memory records. Quest Guide may process the target
+Quest title, description, category, difficulty, and target date.
+
+The Flutter app sends this context to Supabase Edge Functions. When the server
+has an OpenAI API key configured, the Edge Function sends the required context
+to the OpenAI API. If remote generation is unavailable, Questra uses a local
+fallback response. Arc Chat text is not currently stored as a standalone chat
+history table, although derived Arc Memory may be stored.
 
 ## How We Use Data
 
@@ -58,9 +70,15 @@ Before public release, Questra must document:
 
 ## Third-Party Services
 
-Questra currently uses Supabase for authentication, database, storage, and Edge
-Function infrastructure. Additional analytics, crash reporting, or payment
-providers must be added to this policy before public release.
+Questra uses Supabase for authentication, database, storage, and Edge Function
+infrastructure. When configured, Questra uses the OpenAI API for Arc Chat and
+Quest Guide generation. Provider data controls, retention, project region, and
+processor terms must be confirmed before external beta distribution.
+
+The in-app beta feedback form currently copies a report to the clipboard and
+does not automatically submit it. External crash reporting is currently
+disabled. Additional analytics, crash reporting, AI, or payment providers must
+be added to this policy before they are enabled.
 
 ## Contact
 
@@ -73,3 +91,4 @@ Add a support and privacy contact address before public release.
 - Add user rights language for applicable jurisdictions.
 - Add children's privacy language if required.
 - Add final retention periods.
+- Confirm OpenAI project data controls and disclose provider changes.

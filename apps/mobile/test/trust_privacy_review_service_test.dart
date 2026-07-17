@@ -7,8 +7,8 @@ void main() {
   test('builds Master Spec aligned trust and privacy review items', () {
     final review = service.buildReview();
 
-    expect(review.heading, 'Trust & Privacy');
-    expect(review.summary, contains('本人の意思と同意'));
+    expect(review.heading, 'データとプライバシー');
+    expect(review.summary, contains('保存される内容'));
     expect(
       review.items.map((item) => item.area),
       containsAll(TrustPrivacyArea.values),
@@ -16,9 +16,15 @@ void main() {
     expect(
       review.items
           .firstWhere((item) => item.area == TrustPrivacyArea.arcMemory)
-          .summary,
-      contains('勝手に共有しません'),
+          .userControl,
+      contains('自動共有しません'),
     );
+    final arcGeneration = review.items.firstWhere(
+      (item) => item.area == TrustPrivacyArea.aiTransparency,
+    );
+    expect(arcGeneration.summary, contains('OpenAI API'));
+    expect(arcGeneration.summary, contains('Arc Memory'));
+    expect(arcGeneration.userControl, contains('誤ることがある'));
     expect(
       review.items
           .firstWhere((item) => item.area == TrustPrivacyArea.questSupport)
@@ -26,5 +32,8 @@ void main() {
       'Betaでは未接続',
     );
     expect(review.futureActions, contains('データエクスポート'));
+    expect(review.betaNotices, contains(contains('自動送信しません')));
+    expect(review.betaNotices, contains(contains('まだ利用できません')));
+    expect(review.legalStatus, contains('法務確認'));
   });
 }

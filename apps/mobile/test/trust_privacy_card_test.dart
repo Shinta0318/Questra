@@ -17,6 +17,10 @@ void main() {
 
     expect(find.text(review.heading), findsOneWidget);
     expect(find.text('Quest / Mission / Trail'), findsOneWidget);
+    expect(find.text('Arcの生成機能'), findsOneWidget);
+    expect(find.text('Betaでの取り扱い'), findsOneWidget);
+    expect(find.textContaining('クリップボード'), findsOneWidget);
+    expect(find.textContaining('法務確認'), findsOneWidget);
     expect(find.text('今後追加する操作'), findsOneWidget);
     expect(find.text('データ削除リクエスト'), findsOneWidget);
   });

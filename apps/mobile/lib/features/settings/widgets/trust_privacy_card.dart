@@ -82,6 +82,11 @@ class TrustPrivacyCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
+          _BetaDataNotice(
+            notices: review.betaNotices,
+            legalStatus: review.legalStatus,
+          ),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             '今後追加する操作',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -110,6 +115,69 @@ class TrustPrivacyCard extends StatelessWidget {
                   ),
                 )
                 .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BetaDataNotice extends StatelessWidget {
+  const _BetaDataNotice({required this.notices, required this.legalStatus});
+
+  final List<String> notices;
+  final String legalStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.24)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.info_outline, color: AppColors.gold, size: 18),
+              SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Betaでの取り扱い',
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ...notices.map(
+            (notice) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Text(
+                '・$notice',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.parchment,
+                  height: 1.45,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            legalStatus,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.skyBlue,
+              height: 1.45,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),

@@ -18,6 +18,7 @@ Internal beta candidate, not public release ready.
 - In-app Beta feedback entry: ready
 - Beta issue labeling and QST conversion: ready
 - Beta crash/error capture strategy: prepared
+- Beta privacy and Arc data explanation: implementation-aligned draft
 - Beta account setup flow: prepared
 - Beta first Quest experience: polished
 - Beta empty-state owner boundary: automated verification passed
@@ -55,8 +56,9 @@ Internal beta candidate, not public release ready.
    database or CI before public release.
 3. App icon and splash assets still need final design replacement before public
    release.
-4. Terms, privacy policy, and store text drafts require human review before
-   public release.
+4. Terms, privacy policy, Beta data notice, and store text drafts require human
+   review before external distribution. Operator/contact details, target region,
+   retention, and provider settings remain unresolved.
 5. OneDrive generated backlog still contains future-scope items that should stay
    deferred during MVP/beta execution.
 6. Beta account setup has a runbook and Japanese UI copy, but final beta
@@ -89,6 +91,7 @@ Internal beta candidate, not public release ready.
 - QST-124: Beta Feedback Entry Point.
 - QST-125: Beta Issue Labeling Rules.
 - QST-126: Beta Crash and Error Capture Plan.
+- QST-127: Beta Privacy and Legal Copy Check.
 
 ## Deferred Beta Operations
 

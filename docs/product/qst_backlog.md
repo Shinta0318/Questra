@@ -105,8 +105,8 @@ references where they do not conflict with v2.
 | QST-124 | Done | Beta Feedback Entry Point | Add or document feedback route. | Settings now opens a structured report form for surface, type, severity, reproduction, expected, and actual results. |
 | QST-125 | Done | Beta Issue Labeling Rules | Create beta issue labels and QST conversion rules. | Deterministic triage now assigns categories, severity, priority, stop conditions, and complete QST candidates. |
 | QST-126 | Done | Beta Crash and Error Capture Plan | Plan crash/error evidence collection. | Flutter, Supabase, media, auth, and Arc fallback events now share a privacy-safe evidence and response contract. |
-| QST-127 | Ready | Beta Privacy and Legal Copy Check | Review beta privacy, terms, and AI/data explanations. | Beta users receive clear data and AI usage copy. |
-| QST-128 | Planned | Beta Release Notes Draft | Create beta release notes and known limitations. | Beta testers know what is ready, experimental, and how to give feedback. |
+| QST-127 | Done | Beta Privacy and Legal Copy Check | Review beta privacy, terms, and AI/data explanations. | Settings and legal drafts now distinguish stored data, conditional OpenAI processing, manual feedback, disabled crash upload, and unavailable data controls. |
+| QST-128 | Ready | Beta Release Notes Draft | Create beta release notes and known limitations. | Beta testers know what is ready, experimental, and how to give feedback. |
 | QST-129 | Planned | Beta Go/No-Go Checklist | Create final beta launch checklist. | Launch blockers, evidence, device checks, and rollback conditions are explicit. |
 | QST-130 | Planned | Beta Launch Readiness Review | Produce final beta readiness report. | Questra has beta readiness score, open blockers, and QST-131+ recommendations. |
 | QST-131 | Done | Navigation and Creative UI Refresh | Reframe the primary product flow around Home -> Arc -> Quest and reduce generated UI feel. | Navigation, Home, Arc, Quest, and replayable first-use tour support an Arc-centered beta experience. |
