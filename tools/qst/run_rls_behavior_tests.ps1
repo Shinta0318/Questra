@@ -2,16 +2,94 @@
 param(
   [string]$DatabaseUrl = $env:SUPABASE_DB_URL,
   [string]$TestFile = 'supabase/tests/rls_behavior.sql',
+  [string]$SupabaseCommand = 'supabase',
+  [switch]$LinkedCli,
   [switch]$ValidateOnly
 )
 
 $ErrorActionPreference = 'Stop'
 
-if ([string]::IsNullOrWhiteSpace($DatabaseUrl)) {
-  throw 'Set SUPABASE_DB_URL or pass -DatabaseUrl to run database-backed RLS behavior tests.'
-}
 if (-not (Test-Path -LiteralPath $TestFile)) {
   throw "RLS behavior test file was not found: $TestFile"
+}
+
+if ($LinkedCli) {
+  if (-not (Get-Command $SupabaseCommand -ErrorAction SilentlyContinue)) {
+    throw "Supabase CLI was not found: $SupabaseCommand"
+  }
+
+  $psqlSource = Get-Content -Raw -Encoding UTF8 -LiteralPath $TestFile
+  $variables = @{}
+  $variablePattern = "(?m)^\\set\s+([A-Za-z_][A-Za-z0-9_]*)\s+'([^']*)'\s*$"
+  foreach ($match in [regex]::Matches($psqlSource, $variablePattern)) {
+    $variables[$match.Groups[1].Value] = $match.Groups[2].Value
+  }
+
+  $linkedSql = [regex]::Replace(
+    $psqlSource,
+    '(?m)^\\set\s+.*\r?\n?',
+    ''
+  )
+  $linkedSql = [regex]::Replace(
+    $linkedSql,
+    "(?m)^\\echo\s+'([^']*)'\s*$",
+    { param($match) "select '$($match.Groups[1].Value)' as qst_message;" }
+  )
+  foreach ($name in $variables.Keys) {
+    $escapedValue = $variables[$name].Replace("'", "''")
+    $linkedSql = $linkedSql.Replace(":'$name'", "'$escapedValue'")
+  }
+  if ($linkedSql -match '(?m)^\\') {
+    throw 'Unsupported psql metacommand remains after linked CLI conversion.'
+  }
+  if ($linkedSql -match ":'[A-Za-z_][A-Za-z0-9_]*'") {
+    throw 'Unresolved psql variable remains after linked CLI conversion.'
+  }
+
+  Write-Output 'RLS database target: linked Supabase project via Management API'
+  if ($ValidateOnly) {
+    Write-Output 'RLS test converted for linked CLI execution without database credentials.'
+    return
+  }
+
+  $temporarySql = Join-Path (
+    [System.IO.Path]::GetTempPath()
+  ) "questra-rls-$([Guid]::NewGuid().ToString('N')).sql"
+  try {
+    Set-Content -LiteralPath $temporarySql -Value $linkedSql -Encoding UTF8
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+      $ErrorActionPreference = 'Continue'
+      $output = & $SupabaseCommand db query --linked --file $temporarySql 2>&1
+      $exitCode = $LASTEXITCODE
+    } finally {
+      $ErrorActionPreference = $previousErrorActionPreference
+    }
+    $output | ForEach-Object {
+      if ($_ -is [System.Management.Automation.ErrorRecord]) {
+        Write-Output $_.Exception.Message
+      } else {
+        Write-Output $_
+      }
+    }
+    if ($exitCode -ne 0) {
+      throw "Linked CLI RLS behavior tests failed with exit code $exitCode."
+    }
+    if (-not (($output -join [Environment]::NewLine).Contains(
+      'QST-041 RLS behavior tests passed'
+    ))) {
+      throw 'Linked CLI output did not contain the RLS pass marker.'
+    }
+  } finally {
+    if (Test-Path -LiteralPath $temporarySql) {
+      Remove-Item -LiteralPath $temporarySql -Force
+    }
+  }
+  return
+}
+
+if ([string]::IsNullOrWhiteSpace($DatabaseUrl)) {
+  throw 'Set SUPABASE_DB_URL or pass -DatabaseUrl to run database-backed RLS behavior tests.'
 }
 
 try {

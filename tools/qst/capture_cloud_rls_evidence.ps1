@@ -5,7 +5,9 @@ param(
   [string]$ProjectRef,
 
   [string]$DatabaseUrl = $env:SUPABASE_DB_URL,
-  [string]$EvidencePath = 'docs/qst/BETA_RLS_EVIDENCE.yaml'
+  [string]$EvidencePath = 'docs/qst/BETA_RLS_EVIDENCE.yaml',
+  [string]$SupabaseCommand = 'supabase',
+  [switch]$LinkedCli
 )
 
 $ErrorActionPreference = 'Stop'
@@ -15,7 +17,7 @@ Set-Location $repoRoot
 function Invoke-SupabaseCommand {
   param([string[]]$Arguments)
 
-  $output = & supabase @Arguments 2>&1
+  $output = & $SupabaseCommand @Arguments 2>&1
   $exitCode = $LASTEXITCODE
   $output | ForEach-Object { Write-Host $_ }
   if ($exitCode -ne 0) {
@@ -29,13 +31,13 @@ function Quote-Yaml {
   return '"' + $Value.Replace('\', '\\').Replace('"', '\"') + '"'
 }
 
-if ([string]::IsNullOrWhiteSpace($DatabaseUrl)) {
+if (-not $LinkedCli -and [string]::IsNullOrWhiteSpace($DatabaseUrl)) {
   throw 'Set SUPABASE_DB_URL before capturing cloud RLS evidence.'
 }
-if (-not (Get-Command supabase -ErrorAction SilentlyContinue)) {
-  throw 'Supabase CLI was not found.'
+if (-not (Get-Command $SupabaseCommand -ErrorAction SilentlyContinue)) {
+  throw "Supabase CLI was not found: $SupabaseCommand"
 }
-if (-not (Get-Command psql -ErrorAction SilentlyContinue)) {
+if (-not $LinkedCli -and -not (Get-Command psql -ErrorAction SilentlyContinue)) {
   throw 'psql was not found.'
 }
 
@@ -65,9 +67,16 @@ if (-not $migrationList.Contains($latestMigrationId)) {
 }
 
 $testFile = 'supabase/tests/rls_behavior.sql'
-$testOutput = & "$PSScriptRoot/run_rls_behavior_tests.ps1" `
-  -DatabaseUrl $DatabaseUrl `
-  -TestFile $testFile 2>&1
+$runnerArguments = @{
+  TestFile = $testFile
+}
+if ($LinkedCli) {
+  $runnerArguments.LinkedCli = $true
+  $runnerArguments.SupabaseCommand = $SupabaseCommand
+} else {
+  $runnerArguments.DatabaseUrl = $DatabaseUrl
+}
+$testOutput = & "$PSScriptRoot/run_rls_behavior_tests.ps1" @runnerArguments 2>&1
 $testOutput | ForEach-Object { Write-Host $_ }
 if (-not (($testOutput -join [Environment]::NewLine).Contains('QST-041 RLS behavior tests passed'))) {
   throw 'RLS behavior test output did not contain the pass marker.'
@@ -80,16 +89,25 @@ if ($testContent -notmatch '(?m)^begin;\s*$' -or
 }
 $assertionCount = ([regex]::Matches(
   $testContent,
-  'select\s+qst_assert_(?:eq|raises)\s*\(',
+  'select\s+(?:pg_temp\.)?qst_assert_(?:eq|raises)\s*\(',
   [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
 )).Count
 if ($assertionCount -lt 1) {
   throw 'RLS behavior test contains no assertions.'
 }
 
-$psqlVersion = (& psql --version 2>&1 | Out-String).Trim()
-if ($LASTEXITCODE -ne 0) {
-  throw 'Unable to read psql version.'
+$databaseClientVersion = if ($LinkedCli) {
+  $version = (& $SupabaseCommand --version 2>&1 | Out-String).Trim()
+  if ($LASTEXITCODE -ne 0) {
+    throw 'Unable to read Supabase CLI version.'
+  }
+  "supabase-cli $version (db query --linked)"
+} else {
+  $version = (& psql --version 2>&1 | Out-String).Trim()
+  if ($LASTEXITCODE -ne 0) {
+    throw 'Unable to read psql version.'
+  }
+  $version
 }
 $sourceCommit = (& git rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') {
@@ -119,7 +137,7 @@ $lines = @(
   '  write_denial_checks: passed',
   '  transaction_rolled_back: true',
   "  executed_at_utc: $(Quote-Yaml $updatedAt)",
-  "  psql_version: $(Quote-Yaml $psqlVersion)",
+  "  psql_version: $(Quote-Yaml $databaseClientVersion)",
   'guardrails:',
   '  database_url_recorded: false',
   '  database_password_recorded: false',

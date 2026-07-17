@@ -20,6 +20,9 @@ dart run tools/qst/verify_supabase_beta_bootstrap.dart --require-cloud
 - Supabase CLI login/link state
 - `psql` client
 
+または、Supabase CLI 2.109.1以降のlinked query経路を使用する。この経路ではDB URLやDB passwordを
+ローカルへ渡さず、短命なlogin roleをManagement API経由で利用する。
+
 ## Secure Connection Validation
 
 ```powershell
@@ -31,11 +34,22 @@ runnerはURLをhost、port、user、databaseへ分解し、passwordを`PGPASSWOR
 URL全体を`psql`のprocess argumentや出力へ渡さない。remote接続では`sslmode=require`を使い、
 実行後にdatabase関連環境変数を元へ戻す。
 
+## Linked CLI Validation
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/qst/run_rls_behavior_tests.ps1 `
+  -LinkedCli
+```
+
+`-LinkedCli`は既存test fileの`psql`変数と`\\echo`だけを一時SQLへ変換し、
+`supabase db query --linked --file`で実行する。一時SQLは実行後に削除し、元のtest fileは変更しない。
+owner/cross-account/write-denial assertionとtransaction rollbackはpsql経路と同一である。
+
 ## Evidence Capture
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/qst/capture_cloud_rls_evidence.ps1 `
-  -ProjectRef '<20-character-project-ref>'
+  -ProjectRef '<20-character-project-ref>' -LinkedCli
 ```
 
 captureは次を実行する。

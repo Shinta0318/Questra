@@ -32,6 +32,9 @@ Future<void> main(List<String> arguments) async {
     r'$env:PGPASSWORD = $databasePassword',
     r'$env:PGSSLMODE = $sslMode',
     "[switch]\$ValidateOnly",
+    "[switch]\$LinkedCli",
+    'db query --linked',
+    'Unsupported psql metacommand remains',
     '--host',
     '--username',
     '-v ON_ERROR_STOP=1',
@@ -58,7 +61,13 @@ Future<void> main(List<String> arguments) async {
   ]) {
     _expect(test, snippet, testPath, failures);
   }
-  for (final snippet in ['SUPABASE_DB_URL', 'transaction', '--require-cloud']) {
+  for (final snippet in [
+    'SUPABASE_DB_URL',
+    '-LinkedCli',
+    'db query --linked',
+    'transaction',
+    '--require-cloud',
+  ]) {
     _expect(runbook, snippet, runbookPath, failures);
   }
 
@@ -129,7 +138,7 @@ Future<void> _verifyCloud(
   }
 
   final expectedAssertions = RegExp(
-    r'select\s+qst_assert_(?:eq|raises)\s*\(',
+    r'select\s+(?:pg_temp\.)?qst_assert_(?:eq|raises)\s*\(',
     caseSensitive: false,
   ).allMatches(test).length;
   if (_scalar(evidence, 'assertion_count', 2) != '$expectedAssertions') {
