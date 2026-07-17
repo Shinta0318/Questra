@@ -984,16 +984,18 @@ items:
       report: reports/qst/QST-128.md
   - id: QST-129
     title: Beta Go/No-Go Checklist
-    status: Ready
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-121, QST-122, QST-123, QST-124, QST-125, QST-126, QST-127, QST-128]
     scope: Create final beta launch checklist.
     acceptance:
       - Launch blockers, required evidence, device checks, and rollback conditions are explicit.
+    completed_by:
+      report: reports/qst/QST-129.md
   - id: QST-130
     title: Beta Launch Readiness Review
-    status: Planned
+    status: Ready
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-129]
