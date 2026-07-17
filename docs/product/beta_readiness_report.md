@@ -17,6 +17,7 @@ Internal beta candidate, not public release ready.
 - Beta feedback operations: ready
 - Beta account setup flow: prepared
 - Beta first Quest experience: polished
+- Beta empty-state owner boundary: automated verification passed
 - Release assets/legal drafts: tracked
 - Arc Experience Epic: completed for internal beta
 - App source terminology check: passed
@@ -25,11 +26,11 @@ Internal beta candidate, not public release ready.
 
 | Surface | Status | Notes |
 | --- | --- | --- |
-| Home Screen | Ready for internal beta | Home aggregates Arc, Today's Mission, Quest, Trail, and Guild. |
-| Quest Flow | Ready for internal beta | Quest list, detail navigation, and progress dashboard are present. |
-| Mission Flow | Ready for internal beta | Mission generation and completion leave Trails. |
-| Trail Flow | Ready for internal beta | Manual Trail posting, reflection, media readiness, and overview are present. |
-| Guild MVP | Ready for internal beta | Guild supports question drafting and safe Trail reflection review. |
+| Home Screen | Ready for internal beta | Home focuses on Arc, today's open Missions, and active Quests. |
+| Quest Flow | Ready for internal beta | Arc-led creation, editable Mission planning, detail navigation, and unified progress are present. |
+| Mission Flow | Ready for internal beta | Mission creation, editing, ordering, today selection, completion, and persistence paths are present. |
+| Trail Flow | Deferred from primary beta flow | Existing implementation and data are preserved behind a Coming Soon surface. |
+| Guild MVP | Deferred from primary beta flow | Existing implementation and data are preserved behind a Coming Soon surface. |
 | Arc Chat | Ready for internal beta | Arc Chat includes contextual guidance and memory extraction. |
 | Arc Memory | Ready for internal beta | Quest, Mission, Trail, Reflection, and Arc Chat memory paths exist. |
 | Arc Experience Epic | Ready for internal beta | Official Arc expression assets are integrated; expression engine, presence, celebration, greeting, empty states, concern, reflection coaching, Bond, Stardust, Navigator Rank, relationship review, and daily guidance are complete for beta. |
@@ -79,6 +80,7 @@ Internal beta candidate, not public release ready.
 - QST-069: Beta Feedback Operations.
 - QST-121: Beta Account Setup Flow.
 - QST-122: Beta First Quest Experience.
+- QST-123: Beta Empty State Verification.
 
 ## Deferred Beta Operations
 
@@ -88,8 +90,9 @@ Internal beta candidate, not public release ready.
 ## Launch Judgment
 
 Questra is suitable for internal beta preparation, but not public release. The
-core Quest -> Mission -> Trail loop is working across Home, Quest, Mission,
-Trail, Guild, Arc Chat, Arc Memory, Profile, media readiness, and RLS readiness.
+current primary flow focuses on Home -> Arc -> Quest -> Mission and unified
+progress. Trail and Guild implementation remains preserved behind Coming Soon
+surfaces until those experiences are ready to return to the primary beta flow.
 Release work should now focus on real Supabase account/persistence evidence,
-database-backed verification, media lifecycle, assets/legal copy, final
+database-backed verification, feedback intake, assets/legal copy, final
 screenshot QA, and real-device beta validation.

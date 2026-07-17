@@ -12,9 +12,11 @@ import 'package:questra/features/quest/quest_detail_screen.dart';
 import 'package:questra/features/profile/profile_screen.dart';
 import 'package:questra/features/quest/quest_screen.dart';
 import 'package:questra/features/settings/settings_screen.dart';
+import 'package:questra/features/trail/trail_controller.dart';
 import 'package:questra/features/trail/trail_screen.dart';
 
 import 'support/fixture_quest_controller.dart';
+import 'support/fixture_trail_controller.dart';
 
 void main() {
   setUpAll(() => initializeDateFormatting('ja_JP'));
@@ -195,15 +197,29 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
+    final container = ProviderContainer(
+      overrides: [
+        questControllerProvider.overrideWith(FixtureQuestController.new),
+      ],
+    );
+    addTearDown(container.dispose);
+    expect(container.read(questControllerProvider), isNotEmpty);
+
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          questControllerProvider.overrideWith(FixtureQuestController.new),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: const MaterialApp(home: QuestScreen()),
       ),
     );
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(container.read(questControllerProvider), isNotEmpty);
+    await tester.scrollUntilVisible(
+      find.text('Questraをローンチする'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Questraをローンチする'), findsOneWidget);
 
     final questCardSemantics = tester.widgetList<Semantics>(
       find.byWidgetPredicate(
@@ -227,7 +243,13 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: GuildScreen())),
+      ProviderScope(
+        overrides: [
+          questControllerProvider.overrideWith(FixtureQuestController.new),
+          trailControllerProvider.overrideWith(FixtureTrailController.new),
+        ],
+        child: const MaterialApp(home: GuildScreen()),
+      ),
     );
     await tester.pump();
 
@@ -281,7 +303,12 @@ void main() {
     addTearDown(tester.view.resetViewInsets);
 
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: TrailScreen())),
+      ProviderScope(
+        overrides: [
+          trailControllerProvider.overrideWith(FixtureTrailController.new),
+        ],
+        child: const MaterialApp(home: TrailScreen()),
+      ),
     );
     await tester.pump();
     await tester.scrollUntilVisible(
@@ -291,9 +318,10 @@ void main() {
     );
     final createTrailAction = find.text('Trailを残す').first;
     await tester.ensureVisible(createTrailAction);
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(createTrailAction);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     tester.view.viewInsets = const FakeViewPadding(bottom: 300);
     await tester.pump();

@@ -43,9 +43,9 @@ class MissionController extends Notifier<List<Mission>> {
       previous,
       next,
     ) {
-      if (next != null && next != previous) {
-        _loadForCurrentQuests();
-      }
+      if (next == previous) return;
+      state = const [];
+      if (next != null) _loadForCurrentQuests();
     });
 
     ref.listen(questControllerProvider, (previous, next) {
@@ -279,6 +279,11 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   Future<void> loadForQuests(List<String> questIds) async {
+    final ownerId = ref.read(authControllerProvider).profile?.id;
+    if (ownerId == null) {
+      state = const [];
+      return;
+    }
     if (questIds.isEmpty) {
       state = const [];
       return;
@@ -290,6 +295,7 @@ class MissionController extends Notifier<List<Mission>> {
       final loaded = await ref
           .read(missionRepositoryProvider)
           .findManyByQuestIds(questIds);
+      if (ref.read(authControllerProvider).profile?.id != ownerId) return;
       final loadedIds = loaded.map((mission) => mission.id).toSet();
       final questIdSet = questIds.toSet();
       final localOnly = state.where(
@@ -303,6 +309,7 @@ class MissionController extends Notifier<List<Mission>> {
       }
       sync.saved('Missionを読み込みました。');
     } catch (error) {
+      if (ref.read(authControllerProvider).profile?.id != ownerId) return;
       sync.failed('Mission load', error);
     }
   }
@@ -348,6 +355,7 @@ class MissionController extends Notifier<List<Mission>> {
       final savedMission = await ref
           .read(missionRepositoryProvider)
           .save(mission);
+      if (ref.read(authControllerProvider).profile?.id != userId) return;
       state = [
         for (final current in state)
           if (current.id == savedMission.id) savedMission else current,

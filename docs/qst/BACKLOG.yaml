@@ -918,16 +918,18 @@ items:
       report: reports/qst/QST-122.md
   - id: QST-123
     title: Beta Empty State Verification
-    status: Planned
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-121]
     scope: Verify empty DB state across beta accounts.
     acceptance:
       - No mock Quest, Mission, Trail, or Guild content appears as if it belongs to the user.
+    completed_by:
+      report: reports/qst/QST-123.md
   - id: QST-124
     title: Beta Feedback Entry Point
-    status: Planned
+    status: Ready
     priority: P1
     epic: BETA-LAUNCH
     depends_on: [QST-121]

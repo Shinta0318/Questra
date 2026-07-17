@@ -28,14 +28,19 @@ final questSyncControllerProvider =
 class QuestController extends Notifier<List<Quest>> {
   @override
   List<Quest> build() {
+    final initialUserId = ref.read(authControllerProvider).profile?.id;
     ref.listen(authControllerProvider.select((state) => state.profile?.id), (
       previous,
       next,
     ) {
-      if (next != null && next != previous) {
-        loadForUser(next);
-      }
+      if (next == previous) return;
+      state = const [];
+      if (next != null) unawaited(loadForUser(next));
     });
+
+    if (initialUserId != null) {
+      unawaited(Future<void>.microtask(() => loadForUser(initialUserId)));
+    }
 
     return const [];
   }
@@ -50,13 +55,16 @@ class QuestController extends Notifier<List<Quest>> {
   }
 
   Future<void> loadForUser(String userId) async {
+    if (ref.read(authControllerProvider).profile?.id != userId) return;
     final sync = ref.read(questSyncControllerProvider.notifier);
     sync.loading('Questを読み込んでいます...');
     try {
       final quests = await ref.read(questRepositoryProvider).findByUser(userId);
+      if (ref.read(authControllerProvider).profile?.id != userId) return;
       state = quests;
       sync.saved('Questを読み込みました。');
     } catch (error) {
+      if (ref.read(authControllerProvider).profile?.id != userId) return;
       sync.failed('Quest load', error);
     }
   }
@@ -141,6 +149,7 @@ class QuestController extends Notifier<List<Quest>> {
       final savedQuest = await ref
           .read(questRepositoryProvider)
           .save(ownerId: userId, quest: quest);
+      if (ref.read(authControllerProvider).profile?.id != userId) return;
       state = [
         for (final current in state)
           if (current.id == quest.id) savedQuest else current,

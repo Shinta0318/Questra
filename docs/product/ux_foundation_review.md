@@ -61,7 +61,7 @@ flutter test --reporter compact
 | --- | --- | --- | --- |
 | Real devices may reveal keyboard, camera, media, or platform-specific issues not visible in widget tests. | P0 | QST-121+ beta validation | Execute `real_device_beta_validation.md` result logs before wider beta. |
 | Beta account setup now has Japanese UI copy and a verification runbook, but persistence proof is not yet captured on the cloud project. | P0 | QST-121 evidence / QST-129 | Run `beta_account_setup_flow.md` against the Supabase project and attach sign-in, first Quest, save state, and ownership evidence. |
-| Empty DB state may still feel sparse or confusing for first-time testers. | P0 | QST-123 | Verify all empty states with a fresh beta account. |
+| Empty DB and owner-switch behavior is automated, but real cloud evidence is still required. | P0 | QST-123 complete / QST-129 evidence | Repeat the verified empty-state flow with two real beta accounts on the Supabase project. |
 | Feedback entry point may still depend on manual process rather than a clear in-app route. | P1 | QST-124 | Add or document a tester feedback path with severity and reproduction fields. |
 | Store-quality screenshots and real-device evidence still need to be captured, not only documented. | P1 | QST-119 / QST-129 | Capture evidence paths and attach to beta go/no-go checklist. |
 
@@ -74,7 +74,7 @@ Recommended next step:
 1. Capture QST-121 Supabase evidence with `beta_account_setup_flow.md`.
 2. Verify first-run sign-in, Quest creation, persistence, and owner state.
 3. Use QST-119 device result logs during manual beta validation.
-4. Keep QST-123 and QST-124 as early beta blockers because empty states and feedback intake directly affect tester quality.
+4. Proceed to QST-124 because empty-state ownership boundaries are now automated and feedback intake remains the next tester-quality gap.
 
 ## Review Result
 

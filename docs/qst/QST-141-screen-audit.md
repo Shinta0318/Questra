@@ -109,7 +109,7 @@ Migration、テーブル、RLS、既存データは削除しない。
 | 場所 | 内容 | 対応 |
 | --- | --- | --- |
 | `quest_controller.dart` | 英語の初期Quest 3件と固定進捗 | 未認証fallbackから除去し、空状態へ変更 |
-| `trail_controller.dart` | `mock-quest-arc`に紐づくTrail 2件 | 通常表示から除去。Coming Soon化後もControllerは保持 |
+| `trail_controller.dart` | `mock-quest-arc`に紐づくTrail 2件 | 本番fallbackから除去して空状態へ変更。テストは明示fixtureへ分離 |
 | Home | Quest/Trail/Guild/Horizonのpreview表示 | 中心4要素以外を非表示 |
 | Guild | ローカルQuest/Mission/Trailから相談・マッチングを組み立てる | Coming Soonへ変更 |
 
