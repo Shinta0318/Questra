@@ -37,36 +37,7 @@ class QuestController extends Notifier<List<Quest>> {
       }
     });
 
-    return [
-      Quest(
-        title: 'Design the first adventure arc',
-        description: 'Shape the first Questra journey with Arc.',
-        difficulty: QuestDifficulty.normal,
-        status: QuestStatus.active,
-        visibility: QuestVisibility.private,
-        progress: 0.42,
-        category: '世界観づくり',
-        targetDate: DateTime.now().add(const Duration(days: 7)),
-      ),
-      Quest(
-        title: 'Invite first guild member',
-        description: 'Prepare the first lightweight guild loop.',
-        difficulty: QuestDifficulty.easy,
-        status: QuestStatus.draft,
-        visibility: QuestVisibility.guild,
-        progress: 0.16,
-        category: 'コミュニティ',
-      ),
-      Quest(
-        title: 'Build a morning training ritual',
-        description: 'Create a small repeatable routine for real progress.',
-        difficulty: QuestDifficulty.hard,
-        status: QuestStatus.active,
-        visibility: QuestVisibility.private,
-        progress: 0.68,
-        category: 'トレーニング',
-      ),
-    ];
+    return const [];
   }
 
   Quest? findById(String id) {

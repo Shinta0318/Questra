@@ -136,7 +136,7 @@ references where they do not conflict with v2.
 | QST-155 | Done | Arc-led Quest Creation | Make Arc the primary Quest creation entry. | Arc now turns natural-language intent into editable Quest candidates and persists them only after explicit confirmation. |
 | QST-156 | Done | Quest Mission Decomposition Simplification | Focus Quest detail on actionable Missions. | Quest detail now supports editable 3-10 Mission candidates, explicit confirmation, saved Mission editing, ordering, deletion, completion, and today selection. |
 | QST-157 | Done | Unified Quest Progress | Derive Quest progress from Mission completion everywhere. | Home, Quest list, and Quest detail now share completed/total Mission progress, and Mission changes synchronize the persisted Quest value. |
-| QST-158 | Ready | Guild and Trail Coming Soon Review | Hide unfinished community and Trail interactions during simplification. | Preserve code/data while presenting shared Coming Soon surfaces and running the end-to-end review. |
+| QST-158 | Done | Guild and Trail Coming Soon Review | Hide unfinished community and Trail interactions during simplification. | Guild and Trail now use the shared Coming Soon surface, while existing implementation and data remain preserved outside the production flow. |
 
 ## Selection Rules
 

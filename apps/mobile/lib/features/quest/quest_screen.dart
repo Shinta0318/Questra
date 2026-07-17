@@ -61,8 +61,8 @@ class QuestScreen extends ConsumerWidget {
         title: const Text('Quest一覧'),
         actions: [
           IconButton(
-            tooltip: '新しいQuestを始める',
-            onPressed: () => context.go('${AppRoutes.quest}/create'),
+            tooltip: 'ArcとQuestを考える',
+            onPressed: () => context.go(AppRoutes.arc),
             icon: const Icon(Icons.add_circle_outline),
           ),
         ],
@@ -86,7 +86,7 @@ class QuestScreen extends ConsumerWidget {
             _QuestHero(
               activeCount: activeQuests.length,
               emotion: arcExpression.emotion,
-              onCreateQuest: () => context.go('${AppRoutes.quest}/create'),
+              onCreateQuest: () => context.go(AppRoutes.arc),
             ),
             if (concern != null) ...[
               const SizedBox(height: 16),
@@ -118,9 +118,9 @@ class QuestScreen extends ConsumerWidget {
               ArcEmptyState(
                 title: 'まだQuestがありません',
                 message: '最初のQuestを灯すと、ArcがMissionとTrailへの航路を一緒に描きます。',
-                actionLabel: 'Questを作成',
+                actionLabel: 'ArcとQuestを考える',
                 icon: Icons.add_circle_outline,
-                onAction: () => context.go('${AppRoutes.quest}/create'),
+                onAction: () => context.go(AppRoutes.arc),
               )
             else
               ...quests.map(
@@ -287,7 +287,7 @@ class _QuestHero extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: onCreateQuest,
                   icon: const Icon(Icons.auto_awesome),
-                  label: const Text('新しいQuestを始める'),
+                  label: const Text('ArcとQuestを考える'),
                 ),
               ],
             ),

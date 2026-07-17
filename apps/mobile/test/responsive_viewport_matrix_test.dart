@@ -13,6 +13,8 @@ import 'package:questra/features/quest/quest_detail_screen.dart';
 import 'package:questra/features/quest/quest_screen.dart';
 import 'package:questra/features/trail/trail_screen.dart';
 
+import 'support/fixture_quest_controller.dart';
+
 void main() {
   setUpAll(() => initializeDateFormatting('ja_JP'));
 
@@ -50,7 +52,12 @@ void main() {
         addTearDown(tester.view.resetDevicePixelRatio);
 
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp(home: surface.value)),
+          ProviderScope(
+            overrides: [
+              questControllerProvider.overrideWith(FixtureQuestController.new),
+            ],
+            child: MaterialApp(home: surface.value),
+          ),
         );
         await tester.pump();
 

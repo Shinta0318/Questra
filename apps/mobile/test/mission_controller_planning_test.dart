@@ -6,6 +6,8 @@ import 'package:questra/features/quest/quest_controller.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
 import 'package:questra/features/quest/quest_model.dart';
 
+import 'support/fixture_quest_controller.dart';
+
 void main() {
   test(
     'Mission controller edits planning state and keeps one today Mission',
@@ -63,7 +65,11 @@ void main() {
   );
 
   test('Mission completion synchronizes Quest progress', () {
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [
+        questControllerProvider.overrideWith(FixtureQuestController.new),
+      ],
+    );
     addTearDown(container.dispose);
     final quest = container.read(questControllerProvider).first;
     final controller = container.read(missionControllerProvider.notifier);

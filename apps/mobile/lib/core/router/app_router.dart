@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../features/arc/arc_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/signup_screen.dart';
-import '../../features/guild/guild_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/mission/mission_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
@@ -14,7 +13,7 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/quest/quest_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
-import '../../features/trail/trail_screen.dart';
+import '../../widgets/layout/questra_coming_soon_screen.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
 
@@ -44,7 +43,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.trail,
-        builder: (context, state) => const TrailScreen(),
+        builder: (context, state) => const QuestraComingSoonScreen(
+          featureName: 'Trail',
+          message: '挑戦の軌跡を、もっと美しく残せる場所を整えています。もう少しだけ待っていてね。',
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -102,7 +104,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.guild,
-                builder: (context, state) => const GuildScreen(),
+                builder: (context, state) => const QuestraComingSoonScreen(
+                  featureName: 'Guild',
+                  message: '近いQuestを持つ仲間と、安心してつながれる航路を準備しています。',
+                ),
               ),
             ],
           ),

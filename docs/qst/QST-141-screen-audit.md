@@ -171,3 +171,22 @@ Missionが0件なら0%
 | QST-158 | QST-148 | Guild/Trail Coming Soon化と統合レビュー |
 
 最初の実装対象はQST-152。Routeと機能コードを削除せず、主要導線だけを`Home / Quest / Arc / Guild / Profile`へ整理する。
+
+## Simplification Epic完了レビュー
+
+QST-151からQST-158までを実装し、主要導線を`Home / Quest / Arc / Guild / Profile`へ整理した。既存のRoute、Repository、Controller、migration、保存済みデータは削除していない。
+
+- HomeはArcへの入口、今日のMission、進行中Questに集中した。
+- Quest作成の表示導線はArcへ統一し、候補の編集と明示的な確定後にのみ保存する。
+- Quest詳細はMission候補の編集、保存済みMission、統一進捗へ集中した。
+- Quest進捗は`完了Mission数 / 全Mission数`へ統一し、Missionが0件なら0%とする。
+- GuildとTrailは本番Routeで共通Coming Soon Surfaceを表示し、未完成の投稿・コメント・ランキング・作成操作を隠した。
+- 英語の初期Quest 3件を本番fallbackから除去した。画面テストは明示的な日本語fixtureを使用する。
+- Arc、Quest、Mission、進捗の中心フローを保ちながら、Trail/Guildの実装とDB領域は将来再開できる状態で保持した。
+
+### 最終検証
+
+- `flutter test --reporter compact`: 209 tests passed
+- `flutter analyze --no-pub`: No issues found
+
+Simplification Epicは完了。次の開発はMaster Specに照らしてBetaの実利用ブロッカーを再監査し、既存の中心フローを壊さない小さなQSTから再開する。

@@ -1389,10 +1389,12 @@ items:
   - id: QST-158
     requested_id: QST-148
     title: Guild and Trail Coming Soon Review
-    status: Ready
+    status: Done
     priority: P0
     epic: SIMPLIFICATION
     depends_on: [QST-157]
+    completed_by:
+      report: reports/qst/QST-158.md
     scope: Replace Guild and Trail primary surfaces with a shared Coming Soon experience and run the end-to-end simplification review without deleting existing implementation or data.
     acceptance:
       - Guild and Trail show only feature name, short copy, Questra imagery, Coming Soon, and Home action.
