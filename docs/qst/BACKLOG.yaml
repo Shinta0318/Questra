@@ -995,13 +995,15 @@ items:
       report: reports/qst/QST-129.md
   - id: QST-130
     title: Beta Launch Readiness Review
-    status: Ready
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-129]
     scope: Produce the final beta readiness report.
     acceptance:
       - Questra has a clear beta readiness score, open blockers, and QST-131+ recommendations.
+    completed_by:
+      report: reports/qst/QST-130.md
   - id: QST-131
     requested_id: QST-XXX
     title: Navigation and Creative UI Refresh
@@ -1489,6 +1491,133 @@ items:
       - Sensitive memories are excluded from Arc Chat context by default.
       - Retrieval honors the named Arc Chat memory context limit.
       - Targeted retrieval tests and Flutter analyze pass.
+  - id: QST-159
+    title: Beta Candidate Manifest Automation
+    status: Ready
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-130]
+    scope: Generate a reproducible candidate manifest with version, commit, build time, rollback commit, checks, and artifact checksums.
+    likely_files:
+      - tools/qst/generate_beta_candidate_manifest.dart
+      - docs/qst/BETA_CANDIDATE.yaml
+      - reports/qst/QST-159.md
+    acceptance:
+      - Candidate identity and rollback identity are machine-readable.
+      - Automated gate results cannot be confused with external evidence.
+  - id: QST-160
+    title: Supabase Beta Project Bootstrap
+    status: Planned
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-159]
+    scope: Define and execute the Beta Supabase project, config, migration, Edge Function, and secret bootstrap contract.
+    likely_files:
+      - supabase/config.toml
+      - docs/product/supabase_beta_project_bootstrap.md
+      - reports/qst/QST-160.md
+    acceptance:
+      - Project ref, region, owner, migration state, and deployed functions have evidence.
+      - Secrets remain server-side and local fallback is not accepted as cloud evidence.
+  - id: QST-161
+    title: Cloud Migration and RLS Evidence
+    status: Planned
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-160]
+    scope: Apply migrations to the Beta database and execute the database-backed RLS behavior harness.
+    likely_files:
+      - supabase/tests/rls_behavior.sql
+      - docs/qst/BETA_LAUNCH_READINESS.yaml
+      - reports/qst/QST-161.md
+    acceptance:
+      - Required migrations are applied to the named Beta project.
+      - Database-backed owner and cross-account RLS checks pass with sanitized evidence.
+  - id: QST-162
+    title: Dual Account Persistence Acceptance
+    status: Planned
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-161]
+    scope: Validate Profile, Quest, Mission, and Arc Memory persistence and isolation with two Beta accounts.
+    likely_files:
+      - docs/product/beta_account_setup_flow.md
+      - docs/qst/BETA_LAUNCH_READINESS.yaml
+      - reports/qst/QST-162.md
+    acceptance:
+      - Account A data persists after restart and re-login.
+      - Account B cannot read Account A private journey data.
+  - id: QST-163
+    title: Real Device Beta Validation Evidence
+    status: Planned
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-159]
+    scope: Capture candidate-specific Android, Web, compact, large-text, keyboard, and conditional iOS evidence.
+    likely_files:
+      - docs/product/real_device_beta_validation.md
+      - docs/qst/BETA_LAUNCH_READINESS.yaml
+      - reports/qst/QST-163.md
+    acceptance:
+      - Candidate commit and device details accompany every result.
+      - Home, Quest, Mission, Arc, owner switch, and fallback flows have no P0 failure.
+  - id: QST-164
+    title: Beta Support Operations Activation
+    status: Planned
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-128, QST-129]
+    scope: Activate the support contact, feedback channel, daily triage owner, SLA, and issue register.
+    likely_files:
+      - docs/qst/BETA_FEEDBACK.yaml
+      - docs/product/beta_feedback_operations.md
+      - reports/qst/QST-164.md
+    acceptance:
+      - Testers have a working destination for copied feedback reports.
+      - Open S0 and S1 counts are auditable for the candidate.
+  - id: QST-165
+    title: Legal and Privacy Sign-Off Closure
+    status: Planned
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-127, QST-164]
+    scope: Finalize operator, region, retention, provider settings, contact, and versioned legal approval for external Beta.
+    likely_files:
+      - docs/legal/privacy_policy_draft.md
+      - docs/legal/terms_of_service_draft.md
+      - docs/legal/beta_privacy_notice_ja_draft.md
+      - reports/qst/QST-165.md
+    acceptance:
+      - Legal Reviewer signs the same versioned copy distributed to testers.
+      - Provider and data request details match the deployed environment.
+  - id: QST-166
+    title: Beta Candidate Build and Distribution
+    status: Planned
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-161, QST-162, QST-163, QST-164, QST-165]
+    scope: Build, checksum, sign off, and distribute the approved candidate to a limited tester cohort.
+    likely_files:
+      - docs/qst/BETA_CANDIDATE.yaml
+      - docs/product/beta_release_notes_draft.md
+      - reports/qst/QST-166.md
+    acceptance:
+      - Artifact checksum, candidate SHA, rollback SHA, and four sign-offs match.
+      - Limited distribution and rollback channels are operational.
+  - id: QST-167
+    title: Beta Go-Live Review
+    status: Planned
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-166]
+    scope: Re-audit every Beta completion criterion and issue the final GO or NO-GO decision.
+    likely_files:
+      - docs/qst/BETA_LAUNCH_READINESS.yaml
+      - docs/product/beta_readiness_report.md
+      - reports/qst/QST-167.md
+    acceptance:
+      - Every P0 gate has candidate-specific evidence.
+      - GO is issued only with zero open S0 and all required sign-offs.
  deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

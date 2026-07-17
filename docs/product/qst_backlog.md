@@ -108,7 +108,7 @@ references where they do not conflict with v2.
 | QST-127 | Done | Beta Privacy and Legal Copy Check | Review beta privacy, terms, and AI/data explanations. | Settings and legal drafts now distinguish stored data, conditional OpenAI processing, manual feedback, disabled crash upload, and unavailable data controls. |
 | QST-128 | Done | Beta Release Notes Draft | Create beta release notes and known limitations. | Internal testers can distinguish ready, experimental, unavailable, feedback, and stop states without mistaking local fallback for Beta persistence. |
 | QST-129 | Done | Beta Go/No-Go Checklist | Create final beta launch checklist. | P0/P1 gates now require candidate, automation, Supabase/RLS, device, privacy, issue, sign-off, and rollback evidence; current state is NO-GO until missing evidence is supplied. |
-| QST-130 | Ready | Beta Launch Readiness Review | Produce final beta readiness report. | Questra has beta readiness score, open blockers, and QST-131+ recommendations. |
+| QST-130 | Done | Beta Launch Readiness Review | Produce final beta readiness report. | Evidence-based review scores Questra at 66/100 and keeps NO-GO until five P0 blocker groups are closed through QST-159 to QST-167. |
 | QST-131 | Done | Navigation and Creative UI Refresh | Reframe the primary product flow around Home -> Arc -> Quest and reduce generated UI feel. | Navigation, Home, Arc, Quest, and replayable first-use tour support an Arc-centered beta experience. |
 | QST-132 | Done | Onboarding Tour Polish | Harden the Arc onboarding tour state machine after the creative navigation refresh. | First-use guidance appears after profile restore, stays dismissed within a session, and remains replayable. |
 | QST-133 | Done | Quest Theme Card Redesign | Make Quest cards category-aware and reusable through theme metadata. | Quest cards show theme identity, Quest DNA labels, Arc hints, and tested theme resolution. |
@@ -137,6 +137,15 @@ references where they do not conflict with v2.
 | QST-156 | Done | Quest Mission Decomposition Simplification | Focus Quest detail on actionable Missions. | Quest detail now supports editable 3-10 Mission candidates, explicit confirmation, saved Mission editing, ordering, deletion, completion, and today selection. |
 | QST-157 | Done | Unified Quest Progress | Derive Quest progress from Mission completion everywhere. | Home, Quest list, and Quest detail now share completed/total Mission progress, and Mission changes synchronize the persisted Quest value. |
 | QST-158 | Done | Guild and Trail Coming Soon Review | Hide unfinished community and Trail interactions during simplification. | Guild and Trail now use the shared Coming Soon surface, while existing implementation and data remain preserved outside the production flow. |
+| QST-159 | Ready | Beta Candidate Manifest Automation | Make candidate identity and automated evidence reproducible. | Version, commit, rollback, checks, and artifact hashes are machine-readable without overstating external evidence. |
+| QST-160 | Planned | Supabase Beta Project Bootstrap | Establish the real Beta Supabase environment. | Project, region, owner, migration, functions, and secret state have evidence. |
+| QST-161 | Planned | Cloud Migration and RLS Evidence | Run migrations and RLS checks against the Beta database. | Database-backed owner and cross-account checks pass. |
+| QST-162 | Planned | Dual Account Persistence Acceptance | Prove persistence and isolation with two accounts. | Account A data survives re-login and remains invisible to Account B. |
+| QST-163 | Planned | Real Device Beta Validation Evidence | Validate the candidate on target devices. | Candidate-specific Android/Web and responsive evidence has no P0 failure. |
+| QST-164 | Planned | Beta Support Operations Activation | Activate feedback and incident operations. | Contact, channel, owner, SLA, and S0/S1 register are operational. |
+| QST-165 | Planned | Legal and Privacy Sign-Off Closure | Close external Beta legal blockers. | Versioned legal copy matches providers and has dated approval. |
+| QST-166 | Planned | Beta Candidate Build and Distribution | Produce and distribute the approved limited candidate. | Candidate, artifact, rollback, and sign-offs match. |
+| QST-167 | Planned | Beta Go-Live Review | Re-audit every completion gate. | Final GO requires complete evidence, zero S0, and all sign-offs. |
 
 ## Selection Rules
 

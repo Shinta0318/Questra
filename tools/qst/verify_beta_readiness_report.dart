@@ -3,20 +3,24 @@ import 'dart:io';
 const reportPath = 'docs/product/beta_readiness_report.md';
 
 const requiredSnippets = [
-  'Release Manager readiness: 74 / 100',
-  'MVP prepared rate: 93%',
-  'Performance readiness check: passed',
-  'Beta feedback operations: ready',
-  'Arc Experience Epic: completed for internal beta',
-  'QST-067: Performance Measurement Pass',
-  'QST-069: Beta Feedback Operations',
-  'not public release ready',
-  'real-device beta validation',
+  'Beta Launch Readiness Report',
+  'NO-GO for tester distribution',
+  '66 / 100',
+  'Automated Evidence',
+  'Open P0 Blockers',
+  'BLK-001 Supabase Project Evidence',
+  'BLK-005 Legal Sign-Off',
+  'Recommended QSTs',
+  'QST-159 Beta Candidate Manifest Automation',
+  'QST-167 Beta Go-Live Review',
+  'Technical Beta Candidate',
+  'Operational Beta',
 ];
 
 const forbiddenSnippets = [
-  'Performance targets are documented but not measured by repeatable tooling.',
-  'Arc Experience Epic QST-047 through QST-059 should be completed',
+  'Release Manager readiness: 74 / 100',
+  'Release Manager blocking issues: 0',
+  'MVP prepared rate: 93%',
 ];
 
 void main() {

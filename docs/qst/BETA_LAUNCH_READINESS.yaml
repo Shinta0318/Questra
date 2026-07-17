@@ -1,0 +1,73 @@
+version: 1
+updated: 2026-07-17
+decision: no_go
+decision_reason: P0 external environment, device, operations, and legal evidence is incomplete.
+score:
+  total: 66
+  maximum: 100
+  dimensions:
+    - id: product_core
+      weight: 30
+      earned: 28
+      status: ready
+    - id: automated_quality
+      weight: 20
+      earned: 20
+      status: passed
+    - id: supabase_security_evidence
+      weight: 20
+      earned: 5
+      status: evidence_missing
+    - id: device_distribution_evidence
+      weight: 15
+      earned: 4
+      status: evidence_missing
+    - id: trust_legal_operations
+      weight: 15
+      earned: 9
+      status: evidence_missing
+automated_gates:
+  dependency_resolution: passed
+  static_analysis: passed
+  flutter_tests: passed_219
+  rls_static_readiness: passed
+  performance_readiness: passed
+  feedback_readiness: passed
+  error_capture_contract: passed
+  privacy_copy_contract: passed
+  release_notes_contract: passed
+p0_blockers:
+  - id: BLK-001
+    title: Supabase Project Evidence
+    owner: Engineering Owner
+    status: evidence_missing
+    resolution_qst: QST-160
+  - id: BLK-002
+    title: Persistence and Cross-Account RLS
+    owner: Engineering Owner
+    status: evidence_missing
+    resolution_qst: QST-161,QST-162
+  - id: BLK-003
+    title: Candidate Artifact and Device Evidence
+    owner: Release Manager
+    status: evidence_missing
+    resolution_qst: QST-159,QST-163
+  - id: BLK-004
+    title: Beta Operations
+    owner: Release Manager
+    status: evidence_missing
+    resolution_qst: QST-164
+  - id: BLK-005
+    title: Legal Sign-Off
+    owner: Product Owner
+    status: evidence_missing
+    resolution_qst: QST-165
+go_requirements:
+  open_s0: 0
+  open_s1: 0_or_approved_exception
+  required_sign_offs:
+    - Release Manager
+    - Engineering Owner
+    - Product Owner
+    - Legal Reviewer
+  final_review_qst: QST-167
