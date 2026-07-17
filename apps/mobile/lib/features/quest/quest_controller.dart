@@ -119,6 +119,25 @@ class QuestController extends Notifier<List<Quest>> {
     );
   }
 
+  void updateProgress(String questId, double progress) {
+    final quest = findById(questId);
+    if (quest == null) return;
+    final normalized = progress.clamp(0.0, 1.0);
+    if ((quest.progress - normalized).abs() < 0.0001) return;
+    final updatedQuest = quest.copyWith(progress: normalized);
+    state = [
+      for (final current in state)
+        if (current.id == questId) updatedQuest else current,
+    ];
+    unawaited(
+      _persistQuest(
+        updatedQuest,
+        sourceType: ArcMemorySourceType.questUpdated,
+        recordJourney: false,
+      ),
+    );
+  }
+
   void remove(String id) {
     final removedQuest = findById(id);
     state = state.where((quest) => quest.id != id).toList();
@@ -128,17 +147,20 @@ class QuestController extends Notifier<List<Quest>> {
   Future<void> _persistQuest(
     Quest quest, {
     required ArcMemorySourceType sourceType,
+    bool recordJourney = true,
   }) async {
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
       ref
           .read(questSyncControllerProvider.notifier)
           .failed('Quest save', 'ログインが必要です。');
-      _recordQuestAction(
-        ArcActionTrigger.unauthenticated,
-        quest,
-        surface: 'Quest保存',
-      );
+      if (recordJourney) {
+        _recordQuestAction(
+          ArcActionTrigger.unauthenticated,
+          quest,
+          surface: 'Quest保存',
+        );
+      }
       return;
     }
 
@@ -152,17 +174,21 @@ class QuestController extends Notifier<List<Quest>> {
         for (final current in state)
           if (current.id == quest.id) savedQuest else current,
       ];
-      unawaited(_tagQuest(userId, savedQuest));
-      _growBond(sourceType);
-      unawaited(_rememberQuest(userId, savedQuest, sourceType));
+      if (recordJourney) {
+        unawaited(_tagQuest(userId, savedQuest));
+        _growBond(sourceType);
+        unawaited(_rememberQuest(userId, savedQuest, sourceType));
+      }
       sync.saved('Questを保存しました。');
     } catch (error) {
       sync.failed('Quest save', error);
-      _recordQuestAction(
-        ArcActionTrigger.saveFailure,
-        quest,
-        surface: 'Quest保存',
-      );
+      if (recordJourney) {
+        _recordQuestAction(
+          ArcActionTrigger.saveFailure,
+          quest,
+          surface: 'Quest保存',
+        );
+      }
     }
   }
 

@@ -15,6 +15,7 @@ import '../auth/auth_controller.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../quest/quest_model.dart';
+import '../quest/quest_progress_service.dart';
 import '../tagging/tagging_providers.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_event_model.dart';
@@ -84,6 +85,7 @@ class MissionController extends Notifier<List<Mission>> {
         .read(missionGenerationServiceProvider)
         .generate(quest: quest, guide: guide, advice: advice);
     state = [mission, ...state];
+    _syncQuestProgress(quest.id);
     _recordMissionEmotion(mission, trigger: ArcActionTrigger.missionCreated);
     unawaited(
       _persistMission(mission, sourceType: ArcMemorySourceType.missionCreated),
@@ -138,6 +140,7 @@ class MissionController extends Notifier<List<Mission>> {
         ),
       );
     }
+    _syncQuestProgress(quest.id);
     _recordMissionEmotion(mission, trigger: ArcActionTrigger.missionCreated);
     unawaited(
       _persistMission(mission, sourceType: ArcMemorySourceType.missionCreated),
@@ -160,7 +163,12 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   void removeMission(String missionId) {
+    final questId = state
+        .where((mission) => mission.id == missionId)
+        .firstOrNull
+        ?.questId;
     state = state.where((mission) => mission.id != missionId).toList();
+    if (questId != null) _syncQuestProgress(questId);
     unawaited(_deleteMission(missionId));
   }
 
@@ -228,6 +236,7 @@ class MissionController extends Notifier<List<Mission>> {
       for (final mission in state)
         if (mission.id == missionId) updatedMission else mission,
     ];
+    _syncQuestProgress(updatedMission.questId);
     _recordMissionEmotion(
       updatedMission,
       trigger: ArcActionTrigger.missionCompleted,
@@ -289,6 +298,9 @@ class MissionController extends Notifier<List<Mission>> {
             !loadedIds.contains(mission.id),
       );
       state = [...loaded, ...localOnly];
+      for (final questId in questIds) {
+        _syncQuestProgress(questId);
+      }
       sync.saved('Missionを読み込みました。');
     } catch (error) {
       sync.failed('Mission load', error);
@@ -301,6 +313,15 @@ class MissionController extends Notifier<List<Mission>> {
         .map((quest) => quest.id)
         .toList(growable: false);
     unawaited(loadForQuests(questIds));
+  }
+
+  void _syncQuestProgress(String questId) {
+    final snapshot = const QuestProgressService().calculate(
+      state.where((mission) => mission.questId == questId),
+    );
+    ref
+        .read(questControllerProvider.notifier)
+        .updateProgress(questId, snapshot.value);
   }
 
   Future<void> _persistMission(

@@ -31,6 +31,7 @@ import 'quest_milestone_controller.dart';
 import 'quest_milestone_model.dart';
 import 'quest_dna_snapshot.dart';
 import 'quest_model.dart';
+import 'quest_progress_service.dart';
 import 'quest_providers.dart';
 import 'quest_theme_card.dart';
 
@@ -72,7 +73,7 @@ class QuestDetailScreen extends ConsumerWidget {
               onEdit: () => _showQuestEditDialog(context, ref, quest),
             ),
             const SizedBox(height: 16),
-            _ProgressSection(quest: quest),
+            _ProgressSection(quest: quest, missions: missions),
             const SizedBox(height: 16),
             _ArcQuestGuidePanel(quest: quest, state: arcGuideState),
             const SizedBox(height: 16),
@@ -1350,13 +1351,14 @@ class _NextStepPanel extends StatelessWidget {
 }
 
 class _ProgressSection extends StatelessWidget {
-  const _ProgressSection({required this.quest});
+  const _ProgressSection({required this.quest, required this.missions});
 
   final Quest quest;
+  final List<Mission> missions;
 
   @override
   Widget build(BuildContext context) {
-    final percent = (quest.progress.clamp(0, 1) * 100).round();
+    final progress = const QuestProgressService().calculate(missions);
 
     return _SectionCard(
       number: 1,
@@ -1370,7 +1372,7 @@ class _ProgressSection extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(999),
                   child: LinearProgressIndicator(
-                    value: quest.progress.clamp(0, 1),
+                    value: progress.value,
                     minHeight: 12,
                     backgroundColor: QuestraColors.cloud,
                     valueColor: const AlwaysStoppedAnimation<Color>(
@@ -1381,7 +1383,7 @@ class _ProgressSection extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                '$percent%',
+                '${progress.percent}%',
                 style: const TextStyle(
                   color: QuestraColors.deepNavy,
                   fontWeight: FontWeight.w900,
@@ -1390,8 +1392,13 @@ class _ProgressSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
+          Text(
+            '完了したMission ${progress.missionCountLabel}',
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
           const Text('小さなMissionを進めるほど、Questの輪郭がはっきりします。'),
-          if (quest.progress >= 0.85 && quest.status == QuestStatus.active) ...[
+          if (progress.value >= 0.85 && quest.status == QuestStatus.active) ...[
             const SizedBox(height: 12),
             ArcCelebrationCard(
               moment: const ArcCelebrationService().build(

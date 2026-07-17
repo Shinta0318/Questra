@@ -20,6 +20,7 @@ import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_model.dart';
+import '../quest/quest_progress_service.dart';
 import '../signal/mission_signal_model.dart';
 import '../star_map/star_map_recommendation_service.dart';
 import '../trail/trail_model.dart';
@@ -95,6 +96,11 @@ class HomeScreen extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.md),
                       child: _ActiveQuestCard(
                         quest: quest,
+                        progress: const QuestProgressService().calculate(
+                          missions.where(
+                            (mission) => mission.questId == quest.id,
+                          ),
+                        ),
                         nextMission: missions
                             .where(
                               (mission) =>
@@ -847,22 +853,22 @@ class _TodayMissionCard extends StatelessWidget {
 class _ActiveQuestCard extends StatelessWidget {
   const _ActiveQuestCard({
     required this.quest,
+    required this.progress,
     required this.nextMission,
     required this.onTap,
   });
 
   final Quest quest;
+  final QuestProgressSnapshot progress;
   final Mission? nextMission;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final progressPercent = (quest.progress * 100).round().clamp(0, 100);
-
     return Semantics(
       button: true,
       label: '${quest.title}のQuestを開く',
-      value: '進捗$progressPercentパーセント',
+      value: '進捗${progress.percent}パーセント、Mission ${progress.missionCountLabel}',
       child: InkWell(
         borderRadius: AppRadius.card,
         onTap: onTap,
@@ -894,7 +900,7 @@ class _ActiveQuestCard extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                   child: LinearProgressIndicator(
-                    value: quest.progress.clamp(0, 1),
+                    value: progress.value,
                     minHeight: 8,
                     backgroundColor: AppColors.deepNavy,
                     valueColor: const AlwaysStoppedAnimation<Color>(
@@ -912,10 +918,17 @@ class _ActiveQuestCard extends StatelessWidget {
                   _QuestTag(label: quest.category),
                   _QuestTag(label: quest.difficulty.label),
                   Text(
-                    '$progressPercent%',
+                    '${progress.percent}%',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.white,
                       fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    'Mission ${progress.missionCountLabel}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.parchment,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],

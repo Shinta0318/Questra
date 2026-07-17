@@ -75,6 +75,7 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('進行中のQuest'), findsOneWidget);
+    expect(find.text('Mission 0/0'), findsWidgets);
     expect(find.text('最近のTrail'), findsNothing);
     expect(find.text('Guildの動き'), findsNothing);
     expect(find.text('Star Map'), findsNothing);
@@ -112,6 +113,7 @@ void main() {
     expect(find.text('2 ArcのMissionプラン'), findsOneWidget);
     expect(find.text('Arcガイドを生成'), findsOneWidget);
     expect(find.text('3 Mission'), findsOneWidget);
+    expect(find.text('完了したMission 0/0'), findsOneWidget);
     expect(find.textContaining('最初のMissionをつくる'), findsOneWidget);
     expect(find.text('Quest DNA Snapshot'), findsNothing);
     expect(find.text('Challenge Graph Preview'), findsNothing);

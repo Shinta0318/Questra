@@ -1375,10 +1375,12 @@ items:
   - id: QST-157
     requested_id: QST-147
     title: Unified Quest Progress
-    status: Ready
+    status: Done
     priority: P0
     epic: SIMPLIFICATION
     depends_on: [QST-156]
+    completed_by:
+      report: reports/qst/QST-157.md
     scope: Use completed Mission count divided by all Mission count as the single Quest progress rule across Home, Quest list, and Quest detail.
     acceptance:
       - Zero Missions produce zero percent progress.
@@ -1387,7 +1389,7 @@ items:
   - id: QST-158
     requested_id: QST-148
     title: Guild and Trail Coming Soon Review
-    status: Planned
+    status: Ready
     priority: P0
     epic: SIMPLIFICATION
     depends_on: [QST-157]

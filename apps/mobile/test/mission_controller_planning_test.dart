@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/features/mission/mission_controller.dart';
 import 'package:questra/features/mission/mission_model.dart';
+import 'package:questra/features/quest/quest_controller.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
 import 'package:questra/features/quest/quest_model.dart';
 
@@ -60,4 +61,43 @@ void main() {
       );
     },
   );
+
+  test('Mission completion synchronizes Quest progress', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final quest = container.read(questControllerProvider).first;
+    final controller = container.read(missionControllerProvider.notifier);
+    final first = controller.addMissionDraft(
+      quest: quest,
+      title: 'First',
+      description: '',
+      guideType: GuideType.route,
+      difficulty: MissionDifficulty.easy,
+    );
+    controller.addMissionDraft(
+      quest: quest,
+      title: 'Second',
+      description: '',
+      guideType: GuideType.training,
+      difficulty: MissionDifficulty.easy,
+    );
+
+    expect(
+      container
+          .read(questControllerProvider)
+          .singleWhere((item) => item.id == quest.id)
+          .progress,
+      0,
+    );
+
+    controller.completeMission(first.id);
+
+    expect(
+      container
+          .read(questControllerProvider)
+          .singleWhere((item) => item.id == quest.id)
+          .progress,
+      0.5,
+    );
+  });
 }
