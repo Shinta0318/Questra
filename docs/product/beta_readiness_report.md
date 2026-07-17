@@ -40,6 +40,19 @@ Scoreは実装量ではなく、現在のcandidateを安全に配布できる証
 
 これらはFlutter sourceとrepository contractを証明する。実Supabase、実機、運営承認を代替しない。
 
+## Candidate Manifest
+
+- Status: Validated, not distribution-ready
+- App version: `1.0.0+1`
+- Source commit: `faf69ffc8d4d94a108307d34061f4a835fc5e7fe`
+- Rollback commit: `49ed2f50f24d3ac9d4a789befb58baf95cb1ae58`
+- Automated gates: 9 passed
+- Artifact: not built
+- External evidence: missing
+
+`docs/qst/BETA_CANDIDATE.yaml`はlocal fallbackと自動testをcloud/device/legal evidenceとして
+扱わず、artifact checksumと外部証跡がない限り`distribution_ready: false`を維持する。
+
 ## Ready Surfaces
 
 | Surface | Status | Notes |

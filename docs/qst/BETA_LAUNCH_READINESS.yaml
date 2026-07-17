@@ -50,8 +50,9 @@ p0_blockers:
   - id: BLK-003
     title: Candidate Artifact and Device Evidence
     owner: Release Manager
-    status: evidence_missing
-    resolution_qst: QST-159,QST-163
+    status: partial_evidence
+    progress: QST-159 recorded validated source and rollback commits; artifact and device evidence remain missing.
+    resolution_qst: QST-163,QST-166
   - id: BLK-004
     title: Beta Operations
     owner: Release Manager

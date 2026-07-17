@@ -1493,7 +1493,7 @@ items:
       - Targeted retrieval tests and Flutter analyze pass.
   - id: QST-159
     title: Beta Candidate Manifest Automation
-    status: Ready
+    status: Done
     priority: P0
     epic: BETA-GO-LIVE
     depends_on: [QST-130]
@@ -1505,9 +1505,11 @@ items:
     acceptance:
       - Candidate identity and rollback identity are machine-readable.
       - Automated gate results cannot be confused with external evidence.
+    completed_by:
+      report: reports/qst/QST-159.md
   - id: QST-160
     title: Supabase Beta Project Bootstrap
-    status: Planned
+    status: Ready
     priority: P0
     epic: BETA-GO-LIVE
     depends_on: [QST-159]

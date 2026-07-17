@@ -1,0 +1,38 @@
+version: 1
+candidate_status: "validated"
+distribution_ready: false
+app_version: "1.0.0+1"
+source_commit: "faf69ffc8d4d94a108307d34061f4a835fc5e7fe"
+rollback_commit: "49ed2f50f24d3ac9d4a789befb58baf95cb1ae58"
+branch: "codex/initial-questra-structure-pr"
+generated_at_utc: "2026-07-17T09:04:10.975442Z"
+worktree_clean_before_manifest: true
+readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
+automated_gates:
+  dependency_resolution: "passed"
+  static_analysis: "passed"
+  flutter_tests: "passed"
+  rls_static_readiness: "passed"
+  performance_readiness: "passed"
+  feedback_readiness: "passed"
+  error_capture_contract: "passed"
+  privacy_copy_contract: "passed"
+  release_notes_contract: "passed"
+external_evidence:
+  complete: false
+  status: "evidence_missing"
+  required_groups:
+    - supabase_project_and_migrations
+    - dual_account_persistence_and_rls
+    - real_device_validation
+    - support_operations
+    - legal_sign_off
+artifacts:
+  - status: not_built
+    path: null
+    sha256: null
+guardrails:
+  local_fallback_is_cloud_evidence: false
+  automated_checks_replace_external_evidence: false
+  approved_requires_artifact_checksum: true
+  approved_requires_clean_worktree: true
