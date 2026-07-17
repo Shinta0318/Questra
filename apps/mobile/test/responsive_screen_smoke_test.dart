@@ -81,7 +81,7 @@ void main() {
     expect(find.text('Horizon'), findsNothing);
   });
 
-  testWidgets('Quest Detail exposes journey overview and next action', (
+  testWidgets('Quest Detail focuses on progress and editable Missions', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 900);
@@ -102,53 +102,21 @@ void main() {
       ),
     );
     await tester.pump();
+    expect(tester.takeException(), isNull);
 
-    expect(find.textContaining('旅路の概要 /'), findsOneWidget);
-    expect(find.text('次の一歩'), findsOneWidget);
-    expect(find.text('進捗'), findsWidgets);
-    expect(find.text('Mission'), findsWidgets);
-    expect(find.text('Trail'), findsWidgets);
-    expect(find.text('Theme'), findsWidgets);
-    expect(find.text('Adventure Map'), findsWidgets);
-    await tester.scrollUntilVisible(
-      find.text('Quest DNA Snapshot'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Quest DNA Snapshot'), findsOneWidget);
-    expect(find.text('推定'), findsWidgets);
-    await tester.scrollUntilVisible(
-      find.text('Quest DNAを見直す'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Quest DNAを見直す'), findsOneWidget);
-    await tester.ensureVisible(find.text('Quest DNAを見直す'));
+    tester.view.physicalSize = const Size(390, 2400);
     await tester.pump();
-    await tester.tap(find.text('Quest DNAを見直す'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Quest DNAの見直し'), findsOneWidget);
-    expect(find.text('推定値・未保存'), findsWidgets);
-    Navigator.of(tester.element(find.text('Quest DNAの見直し'))).pop();
-    await tester.pump();
-    await tester.scrollUntilVisible(
-      find.text('Challenge Graph Preview'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Challenge Graph Preview'), findsOneWidget);
-    expect(find.text('星図ノード'), findsOneWidget);
-    expect(find.text('Nodes'), findsWidgets);
-    expect(find.text('Edges'), findsWidgets);
-    expect(find.text('Arc Graph Insight'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Quest支援の透明性'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Quest支援の透明性'), findsOneWidget);
-    expect(find.text('Betaでは未接続'), findsOneWidget);
+
+    expect(find.byTooltip('Questを編集'), findsOneWidget);
+    expect(find.text('1 進捗'), findsOneWidget);
+    expect(find.text('2 ArcのMissionプラン'), findsOneWidget);
+    expect(find.text('Arcガイドを生成'), findsOneWidget);
+    expect(find.text('3 Mission'), findsOneWidget);
+    expect(find.textContaining('最初のMissionをつくる'), findsOneWidget);
+    expect(find.text('Quest DNA Snapshot'), findsNothing);
+    expect(find.text('Challenge Graph Preview'), findsNothing);
+    expect(find.text('Quest支援の透明性'), findsNothing);
+    expect(find.text('Dream Board'), findsNothing);
   });
 
   testWidgets('Settings exposes trust and privacy review surface', (

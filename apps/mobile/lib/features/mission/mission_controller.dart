@@ -68,7 +68,10 @@ class MissionController extends Notifier<List<Mission>> {
     if (openMissions.isEmpty) {
       return null;
     }
-    openMissions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    openMissions.sort((a, b) {
+      if (a.isToday != b.isToday) return a.isToday ? -1 : 1;
+      return a.sortOrder.compareTo(b.sortOrder);
+    });
     return openMissions.first;
   }
 
@@ -94,7 +97,23 @@ class MissionController extends Notifier<List<Mission>> {
     required String description,
     required GuideType guideType,
     required MissionDifficulty difficulty,
+    int? sortOrder,
+    bool isToday = false,
   }) {
+    final nextSortOrder =
+        sortOrder ??
+        state.where((mission) => mission.questId == quest.id).length;
+    final clearedToday = isToday
+        ? state
+              .where(
+                (mission) => mission.questId == quest.id && mission.isToday,
+              )
+              .map((mission) => mission.copyWith(isToday: false))
+              .toList(growable: false)
+        : const <Mission>[];
+    final clearedById = {
+      for (final mission in clearedToday) mission.id: mission,
+    };
     final mission = Mission(
       questId: quest.id,
       questTitle: quest.title,
@@ -103,13 +122,95 @@ class MissionController extends Notifier<List<Mission>> {
       guideType: guideType,
       difficulty: difficulty,
       status: MissionStatus.todo,
+      sortOrder: nextSortOrder,
+      isToday: isToday,
     );
-    state = [mission, ...state];
+    state = [
+      mission,
+      for (final current in state) clearedById[current.id] ?? current,
+    ];
+    for (final cleared in clearedToday) {
+      unawaited(
+        _persistMission(
+          cleared,
+          sourceType: ArcMemorySourceType.missionCreated,
+          recordJourney: false,
+        ),
+      );
+    }
     _recordMissionEmotion(mission, trigger: ArcActionTrigger.missionCreated);
     unawaited(
       _persistMission(mission, sourceType: ArcMemorySourceType.missionCreated),
     );
     return mission;
+  }
+
+  void updateMission(Mission updatedMission) {
+    state = [
+      for (final mission in state)
+        if (mission.id == updatedMission.id) updatedMission else mission,
+    ];
+    unawaited(
+      _persistMission(
+        updatedMission,
+        sourceType: ArcMemorySourceType.missionCreated,
+        recordJourney: false,
+      ),
+    );
+  }
+
+  void removeMission(String missionId) {
+    state = state.where((mission) => mission.id != missionId).toList();
+    unawaited(_deleteMission(missionId));
+  }
+
+  void reorderForQuest(String questId, int oldIndex, int newIndex) {
+    final ordered =
+        state.where((mission) => mission.questId == questId).toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    if (oldIndex < 0 || oldIndex >= ordered.length) return;
+    if (newIndex < 0 || newIndex >= ordered.length) return;
+    final moved = ordered.removeAt(oldIndex);
+    ordered.insert(newIndex, moved);
+    final updated = [
+      for (var index = 0; index < ordered.length; index++)
+        ordered[index].copyWith(sortOrder: index),
+    ];
+    final byId = {for (final mission in updated) mission.id: mission};
+    state = [for (final mission in state) byId[mission.id] ?? mission];
+    for (final mission in updated) {
+      unawaited(
+        _persistMission(
+          mission,
+          sourceType: ArcMemorySourceType.missionCreated,
+          recordJourney: false,
+        ),
+      );
+    }
+  }
+
+  void setToday(String questId, String missionId) {
+    final changed = <Mission>[];
+    state = [
+      for (final mission in state)
+        if (mission.questId == questId)
+          () {
+            final updated = mission.copyWith(isToday: mission.id == missionId);
+            if (updated.isToday != mission.isToday) changed.add(updated);
+            return updated;
+          }()
+        else
+          mission,
+    ];
+    for (final mission in changed) {
+      unawaited(
+        _persistMission(
+          mission,
+          sourceType: ArcMemorySourceType.missionCreated,
+          recordJourney: false,
+        ),
+      );
+    }
   }
 
   Mission? completeMission(String missionId) {
@@ -205,6 +306,7 @@ class MissionController extends Notifier<List<Mission>> {
   Future<void> _persistMission(
     Mission mission, {
     required ArcMemorySourceType sourceType,
+    bool recordJourney = true,
   }) async {
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
@@ -229,9 +331,11 @@ class MissionController extends Notifier<List<Mission>> {
         for (final current in state)
           if (current.id == savedMission.id) savedMission else current,
       ];
-      unawaited(_tagMission(userId, savedMission));
-      _growBond(sourceType);
-      await _rememberMission(savedMission, sourceType);
+      if (recordJourney) {
+        unawaited(_tagMission(userId, savedMission));
+        _growBond(sourceType);
+        await _rememberMission(savedMission, sourceType);
+      }
       sync.saved('Missionを保存しました。');
     } catch (error) {
       sync.failed('Mission save', error);
@@ -240,6 +344,17 @@ class MissionController extends Notifier<List<Mission>> {
         trigger: ArcActionTrigger.saveFailure,
         surface: 'Mission保存',
       );
+    }
+  }
+
+  Future<void> _deleteMission(String missionId) async {
+    final sync = ref.read(missionSyncControllerProvider.notifier);
+    sync.loading('Missionを削除しています...');
+    try {
+      await ref.read(missionRepositoryProvider).delete(missionId);
+      sync.saved('Missionを削除しました。');
+    } catch (error) {
+      sync.failed('Mission delete', error);
     }
   }
 

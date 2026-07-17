@@ -1361,10 +1361,12 @@ items:
   - id: QST-156
     requested_id: QST-146
     title: Quest Mission Decomposition Simplification
-    status: Ready
+    status: Done
     priority: P0
     epic: SIMPLIFICATION
     depends_on: [QST-155]
+    completed_by:
+      report: reports/qst/QST-156.md
     scope: Focus Quest detail on description, progress, editable Missions, Mission generation, and Quest editing using existing models.
     acceptance:
       - Mission generation creates editable 3-10 action-sized candidates before save.
@@ -1373,7 +1375,7 @@ items:
   - id: QST-157
     requested_id: QST-147
     title: Unified Quest Progress
-    status: Planned
+    status: Ready
     priority: P0
     epic: SIMPLIFICATION
     depends_on: [QST-156]

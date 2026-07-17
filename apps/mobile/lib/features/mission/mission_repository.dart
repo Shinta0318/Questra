@@ -24,10 +24,10 @@ class InMemoryMissionRepository implements MissionRepository {
     String questId, {
     int limit = QuestraPerformanceLimits.missionListLimit,
   }) async {
-    return _missions
-        .where((mission) => mission.questId == questId)
-        .take(limit)
-        .toList(growable: false);
+    final missions =
+        _missions.where((mission) => mission.questId == questId).toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return missions.take(limit).toList(growable: false);
   }
 
   @override
@@ -36,10 +36,17 @@ class InMemoryMissionRepository implements MissionRepository {
     int limit = QuestraPerformanceLimits.missionListLimit,
   }) async {
     final questIdSet = questIds.toSet();
-    return _missions
-        .where((mission) => questIdSet.contains(mission.questId))
-        .take(limit)
-        .toList(growable: false);
+    final missions =
+        _missions
+            .where((mission) => questIdSet.contains(mission.questId))
+            .toList()
+          ..sort((a, b) {
+            final questOrder = a.questId.compareTo(b.questId);
+            return questOrder != 0
+                ? questOrder
+                : a.sortOrder.compareTo(b.sortOrder);
+          });
+    return missions.take(limit).toList(growable: false);
   }
 
   @override
@@ -68,10 +75,10 @@ class SupabaseMissionRepository implements MissionRepository {
     final rows = await client
         .from('missions')
         .select(
-          'id,quest_id,title,description,guide_type,difficulty,status,created_at',
+          'id,quest_id,title,description,guide_type,difficulty,status,sort_order,is_today,created_at',
         )
         .eq('quest_id', questId)
-        .order('created_at', ascending: false)
+        .order('sort_order')
         .limit(limit);
 
     return rows
@@ -91,10 +98,11 @@ class SupabaseMissionRepository implements MissionRepository {
     final rows = await client
         .from('missions')
         .select(
-          'id,quest_id,title,description,guide_type,difficulty,status,created_at',
+          'id,quest_id,title,description,guide_type,difficulty,status,sort_order,is_today,created_at',
         )
         .inFilter('quest_id', questIds)
-        .order('created_at', ascending: false)
+        .order('quest_id')
+        .order('sort_order')
         .limit(limit);
 
     return rows
@@ -108,7 +116,7 @@ class SupabaseMissionRepository implements MissionRepository {
         .from('missions')
         .upsert(_missionToRow(mission))
         .select(
-          'id,quest_id,title,description,guide_type,difficulty,status,created_at',
+          'id,quest_id,title,description,guide_type,difficulty,status,sort_order,is_today,created_at',
         )
         .limit(1);
 
@@ -133,6 +141,8 @@ class SupabaseMissionRepository implements MissionRepository {
       'guide_type': mission.guideType.storageKey,
       'difficulty': mission.difficulty.storageKey,
       'status': mission.status.storageKey,
+      'sort_order': mission.sortOrder,
+      'is_today': mission.isToday,
       'completed_at': mission.status == MissionStatus.completed
           ? DateTime.now().toIso8601String()
           : null,
@@ -151,6 +161,8 @@ class SupabaseMissionRepository implements MissionRepository {
       guideType: guideTypeFromStorage(row['guide_type'] as String),
       difficulty: missionDifficultyFromStorage(row['difficulty'] as String),
       status: missionStatusFromStorage(row['status'] as String),
+      sortOrder: row['sort_order'] as int? ?? 0,
+      isToday: row['is_today'] as bool? ?? false,
       createdAt: DateTime.parse(row['created_at'] as String),
     );
   }
