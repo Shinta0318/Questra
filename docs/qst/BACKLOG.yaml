@@ -929,16 +929,18 @@ items:
       report: reports/qst/QST-123.md
   - id: QST-124
     title: Beta Feedback Entry Point
-    status: Ready
+    status: Done
     priority: P1
     epic: BETA-LAUNCH
     depends_on: [QST-121]
     scope: Add or document an in-app/manual feedback route.
     acceptance:
       - Beta testers have a clear way to report issues with screen, severity, and reproduction steps.
+    completed_by:
+      report: reports/qst/QST-124.md
   - id: QST-125
     title: Beta Issue Labeling Rules
-    status: Planned
+    status: Ready
     priority: P1
     epic: BETA-LAUNCH
     depends_on: [QST-124]

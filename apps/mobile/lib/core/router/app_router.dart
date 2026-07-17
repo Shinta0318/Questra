@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/arc/arc_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/signup_screen.dart';
+import '../../features/feedback/beta_feedback_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/mission/mission_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
@@ -40,6 +41,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.feedback,
+        builder: (context, state) => const BetaFeedbackScreen(),
       ),
       GoRoute(
         path: AppRoutes.trail,

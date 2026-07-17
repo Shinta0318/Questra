@@ -24,6 +24,18 @@ Every feedback item should include:
 - Actual result.
 - Evidence, such as screenshot, short clip, log, or tester note.
 
+## In-App Entry
+
+Beta testers can open `設定` -> `フィードバックを報告` and record the surface,
+feedback type, S0-S3 severity, summary, reproduction steps, expected result, and
+actual result. Questra formats the report with tester and build identifiers,
+then copies it for pasting into the beta channel provided by the operator.
+
+The current clipboard handoff is intentional: no external destination is hidden
+from the tester, and no new feedback table is required before the beta channel
+is finalized. `BetaFeedbackSink` is the replacement boundary for a future
+approved persistence or issue-tracker destination.
+
 ## Triage Rhythm
 
 - Daily during internal beta: review S0 and S1 feedback.

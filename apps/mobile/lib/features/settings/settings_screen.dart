@@ -14,6 +14,7 @@ import '../trust/data_request_copy_service.dart';
 import '../trust/trust_privacy_review_service.dart';
 import 'settings_information_architecture_service.dart';
 import 'widgets/arc_memory_management_preview_card.dart';
+import 'widgets/beta_feedback_entry_card.dart';
 import 'widgets/settings_tutorial_card.dart';
 import 'widgets/trust_privacy_card.dart';
 
@@ -54,6 +55,10 @@ class SettingsScreen extends ConsumerWidget {
                     .read(onboardingTourControllerProvider.notifier)
                     .replay(),
                 onReturnToQuest: () => context.go(AppRoutes.quest),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              BetaFeedbackEntryCard(
+                onOpen: () => context.push(AppRoutes.feedback),
               ),
               const SizedBox(height: AppSpacing.lg),
               TrustPrivacyCard(review: trustReview),

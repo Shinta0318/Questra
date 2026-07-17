@@ -1,11 +1,12 @@
 version: 1
-updated: 2026-06-20
+updated: 2026-07-17
 owner: Release Manager
 purpose: Internal beta feedback intake, triage, and QST conversion rules.
 intake_channels:
   - id: in_app_notes
     label: In-app tester notes
-    status: planned
+    status: ready
+    implementation: Settings -> Beta feedback form -> structured clipboard report
     required_fields:
       - tester_id
       - build_version
