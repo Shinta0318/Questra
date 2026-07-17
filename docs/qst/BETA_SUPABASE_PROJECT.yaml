@@ -1,39 +1,39 @@
 version: 1
-status: evidence_missing
-updated_at_utc: null
-candidate_source_commit: null
+status: evidence_partial
+updated_at_utc: "2026-07-17T12:46:34.6751457Z"
+candidate_source_commit: "e45f4430ee6147d999a0a83b7c758f4f922b1de2"
 project:
-  ref: null
-  region: null
-  owner: null
-  access_verified: false
-  dashboard_evidence: null
-  linked_at_utc: null
-  cli_version: null
+  ref: "dhbmgwarnrtelrcrmmfk"
+  region: "ap-northeast-1"
+  owner: "Shinta0318's Org"
+  access_verified: true
+  dashboard_evidence: "Supabase Dashboard project overview verified 2026-07-17: Questra Beta, Tokyo"
+  linked_at_utc: "2026-07-17T12:15:36Z"
+  cli_version: "2.109.1"
 migrations:
-  status: not_verified
-  latest_local: "202607170001_mission_planning_fields.sql"
-  remote_head: null
+  status: applied
+  latest_local: "202607170002_data_api_privileges.sql"
+  remote_head: "202607170002_data_api_privileges.sql"
   command: "supabase migration list --linked"
 functions:
   - name: arc-chat
-    status: not_verified
-    deployed_at_utc: null
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
   - name: arc-quest-guide
-    status: not_verified
-    deployed_at_utc: null
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
   - name: generate-arc-advice
-    status: not_verified
-    deployed_at_utc: null
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
   - name: generate-mission
-    status: not_verified
-    deployed_at_utc: null
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
   - name: generate-quest-guides
-    status: not_verified
-    deployed_at_utc: null
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
   - name: generate-star-map
-    status: not_verified
-    deployed_at_utc: null
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
 secrets:
   status: not_verified
   storage: server_side_only

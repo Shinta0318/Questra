@@ -1523,10 +1523,11 @@ items:
       - Secrets remain server-side and local fallback is not accepted as cloud evidence.
     progress:
       - Local config, bootstrap runbook, sanitized evidence contract, and strict verifier are implemented.
-      - Hosted project identity and deployment evidence remain required before completion.
+      - Questra Beta project identity, Tokyo region, owner, and Dashboard access are verified.
+      - CLI link, migrations, Edge Functions, and server-side secret evidence remain required before completion.
   - id: QST-161
     title: Cloud Migration and RLS Evidence
-    status: Planned
+    status: In Progress
     priority: P0
     epic: BETA-GO-LIVE
     depends_on: [QST-160]
@@ -1540,7 +1541,9 @@ items:
       - Database-backed owner and cross-account RLS checks pass with sanitized evidence.
     progress:
       - Secure database runner, evidence capture, runbook, and strict verifier are prepared.
-      - Cloud execution remains pending the QST-160 hosted project dependency.
+      - Ten migrations match local and remote history on Questra Beta.
+      - All 23 cloud RLS assertions passed and rolled back through linked CLI execution.
+      - Final verified evidence remains pending the QST-160 provider secret gate.
   - id: QST-162
     title: Dual Account Persistence Acceptance
     status: Planned
