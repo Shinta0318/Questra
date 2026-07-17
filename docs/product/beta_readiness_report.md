@@ -19,6 +19,7 @@ Internal beta candidate, not public release ready.
 - Beta issue labeling and QST conversion: ready
 - Beta crash/error capture strategy: prepared
 - Beta privacy and Arc data explanation: implementation-aligned draft
+- Beta release notes and known limitations: prepared
 - Beta account setup flow: prepared
 - Beta first Quest experience: polished
 - Beta empty-state owner boundary: automated verification passed
@@ -92,6 +93,7 @@ Internal beta candidate, not public release ready.
 - QST-125: Beta Issue Labeling Rules.
 - QST-126: Beta Crash and Error Capture Plan.
 - QST-127: Beta Privacy and Legal Copy Check.
+- QST-128: Beta Release Notes Draft.
 
 ## Deferred Beta Operations
 
