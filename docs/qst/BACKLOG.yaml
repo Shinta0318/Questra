@@ -940,16 +940,18 @@ items:
       report: reports/qst/QST-124.md
   - id: QST-125
     title: Beta Issue Labeling Rules
-    status: Ready
+    status: Done
     priority: P1
     epic: BETA-LAUNCH
     depends_on: [QST-124]
     scope: Create beta issue labels and QST conversion rules.
     acceptance:
       - Feedback can be converted into bug, UX, data, AI, Guild, Arc, or performance QSTs.
+    completed_by:
+      report: reports/qst/QST-125.md
   - id: QST-126
     title: Beta Crash and Error Capture Plan
-    status: Planned
+    status: Ready
     priority: P1
     epic: BETA-LAUNCH
     depends_on: [QST-124]

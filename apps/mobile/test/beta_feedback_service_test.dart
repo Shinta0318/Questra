@@ -30,6 +30,9 @@ void main() {
     expect(formatted, contains('surface: quest'));
     expect(formatted, contains('feedback_type: broken_flow'));
     expect(formatted, contains('severity: S1'));
+    expect(formatted, contains('suggested_labels:'));
+    expect(formatted, contains('suggested_priority: P0'));
+    expect(formatted, contains('qst_candidate: true'));
     expect(formatted, contains('再現手順'));
     expect(formatted, contains('期待した結果'));
     expect(formatted, contains('実際の結果'));

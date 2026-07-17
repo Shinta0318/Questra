@@ -36,6 +36,10 @@ from the tester, and no new feedback table is required before the beta channel
 is finalized. `BetaFeedbackSink` is the replacement boundary for a future
 approved persistence or issue-tracker destination.
 
+Issue labels, priority, stop conditions, and QST conversion are defined in
+`docs/product/beta_issue_labeling_rules.md`. The Flutter triage service applies
+the same deterministic rules without sending feedback text to an external AI.
+
 ## Triage Rhythm
 
 - Daily during internal beta: review S0 and S1 feedback.

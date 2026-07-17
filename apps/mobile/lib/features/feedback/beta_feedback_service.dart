@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'beta_feedback_model.dart';
+import 'beta_feedback_triage_service.dart';
 
 final betaFeedbackServiceProvider = Provider<BetaFeedbackService>((ref) {
   return const BetaFeedbackService();
@@ -45,6 +46,7 @@ class BetaFeedbackService {
 
   String format(BetaFeedbackReport report) {
     final draft = report.draft;
+    final triage = const BetaFeedbackTriageService().classify(report);
     return '''Questra Beta Feedback
 report_id: ${report.id}
 created_at: ${report.createdAt.toIso8601String()}
@@ -53,6 +55,10 @@ build_version: ${report.buildVersion}
 surface: ${draft.surface.storageKey}
 feedback_type: ${draft.type.storageKey}
 severity: ${draft.severity.code}
+suggested_labels: ${triage.labels.join(', ')}
+suggested_priority: ${triage.priority.code}
+qst_candidate: ${triage.shouldCreateQst}
+stops_beta_expansion: ${triage.stopsBetaExpansion}
 
 概要
 ${draft.summary}

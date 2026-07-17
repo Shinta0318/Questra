@@ -66,6 +66,14 @@ labels:
     - missing_state
     - trust_or_safety
     - idea
+  category:
+    - bug
+    - ux
+    - data
+    - ai
+    - guild
+    - arc
+    - performance
 triage_rules:
   - id: blocker_crash
     when: severity S0 or feedback_type crash
@@ -93,3 +101,12 @@ qst_conversion:
     S2: P1
     S3: P2
   next_id_policy: Use the next open QST number in docs/qst/BACKLOG.yaml.
+automation:
+  service: apps/mobile/lib/features/feedback/beta_feedback_triage_service.dart
+  output_fields:
+    - suggested_labels
+    - suggested_priority
+    - qst_candidate
+    - stops_beta_expansion
+  deterministic: true
+  external_ai_required: false

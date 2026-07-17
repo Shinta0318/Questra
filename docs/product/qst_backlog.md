@@ -103,8 +103,8 @@ references where they do not conflict with v2.
 | QST-122 | Done | Beta First Quest Experience | Polish first Quest creation and Arc guidance. | New beta users understand what to do within the first few minutes. |
 | QST-123 | Done | Beta Empty State Verification | Verify empty DB state across beta accounts. | Production fallbacks are empty, owner changes clear journey state immediately, and tests use explicit fixtures. |
 | QST-124 | Done | Beta Feedback Entry Point | Add or document feedback route. | Settings now opens a structured report form for surface, type, severity, reproduction, expected, and actual results. |
-| QST-125 | Ready | Beta Issue Labeling Rules | Create beta issue labels and QST conversion rules. | Feedback converts into bug, UX, data, AI, Guild, Arc, or performance QSTs. |
-| QST-126 | Planned | Beta Crash and Error Capture Plan | Plan crash/error evidence collection. | Errors, failed Supabase calls, and AI fallback events have capture strategy. |
+| QST-125 | Done | Beta Issue Labeling Rules | Create beta issue labels and QST conversion rules. | Deterministic triage now assigns categories, severity, priority, stop conditions, and complete QST candidates. |
+| QST-126 | Ready | Beta Crash and Error Capture Plan | Plan crash/error evidence collection. | Errors, failed Supabase calls, and AI fallback events have capture strategy. |
 | QST-127 | Planned | Beta Privacy and Legal Copy Check | Review beta privacy, terms, and AI/data explanations. | Beta users receive clear data and AI usage copy. |
 | QST-128 | Planned | Beta Release Notes Draft | Create beta release notes and known limitations. | Beta testers know what is ready, experimental, and how to give feedback. |
 | QST-129 | Planned | Beta Go/No-Go Checklist | Create final beta launch checklist. | Launch blockers, evidence, device checks, and rollback conditions are explicit. |

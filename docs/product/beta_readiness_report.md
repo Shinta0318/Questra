@@ -16,6 +16,7 @@ Internal beta candidate, not public release ready.
 - Performance readiness check: passed
 - Beta feedback operations: ready
 - In-app Beta feedback entry: ready
+- Beta issue labeling and QST conversion: ready
 - Beta account setup flow: prepared
 - Beta first Quest experience: polished
 - Beta empty-state owner boundary: automated verification passed
@@ -83,6 +84,7 @@ Internal beta candidate, not public release ready.
 - QST-122: Beta First Quest Experience.
 - QST-123: Beta Empty State Verification.
 - QST-124: Beta Feedback Entry Point.
+- QST-125: Beta Issue Labeling Rules.
 
 ## Deferred Beta Operations
 
