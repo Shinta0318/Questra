@@ -1,3 +1,9 @@
 .env
 .env.*
 !.env.example
+
+# Supabase CLI state and Beta-only secret/evidence files.
+supabase/.temp/
+supabase/.branches/
+supabase/functions/.env.beta.local
+.beta-evidence/

@@ -1,0 +1,57 @@
+version: 1
+status: evidence_missing
+updated_at_utc: null
+candidate_source_commit: null
+project:
+  ref: null
+  region: null
+  owner: null
+  access_verified: false
+  dashboard_evidence: null
+  linked_at_utc: null
+  cli_version: null
+migrations:
+  status: not_verified
+  latest_local: "202607170001_mission_planning_fields.sql"
+  remote_head: null
+  command: "supabase migration list --linked"
+functions:
+  - name: arc-chat
+    status: not_verified
+    deployed_at_utc: null
+  - name: arc-quest-guide
+    status: not_verified
+    deployed_at_utc: null
+  - name: generate-arc-advice
+    status: not_verified
+    deployed_at_utc: null
+  - name: generate-mission
+    status: not_verified
+    deployed_at_utc: null
+  - name: generate-quest-guides
+    status: not_verified
+    deployed_at_utc: null
+  - name: generate-star-map
+    status: not_verified
+    deployed_at_utc: null
+secrets:
+  status: not_verified
+  storage: server_side_only
+  values_recorded: false
+  required_names:
+    - OPENAI_API_KEY
+  optional_names:
+    - OPENAI_MODEL
+client_configuration:
+  status: not_verified
+  allowed_dart_defines:
+    - SUPABASE_URL
+    - SUPABASE_ANON_KEY
+  prohibited_dart_defines:
+    - SUPABASE_SERVICE_ROLE_KEY
+    - OPENAI_API_KEY
+guardrails:
+  local_fallback_is_cloud_evidence: false
+  secret_values_may_be_committed: false
+  dashboard_schema_changes_allowed: false
+  require_cloud_verifier_for_completion: true

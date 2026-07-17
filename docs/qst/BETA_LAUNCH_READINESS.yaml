@@ -41,6 +41,7 @@ p0_blockers:
     title: Supabase Project Evidence
     owner: Engineering Owner
     status: evidence_missing
+    progress: QST-160 prepared the local config, guarded bootstrap command, and cloud evidence verifier; hosted project evidence remains missing.
     resolution_qst: QST-160
   - id: BLK-002
     title: Persistence and Cross-Account RLS

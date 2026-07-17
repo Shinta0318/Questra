@@ -73,6 +73,8 @@ Scoreは実装量ではなく、現在のcandidateを安全に配布できる証
 - Beta用Supabase project ref、region、ownerが未確定。
 - Migration適用logとEdge Function deployment evidenceがない。
 - `SUPABASE_URL` / `SUPABASE_ANON_KEY`を使ったcandidate起動証跡がない。
+- QST-160でlocal config、guarded bootstrap、sanitized evidence contract、cloud verifierは準備済み。
+- `--require-cloud`は実project証跡が揃うまで意図的に失敗し、未確認を合格へ変換しない。
 
 ### BLK-002 Persistence and Cross-Account RLS
 

@@ -1509,7 +1509,7 @@ items:
       report: reports/qst/QST-159.md
   - id: QST-160
     title: Supabase Beta Project Bootstrap
-    status: Ready
+    status: In Progress
     priority: P0
     epic: BETA-GO-LIVE
     depends_on: [QST-159]
@@ -1521,6 +1521,9 @@ items:
     acceptance:
       - Project ref, region, owner, migration state, and deployed functions have evidence.
       - Secrets remain server-side and local fallback is not accepted as cloud evidence.
+    progress:
+      - Local config, bootstrap runbook, sanitized evidence contract, and strict verifier are implemented.
+      - Hosted project identity and deployment evidence remain required before completion.
   - id: QST-161
     title: Cloud Migration and RLS Evidence
     status: Planned
