@@ -1347,10 +1347,12 @@ items:
   - id: QST-155
     requested_id: QST-145
     title: Arc-led Quest Creation
-    status: Ready
+    status: Done
     priority: P0
     epic: SIMPLIFICATION
     depends_on: [QST-154]
+    completed_by:
+      report: reports/qst/QST-155.md
     scope: Make Arc natural-language input the primary Quest creation flow with editable 3-7 Quest candidates and explicit confirmation before persistence.
     acceptance:
       - Candidates can be edited, added, removed, reordered, and regenerated.
@@ -1359,7 +1361,7 @@ items:
   - id: QST-156
     requested_id: QST-146
     title: Quest Mission Decomposition Simplification
-    status: Planned
+    status: Ready
     priority: P0
     epic: SIMPLIFICATION
     depends_on: [QST-155]
