@@ -3,7 +3,7 @@ updated: 2026-07-17
 decision: no_go
 decision_reason: P0 external environment, device, operations, and legal evidence is incomplete.
 score:
-  total: 66
+  total: 76
   maximum: 100
   dimensions:
     - id: product_core
@@ -16,8 +16,8 @@ score:
       status: passed
     - id: supabase_security_evidence
       weight: 20
-      earned: 5
-      status: evidence_missing
+      earned: 15
+      status: partial_evidence
     - id: device_distribution_evidence
       weight: 15
       earned: 4
@@ -40,14 +40,14 @@ p0_blockers:
   - id: BLK-001
     title: Supabase Project Evidence
     owner: Engineering Owner
-    status: evidence_missing
-    progress: QST-160 prepared the local config, guarded bootstrap command, and cloud evidence verifier; hosted project evidence remains missing.
+    status: partial_evidence
+    progress: Questra Beta project, migrations, Functions, and RLS evidence exist; Gemini provider secret verification remains in QST-160.
     resolution_qst: QST-160
   - id: BLK-002
     title: Persistence and Cross-Account RLS
     owner: Engineering Owner
-    status: evidence_missing
-    progress: QST-161 prepared password-safe database execution and candidate-bound RLS evidence capture; hosted execution remains pending QST-160.
+    status: partial_evidence
+    progress: QST-161 cloud RLS passed 23 assertions; QST-162 dual-account persistence runner is ready and awaits dedicated account execution.
     resolution_qst: QST-161,QST-162
   - id: BLK-003
     title: Candidate Artifact and Device Evidence

@@ -76,3 +76,18 @@ The login and account creation screens use Japanese beta-ready copy:
 
 This QST prepares and documents the flow. Final beta approval still requires a
 real Supabase project run with screenshot or log evidence for the checks above.
+
+## Dual Account Acceptance Runner
+
+QST-162では、専用BetaアカウントA/Bを用いて同じ受入を自動化する。認証情報は現在のshell sessionの
+環境変数だけに設定し、`.env`、terminal command、evidenceへ値を残さない。
+
+```powershell
+dart run tools/qst/run_dual_account_persistence.dart
+dart run tools/qst/verify_dual_account_persistence.dart --require-cloud
+```
+
+runnerはAccount AでProfileを確認し、private Quest、Mission、Arc Memoryを作成する。Aへ再ログインして
+4領域を再取得した後、Account Bから3つのprivate journey IDが0件になることを確認する。最後にAの
+試験データを削除し、メール、password、anon key、private contentを含まないsanitized evidenceだけを
+`docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml`へ保存する。

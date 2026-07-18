@@ -1547,7 +1547,7 @@ items:
       - Final verified evidence remains pending the QST-160 provider secret gate.
   - id: QST-162
     title: Dual Account Persistence Acceptance
-    status: Planned
+    status: In Progress
     priority: P0
     epic: BETA-GO-LIVE
     depends_on: [QST-161]
@@ -1559,6 +1559,9 @@ items:
     acceptance:
       - Account A data persists after restart and re-login.
       - Account B cannot read Account A private journey data.
+    progress:
+      - Credential-safe dual-account runner, sanitized evidence, and strict verifier are implemented.
+      - Dedicated Beta account execution remains required before completion.
   - id: QST-163
     title: Real Device Beta Validation Evidence
     status: Planned
