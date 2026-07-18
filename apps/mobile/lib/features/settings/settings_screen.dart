@@ -1,18 +1,645 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
-import '../../widgets/placeholder_screen.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_gradients.dart';
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_spacing.dart';
+import '../arc_memory/arc_memory_management_preview_service.dart';
+import '../onboarding/onboarding_tour_controller.dart';
+import '../trust/consent_purpose_registry_service.dart';
+import '../trust/data_request_copy_service.dart';
+import '../trust/trust_privacy_review_service.dart';
+import 'settings_information_architecture_service.dart';
+import 'widgets/arc_memory_management_preview_card.dart';
+import 'widgets/beta_feedback_entry_card.dart';
+import 'widgets/settings_tutorial_card.dart';
+import 'widgets/trust_privacy_card.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const PlaceholderScreen(
-      title: 'Settings',
-      subtitle: 'Preferences and app configuration will live here.',
-      actionLabel: 'Back to Quests',
-      actionRoute: AppRoutes.quest,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trustReview = const TrustPrivacyReviewService().buildReview();
+    final memoryPreview = const ArcMemoryManagementPreviewService()
+        .buildPreview();
+    final dataRequests = const DataRequestCopyService().buildReview();
+    final consentRegistry = const ConsentPurposeRegistryService()
+        .buildRegistry();
+    final settingsMap = const SettingsInformationArchitectureService()
+        .buildOverview();
+
+    return Scaffold(
+      backgroundColor: AppColors.deepNavy,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(gradient: AppGradients.adventure),
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            children: [
+              Text(
+                '設定',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _SettingsMapCard(map: settingsMap),
+              const SizedBox(height: AppSpacing.lg),
+              SettingsTutorialCard(
+                onReplay: () => ref
+                    .read(onboardingTourControllerProvider.notifier)
+                    .replay(),
+                onReturnToQuest: () => context.go(AppRoutes.quest),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              BetaFeedbackEntryCard(
+                onOpen: () => context.push(AppRoutes.feedback),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              TrustPrivacyCard(review: trustReview),
+              const SizedBox(height: AppSpacing.lg),
+              ArcMemoryManagementPreviewCard(preview: memoryPreview),
+              const SizedBox(height: AppSpacing.lg),
+              _DataRequestCopyCard(review: dataRequests),
+              const SizedBox(height: AppSpacing.lg),
+              _ConsentPurposeRegistryCard(registry: consentRegistry),
+            ],
+          ),
+        ),
+      ),
     );
   }
+}
+
+class _SettingsMapCard extends StatelessWidget {
+  const _SettingsMapCard({required this.map});
+
+  final SettingsInformationArchitecture map;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.84),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.skyBlue.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppColors.skyBlue.withValues(alpha: 0.34),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.map_outlined,
+                  color: AppColors.skyBlue,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      map.heading,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      map.summary,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.parchment,
+                        height: 1.55,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          ...map.sections.map(
+            (section) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: _SettingsMapTile(section: section),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsMapTile extends StatelessWidget {
+  const _SettingsMapTile({required this.section});
+
+  final SettingsSectionOverview section;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.deepNavy.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(_settingsSectionIcon(section.type), color: AppColors.gold),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  section.title,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  section.summary,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.parchment,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 72),
+            child: Text(
+              section.statusLabel,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: AppColors.skyBlue,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConsentPurposeRegistryCard extends StatelessWidget {
+  const _ConsentPurposeRegistryCard({required this.registry});
+
+  final ConsentPurposeRegistry registry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.84),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.skyBlue.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppColors.skyBlue.withValues(alpha: 0.34),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.rule_outlined,
+                  color: AppColors.skyBlue,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      registry.heading,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      registry.summary,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.parchment,
+                        height: 1.55,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          ...registry.purposes.map(
+            (purpose) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: _ConsentPurposeTile(purpose: purpose),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: registry.guardrails
+                .map(
+                  (guardrail) => Chip(
+                    label: Text(guardrail),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: AppColors.gold.withValues(alpha: 0.12),
+                    side: BorderSide(
+                      color: AppColors.gold.withValues(alpha: 0.24),
+                    ),
+                    labelStyle: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConsentPurposeTile extends StatelessWidget {
+  const _ConsentPurposeTile({required this.purpose});
+
+  final ConsentPurposeDefinition purpose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.deepNavy.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(_consentPurposeIcon(purpose.purpose), color: AppColors.gold),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  purpose.title,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 92),
+                child: Text(
+                  purpose.defaultStateLabel,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    color: AppColors.skyBlue,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            purpose.summary,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.parchment,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: purpose.dataScope
+                .map(
+                  (scope) => Chip(
+                    label: Text(scope),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: AppColors.white.withValues(alpha: 0.1),
+                    side: BorderSide(
+                      color: AppColors.skyBlue.withValues(alpha: 0.2),
+                    ),
+                    labelStyle: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DataRequestCopyCard extends StatelessWidget {
+  const _DataRequestCopyCard({required this.review});
+
+  final DataRequestCopyReview review;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.84),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.34),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.assignment_outlined,
+                  color: AppColors.gold,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      review.heading,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      review.summary,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.parchment,
+                        height: 1.55,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          ...review.requests.map(
+            (request) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: _DataRequestTile(request: request),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _SafetyNoteBlock(notes: review.safetyNotes),
+        ],
+      ),
+    );
+  }
+}
+
+class _DataRequestTile extends StatelessWidget {
+  const _DataRequestTile({required this.request});
+
+  final DataRequestCopy request;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.deepNavy.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(_dataRequestIcon(request.type), color: AppColors.skyBlue),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  request.title,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 72),
+                child: Text(
+                  request.statusLabel,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    color: AppColors.gold,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            request.summary,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.parchment,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: request.scope
+                .map(
+                  (scope) => Chip(
+                    label: Text(scope),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: AppColors.white.withValues(alpha: 0.1),
+                    side: BorderSide(
+                      color: AppColors.skyBlue.withValues(alpha: 0.2),
+                    ),
+                    labelStyle: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SafetyNoteBlock extends StatelessWidget {
+  const _SafetyNoteBlock({required this.notes});
+
+  final List<String> notes;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.verified_user_outlined,
+                color: AppColors.gold,
+                size: 18,
+              ),
+              SizedBox(width: AppSpacing.sm),
+              Text(
+                '安全な実装条件',
+                style: TextStyle(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ...notes.map(
+            (note) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Text(
+                note,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.parchment,
+                  height: 1.35,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+IconData _dataRequestIcon(DataRequestType type) {
+  return switch (type) {
+    DataRequestType.export => Icons.file_download_outlined,
+    DataRequestType.deletion => Icons.delete_outline,
+    DataRequestType.correction => Icons.edit_note_outlined,
+    DataRequestType.withdrawal => Icons.undo_outlined,
+  };
+}
+
+IconData _consentPurposeIcon(ConsentPurpose purpose) {
+  return switch (purpose) {
+    ConsentPurpose.questSupport => Icons.volunteer_activism_outlined,
+    ConsentPurpose.productAnalytics => Icons.query_stats_outlined,
+    ConsentPurpose.aiQualityReview => Icons.auto_fix_high_outlined,
+    ConsentPurpose.externalConnection => Icons.link_outlined,
+  };
+}
+
+IconData _settingsSectionIcon(SettingsSectionType type) {
+  return switch (type) {
+    SettingsSectionType.tutorial => Icons.auto_awesome_outlined,
+    SettingsSectionType.trust => Icons.shield_outlined,
+    SettingsSectionType.arcMemory => Icons.psychology_alt_outlined,
+    SettingsSectionType.dataRequest => Icons.assignment_outlined,
+    SettingsSectionType.consent => Icons.rule_outlined,
+  };
 }

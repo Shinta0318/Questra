@@ -1,4 +1,4 @@
-const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
+import { generateAiText } from "../_shared/ai_provider.ts";
 
 type ArcChatRequest = {
   message?: string;
@@ -26,54 +26,21 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (!openAiApiKey) {
-    return Response.json(buildFallbackResponse(payload));
-  }
-
   try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openAiApiKey}`,
-        "Content-Type": "application/json",
+    const result = await generateAiText({
+      systemInstruction:
+        "You are Arc, Questra's gentle star navigator. Reply in Japanese. Be kind, hopeful, slightly mysterious, use stars or voyage metaphors, avoid commands, celebrate the user's challenge, and never describe yourself as software or a generic helper.",
+      input: {
+        user_message: message,
+        journey_context: payload.context ?? {},
+        recent_history: payload.history?.slice(-8) ?? [],
       },
-      body: JSON.stringify({
-        model: Deno.env.get("OPENAI_MODEL") ?? "gpt-4.1-mini",
-        input: [
-          {
-            role: "system",
-            content:
-              "You are Arc, Questra's gentle star navigator. Reply in Japanese. Be kind, hopeful, slightly mysterious, use stars or voyage metaphors, avoid commands, celebrate the user's challenge, and never describe yourself as software or a generic helper.",
-          },
-          {
-            role: "user",
-            content: JSON.stringify({
-              user_message: message,
-              journey_context: payload.context ?? {},
-              recent_history: payload.history?.slice(-8) ?? [],
-            }),
-          },
-        ],
-      }),
     });
-
-    if (!response.ok) {
-      return Response.json(buildFallbackResponse(payload));
-    }
-
-    const data = await response.json();
-    const outputText =
-      data.output_text ??
-      data.output?.flatMap((item: Record<string, unknown>) =>
-        Array.isArray(item.content) ? item.content : []
-      )
-        ?.map((content: Record<string, unknown>) => content.text)
-        ?.filter(Boolean)
-        ?.join("\n");
+    if (!result) return Response.json(buildFallbackResponse(payload));
 
     return Response.json({
-      message: outputText || buildFallbackResponse(payload).message,
-      source_type: "openai_responses",
+      message: result.text,
+      source_type: result.sourceType,
       quick_actions: ["次のMissionを選ぶ", "Trailを振り返る", "小さな一歩に分ける"],
     });
   } catch (_error) {

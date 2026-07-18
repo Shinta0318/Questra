@@ -885,103 +885,537 @@ items:
       report: reports/qst/QST-119.md
   - id: QST-120
     title: UX Foundation Review
-    status: Ready
+    status: Done
     priority: P0
     epic: UX-FOUNDATION
     depends_on: [QST-101, QST-102, QST-103, QST-104, QST-105, QST-106, QST-107, QST-108, QST-109, QST-110, QST-111, QST-112, QST-113, QST-114, QST-115, QST-116, QST-117, QST-118, QST-119]
     scope: Review QST-101 through QST-119.
     acceptance:
       - Responsive, scrolling, navigation, menu widgets, and accessibility risks are summarized with remaining blockers.
+    completed_by:
+      report: reports/qst/QST-120.md
   - id: QST-121
     title: Beta Account Setup Flow
-    status: Planned
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-120]
     scope: Prepare beta tester account setup and first-run verification.
     acceptance:
       - Beta users can sign in, create first Quest, and confirm persistence without developer help.
+    completed_by:
+      report: reports/qst/QST-121.md
   - id: QST-122
     title: Beta First Quest Experience
-    status: Planned
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-121]
     scope: Polish the first Quest creation and Arc guidance flow.
     acceptance:
       - A new beta user can understand what to do within the first few minutes.
+    completed_by:
+      report: reports/qst/QST-122.md
   - id: QST-123
     title: Beta Empty State Verification
-    status: Planned
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-121]
     scope: Verify empty DB state across beta accounts.
     acceptance:
       - No mock Quest, Mission, Trail, or Guild content appears as if it belongs to the user.
+    completed_by:
+      report: reports/qst/QST-123.md
   - id: QST-124
     title: Beta Feedback Entry Point
-    status: Planned
+    status: Done
     priority: P1
     epic: BETA-LAUNCH
     depends_on: [QST-121]
     scope: Add or document an in-app/manual feedback route.
     acceptance:
       - Beta testers have a clear way to report issues with screen, severity, and reproduction steps.
+    completed_by:
+      report: reports/qst/QST-124.md
   - id: QST-125
     title: Beta Issue Labeling Rules
-    status: Planned
+    status: Done
     priority: P1
     epic: BETA-LAUNCH
     depends_on: [QST-124]
     scope: Create beta issue labels and QST conversion rules.
     acceptance:
       - Feedback can be converted into bug, UX, data, AI, Guild, Arc, or performance QSTs.
+    completed_by:
+      report: reports/qst/QST-125.md
   - id: QST-126
     title: Beta Crash and Error Capture Plan
-    status: Planned
+    status: Done
     priority: P1
     epic: BETA-LAUNCH
     depends_on: [QST-124]
     scope: Plan crash and error evidence collection for beta.
     acceptance:
       - Errors, failed Supabase calls, and AI fallback events have a capture strategy.
+    completed_by:
+      report: reports/qst/QST-126.md
   - id: QST-127
     title: Beta Privacy and Legal Copy Check
-    status: Planned
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-121]
     scope: Review beta-facing privacy, terms, and AI/data explanations.
     acceptance:
       - Beta users receive clear, non-misleading data and AI usage copy.
+    completed_by:
+      report: reports/qst/QST-127.md
   - id: QST-128
     title: Beta Release Notes Draft
-    status: Planned
+    status: Done
     priority: P1
     epic: BETA-LAUNCH
     depends_on: [QST-121, QST-127]
     scope: Create beta release notes and known limitations.
     acceptance:
       - Beta testers know what is ready, what is experimental, and how to give feedback.
+    completed_by:
+      report: reports/qst/QST-128.md
   - id: QST-129
     title: Beta Go/No-Go Checklist
-    status: Planned
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-121, QST-122, QST-123, QST-124, QST-125, QST-126, QST-127, QST-128]
     scope: Create final beta launch checklist.
     acceptance:
       - Launch blockers, required evidence, device checks, and rollback conditions are explicit.
+    completed_by:
+      report: reports/qst/QST-129.md
   - id: QST-130
     title: Beta Launch Readiness Review
-    status: Planned
+    status: Done
     priority: P0
     epic: BETA-LAUNCH
     depends_on: [QST-129]
     scope: Produce the final beta readiness report.
     acceptance:
       - Questra has a clear beta readiness score, open blockers, and QST-131+ recommendations.
+    completed_by:
+      report: reports/qst/QST-130.md
+  - id: QST-131
+    requested_id: QST-XXX
+    title: Navigation and Creative UI Refresh
+    status: Done
+    priority: P0
+    epic: BETA-UX
+    depends_on: [QST-122]
+    completed_by:
+      report: reports/qst/QST-131.md
+    scope: Reframe the primary product flow around Home -> Arc -> Quest, refresh Home, Arc, and Quest UI quality, and add a replayable Arc onboarding tour.
+    acceptance:
+      - Home -> Arc -> Quest is reflected in navigation order and first-use guidance.
+      - Home makes Arc, today's Mission, active Quest, Trail, Guild, Star Map, and Horizon visible.
+      - Arc screen works as a journey command center, not only a chat surface.
+      - Quest list uses richer poster-style cards with progress, next Mission, and Quest DNA cues.
+      - First-use Arc tutorial can be skipped and replayed from Settings.
+      - Story terminology is not introduced.
+  - id: QST-132
+    title: Onboarding Tour Polish
+    status: Done
+    priority: P0
+    epic: BETA-UX
+    depends_on: [QST-131]
+    completed_by:
+      report: reports/qst/QST-132.md
+    scope: Harden the Arc onboarding tour state machine so first-use guidance appears after profile restore, stays dismissed within a session, and remains replayable.
+    acceptance:
+      - Arc onboarding tour can appear after asynchronous profile restore.
+      - Dismissed tour does not reappear in the same session.
+      - Settings replay behavior remains supported by the controller.
+      - UserProfile preserves has_seen_onboarding_tour state.
+  - id: QST-133
+    title: Quest Theme Card Redesign
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-131]
+    completed_by:
+      report: reports/qst/QST-133.md
+    scope: Extract Quest theme card rules from screen-local styling and apply category-aware visual identity, Quest DNA labels, and Arc hints to Quest list cards.
+    acceptance:
+      - Quest card theme styling is resolved through a reusable QuestThemeResolver.
+      - Learning, builder, active, family, adventure, and fallback Quest themes have distinct visual metadata.
+      - Quest cards show theme name, Quest DNA label, and Arc hint without Story terminology.
+      - Theme resolver behavior is covered by unit tests.
+  - id: QST-134
+    title: Quest Detail Theme Application
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-133]
+    completed_by:
+      report: reports/qst/QST-134.md
+    scope: Apply QuestThemeResolver metadata to Quest detail header and journey overview so list and detail surfaces share Quest identity.
+    acceptance:
+      - Quest detail header uses resolved theme gradient, icon, theme name, Quest DNA label, and Arc hint.
+      - Quest journey overview displays the resolved Quest DNA label and theme name.
+      - Existing journey overview metrics remain visible.
+      - Responsive smoke coverage verifies the themed detail copy.
+  - id: QST-135
+    title: Quest DNA Snapshot
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-134]
+    completed_by:
+      report: reports/qst/QST-135.md
+    scope: Add an MVP-safe Quest DNA snapshot derived from existing Quest fields and display it on Quest detail without collecting new sensitive attributes.
+    acceptance:
+      - Quest DNA Snapshot distinguishes user input from inferred context.
+      - Snapshot includes category, theme, difficulty, duration, motivation, social, and risk attributes.
+      - Quest detail displays the snapshot with clear input/inferred labels.
+      - Resolver behavior is covered by unit tests.
+  - id: QST-136
+    title: Quest DNA Review Controls
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-135]
+    completed_by:
+      report: reports/qst/QST-136.md
+    scope: Add review controls that explain Quest DNA input versus inferred values and route users to Quest editing for correction.
+    acceptance:
+      - Quest DNA Snapshot includes a visible review action.
+      - Review sheet explains inferred values are recalculated and not separately persisted.
+      - User can navigate from Quest DNA review to Quest editing.
+      - Responsive smoke coverage verifies the review sheet.
+  - id: QST-137
+    title: Challenge Graph Preview Foundation
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-135]
+    completed_by:
+      report: reports/qst/QST-137.md
+    scope: Add an MVP-safe Challenge Graph preview that connects Quest, Mission, Trail, Theme, and Interest nodes without introducing graph database complexity.
+    acceptance:
+      - Challenge Graph Preview builds nodes and edges from existing Quest, Mission, Trail, and Quest DNA context.
+      - Unrelated Mission and Trail records are excluded.
+      - Quest detail displays node and edge counts.
+      - Service behavior is covered by unit tests.
+  - id: QST-138
+    title: Challenge Graph Insight Layer
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-137]
+    completed_by:
+      report: reports/qst/QST-138.md
+    scope: Add Arc-facing Challenge Graph insights that identify Mission, Trail, and Reflection gaps from existing Quest context.
+    acceptance:
+      - Challenge Graph can produce prioritized insights from Quest, Mission, and Trail state.
+      - Empty Quest graphs suggest Mission creation.
+      - Growing Trail graphs suggest Reflection when no Reflection Trail exists.
+      - Quest detail displays Arc Graph Insight without introducing backend or graph database changes.
+      - Service and responsive smoke tests cover the new insight layer.
+  - id: QST-139
+    title: Star Map Graph Bridge
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-138]
+    completed_by:
+      report: reports/qst/QST-139.md
+    scope: Connect Challenge Graph insights to Star Map recommendations so graph gaps can become explainable next-step candidates.
+    acceptance:
+      - Star Map Recommendation Service accepts Challenge Graph insights without breaking existing callers.
+      - Graph insights can produce Star Map recommendation candidates with explainable source types.
+      - Home passes active Quest graph insights into Star Map recommendations.
+      - No backend, paid feature, or graph database dependency is introduced.
+      - Unit tests cover graph-backed Star Map candidates.
+  - id: QST-140
+    title: Horizon Graph Readiness
+    status: Done
+    priority: P1
+    epic: BETA-UX
+    depends_on: [QST-139]
+    completed_by:
+      report: reports/qst/QST-140.md
+    scope: Use Challenge Graph insights to keep Horizon recommendations focused on strengthening active Quest context before proposing unrelated next challenges.
+    acceptance:
+      - Horizon service accepts optional Challenge Graph insights without breaking existing callers.
+      - Active Quest graph gaps can become Horizon suggestions.
+      - Completed Quest momentum still takes precedence for high-readiness users.
+      - Home passes active Quest graph insights into Horizon readiness.
+      - Unit tests cover graph-backed Horizon suggestions.
+  - id: QST-141
+    title: Challenge Graph Visual Polish
+    status: Done
+    priority: P2
+    epic: BETA-UX
+    depends_on: [QST-140]
+    completed_by:
+      report: reports/qst/QST-141.md
+    scope: Polish the Quest detail Challenge Graph Preview so it reads as a lightweight star-map surface rather than only numeric metrics.
+    acceptance:
+      - Quest detail shows a star-map inspired Challenge Graph node surface.
+      - The primary Quest node and surrounding Theme, Interest, Mission, and Trail nodes are visually distinguishable.
+      - The new UI uses Japanese visible copy for added labels.
+      - Existing Graph metrics and Arc Graph Insight remain visible.
+      - Responsive smoke coverage verifies the visual node surface.
+  - id: QST-142
+    title: Enterprise Support Boundary UI
+    status: Done
+    priority: P1
+    epic: BETA-TRUST
+    depends_on: [QST-141]
+    completed_by:
+      report: reports/qst/QST-142.md
+    scope: Add an MVP-safe Quest Support transparency boundary so future Enterprise support is framed as user Quest support, not advertising.
+    acceptance:
+      - Quest Support boundary service exposes the four Master Spec enterprise roles.
+      - The boundary remains inactive for Beta and does not connect sponsor data.
+      - Quest detail displays transparency requirements and guardrails.
+      - The UI states that support is not connected in Beta.
+      - Tests verify inactive state and Quest detail visibility.
+  - id: QST-143
+    title: Trust and Privacy Review Surface
+    status: Done
+    priority: P1
+    epic: BETA-TRUST
+    depends_on: [QST-142]
+    completed_by:
+      report: reports/qst/QST-143.md
+    scope: Add a Settings surface that summarizes Master Spec trust, privacy, consent, Arc Memory, AI transparency, Quest Support, and owner-boundary principles.
+    acceptance:
+      - Settings exposes a Trust & Privacy review card.
+      - The review covers Quest/Mission/Trail data, Arc Memory, Arc-generated or inferred output, Quest Support, and RLS/owner boundaries.
+      - The UI explains that Quest Support remains disconnected in Beta.
+      - Future user controls for export, deletion, Arc Memory management, and correction reporting are visible as planned actions.
+      - Service and responsive smoke tests cover the review surface.
+  - id: QST-144
+    title: Arc Memory Management Preview
+    status: Done
+    priority: P1
+    epic: BETA-TRUST
+    depends_on: [QST-143]
+    completed_by:
+      report: reports/qst/QST-144.md
+    scope: Add a Settings preview for future Arc Memory review, deletion, sensitivity, and export controls without mutating stored memory data.
+    acceptance:
+      - Settings exposes an Arc Memory management preview.
+      - The preview explains key memory categories such as Quest, Mission, Trail, Bond, and Emotion Memory.
+      - Future review, deletion, sensitivity, and export actions are visible with non-active statuses.
+      - No real Arc Memory deletion, export, or sensitivity mutation is implemented in this QST.
+      - Service and responsive smoke tests cover the preview.
+  - id: QST-145
+    title: Data Export and Deletion Request Copy
+    status: Done
+    priority: P1
+    epic: BETA-TRUST
+    depends_on: [QST-144]
+    completed_by:
+      report: reports/qst/QST-145.md
+    scope: Add Settings copy for data export, deletion, correction, and consent review request flows before implementing the underlying data operations.
+    acceptance:
+      - Settings exposes a Data Request section.
+      - Export, deletion, correction, and consent review request types are visible.
+      - Request scopes mention Quest, Mission, Trail, Arc Memory, Profile, Media, Quest Support, and external connection where appropriate.
+      - Safety notes state that deletion and export are basic free controls and require safe implementation.
+      - No data mutation, deletion, export, or consent persistence is implemented in this QST.
+      - Service and responsive smoke tests cover the copy.
+  - id: QST-146
+    title: Consent Purpose Registry
+    status: Done
+    priority: P1
+    epic: BETA-TRUST
+    depends_on: [QST-145]
+    completed_by:
+      report: reports/qst/QST-146.md
+    scope: Define purpose-specific consent categories for Quest Support, product analytics, Arc quality review, and external connection before implementing consent persistence.
+    acceptance:
+      - Settings exposes a purpose-specific consent registry.
+      - Consent purposes are separated instead of relying on broad bundled consent.
+      - Quest Support, product analytics, Arc quality review, and external connection are represented.
+      - Guardrails state that consent can be withdrawn and that sensitive secondary uses are not allowed without explicit consent.
+      - No consent persistence, opt-in mutation, or external connection is implemented in this QST.
+      - Service and responsive smoke tests cover the registry.
+  - id: QST-147
+    title: Trust Settings Information Architecture
+    status: Done
+    priority: P2
+    epic: BETA-TRUST
+    depends_on: [QST-146]
+    completed_by:
+      report: reports/qst/QST-147.md
+    scope: Add a Settings Map that organizes Arc tutorial, Trust & Privacy, Arc Memory, Data Request, and Consent areas for beta users.
+    acceptance:
+      - Settings exposes a top-level Settings Map.
+      - The map lists tutorial, trust/privacy, Arc Memory, data request, and consent areas in a clear order.
+      - Each area has a status label and short explanation.
+      - The map does not introduce new data mutation, consent persistence, or navigation complexity.
+      - Service and responsive smoke tests cover the map.
+  - id: QST-148
+    title: Settings Component Extraction
+    status: Done
+    priority: P2
+    epic: BETA-TRUST
+    depends_on: [QST-147]
+    completed_by:
+      report: reports/qst/QST-148.md
+    scope: Extract the Arc tutorial presentation from the growing Settings screen while preserving parent-owned state and navigation.
+    acceptance:
+      - Arc tutorial presentation is implemented as a reusable Settings widget.
+      - Replay and Quest navigation actions remain owned by SettingsScreen and are injected as callbacks.
+      - Existing Settings copy and visual behavior remain unchanged.
+      - Widget and responsive smoke tests cover the extracted component.
+      - Flutter analyze passes.
+  - id: QST-149
+    title: Trust Settings Card Extraction
+    status: Done
+    priority: P2
+    epic: BETA-TRUST
+    depends_on: [QST-148]
+    completed_by:
+      report: reports/qst/QST-149.md
+    scope: Extract the Trust & Privacy card from SettingsScreen without changing review content, user controls, or future-action visibility.
+    acceptance:
+      - Trust & Privacy presentation is implemented as a reusable Settings widget.
+      - The review heading, trust areas, user controls, and future actions remain visible.
+      - SettingsScreen continues to own review creation and screen ordering.
+      - Widget and responsive smoke tests cover the extracted presentation.
+      - Flutter analyze passes.
+  - id: QST-150
+    title: Arc Memory Settings Card Extraction
+    status: Done
+    priority: P2
+    epic: BETA-TRUST
+    depends_on: [QST-149]
+    completed_by:
+      report: reports/qst/QST-150.md
+    scope: Extract the Arc Memory management preview from SettingsScreen without changing memory types, management actions, or status visibility.
+    acceptance:
+      - Arc Memory management presentation is implemented as a reusable Settings widget.
+      - Memory type previews and management actions remain visible.
+      - SettingsScreen continues to own preview creation and screen ordering.
+      - Widget and responsive smoke tests cover the extracted presentation.
+      - Flutter analyze passes.
+  - id: QST-151
+    requested_id: QST-141
+    title: Current Screen and Flow Audit
+    status: Done
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-150]
+    completed_by:
+      report: reports/qst/QST-151.md
+    scope: Audit screens, routes, navigation, primary actions, persistence, mock data, unfinished features, duplicated flows, and UI inconsistencies without deleting code or data.
+    acceptance:
+      - All screens and routes are classified as keep, simplify, Coming Soon, or hidden.
+      - Mock data, duplicated entry points, incomplete features, and progress inconsistencies are documented.
+      - Database tables are categorized without changing migrations or user data.
+      - docs/qst/QST-141-screen-audit.md defines the next implementation scope.
+  - id: QST-152
+    requested_id: QST-142
+    title: Navigation Simplification
+    status: Done
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-151]
+    completed_by:
+      report: reports/qst/QST-152.md
+    scope: Standardize primary navigation to Home, Quest, Arc, Guild, and Profile while preserving hidden Trail routes and implementation.
+    acceptance:
+      - Compact and wide navigation use the same five destinations and order.
+      - Trail is removed from primary navigation without deleting its route or data.
+      - Quest creation points to Arc as the primary entry.
+      - Incomplete features are not opened from quick actions.
+  - id: QST-153
+    requested_id: QST-143
+    title: Common UI Simplification
+    status: Done
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-152]
+    completed_by:
+      report: reports/qst/QST-153.md
+    scope: Unify page background, AppBar, cards, actions, headings, progress, states, and Coming Soon presentation across the five primary screens.
+    acceptance:
+      - Home, Quest, Arc, Guild, and Profile use shared layout rules.
+      - Primary actions and states have consistent presentation.
+      - Compact layouts and dark-theme contrast remain valid.
+  - id: QST-154
+    requested_id: QST-144
+    title: Home Simplification
+    status: Done
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-153]
+    completed_by:
+      report: reports/qst/QST-154.md
+    scope: Limit Home to a short Arc message, one Arc CTA, up to five current Missions, and up to three active Quests.
+    acceptance:
+      - Arc is reachable in one tap.
+      - Home can complete a Mission and open Quest detail.
+      - Guild, Trail, Horizon, rankings, offers, and mock cards are not shown.
+  - id: QST-155
+    requested_id: QST-145
+    title: Arc-led Quest Creation
+    status: Done
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-154]
+    completed_by:
+      report: reports/qst/QST-155.md
+    scope: Make Arc natural-language input the primary Quest creation flow with editable 3-7 Quest candidates and explicit confirmation before persistence.
+    acceptance:
+      - Candidates can be edited, added, removed, reordered, and regenerated.
+      - Only confirmed Quests are saved.
+      - Input survives AI failure and manual fallback remains available.
+  - id: QST-156
+    requested_id: QST-146
+    title: Quest Mission Decomposition Simplification
+    status: Done
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-155]
+    completed_by:
+      report: reports/qst/QST-156.md
+    scope: Focus Quest detail on description, progress, editable Missions, Mission generation, and Quest editing using existing models.
+    acceptance:
+      - Mission generation creates editable 3-10 action-sized candidates before save.
+      - Missions can be added, edited, deleted, reordered, completed, and marked for today.
+      - Saved Missions remain after reload.
+  - id: QST-157
+    requested_id: QST-147
+    title: Unified Quest Progress
+    status: Done
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-156]
+    completed_by:
+      report: reports/qst/QST-157.md
+    scope: Use completed Mission count divided by all Mission count as the single Quest progress rule across Home, Quest list, and Quest detail.
+    acceptance:
+      - Zero Missions produce zero percent progress.
+      - All three surfaces show the same percent and completed/total counts.
+      - Mission completion updates and persists Quest progress.
+  - id: QST-158
+    requested_id: QST-148
+    title: Guild and Trail Coming Soon Review
+    status: Done
+    priority: P0
+    epic: SIMPLIFICATION
+    depends_on: [QST-157]
+    completed_by:
+      report: reports/qst/QST-158.md
+    scope: Replace Guild and Trail primary surfaces with a shared Coming Soon experience and run the end-to-end simplification review without deleting existing implementation or data.
+    acceptance:
+      - Guild and Trail show only feature name, short copy, Questra imagery, Coming Soon, and Home action.
+      - Mock posts, comments, rankings, creation controls, and filters are hidden.
+      - The Arc-to-Quest-to-Mission-to-progress flow passes integration review.
   - id: QST-091
     requested_id: QST-041
     title: Arc Relationship Memory Coverage
@@ -1057,6 +1491,157 @@ items:
       - Sensitive memories are excluded from Arc Chat context by default.
       - Retrieval honors the named Arc Chat memory context limit.
       - Targeted retrieval tests and Flutter analyze pass.
+  - id: QST-159
+    title: Beta Candidate Manifest Automation
+    status: Done
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-130]
+    scope: Generate a reproducible candidate manifest with version, commit, build time, rollback commit, checks, and artifact checksums.
+    likely_files:
+      - tools/qst/generate_beta_candidate_manifest.dart
+      - docs/qst/BETA_CANDIDATE.yaml
+      - reports/qst/QST-159.md
+    acceptance:
+      - Candidate identity and rollback identity are machine-readable.
+      - Automated gate results cannot be confused with external evidence.
+    completed_by:
+      report: reports/qst/QST-159.md
+  - id: QST-160
+    title: Supabase Beta Project Bootstrap
+    status: In Progress
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-159]
+    scope: Define and execute the Beta Supabase project, config, migration, Edge Function, and secret bootstrap contract.
+    likely_files:
+      - supabase/config.toml
+      - docs/product/supabase_beta_project_bootstrap.md
+      - reports/qst/QST-160.md
+    acceptance:
+      - Project ref, region, owner, migration state, and deployed functions have evidence.
+      - Secrets remain server-side and local fallback is not accepted as cloud evidence.
+    progress:
+      - Local config, bootstrap runbook, sanitized evidence contract, and strict verifier are implemented.
+      - Questra Beta project identity, Tokyo region, owner, and Dashboard access are verified.
+      - CLI link, ten migrations, six Edge Functions, and cloud RLS behavior are verified.
+      - Gemini provider secret registration and deployment of the Gemini-first Functions remain before completion.
+  - id: QST-161
+    title: Cloud Migration and RLS Evidence
+    status: In Progress
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-160]
+    scope: Apply migrations to the Beta database and execute the database-backed RLS behavior harness.
+    likely_files:
+      - supabase/tests/rls_behavior.sql
+      - docs/qst/BETA_LAUNCH_READINESS.yaml
+      - reports/qst/QST-161.md
+    acceptance:
+      - Required migrations are applied to the named Beta project.
+      - Database-backed owner and cross-account RLS checks pass with sanitized evidence.
+    progress:
+      - Secure database runner, evidence capture, runbook, and strict verifier are prepared.
+      - Ten migrations match local and remote history on Questra Beta.
+      - All 23 cloud RLS assertions passed and rolled back through linked CLI execution.
+      - Final verified evidence remains pending the QST-160 provider secret gate.
+  - id: QST-162
+    title: Dual Account Persistence Acceptance
+    status: In Progress
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-161]
+    scope: Validate Profile, Quest, Mission, and Arc Memory persistence and isolation with two Beta accounts.
+    likely_files:
+      - docs/product/beta_account_setup_flow.md
+      - docs/qst/BETA_LAUNCH_READINESS.yaml
+      - reports/qst/QST-162.md
+    acceptance:
+      - Account A data persists after restart and re-login.
+      - Account B cannot read Account A private journey data.
+    progress:
+      - Credential-safe dual-account runner, sanitized evidence, and strict verifier are implemented.
+      - Dedicated Beta account execution remains required before completion.
+  - id: QST-163
+    title: Real Device Beta Validation Evidence
+    status: In Progress
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-159]
+    scope: Capture candidate-specific Android, Web, compact, large-text, keyboard, and conditional iOS evidence.
+    likely_files:
+      - docs/product/real_device_beta_validation.md
+      - docs/qst/BETA_LAUNCH_READINESS.yaml
+      - reports/qst/QST-163.md
+    acceptance:
+      - Candidate commit and device details accompany every result.
+      - Home, Quest, Mission, Arc, owner switch, and fallback flows have no P0 failure.
+    progress:
+      - Candidate-bound device evidence schema and strict verifier are implemented.
+      - Windows and Edge are available; Android and iOS device execution remain pending.
+  - id: QST-164
+    title: Beta Support Operations Activation
+    status: In Progress
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-128, QST-129]
+    scope: Activate the support contact, feedback channel, daily triage owner, SLA, and issue register.
+    likely_files:
+      - docs/qst/BETA_FEEDBACK.yaml
+      - docs/product/beta_feedback_operations.md
+      - reports/qst/QST-164.md
+    acceptance:
+      - Testers have a working destination for copied feedback reports.
+      - Open S0 and S1 counts are auditable for the candidate.
+    progress:
+      - Configurable tester-visible channel, operations evidence, issue register, and strict verifier are implemented.
+      - Approved private destination, named daily owner, and first verified S0/S1 count remain pending.
+  - id: QST-165
+    title: Legal and Privacy Sign-Off Closure
+    status: In Progress
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-127, QST-164]
+    scope: Finalize operator, region, retention, provider settings, contact, and versioned legal approval for external Beta.
+    likely_files:
+      - docs/legal/privacy_policy_draft.md
+      - docs/legal/terms_of_service_draft.md
+      - docs/legal/beta_privacy_notice_ja_draft.md
+      - reports/qst/QST-165.md
+    acceptance:
+      - Legal Reviewer signs the same versioned copy distributed to testers.
+      - Provider and data request details match the deployed environment.
+    progress:
+      - Gemini-first privacy copy, request storage opt-out, Tokyo region evidence, and versioned sign-off gate are implemented.
+      - Operator, contacts, provider project settings, final retention, data request operations, and human sign-offs remain pending.
+  - id: QST-166
+    title: Beta Candidate Build and Distribution
+    status: Planned
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-161, QST-162, QST-163, QST-164, QST-165]
+    scope: Build, checksum, sign off, and distribute the approved candidate to a limited tester cohort.
+    likely_files:
+      - docs/qst/BETA_CANDIDATE.yaml
+      - docs/product/beta_release_notes_draft.md
+      - reports/qst/QST-166.md
+    acceptance:
+      - Artifact checksum, candidate SHA, rollback SHA, and four sign-offs match.
+      - Limited distribution and rollback channels are operational.
+  - id: QST-167
+    title: Beta Go-Live Review
+    status: Planned
+    priority: P0
+    epic: BETA-GO-LIVE
+    depends_on: [QST-166]
+    scope: Re-audit every Beta completion criterion and issue the final GO or NO-GO decision.
+    likely_files:
+      - docs/qst/BETA_LAUNCH_READINESS.yaml
+      - docs/product/beta_readiness_report.md
+      - reports/qst/QST-167.md
+    acceptance:
+      - Every P0 gate has candidate-specific evidence.
+      - GO is issued only with zero open S0 and all required sign-offs.
  deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

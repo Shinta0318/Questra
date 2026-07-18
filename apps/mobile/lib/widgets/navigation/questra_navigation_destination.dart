@@ -15,23 +15,17 @@ enum QuestraNavigationDestination {
     icon: Icons.explore_outlined,
     selectedIcon: Icons.explore,
   ),
-  trail(
-    label: 'Trail',
-    route: AppRoutes.trail,
-    icon: Icons.timeline_outlined,
-    selectedIcon: Icons.timeline,
+  arc(
+    label: 'Arc',
+    route: AppRoutes.arc,
+    icon: Icons.auto_awesome_outlined,
+    selectedIcon: Icons.auto_awesome,
   ),
   guild(
     label: 'Guild',
     route: AppRoutes.guild,
     icon: Icons.groups_outlined,
     selectedIcon: Icons.groups,
-  ),
-  arc(
-    label: 'Arc',
-    route: AppRoutes.arc,
-    icon: Icons.auto_awesome_outlined,
-    selectedIcon: Icons.auto_awesome,
   ),
   profile(
     label: 'プロフィール',

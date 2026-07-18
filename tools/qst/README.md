@@ -21,12 +21,18 @@ Reports produced from the template should be saved under `reports/qst`.
 
 ```powershell
 dart run tools\qst\verify_rls_readiness.dart
-.\tools\qst\run_rls_behavior_tests.ps1 -DatabaseUrl "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+$env:SUPABASE_DB_URL = '<secret-postgresql-url>'
+.\tools\qst\run_rls_behavior_tests.ps1
 ```
 
 - `verify_rls_readiness.dart`: checks the MVP Supabase migration for RLS
   enablement and required owner/public/Guild policies for Quest, Mission, Trail,
   TrailEvent, Arc Memory, and media boundaries.
 - `run_rls_behavior_tests.ps1`: runs database-backed RLS behavior tests from
-  `supabase/tests/rls_behavior.sql`. Set `SUPABASE_DB_URL` or pass
-  `-DatabaseUrl`. The SQL test uses a transaction and rolls back its seed data.
+  `supabase/tests/rls_behavior.sql`. It parses `SUPABASE_DB_URL`, passes only
+  sanitized connection fields to `psql`, and keeps the password in a temporary
+  process environment variable. The SQL test rolls back its seed data.
+- `capture_cloud_rls_evidence.ps1`: verifies linked migrations, executes the
+  RLS harness, and writes candidate-bound sanitized Beta evidence.
+- `verify_cloud_rls_evidence.dart`: validates the static evidence contract and,
+  with `--require-cloud`, requires real project/migration/RLS evidence.

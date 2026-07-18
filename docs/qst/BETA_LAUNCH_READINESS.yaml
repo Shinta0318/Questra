@@ -1,0 +1,78 @@
+version: 1
+updated: 2026-07-17
+decision: no_go
+decision_reason: P0 external environment, device, operations, and legal evidence is incomplete.
+score:
+  total: 76
+  maximum: 100
+  dimensions:
+    - id: product_core
+      weight: 30
+      earned: 28
+      status: ready
+    - id: automated_quality
+      weight: 20
+      earned: 20
+      status: passed
+    - id: supabase_security_evidence
+      weight: 20
+      earned: 15
+      status: partial_evidence
+    - id: device_distribution_evidence
+      weight: 15
+      earned: 4
+      status: evidence_missing
+    - id: trust_legal_operations
+      weight: 15
+      earned: 9
+      status: evidence_missing
+automated_gates:
+  dependency_resolution: passed
+  static_analysis: passed
+  flutter_tests: passed_219
+  rls_static_readiness: passed
+  performance_readiness: passed
+  feedback_readiness: passed
+  error_capture_contract: passed
+  privacy_copy_contract: passed
+  release_notes_contract: passed
+p0_blockers:
+  - id: BLK-001
+    title: Supabase Project Evidence
+    owner: Engineering Owner
+    status: partial_evidence
+    progress: Questra Beta project, migrations, Functions, and RLS evidence exist; Gemini provider secret verification remains in QST-160.
+    resolution_qst: QST-160
+  - id: BLK-002
+    title: Persistence and Cross-Account RLS
+    owner: Engineering Owner
+    status: partial_evidence
+    progress: QST-161 cloud RLS passed 23 assertions; QST-162 dual-account persistence runner is ready and awaits dedicated account execution.
+    resolution_qst: QST-161,QST-162
+  - id: BLK-003
+    title: Candidate Artifact and Device Evidence
+    owner: Release Manager
+    status: partial_evidence
+    progress: QST-163 candidate-bound device evidence contract is ready; Android, compact, large-text, keyboard, tablet, and conditional iOS execution remain pending.
+    resolution_qst: QST-163,QST-166
+  - id: BLK-004
+    title: Beta Operations
+    owner: Release Manager
+    status: partial_evidence
+    progress: QST-164 channel configuration, SLA, issue register, and strict verifier are ready; approved destination and named daily owner remain pending.
+    resolution_qst: QST-164
+  - id: BLK-005
+    title: Legal Sign-Off
+    owner: Product Owner
+    status: partial_evidence
+    progress: QST-165 copy now matches Gemini-first and Tokyo deployment; operator, contacts, retention, provider project settings, and human sign-offs remain pending.
+    resolution_qst: QST-165
+go_requirements:
+  open_s0: 0
+  open_s1: 0_or_approved_exception
+  required_sign_offs:
+    - Release Manager
+    - Engineering Owner
+    - Product Owner
+    - Legal Reviewer
+  final_review_qst: QST-167

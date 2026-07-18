@@ -15,6 +15,7 @@ void main() {
       questInterest: QuestInterest.learning,
       signalFrequency: SignalFrequency.quiet,
       onboardingCompleted: true,
+      hasSeenOnboardingTour: true,
     );
 
     expect(updated.nickname, 'Shinta');
@@ -22,6 +23,7 @@ void main() {
     expect(updated.questInterest.label, '学習');
     expect(updated.signalFrequency.label, '静かめ');
     expect(updated.onboardingCompleted, isTrue);
+    expect(updated.hasSeenOnboardingTour, isTrue);
   });
 
   test('storage mapping falls back to beta-safe defaults', () {

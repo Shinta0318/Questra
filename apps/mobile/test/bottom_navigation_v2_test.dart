@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:questra/core/router/app_router.dart';
 import 'package:questra/core/router/app_routes.dart';
+import 'package:questra/features/arc/arc_screen.dart';
 import 'package:questra/features/mission/mission_screen.dart';
-import 'package:questra/widgets/navigation/questra_arc_floating_entry.dart';
+import 'package:questra/widgets/layout/questra_coming_soon_screen.dart';
 import 'package:questra/widgets/navigation/questra_bottom_navigation.dart';
 import 'package:questra/widgets/navigation/questra_navigation_rail.dart';
-import 'package:questra/widgets/navigation/questra_quick_action_menu.dart';
-import 'package:questra/widgets/motion/questra_pressable.dart';
 
 void main() {
   test('navigation destination order stays aligned with shell branches', () {
     expect(QuestraNavigationDestination.values.map((item) => item.route), [
       AppRoutes.home,
       AppRoutes.quest,
-      AppRoutes.trail,
-      AppRoutes.guild,
       AppRoutes.arc,
+      AppRoutes.guild,
       AppRoutes.profile,
     ]);
   });
@@ -30,7 +29,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           bottomNavigationBar: QuestraBottomNavigation(
-            currentIndex: QuestraNavigationDestination.trail.index,
+            currentIndex: QuestraNavigationDestination.quest.index,
             onDestinationSelected: (index) => selectedIndex = index,
           ),
         ),
@@ -41,10 +40,10 @@ void main() {
       expect(find.byKey(ValueKey('nav-${destination.name}')), findsOneWidget);
     }
 
-    final trailSemantics = tester
+    final questSemantics = tester
         .widgetList<Semantics>(find.byType(Semantics))
-        .singleWhere((widget) => widget.properties.label == 'Trail');
-    expect(trailSemantics.properties.selected, isTrue);
+        .singleWhere((widget) => widget.properties.label == 'Quest');
+    expect(questSemantics.properties.selected, isTrue);
 
     await tester.tap(find.byKey(const ValueKey('nav-arc')));
     expect(selectedIndex, QuestraNavigationDestination.arc.index);
@@ -140,8 +139,11 @@ void main() {
     expect(find.text('Questra'), findsWidgets);
   });
 
-  testWidgets('quick action menu exposes core journey actions', (tester) async {
-    tester.view.physicalSize = const Size(390, 800);
+  testWidgets('Trail route shows the shared Coming Soon surface', (
+    tester,
+  ) async {
+    await initializeDateFormatting('ja');
+    tester.view.physicalSize = const Size(1280, 1200);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -149,7 +151,7 @@ void main() {
     addTearDown(container.dispose);
     final router = container.read(appRouterProvider);
     addTearDown(router.dispose);
-    router.go(AppRoutes.home);
+    router.go(AppRoutes.trail);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -160,71 +162,46 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.byType(QuestraQuickActionMenu), findsOneWidget);
-
-    await tester.tap(find.byKey(const ValueKey('questra-quick-action-menu')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(find.text('次の航路'), findsOneWidget);
-    expect(find.text('Questを始める'), findsOneWidget);
-    expect(find.text('Trailを残す'), findsOneWidget);
-    expect(find.text('Arcと話す'), findsOneWidget);
-    expect(find.text('Guildへ相談'), findsOneWidget);
+    expect(find.byType(QuestraComingSoonScreen), findsOneWidget);
+    expect(find.text('Trail'), findsWidgets);
+    expect(find.text('Coming Soon'), findsOneWidget);
+    expect(find.text('Homeへ戻る'), findsOneWidget);
+    expect(find.byType(QuestraBottomNavigation), findsNothing);
   });
 
-  testWidgets(
-    'Arc floating entry opens Arc without duplicating on Arc screen',
-    (tester) async {
-      tester.view.physicalSize = const Size(390, 800);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      final router = container.read(appRouterProvider);
-      addTearDown(router.dispose);
-      router.go(AppRoutes.home);
+  testWidgets('Guild route hides unfinished community interactions', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final router = container.read(appRouterProvider);
+    addTearDown(router.dispose);
+    router.go(AppRoutes.guild);
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp.router(routerConfig: router),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.byType(QuestraArcFloatingEntry), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('questra-arc-floating-entry')),
-        findsOneWidget,
-      );
-      expect(
-        find.ancestor(
-          of: find.byKey(const ValueKey('questra-arc-floating-entry')),
-          matching: find.byType(QuestraPressable),
-        ),
-        findsOneWidget,
-      );
-      final arcEntrySize = tester.getSize(
-        find.byKey(const ValueKey('questra-arc-floating-entry')),
-      );
-      expect(arcEntrySize.width, greaterThanOrEqualTo(48));
-      expect(arcEntrySize.height, greaterThanOrEqualTo(48));
+    expect(find.byType(QuestraComingSoonScreen), findsOneWidget);
+    expect(find.text('Guild'), findsWidgets);
+    expect(find.text('Coming Soon'), findsOneWidget);
+    expect(find.text('Guildの現在地'), findsNothing);
+    expect(find.text('相談ドラフト'), findsNothing);
+    expect(find.byType(QuestraBottomNavigation), findsOneWidget);
+  });
 
-      await tester.tap(
-        find.byKey(const ValueKey('questra-arc-floating-entry')),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(find.byType(QuestraArcFloatingEntry), findsNothing);
-      expect(find.text('Arc'), findsWidgets);
-    },
-  );
-
-  testWidgets('quick action can open Quest creation', (tester) async {
+  testWidgets('primary shell does not expose duplicate floating actions', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(390, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -244,22 +221,43 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    await tester.tap(find.byKey(const ValueKey('questra-quick-action-menu')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    final questActionTile = find.ancestor(
-      of: find.text('Questを始める'),
-      matching: find.byType(InkWell),
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(
+      find.byKey(const ValueKey('questra-quick-action-menu')),
+      findsNothing,
     );
     expect(
-      tester.getSize(questActionTile.first).height,
-      greaterThanOrEqualTo(56),
+      find.byKey(const ValueKey('questra-arc-floating-entry')),
+      findsNothing,
     );
-    await tester.tap(find.text('Questを始める'));
+  });
+
+  testWidgets('Quest creation CTA opens Arc instead of the legacy form', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final router = container.read(appRouterProvider);
+    addTearDown(router.dispose);
+    router.go(AppRoutes.quest);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Questを作成'), findsWidgets);
-    expect(find.text('Quest名'), findsOneWidget);
+    await tester.tap(find.byTooltip('ArcとQuestを考える'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(ArcScreen), findsOneWidget);
   });
 }

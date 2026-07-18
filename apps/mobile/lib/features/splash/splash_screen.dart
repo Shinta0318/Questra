@@ -10,8 +10,8 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const PlaceholderScreen(
       title: 'Questra',
-      subtitle: 'Adventure begins here.',
-      actionLabel: 'Enter',
+      subtitle: '冒険はここから始まります。',
+      actionLabel: 'はじめる',
       actionRoute: AppRoutes.login,
     );
   }

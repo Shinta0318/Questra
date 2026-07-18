@@ -1,4 +1,5 @@
 import '../arc/navigator_rank_service.dart';
+import '../challenge_graph/challenge_graph_preview_service.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
 import '../trail/trail_model.dart';
@@ -27,6 +28,7 @@ class HorizonNextChallengeService {
     required List<Quest> quests,
     required List<Mission> missions,
     required List<Trail> trails,
+    List<ChallengeGraphInsight> graphInsights = const [],
   }) {
     final completedQuests = quests
         .where((quest) => quest.status == QuestStatus.completed)
@@ -48,6 +50,19 @@ class HorizonNextChallengeService {
         readinessLabel: 'Low readiness',
         reason: 'まずは短く終わるQuestで、Arcと一緒に成功の感覚を作りましょう。',
         suggestedAction: '今日できる目的地を1つだけ書く',
+      );
+    }
+
+    final graphInsight = graphInsights.firstOrNull;
+    if (graphInsight != null &&
+        activeQuests.isNotEmpty &&
+        completedQuests.isEmpty) {
+      return HorizonNextChallenge(
+        title: graphInsight.title,
+        category: 'Challenge Graph',
+        readinessLabel: 'Graph readiness',
+        reason: graphInsight.message,
+        suggestedAction: graphInsight.suggestedAction,
       );
     }
 

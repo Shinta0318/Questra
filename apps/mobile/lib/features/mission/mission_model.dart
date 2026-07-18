@@ -18,6 +18,8 @@ class Mission {
     required this.guideType,
     required this.difficulty,
     required this.status,
+    this.sortOrder = 0,
+    this.isToday = false,
     DateTime? createdAt,
   }) : id = id ?? _uuid.v4(),
        createdAt = createdAt ?? DateTime.now();
@@ -30,18 +32,30 @@ class Mission {
   final GuideType guideType;
   final MissionDifficulty difficulty;
   final MissionStatus status;
+  final int sortOrder;
+  final bool isToday;
   final DateTime createdAt;
 
-  Mission copyWith({MissionStatus? status}) {
+  Mission copyWith({
+    String? title,
+    String? description,
+    GuideType? guideType,
+    MissionDifficulty? difficulty,
+    MissionStatus? status,
+    int? sortOrder,
+    bool? isToday,
+  }) {
     return Mission(
       id: id,
       questId: questId,
       questTitle: questTitle,
-      title: title,
-      description: description,
-      guideType: guideType,
-      difficulty: difficulty,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      guideType: guideType ?? this.guideType,
+      difficulty: difficulty ?? this.difficulty,
       status: status ?? this.status,
+      sortOrder: sortOrder ?? this.sortOrder,
+      isToday: isToday ?? this.isToday,
       createdAt: createdAt,
     );
   }

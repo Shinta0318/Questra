@@ -483,10 +483,7 @@ class _TrailOverview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Progress Overview',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('進捗の概要', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           Wrap(
             spacing: 16,
@@ -883,7 +880,7 @@ class _EditTrailSheetState extends State<_EditTrailSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Edit Trail',
+                  'Trailを編集',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 16),

@@ -15,8 +15,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController(text: 'demo@questra.app');
-  final _passwordController = TextEditingController(text: 'password');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -30,7 +30,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: const Text('ログイン')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -40,29 +40,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Welcome back',
+                    'おかえりなさい',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
+                  const SizedBox(height: 8),
+                  const Text('ベータテスト用に案内されたメールアドレスとパスワードでログインしてください。'),
                   const SizedBox(height: 20),
                   TextField(
                     controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    decoration: const InputDecoration(labelText: 'メールアドレス'),
                     keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.email],
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(labelText: 'Password'),
+                    decoration: const InputDecoration(labelText: 'パスワード'),
                     obscureText: true,
+                    autofillHints: const [AutofillHints.password],
                   ),
                   const SizedBox(height: 20),
                   QuestraPrimaryButton(
-                    label: auth.isLoading ? 'Logging in...' : 'Login',
+                    label: auth.isLoading ? 'ログインしています...' : 'ログイン',
                     onPressed: auth.isLoading ? null : _submit,
                   ),
                   TextButton(
                     onPressed: () => context.go(AppRoutes.signup),
-                    child: const Text('Create an account'),
+                    child: const Text('ベータアカウントを作成する'),
                   ),
                   if (auth.errorMessage != null) ...[
                     const SizedBox(height: 8),

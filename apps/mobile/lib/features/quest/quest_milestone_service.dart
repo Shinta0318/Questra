@@ -33,7 +33,7 @@ class QuestMilestoneService {
       QuestMilestone(
         questId: quest.id,
         title: 'Missionへ分解する',
-        description: 'GuideやArc Guideから、今日できる小さなMissionを作る。',
+        description: 'GuideやArcガイドから、今日できる小さなMissionを作る。',
         status: missions.isEmpty
             ? QuestMilestoneStatus.active
             : QuestMilestoneStatus.completed,

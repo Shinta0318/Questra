@@ -13,6 +13,7 @@ from internal beta preparation toward public release review.
 | Splash assets | Design Owner | Release Manager | Draft needed | Existing platform placeholders tracked below |
 | Terms of Service | Product Owner | Legal Reviewer | Draft created | `docs/legal/terms_of_service_draft.md` |
 | Privacy Policy | Product Owner | Legal Reviewer | Draft created | `docs/legal/privacy_policy_draft.md` |
+| Beta data notice | Product Owner | Legal Reviewer | Draft aligned to implementation | `docs/legal/beta_privacy_notice_ja_draft.md` |
 | Store listing copy | Product Owner | Release Manager | Draft created | `docs/product/store_listing_draft.md` |
 
 ## Asset Inventory
@@ -34,6 +35,9 @@ from internal beta preparation toward public release review.
 - Privacy copy must explain deletion/export request channels before public
   release.
 - Legal drafts require human legal review before external distribution.
+- Beta copy must distinguish stored data from context processed for Arc generation.
+- Conditional OpenAI API processing must be disclosed while that provider path exists.
+- Clipboard feedback and disabled external crash reporting must not be described as automatic collection.
 
 ## Store Listing Checklist
 
@@ -48,5 +52,6 @@ from internal beta preparation toward public release review.
 ## Beta Readiness
 
 Internal beta can proceed with draft legal/store artifacts and tracked asset
-owners. Public release remains blocked until final app icons, splash assets, and
-human-reviewed legal copy are approved.
+owners. External beta and public release remain blocked until provider settings,
+operator/contact details, data request procedures, final app icons, splash assets,
+and human-reviewed legal copy are approved.

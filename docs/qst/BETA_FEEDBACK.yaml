@@ -1,11 +1,12 @@
 version: 1
-updated: 2026-06-20
+updated: 2026-07-17
 owner: Release Manager
 purpose: Internal beta feedback intake, triage, and QST conversion rules.
 intake_channels:
   - id: in_app_notes
     label: In-app tester notes
-    status: planned
+    status: ready
+    implementation: Settings -> Beta feedback form -> structured clipboard report
     required_fields:
       - tester_id
       - build_version
@@ -65,6 +66,14 @@ labels:
     - missing_state
     - trust_or_safety
     - idea
+  category:
+    - bug
+    - ux
+    - data
+    - ai
+    - guild
+    - arc
+    - performance
 triage_rules:
   - id: blocker_crash
     when: severity S0 or feedback_type crash
@@ -92,3 +101,63 @@ qst_conversion:
     S2: P1
     S3: P2
   next_id_policy: Use the next open QST number in docs/qst/BACKLOG.yaml.
+automation:
+  service: apps/mobile/lib/features/feedback/beta_feedback_triage_service.dart
+  output_fields:
+    - suggested_labels
+    - suggested_priority
+    - qst_candidate
+    - stops_beta_expansion
+  deterministic: true
+  external_ai_required: false
+operations_activation:
+  evidence: docs/qst/BETA_FEEDBACK_OPERATIONS.yaml
+  issue_register: docs/qst/BETA_ISSUE_REGISTER.yaml
+  candidate_channel_define: QUESTRA_BETA_FEEDBACK_CHANNEL
+  clipboard_is_delivery_confirmation: false
+error_capture:
+  status: prepared
+  plan: docs/product/beta_crash_error_capture_plan.md
+  external_provider: disabled_until_privacy_review
+  privacy_gate: QST-127
+  event_types:
+    - app_crash
+    - flutter_framework_error
+    - unhandled_async_error
+    - persistence_failure
+    - auth_failure
+    - media_failure
+    - ai_fallback
+  required_evidence:
+    - event_id
+    - occurred_at
+    - build_version
+    - environment
+    - platform
+    - surface
+    - operation
+    - event_type
+    - severity
+    - error_code
+    - fingerprint
+    - correlation_id
+    - handled
+    - fallback_used
+  prohibited_payloads:
+    - auth_tokens_or_api_keys
+    - personal_contact_details
+    - quest_mission_trail_or_reflection_text
+    - arc_chat_prompt_history_or_response
+    - image_or_signed_url
+    - database_rows_or_raw_request_bodies
+    - raw_exception_messages
+  retention_days: 30
+  access_roles:
+    - Release Manager
+    - Assigned Engineering owner
+  capture_points:
+    - Flutter framework errors
+    - Unhandled asynchronous errors
+    - Supabase persistence boundaries
+    - Auth and media boundaries
+    - Arc Chat and Quest Guide fallback boundaries

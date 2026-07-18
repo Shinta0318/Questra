@@ -11,7 +11,12 @@ import 'package:questra/features/quest/quest_controller.dart';
 import 'package:questra/features/quest/quest_detail_screen.dart';
 import 'package:questra/features/profile/profile_screen.dart';
 import 'package:questra/features/quest/quest_screen.dart';
+import 'package:questra/features/settings/settings_screen.dart';
+import 'package:questra/features/trail/trail_controller.dart';
 import 'package:questra/features/trail/trail_screen.dart';
+
+import 'support/fixture_quest_controller.dart';
+import 'support/fixture_trail_controller.dart';
 
 void main() {
   setUpAll(() => initializeDateFormatting('ja_JP'));
@@ -24,6 +29,7 @@ void main() {
     'Guild': const GuildScreen(),
     'Arc Chat': const ArcScreen(),
     'Profile': const ProfileScreen(),
+    'Settings': const SettingsScreen(),
     'Onboarding': const OnboardingScreen(),
   };
 
@@ -51,39 +57,7 @@ void main() {
     });
   }
 
-  testWidgets('Home orders beta journey sections without mock ownership', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: HomeScreen())),
-    );
-    await tester.pump();
-
-    expect(find.text('今日のMission'), findsOneWidget);
-    expect(find.text('Active Quest'), findsOneWidget);
-    expect(find.text('Missionへ'), findsOneWidget);
-    expect(find.text('すべて見る'), findsOneWidget);
-
-    await tester.scrollUntilVisible(
-      find.text('Recent Trails'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Recent Trails'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Guild Activity'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Guild Activity'), findsOneWidget);
-  });
-
-  testWidgets('Quest Detail exposes journey overview and next action', (
+  testWidgets('Home exposes only Arc, Mission, and active Quest sections', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 900);
@@ -93,6 +67,43 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          questControllerProvider.overrideWith(FixtureQuestController.new),
+        ],
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('今日は何を叶えたい？'), findsOneWidget);
+    expect(find.text('Arcに話す'), findsWidgets);
+    expect(find.text('今日やるMission'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('進行中のQuest'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('進行中のQuest'), findsOneWidget);
+    expect(find.text('Mission 0/0'), findsWidgets);
+    expect(find.text('最近のTrail'), findsNothing);
+    expect(find.text('Guildの動き'), findsNothing);
+    expect(find.text('Star Map'), findsNothing);
+    expect(find.text('Horizon'), findsNothing);
+  });
+
+  testWidgets('Quest Detail focuses on progress and editable Missions', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          questControllerProvider.overrideWith(FixtureQuestController.new),
+        ],
         child: MaterialApp(
           home: Consumer(
             builder: (context, ref, child) {
@@ -104,13 +115,78 @@ void main() {
       ),
     );
     await tester.pump();
+    expect(tester.takeException(), isNull);
 
-    expect(find.text('Journey Overview'), findsOneWidget);
-    expect(find.text('Next Action'), findsOneWidget);
-    expect(find.text('Progress'), findsWidgets);
-    expect(find.text('Mission'), findsWidgets);
-    expect(find.text('Trail'), findsWidgets);
-    expect(find.text('Arc Guide'), findsWidgets);
+    tester.view.physicalSize = const Size(390, 2400);
+    await tester.pump();
+
+    expect(find.byTooltip('Questを編集'), findsOneWidget);
+    expect(find.text('1 進捗'), findsOneWidget);
+    expect(find.text('2 ArcのMissionプラン'), findsOneWidget);
+    expect(find.text('Arcガイドを生成'), findsOneWidget);
+    expect(find.text('3 Mission'), findsOneWidget);
+    expect(find.text('完了したMission 0/0'), findsOneWidget);
+    expect(find.textContaining('最初のMissionをつくる'), findsOneWidget);
+    expect(find.text('Quest DNA Snapshot'), findsNothing);
+    expect(find.text('Challenge Graph Preview'), findsNothing);
+    expect(find.text('Quest支援の透明性'), findsNothing);
+    expect(find.text('Dream Board'), findsNothing);
+  });
+
+  testWidgets('Settings exposes trust and privacy review surface', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: SettingsScreen())),
+    );
+    await tester.pump();
+
+    expect(find.text('設定'), findsOneWidget);
+    expect(find.text('Settings Map'), findsOneWidget);
+    expect(find.text('Arcチュートリアル'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.text('Trust & Privacy'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Trust & Privacy'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Quest / Mission / Trail'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Quest / Mission / Trail'), findsOneWidget);
+    expect(find.text('Arc Memory'), findsWidgets);
+    expect(find.text('Betaでは未接続'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Arc Memory管理プレビュー'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Arc Memory管理プレビュー'), findsOneWidget);
+    expect(find.text('記憶を確認'), findsOneWidget);
+    expect(find.text('記憶を削除'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('データリクエスト'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('データリクエスト'), findsOneWidget);
+    expect(find.text('データエクスポート'), findsOneWidget);
+    expect(find.text('データ削除リクエスト'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('目的別の同意'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('目的別の同意'), findsOneWidget);
+    expect(find.text('Quest支援'), findsOneWidget);
+    expect(find.text('プロダクト改善分析'), findsOneWidget);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (
@@ -121,10 +197,29 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: QuestScreen())),
+    final container = ProviderContainer(
+      overrides: [
+        questControllerProvider.overrideWith(FixtureQuestController.new),
+      ],
     );
-    await tester.pump();
+    addTearDown(container.dispose);
+    expect(container.read(questControllerProvider), isNotEmpty);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: QuestScreen()),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(container.read(questControllerProvider), isNotEmpty);
+    await tester.scrollUntilVisible(
+      find.text('Questraをローンチする'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Questraをローンチする'), findsOneWidget);
 
     final questCardSemantics = tester.widgetList<Semantics>(
       find.byWidgetPredicate(
@@ -148,7 +243,13 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: GuildScreen())),
+      ProviderScope(
+        overrides: [
+          questControllerProvider.overrideWith(FixtureQuestController.new),
+          trailControllerProvider.overrideWith(FixtureTrailController.new),
+        ],
+        child: const MaterialApp(home: GuildScreen()),
+      ),
     );
     await tester.pump();
 
@@ -202,7 +303,12 @@ void main() {
     addTearDown(tester.view.resetViewInsets);
 
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: TrailScreen())),
+      ProviderScope(
+        overrides: [
+          trailControllerProvider.overrideWith(FixtureTrailController.new),
+        ],
+        child: const MaterialApp(home: TrailScreen()),
+      ),
     );
     await tester.pump();
     await tester.scrollUntilVisible(
@@ -210,8 +316,12 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.text('Trailを残す'));
-    await tester.pumpAndSettle();
+    final createTrailAction = find.text('Trailを残す').first;
+    await tester.ensureVisible(createTrailAction);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(createTrailAction);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     tester.view.viewInsets = const FakeViewPadding(bottom: 300);
     await tester.pump();

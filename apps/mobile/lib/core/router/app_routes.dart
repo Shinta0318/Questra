@@ -11,4 +11,5 @@ abstract final class AppRoutes {
   static const guild = '/guild';
   static const profile = '/profile';
   static const settings = '/settings';
+  static const feedback = '/feedback';
 }

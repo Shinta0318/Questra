@@ -101,3 +101,19 @@ Copy this block once per device class during beta validation.
 - Screen recording for one full Quest -> Mission -> Trail loop.
 - List of S0/S1 feedback items created from the pass.
 - One result log entry for Android phone, small phone, large phone, and tablet.
+
+## Structured Evidence Gate
+
+結果は`docs/qst/BETA_DEVICE_VALIDATION.yaml`へ記録する。各端末クラスには同じcandidateの40文字SHA、
+機種、OSまたはbrowser、実行時刻、tester role、必須check、スクリーンショット等のevidence pathを含める。
+メール、認証情報、private journey本文は記録しない。
+
+```powershell
+dart run tools/qst/verify_real_device_validation_readiness.dart
+dart run tools/qst/verify_real_device_validation_readiness.dart --require-devices
+```
+
+最初のコマンドは証跡契約だけを検査する。`--require-devices`はAndroid phone、small phone、large phone、
+tablet、web sanityの全結果が`passed`になるまで失敗する。iOSはruntimeが利用可能な環境では必須とし、
+Windows hostで利用できない場合は理由を記録する。Browser resize、widget test、mock serverは実端末結果を
+代替しない。

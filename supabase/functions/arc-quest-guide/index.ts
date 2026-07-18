@@ -1,3 +1,5 @@
+import { generateAiText } from "../_shared/ai_provider.ts";
+
 type QuestPayload = {
   id?: string;
   title?: string;
@@ -21,76 +23,56 @@ Deno.serve(async (req) => {
 });
 
 async function buildArcQuestGuide(quest: QuestPayload) {
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey) {
-    return fallbackGuide(quest);
-  }
-
   try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+    const result = await generateAiText({
+      systemInstruction:
+        "You are Arc, Questra's star navigator. Reply only as compact JSON. Use gentle Japanese, nautical and star imagery, and never describe Arc as an assistant.",
+      input: {
+        task:
+          "Create a Quest guide with summary, path, cautions, encouragement, and at least 3 mission_candidates.",
+        quest,
       },
-      body: JSON.stringify({
-        model: Deno.env.get("OPENAI_MODEL") ?? "gpt-4.1-mini",
-        input: [
-          {
-            role: "system",
-            content:
-              "You are Arc, Questra's star navigator. Reply only as compact JSON. Use gentle Japanese, nautical and star imagery, and never describe Arc as an assistant.",
-          },
-          {
-            role: "user",
-            content: JSON.stringify({
-              task:
-                "Create a Quest guide with summary, path, cautions, encouragement, and at least 3 mission_candidates.",
-              quest,
-              schema: {
-                summary: "string",
-                path: "string",
-                cautions: "string",
-                encouragement: "string",
-                mission_candidates: [
-                  {
-                    title: "string",
-                    description: "string",
-                    guide_type:
-                      "route|knowledge|training|guild|resource|opportunity",
-                    difficulty: "easy|normal",
-                  },
-                ],
-              },
-            }),
-          },
-        ],
-        text: {
-          format: {
-            type: "json_object",
-          },
-        },
-      }),
+      responseSchema: questGuideSchema,
     });
+    if (!result) return fallbackGuide(quest);
 
-    if (!response.ok) {
-      return fallbackGuide(quest);
-    }
-
-    const data = await response.json();
-    const outputText = data.output_text ??
-      data.output?.flatMap((item: { content?: unknown[] }) => item.content ?? [])
-        ?.find((content: { type?: string }) => content.type === "output_text")
-        ?.text;
-    if (typeof outputText !== "string") {
-      return fallbackGuide(quest);
-    }
-
-    const parsed = JSON.parse(outputText);
-    return normalizeGuide(quest, parsed, "openai_arc_quest_guide");
+    const parsed = JSON.parse(stripJsonFence(result.text));
+    return normalizeGuide(quest, parsed, `${result.provider}_arc_quest_guide`);
   } catch (_error) {
     return fallbackGuide(quest);
   }
+}
+
+const questGuideSchema = {
+  type: "object",
+  properties: {
+    summary: { type: "string" },
+    path: { type: "string" },
+    cautions: { type: "string" },
+    encouragement: { type: "string" },
+    mission_candidates: {
+      type: "array",
+      minItems: 3,
+      items: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          description: { type: "string" },
+          guide_type: {
+            type: "string",
+            enum: ["route", "knowledge", "training", "guild", "resource", "opportunity"],
+          },
+          difficulty: { type: "string", enum: ["easy", "normal"] },
+        },
+        required: ["title", "description", "guide_type", "difficulty"],
+      },
+    },
+  },
+  required: ["summary", "path", "cautions", "encouragement", "mission_candidates"],
+};
+
+function stripJsonFence(value: string) {
+  return value.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
 }
 
 function fallbackGuide(quest: QuestPayload) {

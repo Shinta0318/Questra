@@ -1,0 +1,98 @@
+version: 1
+status: evidence_partial
+updated_at_utc: null
+results:
+  - class: android_phone
+    status: pending
+    candidate_source_commit: null
+    device: null
+    platform: null
+    executed_at_utc: null
+    tester_role: null
+    checks:
+      home: pending
+      quest_mission_trail: pending
+      arc: pending
+      owner_switch: pending
+      fallback: pending
+      keyboard: pending
+      large_text: pending
+      no_p0_failure: pending
+    evidence_paths: []
+  - class: small_phone
+    status: pending
+    candidate_source_commit: null
+    device: null
+    platform: null
+    executed_at_utc: null
+    tester_role: null
+    checks:
+      home: pending
+      quest_mission_trail: pending
+      arc: pending
+      owner_switch: pending
+      fallback: pending
+      keyboard: pending
+      large_text: pending
+      no_p0_failure: pending
+    evidence_paths: []
+  - class: large_phone
+    status: pending
+    candidate_source_commit: null
+    device: null
+    platform: null
+    executed_at_utc: null
+    tester_role: null
+    checks:
+      home: pending
+      quest_mission_trail: pending
+      arc: pending
+      owner_switch: pending
+      fallback: pending
+      keyboard: pending
+      large_text: pending
+      no_p0_failure: pending
+    evidence_paths: []
+  - class: tablet
+    status: pending
+    candidate_source_commit: null
+    device: null
+    platform: null
+    executed_at_utc: null
+    tester_role: null
+    checks:
+      home: pending
+      quest_mission_trail: pending
+      arc: pending
+      owner_switch: pending
+      fallback: pending
+      keyboard: pending
+      large_text: pending
+      no_p0_failure: pending
+    evidence_paths: []
+  - class: web_sanity
+    status: pending
+    candidate_source_commit: null
+    device: null
+    platform: null
+    executed_at_utc: null
+    tester_role: null
+    checks:
+      home: pending
+      quest_mission_trail: pending
+      arc: pending
+      owner_switch: pending
+      fallback: pending
+      keyboard: pending
+      large_text: pending
+      no_p0_failure: pending
+    evidence_paths: []
+ios:
+  availability: unavailable
+  reason: No iOS runtime is available on the current Windows development host.
+guardrails:
+  mock_server_is_device_evidence: false
+  automated_tests_replace_manual_evidence: false
+  credential_values_recorded: false
+  private_journey_content_recorded: false
+  ios_required_when_available: true

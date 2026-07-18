@@ -28,45 +28,21 @@ final questSyncControllerProvider =
 class QuestController extends Notifier<List<Quest>> {
   @override
   List<Quest> build() {
+    final initialUserId = ref.read(authControllerProvider).profile?.id;
     ref.listen(authControllerProvider.select((state) => state.profile?.id), (
       previous,
       next,
     ) {
-      if (next != null && next != previous) {
-        loadForUser(next);
-      }
+      if (next == previous) return;
+      state = const [];
+      if (next != null) unawaited(loadForUser(next));
     });
 
-    return [
-      Quest(
-        title: 'Design the first adventure arc',
-        description: 'Shape the first Questra journey with Arc.',
-        difficulty: QuestDifficulty.normal,
-        status: QuestStatus.active,
-        visibility: QuestVisibility.private,
-        progress: 0.42,
-        category: '世界観づくり',
-        targetDate: DateTime.now().add(const Duration(days: 7)),
-      ),
-      Quest(
-        title: 'Invite first guild member',
-        description: 'Prepare the first lightweight guild loop.',
-        difficulty: QuestDifficulty.easy,
-        status: QuestStatus.draft,
-        visibility: QuestVisibility.guild,
-        progress: 0.16,
-        category: 'コミュニティ',
-      ),
-      Quest(
-        title: 'Build a morning training ritual',
-        description: 'Create a small repeatable routine for real progress.',
-        difficulty: QuestDifficulty.hard,
-        status: QuestStatus.active,
-        visibility: QuestVisibility.private,
-        progress: 0.68,
-        category: 'トレーニング',
-      ),
-    ];
+    if (initialUserId != null) {
+      unawaited(Future<void>.microtask(() => loadForUser(initialUserId)));
+    }
+
+    return const [];
   }
 
   Quest? findById(String id) {
@@ -79,13 +55,16 @@ class QuestController extends Notifier<List<Quest>> {
   }
 
   Future<void> loadForUser(String userId) async {
+    if (ref.read(authControllerProvider).profile?.id != userId) return;
     final sync = ref.read(questSyncControllerProvider.notifier);
     sync.loading('Questを読み込んでいます...');
     try {
       final quests = await ref.read(questRepositoryProvider).findByUser(userId);
+      if (ref.read(authControllerProvider).profile?.id != userId) return;
       state = quests;
       sync.saved('Questを読み込みました。');
     } catch (error) {
+      if (ref.read(authControllerProvider).profile?.id != userId) return;
       sync.failed('Quest load', error);
     }
   }
@@ -119,6 +98,25 @@ class QuestController extends Notifier<List<Quest>> {
     );
   }
 
+  void updateProgress(String questId, double progress) {
+    final quest = findById(questId);
+    if (quest == null) return;
+    final normalized = progress.clamp(0.0, 1.0);
+    if ((quest.progress - normalized).abs() < 0.0001) return;
+    final updatedQuest = quest.copyWith(progress: normalized);
+    state = [
+      for (final current in state)
+        if (current.id == questId) updatedQuest else current,
+    ];
+    unawaited(
+      _persistQuest(
+        updatedQuest,
+        sourceType: ArcMemorySourceType.questUpdated,
+        recordJourney: false,
+      ),
+    );
+  }
+
   void remove(String id) {
     final removedQuest = findById(id);
     state = state.where((quest) => quest.id != id).toList();
@@ -128,17 +126,20 @@ class QuestController extends Notifier<List<Quest>> {
   Future<void> _persistQuest(
     Quest quest, {
     required ArcMemorySourceType sourceType,
+    bool recordJourney = true,
   }) async {
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
       ref
           .read(questSyncControllerProvider.notifier)
           .failed('Quest save', 'ログインが必要です。');
-      _recordQuestAction(
-        ArcActionTrigger.unauthenticated,
-        quest,
-        surface: 'Quest保存',
-      );
+      if (recordJourney) {
+        _recordQuestAction(
+          ArcActionTrigger.unauthenticated,
+          quest,
+          surface: 'Quest保存',
+        );
+      }
       return;
     }
 
@@ -148,21 +149,26 @@ class QuestController extends Notifier<List<Quest>> {
       final savedQuest = await ref
           .read(questRepositoryProvider)
           .save(ownerId: userId, quest: quest);
+      if (ref.read(authControllerProvider).profile?.id != userId) return;
       state = [
         for (final current in state)
           if (current.id == quest.id) savedQuest else current,
       ];
-      unawaited(_tagQuest(userId, savedQuest));
-      _growBond(sourceType);
-      unawaited(_rememberQuest(userId, savedQuest, sourceType));
+      if (recordJourney) {
+        unawaited(_tagQuest(userId, savedQuest));
+        _growBond(sourceType);
+        unawaited(_rememberQuest(userId, savedQuest, sourceType));
+      }
       sync.saved('Questを保存しました。');
     } catch (error) {
       sync.failed('Quest save', error);
-      _recordQuestAction(
-        ArcActionTrigger.saveFailure,
-        quest,
-        surface: 'Quest保存',
-      );
+      if (recordJourney) {
+        _recordQuestAction(
+          ArcActionTrigger.saveFailure,
+          quest,
+          surface: 'Quest保存',
+        );
+      }
     }
   }
 

@@ -1,0 +1,61 @@
+version: 1
+status: evidence_partial
+updated_at_utc: "2026-07-17T12:46:34.6751457Z"
+candidate_source_commit: "e45f4430ee6147d999a0a83b7c758f4f922b1de2"
+project:
+  ref: "dhbmgwarnrtelrcrmmfk"
+  region: "ap-northeast-1"
+  owner: "Shinta0318's Org"
+  access_verified: true
+  dashboard_evidence: "Supabase Dashboard project overview verified 2026-07-17: Questra Beta, Tokyo"
+  linked_at_utc: "2026-07-17T12:15:36Z"
+  cli_version: "2.109.1"
+migrations:
+  status: applied
+  latest_local: "202607170002_data_api_privileges.sql"
+  remote_head: "202607170002_data_api_privileges.sql"
+  command: "supabase migration list --linked"
+functions:
+  - name: arc-chat
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
+  - name: arc-quest-guide
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
+  - name: generate-arc-advice
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
+  - name: generate-mission
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
+  - name: generate-quest-guides
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
+  - name: generate-star-map
+    status: deployed
+    deployed_at_utc: "2026-07-17T12:15:36Z"
+secrets:
+  status: not_verified
+  storage: server_side_only
+  values_recorded: false
+  required_names:
+    - AI_PROVIDER
+    - GEMINI_API_KEY
+  optional_names:
+    - GEMINI_MODEL
+    - OPENAI_API_KEY
+    - OPENAI_MODEL
+client_configuration:
+  status: not_verified
+  allowed_dart_defines:
+    - SUPABASE_URL
+    - SUPABASE_ANON_KEY
+  prohibited_dart_defines:
+    - SUPABASE_SERVICE_ROLE_KEY
+    - GEMINI_API_KEY
+    - OPENAI_API_KEY
+guardrails:
+  local_fallback_is_cloud_evidence: false
+  secret_values_may_be_committed: false
+  dashboard_schema_changes_allowed: false
+  require_cloud_verifier_for_completion: true

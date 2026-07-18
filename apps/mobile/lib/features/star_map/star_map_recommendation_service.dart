@@ -1,3 +1,4 @@
+import '../challenge_graph/challenge_graph_preview_service.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
 import '../trail/trail_highlight_service.dart';
@@ -27,6 +28,7 @@ class StarMapRecommendationService {
     required List<Mission> missions,
     required List<Trail> trails,
     required List<TrailHighlight> highlights,
+    List<ChallengeGraphInsight> graphInsights = const [],
   }) {
     final completedQuests = quests
         .where((quest) => quest.status == QuestStatus.completed)
@@ -95,6 +97,18 @@ class StarMapRecommendationService {
           score: 72 + highlights.take(2).length * 6,
           reason: '意味の強いTrailが見つかっています。そこから次の挑戦を選べます。',
           sourceType: 'trail_highlight',
+        ),
+      );
+    }
+
+    for (final insight in graphInsights.take(3)) {
+      candidates.add(
+        StarMapRecommendation(
+          title: insight.title,
+          category: 'Challenge Graph',
+          score: 62 + insight.priority ~/ 4,
+          reason: insight.message,
+          sourceType: 'challenge_graph_${insight.type.name}',
         ),
       );
     }

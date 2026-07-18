@@ -27,8 +27,21 @@ limited rights needed to store, process, display, and operate the service.
 ## Arc
 
 Arc is presented as a navigator for the user's journey in Questra. Arc guidance
-is part of the product experience and should be reviewed by the user before
-acting on it.
+is generated from limited journey context when remote generation is enabled.
+Generated guidance can be incomplete or incorrect and should be reviewed by the
+user before acting on it. Questra does not present Arc guidance as professional
+medical, legal, financial, or emergency advice.
+
+Users should not submit secrets or another person's private information to Arc.
+The current provider and data flow are described in the beta privacy notice and
+Privacy Policy draft.
+
+## Beta Eligibility
+
+Until human legal review confirms the final age policy and provider terms, the
+external Beta is restricted to participants aged 18 or older. The app must not
+enable remote Gemini generation for an audience that does not satisfy the
+provider's applicable age and region requirements.
 
 ## Media Uploads
 
@@ -59,3 +72,5 @@ seek qualified professional support for high-stakes decisions.
 - Add contact email.
 - Add age restrictions if required.
 - Confirm consumer law requirements for target release regions.
+- Confirm generated-content notices and third-party provider terms.
+- Confirm the age rule above through human legal review before distribution.
