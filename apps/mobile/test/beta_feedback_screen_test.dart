@@ -17,7 +17,12 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [betaFeedbackSinkProvider.overrideWithValue(sink)],
+        overrides: [
+          betaFeedbackSinkProvider.overrideWithValue(sink),
+          betaFeedbackDestinationProvider.overrideWithValue(
+            const BetaFeedbackDestination(channelLabel: 'Questra Beta受付'),
+          ),
+        ],
         child: const MaterialApp(home: BetaFeedbackScreen()),
       ),
     );
@@ -40,6 +45,7 @@ void main() {
     expect(sink.report!.draft.severity, BetaFeedbackSeverity.s2);
     expect(sink.report!.draft.summary, 'Questカードを開けない');
     expect(find.textContaining('報告内容をコピーしました'), findsOneWidget);
+    expect(find.textContaining('Questra Beta受付'), findsWidgets);
   });
 
   testWidgets('Settings opens the beta feedback route', (tester) async {

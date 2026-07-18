@@ -1581,7 +1581,7 @@ items:
       - Windows and Edge are available; Android and iOS device execution remain pending.
   - id: QST-164
     title: Beta Support Operations Activation
-    status: Planned
+    status: In Progress
     priority: P0
     epic: BETA-GO-LIVE
     depends_on: [QST-128, QST-129]
@@ -1593,6 +1593,9 @@ items:
     acceptance:
       - Testers have a working destination for copied feedback reports.
       - Open S0 and S1 counts are auditable for the candidate.
+    progress:
+      - Configurable tester-visible channel, operations evidence, issue register, and strict verifier are implemented.
+      - Approved private destination, named daily owner, and first verified S0/S1 count remain pending.
   - id: QST-165
     title: Legal and Privacy Sign-Off Closure
     status: Planned

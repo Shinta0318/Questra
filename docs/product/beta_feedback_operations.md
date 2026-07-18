@@ -36,6 +36,9 @@ from the tester, and no new feedback table is required before the beta channel
 is finalized. `BetaFeedbackSink` is the replacement boundary for a future
 approved persistence or issue-tracker destination.
 
+承認済み窓口名はcandidate buildへ`QUESTRA_BETA_FEEDBACK_CHANNEL`として渡す。未設定時はアプリに
+「準備中」と表示し、存在しない窓口への送信完了を示さない。clipboardへのcopy成功はdelivery確認ではない。
+
 Issue labels, priority, stop conditions, and QST conversion are defined in
 `docs/product/beta_issue_labeling_rules.md`. The Flutter triage service applies
 the same deterministic rules without sending feedback text to an external AI.
@@ -88,3 +91,15 @@ Internal beta can expand only when:
 - RLS readiness script passes.
 - Latest feedback batch has been triaged into fix, defer, or QST candidate.
 - Crash/error evidence follows the approved schema and contains no prohibited payload.
+
+## Operations Evidence Gate
+
+窓口、日次担当、SLAは`docs/qst/BETA_FEEDBACK_OPERATIONS.yaml`、S0/S1台帳は
+`docs/qst/BETA_ISSUE_REGISTER.yaml`をsource of truthとする。
+
+```powershell
+dart run tools/qst/verify_beta_feedback_readiness.dart
+dart run tools/qst/verify_beta_feedback_readiness.dart --require-operations
+```
+
+strict gateはtester-visible窓口、実名のtriage owner、SLA、台帳の集計時刻、open S0/S1件数の一致を要求する。

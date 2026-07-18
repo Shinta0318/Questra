@@ -1,0 +1,28 @@
+version: 1
+status: activation_pending
+updated_at_utc: null
+destination:
+  status: pending
+  channel_label: null
+  configuration_key: QUESTRA_BETA_FEEDBACK_CHANNEL
+  tester_access_verified_at_utc: null
+daily_triage:
+  status: pending
+  owner_role: Release Manager
+  owner_name: null
+  timezone: Asia/Tokyo
+  review_time_local: "10:00"
+sla:
+  S0: acknowledge_within_1_hour_and_stop_expansion
+  S1: assign_owner_and_qst_within_24_hours
+  S2: review_twice_weekly
+  S3: review_weekly_when_repeated
+issue_register:
+  path: docs/qst/BETA_ISSUE_REGISTER.yaml
+  open_s0_verified: false
+  open_s1_verified: false
+guardrails:
+  destination_must_be_visible_to_testers: true
+  clipboard_is_not_delivery_confirmation: true
+  credential_values_recorded: false
+  private_journey_content_recorded: false

@@ -43,6 +43,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final destination = ref.watch(betaFeedbackDestinationProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Betaフィードバック')),
       body: QuestraScreenSurface(
@@ -70,13 +71,13 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
                             children: [
                               Text(
                                 '航路で気づいたことを教えてください',
-                                style: Theme.of(context).textTheme.titleLarge
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
                                     ?.copyWith(fontWeight: FontWeight.w900),
                               ),
                               const SizedBox(height: AppSpacing.xs),
-                              const Text(
-                                '内容を構造化してコピーします。案内されたBeta窓口へ貼り付けてください。',
-                              ),
+                              Text(destination.guidance),
                             ],
                           ),
                         ),
@@ -95,8 +96,8 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
                     Text(
                       '報告内容',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                            fontWeight: FontWeight.w900,
+                          ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     DropdownButtonFormField<BetaFeedbackSurface>(
@@ -216,9 +217,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
       actual: _actualController.text,
     );
     try {
-      final report = ref
-          .read(betaFeedbackServiceProvider)
-          .createReport(
+      final report = ref.read(betaFeedbackServiceProvider).createReport(
             draft: draft,
             testerId: profile?.id ?? 'anonymous-beta',
             buildVersion: _buildVersion,
@@ -226,7 +225,11 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
       await ref.read(betaFeedbackSinkProvider).submit(report);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('報告内容をコピーしました。案内されたBeta窓口へ貼り付けてください。')),
+        SnackBar(
+          content: Text(
+            ref.read(betaFeedbackDestinationProvider).copiedMessage,
+          ),
+        ),
       );
     } catch (_) {
       if (!mounted) return;

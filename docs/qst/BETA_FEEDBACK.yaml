@@ -110,6 +110,11 @@ automation:
     - stops_beta_expansion
   deterministic: true
   external_ai_required: false
+operations_activation:
+  evidence: docs/qst/BETA_FEEDBACK_OPERATIONS.yaml
+  issue_register: docs/qst/BETA_ISSUE_REGISTER.yaml
+  candidate_channel_define: QUESTRA_BETA_FEEDBACK_CHANNEL
+  clipboard_is_delivery_confirmation: false
 error_capture:
   status: prepared
   plan: docs/product/beta_crash_error_capture_plan.md

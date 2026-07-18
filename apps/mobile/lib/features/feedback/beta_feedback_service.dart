@@ -12,6 +12,31 @@ final betaFeedbackSinkProvider = Provider<BetaFeedbackSink>((ref) {
   return const ClipboardBetaFeedbackSink();
 });
 
+final betaFeedbackDestinationProvider =
+    Provider<BetaFeedbackDestination>((ref) {
+  return BetaFeedbackDestination.fromEnvironment;
+});
+
+class BetaFeedbackDestination {
+  const BetaFeedbackDestination({required this.channelLabel});
+
+  static const fromEnvironment = BetaFeedbackDestination(
+    channelLabel: String.fromEnvironment('QUESTRA_BETA_FEEDBACK_CHANNEL'),
+  );
+
+  final String channelLabel;
+
+  bool get isConfigured => channelLabel.trim().isNotEmpty;
+
+  String get guidance => isConfigured
+      ? '内容を構造化してコピーします。コピー後、${channelLabel.trim()}へ貼り付けてください。'
+      : 'Beta窓口は準備中です。内容はコピーできるので、ベータ運営担当者へ共有してください。';
+
+  String get copiedMessage => isConfigured
+      ? '報告内容をコピーしました。${channelLabel.trim()}へ貼り付けてください。'
+      : '報告内容をコピーしました。ベータ運営担当者へ共有してください。';
+}
+
 class BetaFeedbackService {
   const BetaFeedbackService();
 
@@ -29,9 +54,8 @@ class BetaFeedbackService {
       id: 'beta-${createdAt.microsecondsSinceEpoch}',
       createdAt: createdAt,
       testerId: testerId.trim().isEmpty ? 'anonymous-beta' : testerId.trim(),
-      buildVersion: buildVersion.trim().isEmpty
-          ? 'local-beta'
-          : buildVersion.trim(),
+      buildVersion:
+          buildVersion.trim().isEmpty ? 'local-beta' : buildVersion.trim(),
       draft: BetaFeedbackDraft(
         surface: draft.surface,
         type: draft.type,

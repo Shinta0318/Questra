@@ -58,7 +58,8 @@ p0_blockers:
   - id: BLK-004
     title: Beta Operations
     owner: Release Manager
-    status: evidence_missing
+    status: partial_evidence
+    progress: QST-164 channel configuration, SLA, issue register, and strict verifier are ready; approved destination and named daily owner remain pending.
     resolution_qst: QST-164
   - id: BLK-005
     title: Legal Sign-Off

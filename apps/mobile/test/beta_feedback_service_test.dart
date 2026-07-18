@@ -58,4 +58,15 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('feedback destination is explicit and safe when unconfigured', () {
+    const pending = BetaFeedbackDestination(channelLabel: '');
+    const configured = BetaFeedbackDestination(channelLabel: 'Questra Beta受付');
+
+    expect(pending.isConfigured, isFalse);
+    expect(pending.guidance, contains('準備中'));
+    expect(configured.isConfigured, isTrue);
+    expect(configured.guidance, contains('Questra Beta受付'));
+    expect(configured.copiedMessage, contains('Questra Beta受付'));
+  });
 }
