@@ -53,7 +53,7 @@ p0_blockers:
     title: Candidate Artifact and Device Evidence
     owner: Release Manager
     status: partial_evidence
-    progress: QST-159 recorded validated source and rollback commits; artifact and device evidence remain missing.
+    progress: QST-163 candidate-bound device evidence contract is ready; Android, compact, large-text, keyboard, tablet, and conditional iOS execution remain pending.
     resolution_qst: QST-163,QST-166
   - id: BLK-004
     title: Beta Operations

@@ -1564,7 +1564,7 @@ items:
       - Dedicated Beta account execution remains required before completion.
   - id: QST-163
     title: Real Device Beta Validation Evidence
-    status: Planned
+    status: In Progress
     priority: P0
     epic: BETA-GO-LIVE
     depends_on: [QST-159]
@@ -1576,6 +1576,9 @@ items:
     acceptance:
       - Candidate commit and device details accompany every result.
       - Home, Quest, Mission, Arc, owner switch, and fallback flows have no P0 failure.
+    progress:
+      - Candidate-bound device evidence schema and strict verifier are implemented.
+      - Windows and Edge are available; Android and iOS device execution remain pending.
   - id: QST-164
     title: Beta Support Operations Activation
     status: Planned
