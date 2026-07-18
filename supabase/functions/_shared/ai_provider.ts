@@ -37,6 +37,7 @@ async function generateWithGemini(
     model: Deno.env.get("GEMINI_MODEL") ?? "gemini-3.5-flash",
     input: JSON.stringify(options.input),
     system_instruction: options.systemInstruction,
+    store: false,
   };
   if (options.responseSchema) {
     body.response_format = {

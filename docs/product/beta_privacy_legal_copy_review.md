@@ -13,7 +13,9 @@ Terms of Serviceは引き続きDraftであり、外部BetaまたはStore配布�
 | Persistence | 接続時はSupabase、未接続時はin-memory fallback | 保存保証の違いを明記 |
 | Arc Chat | message、recent history、Quest/Mission/Trail/Memory contextをEdge Functionへ送信 | 外部処理範囲を明記 |
 | Quest Guide | Quest detailをEdge Functionへ送信 | Guide生成対象を明記 |
-| Model provider | server key設定時はOpenAI Responses API | Supabaseだけという旧Draftを修正 |
+| Model provider | Gemini Interactions APIが既定、OpenAIは明示互換 | provider、fallback、互換経路を明記 |
+| Gemini storage | requestは`store=false` | server-side state保存を既定で無効化 |
+| Supabase region | Questra BetaはTokyo (`ap-northeast-1`) | primary regionを明記 |
 | Arc fallback | 未設定・失敗時はlocal response | 継続可能だがremote成功と誤認させない |
 | Feedback | clipboard handoff | 自動送信しないと明記 |
 | Crash capture | external provider disabled | 自動収集中と表現しない |
@@ -33,9 +35,11 @@ Terms of Serviceは引き続きDraftであり、外部BetaまたはStore配布�
 - 個人情報保護委員会は、保有個人データの利用目的や開示・訂正等の手続を本人が知り得る
   状態に置く考え方を示している。
   https://www.ppc.go.jp/personalinfo/legal/guidelines/
-- OpenAI APIは既定でinput/outputをmodel trainingに使用しない一方、endpointや契約条件に
-  応じたabuse monitoring retentionがあり得るため、provider利用と保持条件を分けて説明する。
-  https://platform.openai.com/docs/models/default-usage-policies-by-endpoint
+- Gemini APIはpaid/unpaid serviceでdata use条件が異なるため、外部Beta前にbilling状態を確認する。
+  https://ai.google.dev/gemini-api/terms
+- Gemini Interactions APIはrequest storageを設定でき、project logの保持期間も設定対象である。
+  Questraはcode上`store=false`とし、AI Studio側logging設定も別途確認する。
+  https://ai.google.dev/gemini-api/docs/logs-policy
 - このレビューは法的助言ではない。対象地域と運営主体を確定したLegal Reviewerが最終判断する。
 
 ## Open Blockers
@@ -43,14 +47,24 @@ Terms of Serviceは引き続きDraftであり、外部BetaまたはStore配布�
 1. 運営会社・住所・代表者または正式なサービス提供者情報。
 2. Privacy / support contactとdata request受付手順。
 3. 対象地域、年齢条件、準拠法、紛争解決、consumer law確認。
-4. Supabase project region、DPA、subprocessor、backup retention。
-5. OpenAI projectのretention設定、data control、model/provider変更手順。
+4. Supabase DPA、subprocessor、backup retention（primary regionはTokyoで確認済み）。
+5. Gemini paid service、project logging、provider retention、model/provider変更手順。
 6. Account deletion、export、correction、consent withdrawalの実処理。
 7. External Beta testerから取得する明示同意とversioned acceptance evidence。
 
 ## Exit Criteria
 
 - Settingsで保存、Arc外部処理、Feedback、Crash、未提供操作を日本語で確認できる。
-- Privacy DraftがSupabaseとconditional OpenAI API利用を正確に示す。
+- Privacy DraftがSupabase、Gemini-first、conditional OpenAI互換利用を正確に示す。
 - Terms Draftが生成結果の限界とhigh-stakes boundaryを示す。
 - External distribution blockerとhuman legal review ownerが明示されている。
+
+## Sign-Off Gate
+
+`docs/qst/BETA_LEGAL_SIGNOFF.yaml`へversion、運営主体、contact、対象地域、保持条件、provider設定、
+Product OwnerとLegal Reviewerの承認を記録する。秘密値や署名画像は保存しない。
+
+```powershell
+dart run tools/qst/verify_beta_privacy_copy_readiness.dart
+dart run tools/qst/verify_beta_privacy_copy_readiness.dart --require-signoff
+```

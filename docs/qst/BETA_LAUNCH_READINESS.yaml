@@ -64,7 +64,8 @@ p0_blockers:
   - id: BLK-005
     title: Legal Sign-Off
     owner: Product Owner
-    status: evidence_missing
+    status: partial_evidence
+    progress: QST-165 copy now matches Gemini-first and Tokyo deployment; operator, contacts, retention, provider project settings, and human sign-offs remain pending.
     resolution_qst: QST-165
 go_requirements:
   open_s0: 0

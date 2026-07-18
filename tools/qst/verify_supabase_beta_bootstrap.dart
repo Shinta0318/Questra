@@ -104,6 +104,7 @@ void main(List<String> arguments) {
     'gemini-3.5-flash',
     'AI_PROVIDER',
     'OPENAI_API_KEY',
+    'store: false',
   ]) {
     _expect(aiProvider, snippet, aiProviderPath, failures);
   }
@@ -120,13 +121,12 @@ void main(List<String> arguments) {
     );
   }
 
-  final migrations =
-      Directory('supabase/migrations')
-          .listSync()
-          .whereType<File>()
-          .where((file) => file.path.endsWith('.sql'))
-          .toList()
-        ..sort((left, right) => left.path.compareTo(right.path));
+  final migrations = Directory('supabase/migrations')
+      .listSync()
+      .whereType<File>()
+      .where((file) => file.path.endsWith('.sql'))
+      .toList()
+    ..sort((left, right) => left.path.compareTo(right.path));
   if (migrations.isEmpty) {
     failures.add('No migration files found.');
   } else {

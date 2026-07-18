@@ -69,9 +69,10 @@ class TrustPrivacyReviewService {
           area: TrustPrivacyArea.aiTransparency,
           title: 'Arcの生成機能',
           summary:
-              '外部生成が有効な場合、入力、直近の会話、進行中のQuest、最近のMission・Trail、選ばれたArc MemoryをSupabase Edge Function経由でOpenAI APIへ送ります。',
+              '外部生成が有効な場合、入力、直近の会話、進行中のQuest、最近のMission・Trail、選ばれたArc MemoryをSupabase Edge Function経由でGemini APIへ送ります。OpenAI互換経路は運営側が明示設定した場合だけ利用します。',
           statusLabel: '外部処理あり',
-          userControl: '未設定・失敗時は端末内の応答へ切り替わります。生成内容は誤ることがあるため、重要な判断では確認してください。',
+          userControl:
+              'Geminiへのrequest保存は無効化しています。未設定・失敗時は端末内の応答へ切り替わります。生成内容は誤ることがあるため、重要な判断では確認してください。',
         ),
         TrustPrivacyReviewItem(
           area: TrustPrivacyArea.questSupport,
@@ -85,7 +86,7 @@ class TrustPrivacyReviewService {
           title: 'RLS / 所有者管理',
           summary: 'ユーザーごとのデータを分離し、他のユーザーのPrivateデータを表示しない設計を前提にします。',
           statusLabel: '検証対象',
-          userControl: 'Beta前にRLS検証と実クラウド環境確認を継続します。',
+          userControl: '東京リージョンのBeta環境でRLSを検証しています。実アカウント分離の確認を継続します。',
         ),
       ],
       betaNotices: [

@@ -36,6 +36,13 @@ Users should not submit secrets or another person's private information to Arc.
 The current provider and data flow are described in the beta privacy notice and
 Privacy Policy draft.
 
+## Beta Eligibility
+
+Until human legal review confirms the final age policy and provider terms, the
+external Beta is restricted to participants aged 18 or older. The app must not
+enable remote Gemini generation for an audience that does not satisfy the
+provider's applicable age and region requirements.
+
 ## Media Uploads
 
 Users are responsible for images and other media they upload. Private Trail
@@ -66,3 +73,4 @@ seek qualified professional support for high-stakes decisions.
 - Add age restrictions if required.
 - Confirm consumer law requirements for target release regions.
 - Confirm generated-content notices and third-party provider terms.
+- Confirm the age rule above through human legal review before distribution.

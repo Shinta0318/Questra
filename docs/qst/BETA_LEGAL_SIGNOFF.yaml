@@ -1,0 +1,43 @@
+version: 1
+status: signoff_pending
+document_version: "2026-07-18-draft.1"
+updated_at_utc: null
+operator:
+  legal_name: null
+  service_address: null
+privacy_contact: null
+support_contact: null
+audience:
+  target_region: Japan internal beta
+  minimum_age: 18
+  age_rule_legally_verified: false
+supabase:
+  project_ref: dhbmgwarnrtelrcrmmfk
+  primary_region: ap-northeast-1
+  region_verified: true
+  dpa_verified: false
+  subprocessors_verified: false
+ai_provider:
+  default: gemini
+  compatibility: openai_explicit_only
+  request_store: false
+  paid_service_verified: false
+  logging_disabled_verified: false
+  provider_retention_verified: false
+retention:
+  crash_error_days: 30
+  account_data_retention_verified: false
+  supabase_backup_retention_verified: false
+data_requests:
+  request_procedure_verified: false
+  account_deletion_available: false
+  data_export_available: false
+  correction_available: false
+  consent_withdrawal_available: false
+signoffs:
+  legal_reviewer: pending
+  product_owner: pending
+guardrails:
+  external_distribution_before_approval: false
+  credential_values_recorded: false
+  signatures_recorded_in_repository: false

@@ -26,9 +26,10 @@ recent conversation history, active Quest, recent Missions and Trails, and a
 limited set of relevant Arc Memory records. Quest Guide may process the target
 Quest title, description, category, difficulty, and target date.
 
-The Flutter app sends this context to Supabase Edge Functions. When the server
-has an OpenAI API key configured, the Edge Function sends the required context
-to the OpenAI API. If remote generation is unavailable, Questra uses a local
+The Flutter app sends this context to Supabase Edge Functions. The MVP/Beta
+default provider is the Gemini API. The OpenAI compatibility path is used only
+when the operator explicitly selects it. Gemini Interactions requests set
+`store=false`; if remote generation is unavailable, Questra uses a local
 fallback response. Arc Chat text is not currently stored as a standalone chat
 history table, although derived Arc Memory may be stored.
 
@@ -61,7 +62,8 @@ explicitly asks the user to share it.
 
 ## Data Retention and Deletion
 
-Before public release, Questra must document:
+Crash/error evidence is retained for 30 days under the current Beta operations
+plan. Before public release, Questra must document:
 
 - How users request account deletion.
 - How users request deletion of Quest, Mission, Trail, Arc Memory, and media
@@ -71,9 +73,11 @@ Before public release, Questra must document:
 ## Third-Party Services
 
 Questra uses Supabase for authentication, database, storage, and Edge Function
-infrastructure. When configured, Questra uses the OpenAI API for Arc Chat and
-Quest Guide generation. Provider data controls, retention, project region, and
-processor terms must be confirmed before external beta distribution.
+infrastructure. The Beta Supabase project uses the Tokyo region. When configured,
+Questra uses the Gemini API for Arc Chat and Quest Guide generation. An OpenAI
+compatibility path remains available only through explicit server configuration.
+Gemini billing tier, project logging settings, provider retention, and processor
+terms must be confirmed before external beta distribution.
 
 The in-app beta feedback form currently copies a report to the clipboard and
 does not automatically submit it. External crash reporting is currently
@@ -91,4 +95,5 @@ Add a support and privacy contact address before public release.
 - Add user rights language for applicable jurisdictions.
 - Add children's privacy language if required.
 - Add final retention periods.
-- Confirm OpenAI project data controls and disclose provider changes.
+- Confirm Gemini paid-service status, logging settings, and provider retention.
+- Confirm any explicitly enabled OpenAI compatibility project data controls.

@@ -1598,7 +1598,7 @@ items:
       - Approved private destination, named daily owner, and first verified S0/S1 count remain pending.
   - id: QST-165
     title: Legal and Privacy Sign-Off Closure
-    status: Planned
+    status: In Progress
     priority: P0
     epic: BETA-GO-LIVE
     depends_on: [QST-127, QST-164]
@@ -1611,6 +1611,9 @@ items:
     acceptance:
       - Legal Reviewer signs the same versioned copy distributed to testers.
       - Provider and data request details match the deployed environment.
+    progress:
+      - Gemini-first privacy copy, request storage opt-out, Tokyo region evidence, and versioned sign-off gate are implemented.
+      - Operator, contacts, provider project settings, final retention, data request operations, and human sign-offs remain pending.
   - id: QST-166
     title: Beta Candidate Build and Distribution
     status: Planned

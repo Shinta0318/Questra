@@ -67,6 +67,8 @@ powershell -ExecutionPolicy Bypass -File tools/qst/bootstrap_supabase_beta.ps1 `
 MVP/Betaの既定AI経路はGemini stable Interactions APIである。`GEMINI_API_KEY`はEdge Functionの
 server-side secretとしてのみ保存する。OpenAI互換経路は`AI_PROVIDER=openai`を明示した場合だけ使用し、
 provider障害時に別providerへ暗黙送信しない。選択providerが利用できない場合はArcのローカルfallbackへ戻る。
+Gemini Interactions requestは`store=false`で送信する。外部Beta前にGemini projectがpaid serviceであること、
+AI Studioのlogging設定、provider retentionをLegal/Privacy gateで確認する。
 
 remote schemaをDashboardやSQL Editorで直接変更しない。すべてのschema変更はtimestamp付きmigrationを
 経由させ、履歴不一致がある場合は自動repairせず、`supabase migration list`の差分をレビューする。

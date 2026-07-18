@@ -22,7 +22,9 @@ void main() {
     final arcGeneration = review.items.firstWhere(
       (item) => item.area == TrustPrivacyArea.aiTransparency,
     );
-    expect(arcGeneration.summary, contains('OpenAI API'));
+    expect(arcGeneration.summary, contains('Gemini API'));
+    expect(arcGeneration.summary, contains('OpenAI互換経路'));
+    expect(arcGeneration.userControl, contains('request保存は無効'));
     expect(arcGeneration.summary, contains('Arc Memory'));
     expect(arcGeneration.userControl, contains('誤ることがある'));
     expect(

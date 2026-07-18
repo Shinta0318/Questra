@@ -28,8 +28,10 @@ Edge Functionへ送ります。
 - 関連度の高い少数のArc Memory。
 - Quest Guideで対象となるQuestのtitle、description、category、difficulty、target date。
 
-Edge Functionは、server側でOpenAI API keyが設定されている場合にOpenAI APIへこれらの
-文脈を送ります。未設定、通信失敗、応答不備の場合はlocal responseへ切り替わります。
+Edge Functionは、server側でGemini API keyが設定されている場合にGemini APIへこれらの
+文脈を送ります。Gemini Interactions APIへのrequestは`store=false`で送信します。OpenAI互換経路は、
+運営側がserver設定で明示的に選んだ場合だけ利用します。未設定、通信失敗、応答不備の場合は
+local responseへ切り替わります。
 生成内容は誤ることがあるため、医療、法律、金融、安全に関わる判断へそのまま利用しないで
 ください。入力には秘密情報や第三者の個人情報を含めないでください。
 
@@ -40,6 +42,8 @@ Edge Functionは、server側でOpenAI API keyが設定されている場合にOp
 - 外部Crash collectorは現在無効です。自動収集を開始する前に収集項目、保持期間、送信先を
   再レビューします。
 - Crash証跡へQuest、Mission、Trail、Arc Memory、Arc Chat本文を含めません。
+- 現在の内部Beta障害証跡は30日保持する運用です。Account、Quest、Mission、Trail、Arc Memory、
+  Supabase backup、Gemini provider側の最終保持期間は外部配布前に確定します。
 
 ## 現在利用できない操作
 
@@ -48,8 +52,10 @@ Edge Functionは、server側でOpenAI API keyが設定されている場合にOp
 
 ## 外部サービス
 
-- Supabase: authentication、database、storage、Edge Functions。
-- OpenAI API: server設定時のArc Chat / Quest Guide生成。
+- Supabase: authentication、database、storage、Edge Functions。Beta projectのprimary regionは東京です。
+- Gemini API: server設定時のArc Chat / Quest Guide生成。外部Beta前にpaid service、logging設定、
+  provider retentionを確認します。
+- OpenAI互換経路: 運営側がserver設定で明示した場合だけ利用します。
 
 Analytics、Crash reporting、Paymentなど新しいproviderを追加する場合は、自動的に有効化せず、
 この説明とPrivacy Policyを先に更新します。
