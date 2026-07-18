@@ -88,11 +88,14 @@ if (-not (Test-Path -LiteralPath $secretPath)) {
   throw "Secret env file was not found: $SecretEnvFile"
 }
 $secretContent = Get-Content -LiteralPath $secretPath
-if (-not ($secretContent -match '^OPENAI_API_KEY=.+')) {
-  throw 'Secret env file must define OPENAI_API_KEY.'
+if (-not ($secretContent -match '^AI_PROVIDER=gemini$')) {
+  throw 'Beta secret env file must define AI_PROVIDER=gemini.'
 }
-if ($secretContent -match 'replace-with-server-side-secret') {
-  throw 'Replace the example OPENAI_API_KEY before bootstrap.'
+if (-not ($secretContent -match '^GEMINI_API_KEY=.+')) {
+  throw 'Beta secret env file must define GEMINI_API_KEY.'
+}
+if ($secretContent -match '^GEMINI_API_KEY=replace-with-server-side-secret$') {
+  throw 'Replace the example GEMINI_API_KEY before bootstrap.'
 }
 
 $cliVersion = Invoke-SupabaseCommand @('--version')
@@ -127,8 +130,10 @@ Invoke-SupabaseCommand @(
   'secrets', 'set', '--project-ref', $ProjectRef, '--env-file', $SecretEnvFile
 ) | Out-Null
 $secretList = Invoke-SupabaseCommand @('secrets', 'list', '--project-ref', $ProjectRef)
-if (-not $secretList.Contains('OPENAI_API_KEY')) {
-  throw 'Remote secret list does not contain OPENAI_API_KEY.'
+foreach ($requiredSecret in @('AI_PROVIDER', 'GEMINI_API_KEY')) {
+  if (-not $secretList.Contains($requiredSecret)) {
+    throw "Remote secret list does not contain $requiredSecret."
+  }
 }
 
 $deployedAt = [DateTime]::UtcNow.ToString('o')
@@ -173,8 +178,11 @@ $lines.Add('  status: verified')
 $lines.Add('  storage: server_side_only')
 $lines.Add('  values_recorded: false')
 $lines.Add('  required_names:')
-$lines.Add('    - OPENAI_API_KEY')
+$lines.Add('    - AI_PROVIDER')
+$lines.Add('    - GEMINI_API_KEY')
 $lines.Add('  optional_names:')
+$lines.Add('    - GEMINI_MODEL')
+$lines.Add('    - OPENAI_API_KEY')
 $lines.Add('    - OPENAI_MODEL')
 $lines.Add('client_configuration:')
 $lines.Add('  status: pending_candidate_run')
@@ -183,6 +191,7 @@ $lines.Add('    - SUPABASE_URL')
 $lines.Add('    - SUPABASE_ANON_KEY')
 $lines.Add('  prohibited_dart_defines:')
 $lines.Add('    - SUPABASE_SERVICE_ROLE_KEY')
+$lines.Add('    - GEMINI_API_KEY')
 $lines.Add('    - OPENAI_API_KEY')
 $lines.Add('guardrails:')
 $lines.Add('  local_fallback_is_cloud_evidence: false')

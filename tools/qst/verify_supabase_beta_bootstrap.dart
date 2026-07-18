@@ -4,6 +4,7 @@ const configPath = 'supabase/config.toml';
 const evidencePath = 'docs/qst/BETA_SUPABASE_PROJECT.yaml';
 const runbookPath = 'docs/product/supabase_beta_project_bootstrap.md';
 const bootstrapPath = 'tools/qst/bootstrap_supabase_beta.ps1';
+const aiProviderPath = 'supabase/functions/_shared/ai_provider.ts';
 
 const requiredFunctions = [
   'arc-chat',
@@ -40,6 +41,7 @@ void main(List<String> arguments) {
   final evidence = _readRequired(evidencePath, failures);
   final runbook = _readRequired(runbookPath, failures);
   final bootstrap = _readRequired(bootstrapPath, failures);
+  final aiProvider = _readRequired(aiProviderPath, failures);
   final gitignore = _readRequired('.gitignore', failures);
 
   for (final snippet in requiredStaticConfig) {
@@ -90,8 +92,32 @@ void main(List<String> arguments) {
     "'secrets', 'set'",
     "'functions', 'deploy'",
     'status: verified',
+    'AI_PROVIDER=gemini',
+    'GEMINI_API_KEY',
   ]) {
     _expect(bootstrap, snippet, bootstrapPath, failures);
+  }
+
+  for (final snippet in [
+    'https://generativelanguage.googleapis.com/v1/interactions',
+    'GEMINI_API_KEY',
+    'gemini-3.5-flash',
+    'AI_PROVIDER',
+    'OPENAI_API_KEY',
+  ]) {
+    _expect(aiProvider, snippet, aiProviderPath, failures);
+  }
+  for (final functionName in ['arc-chat', 'arc-quest-guide']) {
+    final source = _readRequired(
+      'supabase/functions/$functionName/index.ts',
+      failures,
+    );
+    _expect(
+      source,
+      '../_shared/ai_provider.ts',
+      'supabase/functions/$functionName/index.ts',
+      failures,
+    );
   }
 
   final migrations =
@@ -114,6 +140,7 @@ void main(List<String> arguments) {
       r'openai_api_key\s*[:=]\s*\S*sk-[A-Za-z0-9_-]+',
       caseSensitive: false,
     ),
+    RegExp(r'gemini_api_key\s*[:=]\s*\S{20,}', caseSensitive: false),
     RegExp(r'supabase_db_password\s*[:=]\s*\S+', caseSensitive: false),
   ];
   for (final pattern in secretValuePatterns) {

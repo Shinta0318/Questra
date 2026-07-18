@@ -23,7 +23,7 @@ hosted projectとの関連付けは`supabase link --project-ref`で行い、CLI�
 2. Regionは対象testerとPrivacy copyに整合するものを選び、作成後は変更しない。
 3. Engineering Ownerを1名決め、database passwordとaccess tokenをpassword managerで管理する。
 4. Supabase CLIをインストールし、repository rootで`supabase login`を完了する。
-5. `supabase/functions/.env.example`を`supabase/functions/.env.beta.local`へ複製し、実値を安全に設定する。
+5. `supabase/functions/.env.example`を`supabase/functions/.env.beta.local`へ複製し、`AI_PROVIDER=gemini`とGemini API keyを安全に設定する。
 
 `.env.beta.local`、service-role key、database password、personal access token、provider API keyは
 commit、QST Report、screenshot、terminal logへ残してはいけない。
@@ -63,6 +63,10 @@ powershell -ExecutionPolicy Bypass -File tools/qst/bootstrap_supabase_beta.ps1 `
 5. `supabase secrets set --env-file`でserver-side secretを登録
 6. `supabase functions deploy <function-name>`で6つのEdge FunctionをJWT検証有効のままdeploy
 7. sanitized evidenceを`docs/qst/BETA_SUPABASE_PROJECT.yaml`へ生成
+
+MVP/Betaの既定AI経路はGemini stable Interactions APIである。`GEMINI_API_KEY`はEdge Functionの
+server-side secretとしてのみ保存する。OpenAI互換経路は`AI_PROVIDER=openai`を明示した場合だけ使用し、
+provider障害時に別providerへ暗黙送信しない。選択providerが利用できない場合はArcのローカルfallbackへ戻る。
 
 remote schemaをDashboardやSQL Editorで直接変更しない。すべてのschema変更はtimestamp付きmigrationを
 経由させ、履歴不一致がある場合は自動repairせず、`supabase migration list`の差分をレビューする。

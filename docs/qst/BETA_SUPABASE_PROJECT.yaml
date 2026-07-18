@@ -39,8 +39,11 @@ secrets:
   storage: server_side_only
   values_recorded: false
   required_names:
-    - OPENAI_API_KEY
+    - AI_PROVIDER
+    - GEMINI_API_KEY
   optional_names:
+    - GEMINI_MODEL
+    - OPENAI_API_KEY
     - OPENAI_MODEL
 client_configuration:
   status: not_verified
@@ -49,6 +52,7 @@ client_configuration:
     - SUPABASE_ANON_KEY
   prohibited_dart_defines:
     - SUPABASE_SERVICE_ROLE_KEY
+    - GEMINI_API_KEY
     - OPENAI_API_KEY
 guardrails:
   local_fallback_is_cloud_evidence: false

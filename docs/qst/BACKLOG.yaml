@@ -1524,7 +1524,8 @@ items:
     progress:
       - Local config, bootstrap runbook, sanitized evidence contract, and strict verifier are implemented.
       - Questra Beta project identity, Tokyo region, owner, and Dashboard access are verified.
-      - CLI link, migrations, Edge Functions, and server-side secret evidence remain required before completion.
+      - CLI link, ten migrations, six Edge Functions, and cloud RLS behavior are verified.
+      - Gemini provider secret registration and deployment of the Gemini-first Functions remain before completion.
   - id: QST-161
     title: Cloud Migration and RLS Evidence
     status: In Progress
