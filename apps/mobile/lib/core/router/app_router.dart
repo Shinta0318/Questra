@@ -3,10 +3,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/arc/arc_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/auth/forgot_password_screen.dart';
+import '../../features/auth/reset_password_screen.dart';
 import '../../features/auth/signup_screen.dart';
 import '../../features/feedback/beta_feedback_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/mission/mission_screen.dart';
+import '../../features/mission_support/mission_support_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/quest/quest_detail_screen.dart';
 import '../../features/quest/quest_form_screen.dart';
@@ -14,6 +17,7 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/quest/quest_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
+import '../../features/trail/trail_screen.dart';
 import '../../widgets/layout/questra_coming_soon_screen.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
@@ -35,6 +39,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SignupScreen(),
       ),
       GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.resetPassword,
+        builder: (context, state) => const ResetPasswordScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
       ),
@@ -47,10 +59,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const BetaFeedbackScreen(),
       ),
       GoRoute(
-        path: AppRoutes.trail,
+        path: AppRoutes.guild,
         builder: (context, state) => const QuestraComingSoonScreen(
-          featureName: 'Trail',
-          message: '挑戦の軌跡を、もっと美しく残せる場所を整えています。もう少しだけ待っていてね。',
+          featureName: 'Guild',
+          message: '近いQuestを持つ仲間と、安心してつながれる航路を準備しています。',
         ),
       ),
       StatefulShellRoute.indexedStack(
@@ -87,6 +99,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                           questId: state.pathParameters['questId']!,
                         ),
                       ),
+                      GoRoute(
+                        path: 'mission/:missionId/support',
+                        builder: (context, state) => MissionSupportScreen(
+                          missionId: state.pathParameters['missionId']!,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -108,11 +126,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.guild,
-                builder: (context, state) => const QuestraComingSoonScreen(
-                  featureName: 'Guild',
-                  message: '近いQuestを持つ仲間と、安心してつながれる航路を準備しています。',
-                ),
+                path: AppRoutes.trail,
+                builder: (context, state) => const TrailScreen(),
               ),
             ],
           ),

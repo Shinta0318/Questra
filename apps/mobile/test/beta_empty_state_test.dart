@@ -60,7 +60,11 @@ void main() {
             email: 'owner-a@example.com',
             password: 'password',
             nickname: 'Navigator A',
+            loginId: 'owner-a',
           );
+      await container
+          .read(authControllerProvider.notifier)
+          .login(identifier: 'owner-a', password: 'password');
       final ownerId = container.read(authControllerProvider).profile!.id;
       final quest = Quest(
         title: '自分の最初のQuest',
@@ -114,7 +118,11 @@ void main() {
             email: 'owner-b@example.com',
             password: 'password',
             nickname: 'Navigator B',
+            loginId: 'owner-b',
           );
+      await container
+          .read(authControllerProvider.notifier)
+          .login(identifier: 'owner-b', password: 'password');
       await _settleProviders();
 
       expect(container.read(questControllerProvider), isEmpty);

@@ -6,6 +6,7 @@ import 'package:questra/core/router/app_router.dart';
 import 'package:questra/core/router/app_routes.dart';
 import 'package:questra/features/arc/arc_screen.dart';
 import 'package:questra/features/mission/mission_screen.dart';
+import 'package:questra/features/trail/trail_screen.dart';
 import 'package:questra/widgets/layout/questra_coming_soon_screen.dart';
 import 'package:questra/widgets/navigation/questra_bottom_navigation.dart';
 import 'package:questra/widgets/navigation/questra_navigation_rail.dart';
@@ -16,7 +17,7 @@ void main() {
       AppRoutes.home,
       AppRoutes.quest,
       AppRoutes.arc,
-      AppRoutes.guild,
+      AppRoutes.trail,
       AppRoutes.profile,
     ]);
   });
@@ -139,11 +140,9 @@ void main() {
     expect(find.text('Questra'), findsWidgets);
   });
 
-  testWidgets('Trail route shows the shared Coming Soon surface', (
-    tester,
-  ) async {
+  testWidgets('Trail is an enabled primary Beta destination', (tester) async {
     await initializeDateFormatting('ja');
-    tester.view.physicalSize = const Size(1280, 1200);
+    tester.view.physicalSize = const Size(390, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -162,11 +161,14 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.byType(QuestraComingSoonScreen), findsOneWidget);
+    expect(find.byType(TrailScreen), findsOneWidget);
     expect(find.text('Trail'), findsWidgets);
-    expect(find.text('Coming Soon'), findsOneWidget);
-    expect(find.text('Homeへ戻る'), findsOneWidget);
-    expect(find.byType(QuestraBottomNavigation), findsNothing);
+    expect(find.text('Coming Soon'), findsNothing);
+    expect(find.byType(QuestraBottomNavigation), findsOneWidget);
+    final trailSemantics = tester
+        .widgetList<Semantics>(find.byType(Semantics))
+        .singleWhere((widget) => widget.properties.label == 'Trail');
+    expect(trailSemantics.properties.selected, isTrue);
   });
 
   testWidgets('Guild route hides unfinished community interactions', (
@@ -196,7 +198,7 @@ void main() {
     expect(find.text('Coming Soon'), findsOneWidget);
     expect(find.text('Guildの現在地'), findsNothing);
     expect(find.text('相談ドラフト'), findsNothing);
-    expect(find.byType(QuestraBottomNavigation), findsOneWidget);
+    expect(find.byType(QuestraBottomNavigation), findsNothing);
   });
 
   testWidgets('primary shell does not expose duplicate floating actions', (

@@ -5,6 +5,7 @@ import '../../core/config/supabase_config.dart';
 import 'quest_guide_repository.dart';
 import 'quest_milestone_repository.dart';
 import 'quest_milestone_service.dart';
+import 'quest_planning_feedback_repository.dart';
 import 'quest_repository.dart';
 import 'quest_template_library.dart';
 
@@ -37,4 +38,12 @@ final questMilestoneServiceProvider = Provider<QuestMilestoneService>((ref) {
 
 final questTemplateLibraryProvider = Provider<QuestTemplateLibrary>((ref) {
   return const QuestTemplateLibrary();
+});
+
+final questPlanningFeedbackRepositoryProvider =
+    Provider<QuestPlanningFeedbackRepository>((ref) {
+  if (SupabaseConfig.isConfigured) {
+    return SupabaseQuestPlanningFeedbackRepository(Supabase.instance.client);
+  }
+  return InMemoryQuestPlanningFeedbackRepository();
 });

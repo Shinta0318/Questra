@@ -4,6 +4,8 @@ export type GenerateAiTextOptions = {
   systemInstruction: string;
   input: unknown;
   responseSchema?: Record<string, unknown>;
+  maxOutputTokens?: number;
+  temperature?: number;
 };
 
 export type AiTextResult = {
@@ -11,6 +13,14 @@ export type AiTextResult = {
   provider: AiProvider;
   sourceType: string;
 };
+
+const GEMINI_INTERACTIONS_URL =
+  "https://generativelanguage.googleapis.com/v1beta/interactions";
+const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
+const DEFAULT_TIMEOUT_MS = 20_000;
+const DEFAULT_MAX_INPUT_CHARS = 16_000;
+const DEFAULT_MAX_OUTPUT_TOKENS = 512;
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
 
 export async function generateAiText(
   options: GenerateAiTextOptions,
@@ -31,13 +41,27 @@ async function generateWithGemini(
   options: GenerateAiTextOptions,
 ): Promise<AiTextResult | null> {
   const apiKey = Deno.env.get("GEMINI_API_KEY");
-  if (!apiKey) return null;
+  if (!apiKey) {
+    console.warn("Gemini request skipped: GEMINI_API_KEY is not configured.");
+    return null;
+  }
 
+  const model = Deno.env.get("GEMINI_MODEL") ?? DEFAULT_GEMINI_MODEL;
   const body: Record<string, unknown> = {
-    model: Deno.env.get("GEMINI_MODEL") ?? "gemini-3.5-flash",
-    input: JSON.stringify(options.input),
+    model,
+    input: boundedJson(options.input),
     system_instruction: options.systemInstruction,
     store: false,
+    generation_config: {
+      max_output_tokens: boundedInteger(
+        options.maxOutputTokens,
+        DEFAULT_MAX_OUTPUT_TOKENS,
+        128,
+        2_048,
+      ),
+      temperature: boundedNumber(options.temperature, 0.7, 0, 1.5),
+      thinking_level: "minimal",
+    },
   };
   if (options.responseSchema) {
     body.response_format = {
@@ -47,18 +71,15 @@ async function generateWithGemini(
     };
   }
 
-  const response = await fetch(
-    "https://generativelanguage.googleapis.com/v1/interactions",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify(body),
+  const response = await fetchWithRetry(GEMINI_INTERACTIONS_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey,
     },
-  );
-  if (!response.ok) return null;
+    body: JSON.stringify(body),
+  });
+  if (!response?.ok) return null;
 
   const data = await response.json() as Record<string, unknown>;
   const text = extractGeminiText(data);
@@ -77,14 +98,20 @@ async function generateWithOpenAi(
     model: Deno.env.get("OPENAI_MODEL") ?? "gpt-4.1-mini",
     input: [
       { role: "system", content: options.systemInstruction },
-      { role: "user", content: JSON.stringify(options.input) },
+      { role: "user", content: boundedJson(options.input) },
     ],
+    max_output_tokens: boundedInteger(
+      options.maxOutputTokens,
+      DEFAULT_MAX_OUTPUT_TOKENS,
+      128,
+      2_048,
+    ),
   };
   if (options.responseSchema) {
     body.text = { format: { type: "json_object" } };
   }
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
+  const response = await fetchWithRetry("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
@@ -92,13 +119,93 @@ async function generateWithOpenAi(
     },
     body: JSON.stringify(body),
   });
-  if (!response.ok) return null;
+  if (!response?.ok) return null;
 
   const data = await response.json() as Record<string, unknown>;
   const text = extractOpenAiText(data);
   return text
     ? { text, provider: "openai", sourceType: "openai_responses" }
     : null;
+}
+
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+): Promise<Response | null> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      envInteger("AI_REQUEST_TIMEOUT_MS", DEFAULT_TIMEOUT_MS, 5_000, 30_000),
+    );
+    try {
+      const response = await fetch(url, { ...init, signal: controller.signal });
+      if (response.ok) return response;
+
+      console.warn(
+        `AI provider request failed: status=${response.status}, attempt=${attempt + 1}`,
+      );
+      if (!RETRYABLE_STATUS.has(response.status) || attempt === 1) return null;
+      await delay(retryDelayMs(response, attempt));
+    } catch (error) {
+      const name = error instanceof Error ? error.name : "UnknownError";
+      console.warn(`AI provider request failed: ${name}, attempt=${attempt + 1}`);
+      if (attempt === 1) return null;
+      await delay(350);
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+  return null;
+}
+
+function retryDelayMs(response: Response, attempt: number) {
+  const retryAfter = Number(response.headers.get("retry-after"));
+  if (Number.isFinite(retryAfter) && retryAfter > 0) {
+    return Math.min(retryAfter * 1_000, 1_500);
+  }
+  return 350 * (attempt + 1);
+}
+
+function delay(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function boundedJson(value: unknown) {
+  const serialized = JSON.stringify(value) ?? "{}";
+  const limit = envInteger(
+    "AI_MAX_INPUT_CHARS",
+    DEFAULT_MAX_INPUT_CHARS,
+    2_000,
+    40_000,
+  );
+  return serialized.length <= limit
+    ? serialized
+    : `${serialized.substring(0, limit)}\n[context truncated]`;
+}
+
+function envInteger(name: string, fallback: number, min: number, max: number) {
+  return boundedInteger(Number(Deno.env.get(name)), fallback, min, max);
+}
+
+function boundedInteger(
+  value: number | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+function boundedNumber(
+  value: number | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
 }
 
 function extractGeminiText(data: Record<string, unknown>): string | null {

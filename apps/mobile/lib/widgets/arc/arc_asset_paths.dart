@@ -11,6 +11,7 @@ class ArcAssetPaths {
   static const worried = 'assets/characters/arc/arc_worried.png';
   static const lonely = 'assets/characters/arc/arc_lonely.png';
   static const celebrate = 'assets/characters/arc/arc_celebrate.png';
+  static const approvedPortrait = 'assets/mockups/arc_approved_reference.jpg';
 
   static String fromEmotion(ArcEmotion emotion) {
     return switch (emotion) {
@@ -28,7 +29,7 @@ class ArcAssetPaths {
     return ArcVisualAsset(
       type: ArcVisualAssetType.png,
       path: fromEmotion(emotion),
-      semanticLabel: 'Arc ${emotion.label} PNG expression',
+      semanticLabel: '星のナビゲーター Arc',
     );
   }
 }

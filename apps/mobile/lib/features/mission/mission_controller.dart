@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics/analytics_service.dart';
+import '../../core/estimation/effort_estimate.dart';
 import '../../core/persistence/persistence_sync_state.dart';
 import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_bond_growth_service.dart';
@@ -16,11 +17,13 @@ import '../quest/quest_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../quest/quest_model.dart';
 import '../quest/quest_progress_service.dart';
+import '../quest/route_replanning_repository.dart';
 import '../tagging/tagging_providers.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_event_model.dart';
 import '../trail/trail_providers.dart';
 import 'mission_generation_service.dart';
+import 'mission_contract_service.dart';
 import 'mission_model.dart';
 import 'mission_providers.dart';
 
@@ -33,8 +36,8 @@ final missionControllerProvider =
 
 final missionSyncControllerProvider =
     NotifierProvider<PersistenceSyncController, PersistenceSyncState>(
-      PersistenceSyncController.new,
-    );
+  PersistenceSyncController.new,
+);
 
 class MissionController extends Notifier<List<Mission>> {
   @override
@@ -63,9 +66,8 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   Mission? get todaysMission {
-    final openMissions = state
-        .where((mission) => mission.status == MissionStatus.todo)
-        .toList();
+    final openMissions =
+        state.where((mission) => mission.status == MissionStatus.todo).toList();
     if (openMissions.isEmpty) {
       return null;
     }
@@ -101,22 +103,43 @@ class MissionController extends Notifier<List<Mission>> {
     required MissionDifficulty difficulty,
     int? sortOrder,
     bool isToday = false,
+    EffortEstimate? effortEstimate,
+    String? id,
+    String? parentMissionId,
+    List<String> dependencyIds = const [],
+    MissionPriority priority = MissionPriority.normal,
+    String category = '実行',
+    String? estimatedCostLabel,
+    List<String> referenceHints = const [],
+    List<String> enterpriseSupportHints = const [],
+    int? difficultyScore,
+    int? estimatedDurationDays,
   }) {
-    final nextSortOrder =
-        sortOrder ??
+    final titleError = const MissionContractService().validateTitle(
+      questTitle: quest.title,
+      missionTitle: title,
+      existingTitles: state
+          .where((mission) => mission.questId == quest.id)
+          .map((mission) => mission.title),
+    );
+    if (titleError != null) {
+      throw ArgumentError.value(title, 'title', titleError);
+    }
+    final nextSortOrder = sortOrder ??
         state.where((mission) => mission.questId == quest.id).length;
     final clearedToday = isToday
         ? state
-              .where(
-                (mission) => mission.questId == quest.id && mission.isToday,
-              )
-              .map((mission) => mission.copyWith(isToday: false))
-              .toList(growable: false)
+            .where(
+              (mission) => mission.questId == quest.id && mission.isToday,
+            )
+            .map((mission) => mission.copyWith(isToday: false))
+            .toList(growable: false)
         : const <Mission>[];
     final clearedById = {
       for (final mission in clearedToday) mission.id: mission,
     };
     final mission = Mission(
+      id: id,
       questId: quest.id,
       questTitle: quest.title,
       title: title,
@@ -126,6 +149,16 @@ class MissionController extends Notifier<List<Mission>> {
       status: MissionStatus.todo,
       sortOrder: nextSortOrder,
       isToday: isToday,
+      effortEstimate: effortEstimate,
+      parentMissionId: parentMissionId,
+      dependencyIds: dependencyIds,
+      priority: priority,
+      category: category,
+      estimatedCostLabel: estimatedCostLabel,
+      referenceHints: referenceHints,
+      enterpriseSupportHints: enterpriseSupportHints,
+      difficultyScore: difficultyScore,
+      estimatedDurationDays: estimatedDurationDays,
     );
     state = [
       mission,
@@ -149,6 +182,20 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   void updateMission(Mission updatedMission) {
+    final titleError = const MissionContractService().validateTitle(
+      questTitle: updatedMission.questTitle,
+      missionTitle: updatedMission.title,
+      existingTitles: state
+          .where(
+            (mission) =>
+                mission.questId == updatedMission.questId &&
+                mission.id != updatedMission.id,
+          )
+          .map((mission) => mission.title),
+    );
+    if (titleError != null) {
+      throw ArgumentError.value(updatedMission.title, 'title', titleError);
+    }
     state = [
       for (final mission in state)
         if (mission.id == updatedMission.id) updatedMission else mission,
@@ -162,20 +209,74 @@ class MissionController extends Notifier<List<Mission>> {
     );
   }
 
+  void updateProgress(String missionId, int progressPercent) {
+    final mission = state.where((item) => item.id == missionId).firstOrNull;
+    if (mission == null) return;
+    final normalized = progressPercent.clamp(0, 100);
+    final updated = mission.copyWith(
+      progressPercent: normalized,
+      status: normalized == 100 ? MissionStatus.completed : MissionStatus.todo,
+    );
+    state = [
+      for (final item in state)
+        if (item.id == missionId) updated else item,
+    ];
+    _syncQuestProgress(updated.questId);
+    unawaited(
+      _persistMission(
+        updated,
+        sourceType: normalized == 100
+            ? ArcMemorySourceType.missionCompleted
+            : ArcMemorySourceType.missionCreated,
+        recordJourney: normalized == 100,
+      ),
+    );
+    if (normalized == 100) {
+      unawaited(_recordRouteProgressEvent(updated, 'completed'));
+    }
+  }
+
   void removeMission(String missionId) {
-    final questId = state
-        .where((mission) => mission.id == missionId)
-        .firstOrNull
-        ?.questId;
+    final questId =
+        state.where((mission) => mission.id == missionId).firstOrNull?.questId;
     state = state.where((mission) => mission.id != missionId).toList();
     if (questId != null) _syncQuestProgress(questId);
     unawaited(_deleteMission(missionId));
   }
 
+  void archiveForRoute(String missionId) {
+    final mission = state.where((item) => item.id == missionId).firstOrNull;
+    if (mission == null || mission.status == MissionStatus.completed) return;
+    final archived = mission.copyWith(routeState: MissionRouteState.removed);
+    state = state.where((item) => item.id != missionId).toList();
+    _syncQuestProgress(mission.questId);
+    unawaited(
+      _persistMission(
+        archived,
+        sourceType: ArcMemorySourceType.missionCreated,
+        recordJourney: false,
+      ),
+    );
+  }
+
+  void restoreForRoute(Mission mission) {
+    final restored = mission.copyWith(routeState: MissionRouteState.active);
+    state = [restored, ...state.where((item) => item.id != restored.id)];
+    _syncQuestProgress(restored.questId);
+    unawaited(
+      _persistMission(
+        restored,
+        sourceType: ArcMemorySourceType.missionCreated,
+        recordJourney: false,
+      ),
+    );
+  }
+
   void reorderForQuest(String questId, int oldIndex, int newIndex) {
-    final ordered =
-        state.where((mission) => mission.questId == questId).toList()
-          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final ordered = state
+        .where((mission) => mission.questId == questId)
+        .toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     if (oldIndex < 0 || oldIndex >= ordered.length) return;
     if (newIndex < 0 || newIndex >= ordered.length) return;
     final moved = ordered.removeAt(oldIndex);
@@ -222,15 +323,15 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   Mission? completeMission(String missionId) {
-    final completedMission = state
-        .where((mission) => mission.id == missionId)
-        .firstOrNull;
+    final completedMission =
+        state.where((mission) => mission.id == missionId).firstOrNull;
     if (completedMission == null ||
         completedMission.status == MissionStatus.completed) {
       return null;
     }
     final updatedMission = completedMission.copyWith(
       status: MissionStatus.completed,
+      progressPercent: 100,
     );
     state = [
       for (final mission in state)
@@ -242,9 +343,7 @@ class MissionController extends Notifier<List<Mission>> {
       trigger: ArcActionTrigger.missionCompleted,
     );
     unawaited(
-      ref
-          .read(analyticsServiceProvider)
-          .missionCompleted(
+      ref.read(analyticsServiceProvider).missionCompleted(
             userId: ref.read(authControllerProvider).profile?.id,
             difficulty: updatedMission.difficulty.name,
             hasQuest: updatedMission.questId.isNotEmpty,
@@ -257,9 +356,8 @@ class MissionController extends Notifier<List<Mission>> {
         sourceType: ArcMemorySourceType.missionCompleted,
       ),
     );
-    final trail = ref
-        .read(trailControllerProvider.notifier)
-        .addQuestTrail(
+    unawaited(_recordRouteProgressEvent(updatedMission, 'completed'));
+    final trail = ref.read(trailControllerProvider.notifier).addQuestTrail(
           questId: completedMission.questId,
           missionId: completedMission.id,
           questTitle: completedMission.questTitle,
@@ -352,9 +450,8 @@ class MissionController extends Notifier<List<Mission>> {
     final sync = ref.read(missionSyncControllerProvider.notifier);
     sync.loading('Missionを保存しています...');
     try {
-      final savedMission = await ref
-          .read(missionRepositoryProvider)
-          .save(mission);
+      final savedMission =
+          await ref.read(missionRepositoryProvider).save(mission);
       if (ref.read(authControllerProvider).profile?.id != userId) return;
       state = [
         for (final current in state)
@@ -392,17 +489,13 @@ class MissionController extends Notifier<List<Mission>> {
     required ArcActionTrigger trigger,
     String? surface,
   }) {
-    final decision = ref
-        .read(arcActionTriggerServiceProvider)
-        .resolve(
+    final decision = ref.read(arcActionTriggerServiceProvider).resolve(
           trigger: trigger,
           missionTitle: mission.title,
           questTitle: mission.questTitle,
           surface: surface,
         );
-    ref
-        .read(arcEmotionTimelineControllerProvider.notifier)
-        .record(
+    ref.read(arcEmotionTimelineControllerProvider.notifier).record(
           emotion: decision.emotion,
           sourceType: decision.sourceType,
           reason: decision.message,
@@ -413,9 +506,8 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   void _growBond(ArcMemorySourceType sourceType) {
-    final growth = ref
-        .read(arcBondGrowthServiceProvider)
-        .forMission(sourceType);
+    final growth =
+        ref.read(arcBondGrowthServiceProvider).forMission(sourceType);
     final award = ref.read(stardustServiceProvider).forMission(sourceType);
     unawaited(
       ref
@@ -449,6 +541,23 @@ class MissionController extends Notifier<List<Mission>> {
     }
   }
 
+  Future<void> _recordRouteProgressEvent(
+    Mission mission,
+    String eventType,
+  ) async {
+    try {
+      await ref.read(routeReplanningRepositoryProvider).recordProgressEvent(
+        questId: mission.questId,
+        missionId: mission.id,
+        eventType: eventType,
+        eventKey: '$eventType:${mission.id}',
+        metadata: {'progressPercent': mission.progressPercent},
+      );
+    } catch (_) {
+      // Route review telemetry must never block Mission completion.
+    }
+  }
+
   Future<void> _rememberMission(
     Mission mission,
     ArcMemorySourceType sourceType,
@@ -459,9 +568,7 @@ class MissionController extends Notifier<List<Mission>> {
     }
 
     try {
-      await ref
-          .read(memoryExtractionServiceProvider)
-          .extractAndSave(
+      await ref.read(memoryExtractionServiceProvider).extractAndSave(
             MemoryExtractionEvent(
               userId: userId,
               questId: mission.questId,

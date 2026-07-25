@@ -1,7 +1,8 @@
 version: 1
-status: evidence_partial
-updated_at_utc: "2026-07-17T12:46:34.6751457Z"
-candidate_source_commit: "e45f4430ee6147d999a0a83b7c758f4f922b1de2"
+status: deployed_pending_candidate_freeze
+updated_at_utc: "2026-07-25T05:05:29Z"
+candidate_source_commit: "e33c8421b0f6a11b4415ab9ec55339f895b69eb0"
+working_tree_clean_at_deploy: false
 project:
   ref: "dhbmgwarnrtelrcrmmfk"
   region: "ap-northeast-1"
@@ -12,37 +13,71 @@ project:
   cli_version: "2.109.1"
 migrations:
   status: applied
-  latest_local: "202607170002_data_api_privileges.sql"
-  remote_head: "202607170002_data_api_privileges.sql"
+  latest_local: "202607250004_route_transaction_hardening.sql"
+  remote_head: "202607250004_route_transaction_hardening.sql"
   command: "supabase migration list --linked"
+  applied_at_utc: "2026-07-25T05:02:00Z"
+  first_attempt:
+    status: stopped_on_error
+    migration: "202607240001_mission_progress_and_planning_feedback.sql"
+    reason: "obsolete quests.user_id owner reference"
+    resolution: "changed policy ownership check to quests.owner_id and reran dry-run"
 functions:
   - name: arc-chat
     status: deployed
-    deployed_at_utc: "2026-07-17T12:15:36Z"
+    deployed_at_utc: "2026-07-25T05:03:41Z"
+    version: 12
   - name: arc-quest-guide
     status: deployed
-    deployed_at_utc: "2026-07-17T12:15:36Z"
+    deployed_at_utc: "2026-07-25T05:03:49Z"
+    version: 9
   - name: generate-arc-advice
     status: deployed
-    deployed_at_utc: "2026-07-17T12:15:36Z"
+    deployed_at_utc: "2026-07-25T05:03:55Z"
+    version: 6
   - name: generate-mission
     status: deployed
-    deployed_at_utc: "2026-07-17T12:15:36Z"
+    deployed_at_utc: "2026-07-25T05:04:01Z"
+    version: 6
   - name: generate-quest-guides
     status: deployed
-    deployed_at_utc: "2026-07-17T12:15:36Z"
+    deployed_at_utc: "2026-07-25T05:04:09Z"
+    version: 6
   - name: generate-star-map
     status: deployed
-    deployed_at_utc: "2026-07-17T12:15:36Z"
+    deployed_at_utc: "2026-07-25T05:04:15Z"
+    version: 6
+  - name: auth-login
+    status: deployed
+    deployed_at_utc: "2026-07-25T05:04:23Z"
+    version: 1
+  - name: moderate-quest-intent
+    status: deployed
+    deployed_at_utc: "2026-07-25T05:04:30Z"
+    version: 1
+  - name: research-mission-resources
+    status: deployed
+    deployed_at_utc: "2026-07-25T05:04:36Z"
+    version: 1
 secrets:
-  status: not_verified
+  status: verified
   storage: server_side_only
   values_recorded: false
+  registered_at_utc: "2026-07-18T15:01:00Z"
+  provider_smoke_test:
+    status: passed
+    function: arc-chat
+    source_type: gemini_interactions
+    verified_at_utc: "2026-07-18T15:03:00Z"
+  google_key_restriction: "generativelanguage.googleapis.com"
   required_names:
     - AI_PROVIDER
     - GEMINI_API_KEY
   optional_names:
     - GEMINI_MODEL
+    - GEMINI_SEARCH_MODEL
+    - AI_MAX_INPUT_CHARS
+    - AI_REQUEST_TIMEOUT_MS
     - OPENAI_API_KEY
     - OPENAI_MODEL
 client_configuration:
@@ -54,7 +89,16 @@ client_configuration:
     - SUPABASE_SERVICE_ROLE_KEY
     - GEMINI_API_KEY
     - OPENAI_API_KEY
+deployment_smoke:
+  status: passed
+  verified_at_utc: "2026-07-25T05:05:00Z"
+  edge_function_options: "9/9 returned success"
+  auth_login_invalid_input: "401"
+  authenticated_owner_flows: "pending QST-199 and QST-201"
 guardrails:
+  gemini_tier_target: free_internal_validation
+  gemini_request_store: false
+  free_tier_sensitive_data_allowed: false
   local_fallback_is_cloud_evidence: false
   secret_values_may_be_committed: false
   dashboard_schema_changes_allowed: false

@@ -1,5 +1,8 @@
 import 'package:uuid/uuid.dart';
 
+import '../../core/estimation/effort_estimate.dart';
+import 'quest_evaluation.dart';
+
 const _uuid = Uuid();
 
 enum QuestDifficulty { easy, normal, hard, legendary }
@@ -19,6 +22,8 @@ class Quest {
     this.progress = 0,
     this.category = '冒険',
     this.targetDate,
+    this.effortEstimate,
+    this.evaluation,
   }) : id = id ?? _uuid.v4();
 
   final String id;
@@ -30,6 +35,8 @@ class Quest {
   final double progress;
   final String category;
   final DateTime? targetDate;
+  final EffortEstimate? effortEstimate;
+  final QuestEvaluation? evaluation;
 
   Quest copyWith({
     String? title,
@@ -41,6 +48,8 @@ class Quest {
     String? category,
     DateTime? targetDate,
     bool clearTargetDate = false,
+    EffortEstimate? effortEstimate,
+    QuestEvaluation? evaluation,
   }) {
     return Quest(
       id: id,
@@ -52,6 +61,8 @@ class Quest {
       progress: progress ?? this.progress,
       category: category ?? this.category,
       targetDate: clearTargetDate ? null : targetDate ?? this.targetDate,
+      effortEstimate: effortEstimate ?? this.effortEstimate,
+      evaluation: evaluation ?? this.evaluation,
     );
   }
 }

@@ -24,9 +24,23 @@ void main(List<String> arguments) {
     "await _expectOne(accountA, 'quests'",
     "await _expectOne(accountA, 'missions'",
     "await _expectOne(accountA, 'arc_memories'",
+    "await _expectOne(accountA, 'trails'",
+    "await _expectOne(accountA, 'media'",
+    "await _expectOne(accountA, 'route_versions'",
     "await _expectNone(accountB, 'quests'",
     "await _expectNone(accountB, 'missions'",
     "await _expectNone(accountB, 'arc_memories'",
+    "await _expectNone(accountB, 'trails'",
+    "await _expectNone(accountB, 'media'",
+    "await _expectNone(accountB, 'route_versions'",
+    'expectTrailObjectDenied',
+    'expectInsertDenied',
+    'expectRpcDenied',
+    'applyRouteProposal',
+    'rollbackRouteProposal',
+    "'guild_quest_publications'",
+    "'guild_quest_publication_owners'",
+    "'anonymous'",
     "await accountA.delete('arc_memories'",
     "await accountA.delete('quests'",
   ]) {
@@ -52,16 +66,38 @@ void main(List<String> arguments) {
       'account_a_quest_after_relogin: passed',
       'account_a_mission_after_relogin: passed',
       'account_a_arc_memory_after_relogin: passed',
+      'account_a_trail_after_relogin: passed',
+      'account_a_media_after_relogin: passed',
+      'account_a_route_after_relogin: passed',
+      'account_a_storage_object_read: passed',
       'account_b_private_quest_visibility: denied',
       'account_b_private_mission_visibility: denied',
       'account_b_private_arc_memory_visibility: denied',
+      'account_b_private_trail_visibility: denied',
+      'account_b_private_media_visibility: denied',
+      'account_b_private_route_visibility: denied',
+      'account_b_private_route_write: denied',
+      'account_b_private_storage_object_read: denied',
+      'account_b_pending_guild_publication_visibility: denied',
+      'account_b_guild_owner_mapping_visibility: denied',
+      'account_b_route_apply_rpc: denied',
+      'account_a_route_apply_after_relogin: passed',
+      'account_a_route_rollback_restore: passed',
+      'anonymous_private_quest_visibility: denied',
+      'anonymous_private_route_visibility: denied',
+      'anonymous_private_storage_object_read: denied',
+      'anonymous_pending_guild_publication_visibility: denied',
       'test_records_cleaned: true',
     ]) {
       _expect(evidence, result, evidencePath, failures);
     }
-    final commit = _scalar(evidence, 'candidate_source_commit');
+    final commit = _scalar(evidence, 'source_commit_at_execution');
     if (commit == null || !RegExp(r'^[0-9a-f]{40}$').hasMatch(commit)) {
-      failures.add('A full candidate source commit is required.');
+      failures.add('A full source commit at execution is required.');
+    }
+    final clean = _scalar(evidence, 'working_tree_clean_at_execution');
+    if (clean != 'true' && clean != 'false') {
+      failures.add('Working tree cleanliness at execution is required.');
     }
     final projectRef = _scalar(evidence, 'project_ref');
     if (projectRef == null || !RegExp(r'^[a-z0-9]{20}$').hasMatch(projectRef)) {

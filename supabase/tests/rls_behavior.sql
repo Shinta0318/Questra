@@ -58,6 +58,13 @@ $$;
 \set owner_media_id '00000000-0000-4000-8000-000000044101'
 \set owner_public_media_id '00000000-0000-4000-8000-000000044102'
 \set other_media_id '00000000-0000-4000-8000-000000044201'
+\set guild_publication_id '00000000-0000-4000-8000-000000054101'
+\set guild_pending_publication_id '00000000-0000-4000-8000-000000054102'
+\set guild_mission_publication_id '00000000-0000-4000-8000-000000064101'
+\set guild_copy_event_id '00000000-0000-4000-8000-000000074201'
+\set owner_route_version_id '00000000-0000-4000-8000-000000084101'
+\set owner_route_proposal_id '00000000-0000-4000-8000-000000094101'
+\set owner_route_item_id '00000000-0000-4000-8000-000000104101'
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 values
@@ -100,6 +107,63 @@ values
   (:'owner_public_media_id', :'owner_id', 'trail-media', :'owner_id' || '/qst41/public.jpg', 'image', 'trails', :'owner_public_trail_id', 'public'),
   (:'other_media_id', :'other_id', 'trail-media', :'other_id' || '/qst41/private.jpg', 'image', 'trails', :'other_private_trail_id', 'private');
 
+insert into public.guild_quest_publications (
+  id, title, summary, author_display_name, tags, difficulty_score,
+  visibility, moderation_status
+) values
+  (:'guild_publication_id', 'Public Guild Quest', 'Approved public snapshot.', 'Owner Navigator', array['挑戦'], 3, 'public', 'approved'),
+  (:'guild_pending_publication_id', 'Pending Guild Quest', 'Pending owner snapshot.', 'Owner Navigator', array['学習'], 2, 'public', 'pending');
+
+insert into public.guild_quest_publication_owners (publication_id, owner_id, source_quest_id)
+values
+  (:'guild_publication_id', :'owner_id', :'owner_public_quest_id'),
+  (:'guild_pending_publication_id', :'owner_id', :'owner_private_quest_id');
+
+insert into public.guild_mission_publications (
+  id, quest_publication_id, title, purpose, order_index, moderation_status
+) values (
+  :'guild_mission_publication_id', :'guild_publication_id',
+  'Public Guild Mission', 'Approved public Mission purpose.', 0, 'approved'
+);
+
+insert into public.guild_mission_publication_owners (
+  mission_publication_id, owner_id, source_mission_id
+) values (
+  :'guild_mission_publication_id', :'owner_id', :'owner_public_mission_id'
+);
+
+insert into public.guild_quest_copy_events (
+  id, publication_id, copier_id, destination_quest_id, include_missions,
+  arc_optimization_requested, idempotency_key
+) values (
+  :'guild_copy_event_id', :'guild_publication_id', :'other_id',
+  :'other_private_quest_id', true, true, 'qst41-copy-other-001'
+);
+
+insert into public.route_versions (
+  id, quest_id, version_number, status, generated_by, generation_reason
+) values (
+  :'owner_route_version_id', :'owner_private_quest_id', 1,
+  'proposed', 'arc', 'QST-199 RLS behavior proof'
+);
+
+insert into public.route_change_proposals (
+  id, quest_id, route_version_id, proposal_type, summary, reason,
+  confidence_score
+) values (
+  :'owner_route_proposal_id', :'owner_private_quest_id',
+  :'owner_route_version_id', 'replan', 'Private route proposal',
+  'QST-199 RLS behavior proof', 0.8
+);
+
+insert into public.route_change_items (
+  id, proposal_id, action_type, target_mission_id, title, reason, safety_level
+) values (
+  :'owner_route_item_id', :'owner_route_proposal_id', 'reschedule',
+  :'owner_private_mission_id', 'Private route item',
+  'QST-199 RLS behavior proof', 2
+);
+
 set local role authenticated;
 
 select set_config('request.jwt.claim.sub', :'owner_id', true);
@@ -114,6 +178,13 @@ select pg_temp.qst_assert_eq((select count(*) from public.arc_memories where id 
 select pg_temp.qst_assert_eq((select count(*) from public.arc_memories where id = :'other_memory_id'), 0, 'owner cannot read another Arc Memory');
 select pg_temp.qst_assert_eq((select count(*) from public.media where id = :'owner_media_id'), 1, 'owner can read own private media row');
 select pg_temp.qst_assert_eq((select count(*) from public.media where id = :'other_media_id'), 0, 'owner cannot read another private media row');
+select pg_temp.qst_assert_eq((select count(*) from public.guild_quest_publications where id = :'guild_publication_id'), 1, 'owner can read own approved Guild publication');
+select pg_temp.qst_assert_eq((select count(*) from public.guild_quest_publications where id = :'guild_pending_publication_id'), 1, 'owner can read own pending Guild publication');
+select pg_temp.qst_assert_eq((select count(*) from public.guild_quest_publication_owners where publication_id = :'guild_publication_id'), 1, 'owner can read Guild publication ownership');
+select pg_temp.qst_assert_eq((select count(*) from public.guild_quest_copy_events where id = :'guild_copy_event_id'), 0, 'source owner cannot inspect copier event');
+select pg_temp.qst_assert_eq((select count(*) from public.route_versions where id = :'owner_route_version_id'), 1, 'owner can read own private Route version');
+select pg_temp.qst_assert_eq((select count(*) from public.route_change_proposals where id = :'owner_route_proposal_id'), 1, 'owner can read own private Route proposal');
+select pg_temp.qst_assert_eq((select count(*) from public.route_change_items where id = :'owner_route_item_id'), 1, 'owner can read own private Route item');
 
 select set_config('request.jwt.claim.sub', :'other_id', true);
 
@@ -126,6 +197,26 @@ select pg_temp.qst_assert_eq((select count(*) from public.trails where id = :'ow
 select pg_temp.qst_assert_eq((select count(*) from public.arc_memories where id = :'owner_memory_id'), 0, 'other cannot read owner Arc Memory');
 select pg_temp.qst_assert_eq((select count(*) from public.media where id = :'owner_media_id'), 0, 'other cannot read owner private media row');
 select pg_temp.qst_assert_eq((select count(*) from public.media where id = :'owner_public_media_id'), 1, 'other can read public media row');
+select pg_temp.qst_assert_eq((select count(*) from public.guild_quest_publications where id = :'guild_publication_id'), 1, 'other can read approved public Guild publication');
+select pg_temp.qst_assert_eq((select count(*) from public.guild_quest_publications where id = :'guild_pending_publication_id'), 0, 'other cannot read pending Guild publication');
+select pg_temp.qst_assert_eq((select count(*) from public.guild_mission_publications where id = :'guild_mission_publication_id'), 1, 'other can read approved Guild Mission publication');
+select pg_temp.qst_assert_eq((select count(*) from public.guild_quest_publication_owners where publication_id = :'guild_publication_id'), 0, 'other cannot read Guild publication ownership');
+select pg_temp.qst_assert_eq((select count(*) from public.guild_quest_copy_events where id = :'guild_copy_event_id'), 1, 'copier can read own private copy event');
+select pg_temp.qst_assert_eq((select count(*) from public.route_versions where id = :'owner_route_version_id'), 0, 'other cannot read owner private Route version');
+select pg_temp.qst_assert_eq((select count(*) from public.route_change_proposals where id = :'owner_route_proposal_id'), 0, 'other cannot read owner private Route proposal');
+select pg_temp.qst_assert_eq((select count(*) from public.route_change_items where id = :'owner_route_item_id'), 0, 'other cannot read owner private Route item');
+
+select pg_temp.qst_assert_raises(
+  format(
+    'insert into public.route_versions (quest_id, version_number, status, generated_by, generation_reason) values (%L, %s, %L, %L, %L)',
+    :'owner_private_quest_id',
+    99,
+    'proposed',
+    'user',
+    'Cross-account Route write must fail'
+  ),
+  'other cannot create a Route version for owner'
+);
 
 select pg_temp.qst_assert_raises(
   format(

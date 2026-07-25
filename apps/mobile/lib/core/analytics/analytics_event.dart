@@ -6,6 +6,17 @@ enum AnalyticsEventName {
   guildDraftCreated,
   mediaAttached,
   onboardingCompleted,
+  experienceSettingsOpened,
+  experienceSettingChanged,
+  arcTapped,
+  arcLongPressed,
+  missionCompletedBySwipe,
+  missionCompletedByButton,
+  questCompletionEffectShown,
+  completionEffectSkipped,
+  soundEffectEnabled,
+  hapticsDisabled,
+  powerSavingEnabled,
 }
 
 class AnalyticsEvent {
@@ -32,6 +43,22 @@ extension AnalyticsEventNameStorage on AnalyticsEventName {
       AnalyticsEventName.guildDraftCreated => 'guild_draft_created',
       AnalyticsEventName.mediaAttached => 'media_attached',
       AnalyticsEventName.onboardingCompleted => 'onboarding_completed',
+      AnalyticsEventName.experienceSettingsOpened =>
+        'experience_settings_opened',
+      AnalyticsEventName.experienceSettingChanged =>
+        'experience_setting_changed',
+      AnalyticsEventName.arcTapped => 'arc_tapped',
+      AnalyticsEventName.arcLongPressed => 'arc_long_pressed',
+      AnalyticsEventName.missionCompletedBySwipe =>
+        'mission_completed_by_swipe',
+      AnalyticsEventName.missionCompletedByButton =>
+        'mission_completed_by_button',
+      AnalyticsEventName.questCompletionEffectShown =>
+        'quest_completion_effect_shown',
+      AnalyticsEventName.completionEffectSkipped => 'completion_effect_skipped',
+      AnalyticsEventName.soundEffectEnabled => 'sound_effect_enabled',
+      AnalyticsEventName.hapticsDisabled => 'haptics_disabled',
+      AnalyticsEventName.powerSavingEnabled => 'power_saving_enabled',
     };
   }
 }
@@ -52,6 +79,9 @@ class AnalyticsPayloadRules {
     'has_trail',
     'quest_interest',
     'signal_frequency',
+    'setting',
+    'value',
+    'interaction',
   };
 
   static const blockedKeys = {

@@ -21,11 +21,11 @@ enum QuestraNavigationDestination {
     icon: Icons.auto_awesome_outlined,
     selectedIcon: Icons.auto_awesome,
   ),
-  guild(
-    label: 'Guild',
-    route: AppRoutes.guild,
-    icon: Icons.groups_outlined,
-    selectedIcon: Icons.groups,
+  trail(
+    label: 'Trail',
+    route: AppRoutes.trail,
+    icon: Icons.timeline_outlined,
+    selectedIcon: Icons.timeline,
   ),
   profile(
     label: 'プロフィール',

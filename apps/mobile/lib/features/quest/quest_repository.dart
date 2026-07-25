@@ -1,7 +1,16 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
 import '../../core/performance/performance_limits.dart';
+import '../../core/estimation/effort_estimate.dart';
 import 'quest_model.dart';
+import 'quest_evaluation.dart';
+
+const _questColumns =
+    'id,title,description,difficulty,status,visibility,target_date,'
+    'requested_target_month,effort_estimate,quest_evaluation,'
+    'difficulty_score,estimated_duration_days,estimated_cost,'
+    'estimated_success_rate,estimated_mission_count,evaluation_version,'
+    'evaluated_at,recommended_start_date,risk_summary,created_at';
 
 abstract interface class QuestRepository {
   Future<List<Quest>> findByUser(
@@ -57,9 +66,7 @@ class SupabaseQuestRepository implements QuestRepository {
   }) async {
     final rows = await client
         .from('quests')
-        .select(
-          'id,title,description,difficulty,status,visibility,target_date,created_at',
-        )
+        .select(_questColumns)
         .eq('owner_id', userId)
         .order('created_at', ascending: false)
         .limit(limit);
@@ -74,7 +81,7 @@ class SupabaseQuestRepository implements QuestRepository {
     final rows = await client
         .from('quests')
         .upsert(_questToRow(ownerId, quest))
-        .select('id,title,description,difficulty,status,visibility,target_date')
+        .select(_questColumns)
         .limit(1);
 
     if (rows.isEmpty) {
@@ -106,6 +113,25 @@ class SupabaseQuestRepository implements QuestRepository {
       'status': quest.status.storageKey,
       'visibility': quest.visibility.storageKey,
       'target_date': quest.targetDate?.toIso8601String().split('T').first,
+      'requested_target_month': quest.targetDate == null
+          ? null
+          : '${quest.targetDate!.year.toString().padLeft(4, '0')}-${quest.targetDate!.month.toString().padLeft(2, '0')}-01',
+      'effort_estimate': quest.effortEstimate == null
+          ? null
+          : effortEstimateToJson(quest.effortEstimate!),
+      'quest_evaluation': quest.evaluation?.toJson(),
+      'difficulty_score': quest.evaluation?.difficultyScore,
+      'estimated_duration_days': quest.evaluation?.estimatedDurationDays,
+      'estimated_cost': quest.evaluation?.estimatedCostLabel,
+      'estimated_success_rate': quest.evaluation?.successLikelihood,
+      'estimated_mission_count': quest.evaluation?.estimatedMissionCount,
+      'evaluation_version': quest.evaluation?.version,
+      'evaluated_at': quest.evaluation?.evaluatedAt.toIso8601String(),
+      'recommended_start_date': quest.evaluation?.recommendedStartDate
+          ?.toIso8601String()
+          .split('T')
+          .first,
+      'risk_summary': quest.evaluation?.riskSummary,
       'updated_at': DateTime.now().toIso8601String(),
     };
   }
@@ -118,9 +144,13 @@ class SupabaseQuestRepository implements QuestRepository {
       difficulty: questDifficultyFromStorage(row['difficulty'] as String),
       status: questStatusFromStorage(row['status'] as String),
       visibility: questVisibilityFromStorage(row['visibility'] as String),
-      targetDate: row['target_date'] == null
+      targetDate: row['requested_target_month'] != null
+          ? DateTime.parse(row['requested_target_month'] as String)
+          : row['target_date'] == null
           ? null
           : DateTime.parse(row['target_date'] as String),
+      effortEstimate: effortEstimateFromJson(row['effort_estimate']),
+      evaluation: QuestEvaluation.fromJson(row['quest_evaluation']),
     );
   }
 }

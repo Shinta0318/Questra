@@ -14,6 +14,9 @@ Future<void> main() async {
   _Session? accountB;
   var questCreated = false;
   var memoryCreated = false;
+  var mediaCreated = false;
+  var storageObjectCreated = false;
+  String? guildPublicationId;
 
   try {
     accountA = await _signIn(
@@ -58,6 +61,62 @@ Future<void> main() async {
     });
     memoryCreated = true;
 
+    await accountA.insert('trails', {
+      'id': ids.trail,
+      'owner_id': accountA.userId,
+      'quest_id': ids.quest,
+      'mission_id': ids.mission,
+      'title': 'QST-199 private Trail probe',
+      'summary': 'Automated Beta acceptance record',
+      'content': 'Automated Beta acceptance record',
+      'visibility': 'private',
+      'trail_type': 'quest_record',
+    });
+    await accountA.insert('media', {
+      'id': ids.media,
+      'owner_id': accountA.userId,
+      'bucket': 'trail-media',
+      'path': '${accountA.userId}/${ids.storageObject}.txt',
+      'media_type': 'image',
+      'related_table': 'trails',
+      'related_id': ids.trail,
+      'visibility': 'private',
+    });
+    mediaCreated = true;
+    await accountA.uploadTrailObject(
+      '${accountA.userId}/${ids.storageObject}.txt',
+      utf8.encode('QST-199 private media probe'),
+    );
+    storageObjectCreated = true;
+
+    await accountA.insert('route_versions', {
+      'id': ids.routeVersion,
+      'quest_id': ids.quest,
+      'version_number': 1,
+      'status': 'proposed',
+      'generated_by': 'arc',
+      'generation_reason': 'QST-199 RLS proof',
+    });
+    await accountA.insert('route_change_proposals', {
+      'id': ids.routeProposal,
+      'quest_id': ids.quest,
+      'route_version_id': ids.routeVersion,
+      'proposal_type': 'replan',
+      'summary': 'QST-199 private route proposal',
+      'reason': 'Automated Beta acceptance record',
+      'confidence_score': 0.8,
+    });
+    await accountA.insert('route_change_items', {
+      'id': ids.routeItem,
+      'proposal_id': ids.routeProposal,
+      'action_type': 'pause',
+      'target_mission_id': ids.mission,
+      'title': 'Pause Mission for QST-196 proof',
+      'reason': 'Automated Beta acceptance record',
+      'safety_level': 2,
+    });
+    guildPublicationId = await accountA.publishGuildQuest(ids.quest);
+
     final firstAccountASession = accountA;
     accountA = await _signIn(
       config,
@@ -69,10 +128,120 @@ Future<void> main() async {
     await _expectOne(accountA, 'quests', 'id', ids.quest);
     await _expectOne(accountA, 'missions', 'id', ids.mission);
     await _expectOne(accountA, 'arc_memories', 'id', ids.memory);
+    await _expectOne(accountA, 'trails', 'id', ids.trail);
+    await _expectOne(accountA, 'media', 'id', ids.media);
+    await _expectOne(accountA, 'route_versions', 'id', ids.routeVersion);
+    await _expectOne(
+      accountA,
+      'route_change_proposals',
+      'id',
+      ids.routeProposal,
+    );
+    await accountA.expectTrailObjectReadable(
+      '${accountA.userId}/${ids.storageObject}.txt',
+    );
 
     await _expectNone(accountB, 'quests', 'id', ids.quest);
     await _expectNone(accountB, 'missions', 'id', ids.mission);
     await _expectNone(accountB, 'arc_memories', 'id', ids.memory);
+    await _expectNone(accountB, 'trails', 'id', ids.trail);
+    await _expectNone(accountB, 'media', 'id', ids.media);
+    await _expectNone(accountB, 'route_versions', 'id', ids.routeVersion);
+    await _expectNone(
+      accountB,
+      'route_change_proposals',
+      'id',
+      ids.routeProposal,
+    );
+    await _expectNone(
+      accountB,
+      'guild_quest_publications',
+      'id',
+      guildPublicationId,
+    );
+    await _expectNone(
+      accountB,
+      'guild_quest_publication_owners',
+      'publication_id',
+      guildPublicationId,
+    );
+    await accountB.expectTrailObjectDenied(
+      '${accountA.userId}/${ids.storageObject}.txt',
+    );
+    await accountB.expectInsertDenied('route_versions', {
+      'quest_id': ids.quest,
+      'version_number': 99,
+      'status': 'proposed',
+      'generated_by': 'user',
+      'generation_reason': 'Cross-account Route write must fail',
+    });
+    await accountB.expectRpcDenied('apply_route_change_proposal', {
+      'p_proposal_id': ids.routeProposal,
+      'p_accepted_item_ids': <String>[ids.routeItem],
+      'p_expected_route_version_id': ids.routeVersion,
+    });
+
+    await accountA.applyRouteProposal(
+      proposalId: ids.routeProposal,
+      itemId: ids.routeItem,
+      routeVersionId: ids.routeVersion,
+    );
+    await accountA.expectFieldValue(
+      'missions',
+      'id',
+      ids.mission,
+      'route_state',
+      'paused',
+    );
+    await accountA.rollbackRouteProposal(ids.routeProposal);
+    await accountA.expectFieldValue(
+      'missions',
+      'id',
+      ids.mission,
+      'route_state',
+      'active',
+    );
+    await accountA.expectFieldValue(
+      'route_change_proposals',
+      'id',
+      ids.routeProposal,
+      'status',
+      'rolledBack',
+    );
+
+    final anonymous = _Session(
+      config,
+      HttpClient(),
+      config.anonKey,
+      'anonymous',
+    );
+    try {
+      await anonymous.expectReadDenied('quests', 'id', ids.quest);
+      await anonymous.expectReadDenied(
+        'route_versions',
+        'id',
+        ids.routeVersion,
+      );
+      await anonymous.expectReadDenied(
+        'guild_quest_publications',
+        'id',
+        guildPublicationId,
+      );
+      await anonymous.expectTrailObjectDenied(
+        '${accountA.userId}/${ids.storageObject}.txt',
+      );
+    } finally {
+      anonymous.close();
+    }
+
+    await accountA.unpublishGuildQuest(guildPublicationId);
+    guildPublicationId = null;
+    await accountA.deleteTrailObject(
+      '${accountA.userId}/${ids.storageObject}.txt',
+    );
+    storageObjectCreated = false;
+    await accountA.delete('media', 'id', ids.media);
+    mediaCreated = false;
 
     await accountA.delete('arc_memories', 'id', ids.memory);
     memoryCreated = false;
@@ -85,6 +254,17 @@ Future<void> main() async {
     if (accountA != null) {
       if (memoryCreated) {
         await accountA.delete('arc_memories', 'id', ids.memory);
+      }
+      if (guildPublicationId != null) {
+        await accountA.unpublishGuildQuest(guildPublicationId);
+      }
+      if (storageObjectCreated) {
+        await accountA.deleteTrailObject(
+          '${accountA.userId}/${ids.storageObject}.txt',
+        );
+      }
+      if (mediaCreated) {
+        await accountA.delete('media', 'id', ids.media);
       }
       if (questCreated) {
         await accountA.delete('quests', 'id', ids.quest);
@@ -164,22 +344,43 @@ Future<void> _writeEvidence(String projectRef) async {
   final commit = (commitResult.stdout as String).trim();
   if (commitResult.exitCode != 0 ||
       !RegExp(r'^[0-9a-f]{40}$').hasMatch(commit)) {
-    throw StateError('Unable to resolve candidate source commit.');
+    throw StateError('Unable to resolve source commit at execution.');
   }
+  final statusResult = await Process.run('git', ['status', '--porcelain']);
+  final workingTreeClean = (statusResult.stdout as String).trim().isEmpty;
   final now = DateTime.now().toUtc().toIso8601String();
   File(evidencePath).writeAsStringSync('''version: 1
 status: verified
 updated_at_utc: "$now"
-candidate_source_commit: "$commit"
+source_commit_at_execution: "$commit"
+working_tree_clean_at_execution: $workingTreeClean
 project_ref: "$projectRef"
 acceptance:
   account_a_profile_after_relogin: passed
   account_a_quest_after_relogin: passed
   account_a_mission_after_relogin: passed
   account_a_arc_memory_after_relogin: passed
+  account_a_trail_after_relogin: passed
+  account_a_media_after_relogin: passed
+  account_a_route_after_relogin: passed
+  account_a_storage_object_read: passed
   account_b_private_quest_visibility: denied
   account_b_private_mission_visibility: denied
   account_b_private_arc_memory_visibility: denied
+  account_b_private_trail_visibility: denied
+  account_b_private_media_visibility: denied
+  account_b_private_route_visibility: denied
+  account_b_private_route_write: denied
+  account_b_private_storage_object_read: denied
+  account_b_pending_guild_publication_visibility: denied
+  account_b_guild_owner_mapping_visibility: denied
+  account_b_route_apply_rpc: denied
+  account_a_route_apply_after_relogin: passed
+  account_a_route_rollback_restore: passed
+  anonymous_private_quest_visibility: denied
+  anonymous_private_route_visibility: denied
+  anonymous_private_storage_object_read: denied
+  anonymous_pending_guild_publication_visibility: denied
   test_records_cleaned: true
 guardrails:
   credential_values_recorded: false
@@ -206,7 +407,7 @@ class _Session {
     final body = await _request(
       'GET',
       table,
-      query: {'select': 'id', field: 'eq.$value'},
+      query: {'select': field, field: 'eq.$value'},
       expectedStatuses: {200},
     );
     return jsonDecode(body) as List<dynamic>;
@@ -219,6 +420,145 @@ class _Session {
       query: {field: 'eq.$value'},
       expectedStatuses: {204},
     );
+  }
+
+  Future<void> expectInsertDenied(
+    String table,
+    Map<String, Object?> row,
+  ) async {
+    await _request('POST', table, body: row, expectedStatuses: {401, 403});
+  }
+
+  Future<String> publishGuildQuest(String questId) async {
+    final body = await _rpc('publish_guild_quest', {
+      'p_quest_id': questId,
+      'p_summary': 'QST-199 pending Guild publication',
+      'p_tags': <String>['qst-199'],
+      'p_visibility': 'public',
+      'p_seeking_companions': false,
+    });
+    final id = jsonDecode(body) as String?;
+    if (id == null || id.isEmpty) {
+      throw StateError('Guild publication RPC did not return an id.');
+    }
+    return id;
+  }
+
+  Future<void> unpublishGuildQuest(String publicationId) async {
+    await _rpc('unpublish_guild_quest', {'p_publication_id': publicationId});
+  }
+
+  Future<String> _rpc(String function, Map<String, Object?> body) {
+    return _request(
+      'POST',
+      'rpc/$function',
+      body: body,
+      expectedStatuses: {200, 204},
+    );
+  }
+
+  Future<void> expectReadDenied(
+    String table,
+    String field,
+    String value,
+  ) async {
+    final body = await _request(
+      'GET',
+      table,
+      query: {'select': field, field: 'eq.$value'},
+      expectedStatuses: {200, 401, 403},
+    );
+    if (body.isNotEmpty && body != '[]') {
+      final decoded = jsonDecode(body);
+      if (decoded is List && decoded.isNotEmpty) {
+        throw StateError('$table anonymous visibility was not denied.');
+      }
+    }
+  }
+
+  Future<void> expectRpcDenied(
+    String function,
+    Map<String, Object?> body,
+  ) async {
+    await _request(
+      'POST',
+      'rpc/$function',
+      body: body,
+      expectedStatuses: {400, 401, 403, 404},
+    );
+  }
+
+  Future<void> applyRouteProposal({
+    required String proposalId,
+    required String itemId,
+    required String routeVersionId,
+  }) async {
+    await _rpc('apply_route_change_proposal', {
+      'p_proposal_id': proposalId,
+      'p_accepted_item_ids': <String>[itemId],
+      'p_expected_route_version_id': routeVersionId,
+    });
+  }
+
+  Future<void> rollbackRouteProposal(String proposalId) async {
+    await _rpc('rollback_route_change_proposal', {'p_proposal_id': proposalId});
+  }
+
+  Future<void> expectFieldValue(
+    String table,
+    String idField,
+    String id,
+    String field,
+    Object expected,
+  ) async {
+    final body = await _request(
+      'GET',
+      table,
+      query: {'select': field, idField: 'eq.$id'},
+      expectedStatuses: {200},
+    );
+    final rows = jsonDecode(body) as List<dynamic>;
+    if (rows.length != 1 ||
+        (rows.single as Map<String, dynamic>)[field] != expected) {
+      throw StateError('$table.$field did not equal the expected value.');
+    }
+  }
+
+  Future<void> uploadTrailObject(String path, List<int> bytes) async {
+    await _storageRequest('POST', path, bytes: bytes, expectedStatuses: {200});
+  }
+
+  Future<void> expectTrailObjectReadable(String path) async {
+    await _storageRequest('GET', path, expectedStatuses: {200});
+  }
+
+  Future<void> expectTrailObjectDenied(String path) async {
+    await _storageRequest('GET', path, expectedStatuses: {400, 401, 403, 404});
+  }
+
+  Future<void> deleteTrailObject(String path) async {
+    await _storageRequest('DELETE', path, expectedStatuses: {200});
+  }
+
+  Future<void> _storageRequest(
+    String method,
+    String path, {
+    List<int>? bytes,
+    required Set<int> expectedStatuses,
+  }) async {
+    final uri = config.projectUrl.resolve(
+      '/storage/v1/object/trail-media/${Uri.encodeFull(path)}',
+    );
+    final request = await client.openUrl(method, uri);
+    request.headers.set('apikey', config.anonKey);
+    request.headers.set('Authorization', 'Bearer $token');
+    request.headers.contentType = ContentType.binary;
+    if (bytes != null) request.add(bytes);
+    final response = await request.close();
+    await response.drain<void>();
+    if (!expectedStatuses.contains(response.statusCode)) {
+      throw HttpException('Storage $method failed (${response.statusCode}).');
+    }
   }
 
   Future<String> _request(
@@ -239,7 +579,13 @@ class _Session {
     final response = await request.close();
     final responseBody = await utf8.decodeStream(response);
     if (!expectedStatuses.contains(response.statusCode)) {
-      throw HttpException('$table $method failed (${response.statusCode}).');
+      final detail = responseBody.replaceAll(RegExp(r'\s+'), ' ').trim();
+      final safeDetail = detail.length > 300
+          ? detail.substring(0, 300)
+          : detail;
+      throw HttpException(
+        '$table $method failed (${response.statusCode}): $safeDetail',
+      );
     }
     return responseBody;
   }
@@ -289,13 +635,39 @@ class _Config {
 }
 
 class _TestIds {
-  const _TestIds(this.quest, this.mission, this.memory);
+  const _TestIds(
+    this.quest,
+    this.mission,
+    this.memory,
+    this.trail,
+    this.media,
+    this.storageObject,
+    this.routeVersion,
+    this.routeProposal,
+    this.routeItem,
+  );
 
-  factory _TestIds.create() => _TestIds(_uuid(), _uuid(), _uuid());
+  factory _TestIds.create() => _TestIds(
+    _uuid(),
+    _uuid(),
+    _uuid(),
+    _uuid(),
+    _uuid(),
+    _uuid(),
+    _uuid(),
+    _uuid(),
+    _uuid(),
+  );
 
   final String quest;
   final String mission;
   final String memory;
+  final String trail;
+  final String media;
+  final String storageObject;
+  final String routeVersion;
+  final String routeProposal;
+  final String routeItem;
 }
 
 String _uuid() {

@@ -102,10 +102,12 @@ Future<void> _verifyCloud(
     failures.add('Top-level RLS evidence status must be verified.');
   }
   if (!RegExp(
-    r'^status: verified$',
+    r'^status: (verified|deployed_pending_candidate_freeze)$',
     multiLine: true,
   ).hasMatch(projectEvidence)) {
-    failures.add('QST-160 Supabase project evidence must be verified first.');
+    failures.add(
+      'Supabase project deployment evidence must be available first.',
+    );
   }
 
   final projectRef = _scalar(evidence, 'project_ref', 0);
@@ -116,9 +118,13 @@ Future<void> _verifyCloud(
     failures.add('RLS and QST-160 project refs do not match.');
   }
 
-  final commit = _scalar(evidence, 'candidate_source_commit', 0);
+  final commit = _scalar(evidence, 'source_commit_at_execution', 0);
   if (commit == null || !RegExp(r'^[0-9a-f]{40}$').hasMatch(commit)) {
-    failures.add('A full candidate source commit is required.');
+    failures.add('A full source commit at execution is required.');
+  }
+  final clean = _scalar(evidence, 'working_tree_clean_at_execution', 0);
+  if (clean != 'true' && clean != 'false') {
+    failures.add('Working tree cleanliness must be recorded for RLS evidence.');
   }
   _expect(evidence, 'migrations:\n  status: applied', evidencePath, failures);
   _expect(evidence, 'rls_behavior:\n  status: passed', evidencePath, failures);

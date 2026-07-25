@@ -1,0 +1,3229 @@
+﻿[
+    {
+        "id":  "travel-01",
+        "category":  "旅行",
+        "title":  "シンガポールへ行く",
+        "status":  "ok",
+        "source_type":  "gemini_arc_quest_guide",
+        "mission_count":  9,
+        "done_condition_count":  2,
+        "domain_keyword_hits":  [
+                                    "日程",
+                                    "入国",
+                                    "航空",
+                                    "宿泊",
+                                    "保険"
+                                ],
+        "unique_title_count":  9,
+        "duration_ms":  7232,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  false,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  true
+                   },
+        "missions":  [
+                         {
+                             "title":  "旅の基本方針と予算上限を決定する",
+                             "description":  "旅行日程（例：3泊4日）と、航空券・宿泊・食費を合わせた総予算の上限をスプレッドシートやノートに書き出し、旅の基本骨子を確定させてください。"
+                         },
+                         {
+                             "title":  "パスポート有効期限とSG Arrival Cardの申請要件を確認する",
+                             "description":  "パスポートの残存期間がシンガポール入国時に6ヶ月以上あるかを確認し、入国3日前から必要な「SG Arrival Card（電子入国カード）」の申請手順を公式サイトで確認してメモに残してください。"
+                         },
+                         {
+                             "title":  "現地の最新の法律・禁止事項をリストアップする",
+                             "description":  "ガムの持ち込み、電子タバコ、公共交通機関での飲食禁止など、現地で罰金対象となる行為を公式観光局等のサイトで調べ、スマートフォンのメモ帳に「禁止行為リスト」として保存してください。"
+                         },
+                         {
+                             "title":  "航空便を比較して往復チケットを予約する",
+                             "description":  "直行便と経由便の運行スケジュールおよび価格を比較し、予算内に収まる最適な往復航空便を1つ選択して予約（決済まで完了）してください。"
+                         },
+                         {
+                             "title":  "滞在エリアを選定しホテルを予約する",
+                             "description":  "マリーナベイ、クラークキー、チャイナタウンなど観光に便利なエリアから宿泊地を選び、予算とセキュリティ基準を満たすホテルを1軒予約して予約確認書を保存してください。"
+                         },
+                         {
+                             "title":  "体験したい文化スポットとグルメの候補リストを作成する",
+                             "description":  "プラナカン文化が残るカトン地区や、ホーカーセンター（マクスウェルなど）で食べたい料理（チキンライス、チリクラブ等）を調べ、住所と営業時間をまとめた「行きたい場所リスト」を完成させてください。"
+                         },
+                         {
+                             "title":  "現地での通信手段と移動用決済方法を決定する",
+                             "description":  "eSIM、レンタルWi-Fi、または国際ローミングのプランを比較して1つ契約し、現地での地下鉄（MRT）乗車に必要なコンタクトレス決済対応クレジットカードが手元にあるか確認してください。"
+                         },
+                         {
+                             "title":  "海外旅行保険への加入と緊急連絡先を控える",
+                             "description":  "クレジットカード付帯保険の補償内容を確認するか、個別の海外旅行保険に加入し、現地の日本大使館や日本語が通じる医療機関の電話番号を緊急連絡先リストとして保存してください。"
+                         },
+                         {
+                             "title":  "SG Arrival Cardの登録と荷造りを完了する",
+                             "description":  "出発3日前になったら「SG Arrival Card」のオンライン登録を完了させ、登録完了メールを保存します。また、常備薬や変換プラグ（BFタイプ）を含む荷物をスーツケースに詰め終えてください。"
+                         }
+                     ]
+    },
+    {
+        "id":  "travel-02",
+        "category":  "旅行",
+        "title":  "北海道を車で一周したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "日程",
+                                    "車",
+                                    "予算"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  768,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "北海道を車で一周したいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "travel-03",
+        "category":  "旅行",
+        "title":  "家族で沖縄旅行を実現する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "家族",
+                                    "日程",
+                                    "予約"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  819,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "家族で沖縄旅行を実現するの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "travel-04",
+        "category":  "旅行",
+        "title":  "ヨーロッパを一人旅する",
+        "status":  "ok",
+        "source_type":  "gemini_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  3,
+        "domain_keyword_hits":  [
+                                    "入国",
+                                    "旅程",
+                                    "宿泊",
+                                    "安全",
+                                    "保険"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  6940,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  false,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  true
+                   },
+        "missions":  [
+                         {
+                             "title":  "旅のテーマと希望の国・日程を決定する",
+                             "description":  "ヨーロッパで「何をしたいか」を書き出し、候補国、出発希望日、旅行期間（例：7泊9日など）をノートに記録して、旅の基本骨子を決定します。"
+                         },
+                         {
+                             "title":  "パスポートの残存有効期間と渡航要件を確認する",
+                             "description":  "自身のパスポートの有効期限を確認し、目的国の入国に必要な残存期間（一般的に3〜6ヶ月以上）や、ビザ・ETIAS等の事前申請の要否を公式サイトで調べてクリア条件を記録します。"
+                         },
+                         {
+                             "title":  "全体の予算上限を設定し内訳を算出する",
+                             "description":  "航空券、宿泊費、現地交通費、食費、観光費、海外旅行保険などの予算をスプレッドシートに書き出し、総予算の上限額を決定します。"
+                         },
+                         {
+                             "title":  "航空券の候補を3パターン比較して仮決定する",
+                             "description":  "航空券比較サイト（Skyscanner等）を使い、直行便や経由便の所要時間、価格、到着時間帯（治安を考慮し夜間到着を避ける）を比較したリストを作成し、最適なフライトを1つ選びます。"
+                         },
+                         {
+                             "title":  "都市間の移動ルートと交通手段を調べる",
+                             "description":  "複数都市を巡る場合、鉄道（ユーレイルパス等）や長距離バス、LCCの運行スケジュールと価格を調べ、最適な移動ルートと乗車予定便をノートにまとめます。"
+                         },
+                         {
+                             "title":  "安全なエリアの宿泊施設を比較して予約する",
+                             "description":  "治安の良いエリア（駅の目の前や大通り沿いなど）に絞り、口コミ評価8.0以上のホテルやホステルを3件以上比較した上で、キャンセル無料プランで1箇所予約を完了します。"
+                         },
+                         {
+                             "title":  "日ごとの詳細な観光ルート案を作成する",
+                             "description":  "各日の「午前・午後・夜」の行動予定、主要観光スポットの定休日や事前予約の要否を調べ、タイムライン形式の旅程表を完成させます。"
+                         },
+                         {
+                             "title":  "現地での通信手段と海外旅行保険を決定する",
+                             "description":  "SIMカード/eSIM/レンタルWi-Fiの料金と利便性を比較して購入手続きを済ませ、クレジットカード付帯保険の適用条件確認または専用の海外旅行保険への加入を完了します。"
+                         },
+                         {
+                             "title":  "防犯対策グッズと持ち物リストを作成する",
+                             "description":  "セキュリティポーチ、防犯用ワイヤーロック、変換プラグなど、ヨーロッパ一人旅に必要な持ち物リストを作成し、不足しているものを全て購入・準備します。"
+                         },
+                         {
+                             "title":  "緊急連絡先リストを作成しオフラインに保存する",
+                             "description":  "現地の日本大使館の電話番号、カード会社の紛失連絡先、海外旅行保険のサポート窓口、家族の連絡先を1枚の紙とスマホのオフラインメモに保存して準備を完了します。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-01",
+        "category":  "学習",
+        "title":  "英語で海外の人と自然に話せるようになりたい",
+        "status":  "ok",
+        "source_type":  "gemini_arc_quest_guide",
+        "mission_count":  9,
+        "done_condition_count":  9,
+        "domain_keyword_hits":  [
+                                    "英語",
+                                    "会話",
+                                    "教材"
+                                ],
+        "unique_title_count":  9,
+        "duration_ms":  6620,
+        "passed":  true,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  true
+                   },
+        "missions":  [
+                         {
+                             "title":  "旅行の目的地と「話したい場面」を3つ書き出す",
+                             "description":  "半年後の旅行先（国・都市）を決定し、現地で「カフェで注文する」「道を尋ねる」など、自分が英語でスムーズに会話したい具体的な場面を3つノートに記録して完了とします。"
+                         },
+                         {
+                             "title":  "現在の英語力と学習に割ける時間を測定する",
+                             "description":  "簡単な無料のオンライン英語力診断テストを受け、現在のレベルを把握するとともに、週に何時間英語学習に投資できるかをスケジュール帳に記録して完了とします。"
+                         },
+                         {
+                             "title":  "旅行英会話に特化した教材やアプリを1つ選定する",
+                             "description":  "書店やアプリストアで「旅行英語」「日常会話」に特化した教材を3つ比較し、音声付きで毎日続けられそうなものを1つ購入またはダウンロードして完了とします。"
+                         },
+                         {
+                             "title":  "基本の「あいさつと相槌」フレーズを20個暗記する",
+                             "description":  "選んだ教材から、会話を円滑にする「Hello」「Thank you」以外の相槌や挨拶の表現を20個ノートに書き出し、すべて音声に合わせてスムーズに発音できる状態にして完了とします。"
+                         },
+                         {
+                             "title":  "オンライン英会話サービスを3社比較して無料体験する",
+                             "description":  "初心者向けカリキュラムがあるオンライン英会話サービスを3社リストアップし、それぞれの無料体験レッスンを実際に受講して、講師の雰囲気やシステムを比較したメモを作成して完了とします。"
+                         },
+                         {
+                             "title":  "週2回の英会話レッスンを1ヶ月間継続する",
+                             "description":  "選定したオンライン英会話サービスに入会し、週2回のペースで合計8回のレッスンを予約・受講し、レッスン後に講師からもらったフィードバックを記録して完了とします。"
+                         },
+                         {
+                             "title":  "「自己紹介」と「自分の趣味」を語る英文を100語で作成する",
+                             "description":  "現地の人との雑談で必ず聞かれる「自分の仕事や趣味」「なぜここに来たのか」を説明する自己紹介文（約100語）を作成し、翻訳ツール等で文法を確認して清書して完了とします。"
+                         },
+                         {
+                             "title":  "旅行のトラブル対策フレーズを10個マスターする",
+                             "description":  "「荷物を紛失した」「体調が悪い」「会計が違う」など、旅行中の緊急事態で使える英語表現を10個ピックアップし、見ずにそらんじて言える状態にして完了とします。"
+                         },
+                         {
+                             "title":  "現地を想定したロールプレイングレッスンを3回受講する",
+                             "description":  "オンライン英会話の講師にお願いし、入国審査、ホテルのチェックイン、レストランでの注文の3つのシミュレーションレッスンを実践し、合格点をもらって完了とします。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-02",
+        "category":  "学習",
+        "title":  "簿記2級に合格する",
+        "status":  "ok",
+        "source_type":  "gemini_arc_quest_guide",
+        "mission_count":  9,
+        "done_condition_count":  9,
+        "domain_keyword_hits":  [
+                                    "試験",
+                                    "教材",
+                                    "学習",
+                                    "過去問"
+                                ],
+        "unique_title_count":  9,
+        "duration_ms":  6622,
+        "passed":  true,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  true
+                   },
+        "missions":  [
+                         {
+                             "title":  "試験制度と出題範囲を調査し、受験方式を決定する",
+                             "description":  "日本商工会議所の公式サイトで最新の試験範囲（区分改定）と、ネット試験・統一試験の違いを確認します。自分の仕事のスケジュールに合わせてどちらの方式で受験するかを決め、手帳に試験予定日を記録することで完了とします。"
+                         },
+                         {
+                             "title":  "教材と電卓を選定し、学習環境を整える",
+                             "description":  "定評のあるテキスト・問題集（商業・工業各1冊）と、試験で使用可能な機能（メモリ機能、GTキー等）を備えた電卓を選定して購入します。すべての教材が手元に揃い、勉強スペースが確保された状態をもって完了とします。"
+                         },
+                         {
+                             "title":  "4ヶ月の週単位学習ロードマップを作成する",
+                             "description":  "仕事の繁忙期を考慮し、最初の1.5ヶ月を工業簿記、次の1.5ヶ月を商業簿記、最後の1ヶ月を総仕上げとする週ごとのスケジュール表を作成します。予備日を含めた計画表が完成し、カレンダーに登録された時点で完了とします。"
+                         },
+                         {
+                             "title":  "工業簿記の基礎講義と基本問題を完了する",
+                             "description":  "テキストの工業簿記パートを読み進め、各章末の基本問題を解きます。原価計算の基礎から標準・直接原価計算までの全体像を理解し、基本問題の正答率が8割を超えたことを確認して完了とします。"
+                         },
+                         {
+                             "title":  "商業簿記の重要論点と仕訳をマスターする",
+                             "description":  "商業簿記のテキストを進め、2級特有の論点（連結会計、外貨建取引、税効果会計など）の仕訳カードやノートを作成します。基本問題の仕訳がスムーズに書き出せるようになった時点で完了とします。"
+                         },
+                         {
+                             "title":  "本試験の受験予約を完了する",
+                             "description":  "ネット試験の場合はCBTS等の予約サイトから、統一試験の場合は各地の商工会議所から、目標日に合わせた受験申し込みを行います。決済を済ませ、受験票または予約完了メールを受信したことをもって完了とします。"
+                         },
+                         {
+                             "title":  "分野別過去問と予想問題集を1周する",
+                             "description":  "商業・工業の分野別問題集を解き、間違えた問題にチェックをつけます。すべての分野を一通り解き終え、自分の苦手な論点（例：連結会計、総合原価計算など）を3つリストアップした時点で完了とします。"
+                         },
+                         {
+                             "title":  "模擬試験を時間を計って3回分実施する",
+                             "description":  "本番と同じ試験時間（90分）をタイマーで計り、予想模試または過去模試を3回分解きます。採点を行い、すべての回で合格基準点（70点）をクリアするか、間違えた問題の解き直しをすべてノートに記録して完了とします。"
+                         },
+                         {
+                             "title":  "本試験に挑み、合否結果を確認する",
+                             "description":  "受験票、身分証明書、電卓、筆記用具を持参して試験会場で受験します。ネット試験の場合は即時判定されたスコアレポートを、統一試験の場合は合格発表を確認し、結果を記録して完了とします。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-03",
+        "category":  "学習",
+        "title":  "Flutterでアプリを作れるようになる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "Flutter",
+                                    "アプリ"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  823,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "Flutterでアプリを作れるようになるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-04",
+        "category":  "学習",
+        "title":  "日本史を学び直したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "振り返り"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  817,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "日本史を学び直したいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-05",
+        "category":  "学習",
+        "title":  "ピアノで好きな曲を弾きたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "曲"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  800,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "ピアノで好きな曲を弾きたいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-06",
+        "category":  "学習",
+        "title":  "基本情報技術者試験に合格したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "試験",
+                                    "範囲"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  748,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "基本情報技術者試験に合格したいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-01",
+        "category":  "健康",
+        "title":  "5キロ走れるようになる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1984,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "5キロ走れるようになるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-02",
+        "category":  "健康",
+        "title":  "睡眠の質を改善したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "睡眠",
+                                    "記録"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  819,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "睡眠の質を改善したいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-03",
+        "category":  "健康",
+        "title":  "健康的に5キロ減量する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "記録"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  851,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "健康的に5キロ減量するの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-04",
+        "category":  "健康",
+        "title":  "筋力トレーニングを習慣にする",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "筋力"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  865,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "筋力トレーニングを習慣にするの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-05",
+        "category":  "健康",
+        "title":  "自炊で栄養バランスを整える",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "栄養"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  802,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "自炊で栄養バランスを整えるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-06",
+        "category":  "健康",
+        "title":  "ストレスを上手に整えたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "ストレス",
+                                    "記録",
+                                    "相談"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  749,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "ストレスを上手に整えたいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "career-01",
+        "category":  "仕事",
+        "title":  "チームリーダーへ昇進したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  804,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "チームリーダーへ昇進したいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "career-02",
+        "category":  "仕事",
+        "title":  "納得できる会社へ転職する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "条件"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  775,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "納得できる会社へ転職するの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "career-03",
+        "category":  "仕事",
+        "title":  "デザインのポートフォリオを完成させる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  786,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "デザインのポートフォリオを完成させるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "career-04",
+        "category":  "仕事",
+        "title":  "小さな副業を始める",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  751,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "小さな副業を始めるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "career-05",
+        "category":  "仕事",
+        "title":  "大切なプレゼンを成功させる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "資料"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1669,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "大切なプレゼンを成功させるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "creative-01",
+        "category":  "創作",
+        "title":  "短編小説を書き上げる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  952,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "短編小説を書き上げるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "creative-02",
+        "category":  "創作",
+        "title":  "デジタルイラストを描けるようになる",
+        "status":  "ok",
+        "source_type":  "gemini_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  1,
+        "domain_keyword_hits":  [
+                                    "資料",
+                                    "ラフ",
+                                    "線画",
+                                    "完成"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  5820,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  false,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  true
+                   },
+        "missions":  [
+                         {
+                             "title":  "キャラクターの基本設定とイメージを書き出す",
+                             "description":  "描きたいオリジナルキャラクターの性別、髪型、服装、表情、全体のテーマ（ファンタジー、現代風など）をテキストでメモに書き出し、イメージシートを完成させる。"
+                         },
+                         {
+                             "title":  "イラスト制作アプリとデバイスを決定する",
+                             "description":  "手持ちの機材（PC、iPad、スマホなど）に合わせて、使用するアプリ（アイビスペイント、クリスタ、Procreateなど）を1つ選び、インストールを完了する。"
+                         },
+                         {
+                             "title":  "ポーズや構図の参考資料を3枚以上集める",
+                             "description":  "描きたいポーズやキャラクターの雰囲気に近い既存のイラストや写真素材をネット上で検索し、フォルダに「参考資料」として保存する。"
+                         },
+                         {
+                             "title":  "キャンバスを作成し大まかなアタリを描く",
+                             "description":  "アプリを開いて新規キャンバス（推奨：A4サイズ・350dpiなど）を作成し、丸や線を使ってキャラクターの頭身やポーズの大枠（アタリ）を描いた画像を保存する。"
+                         },
+                         {
+                             "title":  "アタリの上にキャラクターの下描き（ラフ）を描く",
+                             "description":  "アタリのレイヤーの不透明度を下げ、別レイヤーに髪型や服装などのディテールを描き込んだ「ラフ画」を1枚完成させる。"
+                         },
+                         {
+                             "title":  "ラフをなぞってきれいな線画を作成する",
+                             "description":  "ラフ画の上に新しい線画用レイヤーを作成し、ブレのない滑らかな線でキャラクターの輪郭やパーツを描いた「線画レイヤー」を完成させる。"
+                         },
+                         {
+                             "title":  "パーツごとにパーツ分けと下塗りを行う",
+                             "description":  "肌、髪、服、目などのパーツごとにレイヤーを分け、バケツツール等を使って隙間なく単色で塗り潰した「下塗り状態」を完成させる。"
+                         },
+                         {
+                             "title":  "影とハイライトを入れて立体感を出す",
+                             "description":  "乗算レイヤーやスクリーンレイヤーを追加し、光源を意識して髪や肌に「影（1部・2部）」と「光（ハイライト）」を描き込んだ状態にする。"
+                         },
+                         {
+                             "title":  "背景をシンプルに仕上げてイラストを統合する",
+                             "description":  "単色グラデーションや簡単なエフェクトで背景を描き、キャラクターと馴染ませた上で、最終的な1枚の画像（PNGまたはJPEG形式）として書き出す。"
+                         },
+                         {
+                             "title":  "完成したイラストを振り返り保存する",
+                             "description":  "完成したオリジナルキャラクター画像をSNSやポートフォリオに投稿するか、専用のフォルダに「初オリジナル作品」として保存し、達成感を記録する。"
+                         }
+                     ]
+    },
+    {
+        "id":  "creative-03",
+        "category":  "創作",
+        "title":  "自分の写真展を開く",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  783,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "自分の写真展を開くの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "creative-04",
+        "category":  "創作",
+        "title":  "ポッドキャストを始める",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1029,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "ポッドキャストを始めるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "creative-05",
+        "category":  "創作",
+        "title":  "オリジナル曲を完成させる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "完成"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  751,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "オリジナル曲を完成させるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "relationship-01",
+        "category":  "家族",
+        "title":  "家族で夕食を囲む時間を増やす",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "家族",
+                                    "夕食",
+                                    "振り返り"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  769,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "家族で夕食を囲む時間を増やすの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "relationship-02",
+        "category":  "人間関係",
+        "title":  "疎遠になった友人とまた話したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "連絡",
+                                    "相手"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  736,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "疎遠になった友人とまた話したいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "relationship-03",
+        "category":  "家族",
+        "title":  "結婚記念日を大切に祝う",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "相手",
+                                    "予算",
+                                    "予約"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  736,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "結婚記念日を大切に祝うの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "relationship-04",
+        "category":  "家族",
+        "title":  "育児と仕事の分担を見直したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "分担",
+                                    "時間",
+                                    "見直し"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  736,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "育児と仕事の分担を見直したいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "lifestyle-01",
+        "category":  "生活",
+        "title":  "部屋をすっきり片付ける",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "場所"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1300,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "部屋をすっきり片付けるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "lifestyle-02",
+        "category":  "生活",
+        "title":  "新しい街へ引っ越す",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "条件",
+                                    "費用"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  749,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "新しい街へ引っ越すの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "lifestyle-03",
+        "category":  "生活",
+        "title":  "朝の時間を有効に使いたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "記録"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  803,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "朝の時間を有効に使いたいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "lifestyle-04",
+        "category":  "生活",
+        "title":  "ベランダで野菜を育てたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "野菜"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  793,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "ベランダで野菜を育てたいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "lifestyle-05",
+        "category":  "生活",
+        "title":  "家庭の防災対策を整える",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "連絡"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  902,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "家庭の防災対策を整えるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "finance-01",
+        "category":  "お金",
+        "title":  "一年で50万円貯める",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "予算"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  720,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "一年で50万円貯めるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "finance-02",
+        "category":  "お金",
+        "title":  "家計を見える化する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "家計",
+                                    "予算",
+                                    "記録"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  940,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "家計を見える化するの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "finance-03",
+        "category":  "お金",
+        "title":  "投資の基礎を学びたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "リスク"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  773,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "投資の基礎を学びたいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "community-01",
+        "category":  "地域活動",
+        "title":  "地域の清掃ボランティアに参加する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "日程",
+                                    "申込",
+                                    "参加"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  841,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "地域の清掃ボランティアに参加するの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "community-02",
+        "category":  "地域活動",
+        "title":  "近所で小さな交流イベントを開く",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  727,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "近所で小さな交流イベントを開くの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "community-03",
+        "category":  "地域活動",
+        "title":  "読書会を立ち上げる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "日程"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1282,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "読書会を立ち上げるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "challenge-01",
+        "category":  "挑戦",
+        "title":  "富士山に登る",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  731,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "富士山に登るの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "challenge-02",
+        "category":  "挑戦",
+        "title":  "フルマラソンを完走する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1047,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "フルマラソンを完走するの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "challenge-03",
+        "category":  "挑戦",
+        "title":  "家族で初めてキャンプをする",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "場所",
+                                    "予約"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1305,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "家族で初めてキャンプをするの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "challenge-04",
+        "category":  "挑戦",
+        "title":  "スキューバダイビングの資格を取る",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "資格"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  857,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "スキューバダイビングの資格を取るの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "product-01",
+        "category":  "プロダクト",
+        "title":  "個人アプリをリリースする",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  821,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "個人アプリをリリースするの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "product-02",
+        "category":  "プロダクト",
+        "title":  "自分のポートフォリオサイトを公開する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "確認",
+                                    "公開"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1275,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "自分のポートフォリオサイトを公開するの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "product-03",
+        "category":  "プロダクト",
+        "title":  "週刊ニュースレターを始める",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  730,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "週刊ニュースレターを始めるの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "product-04",
+        "category":  "プロダクト",
+        "title":  "小さなオンラインショップを開く",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  697,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "小さなオンラインショップを開くの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "growth-01",
+        "category":  "自己成長",
+        "title":  "人前で自信を持って話せるようになりたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  920,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "人前で自信を持って話せるようになりたいの完了条件を決める",
+                             "description":  "達成したと言える状態、期限、優先したい体験を一文ずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "期限と前提条件を確認する",
+                             "description":  "期限、必要条件、変更されやすいルールを公式情報で確認し、参照先と確認日を残したら完了です。"
+                         },
+                         {
+                             "title":  "使える予算と時間を決める",
+                             "description":  "上限予算と確保できる時間を数字で決め、調整可能な範囲も記録したら完了です。"
+                         },
+                         {
+                             "title":  "選択肢を3つ比較する",
+                             "description":  "費用、時間、利点、注意点の同じ4項目で3案を比較表にしたら完了です。"
+                         },
+                         {
+                             "title":  "進め方と日程を組み立てる",
+                             "description":  "準備、実行、振り返りの順に日程を置き、各段階の締切を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約や協力を整理する",
+                             "description":  "予約、申込み、相談相手を一覧にし、期限と連絡先を添えたら完了です。"
+                         },
+                         {
+                             "title":  "不足する道具と情報をそろえる",
+                             "description":  "必要な物、資料、連絡手段をチェックリスト化し、入手状況を記録したら完了です。"
+                         },
+                         {
+                             "title":  "リスクと代替案を決める",
+                             "description":  "起こりそうな問題を3つ挙げ、それぞれの予防策と代替案を一つずつ決めたら完了です。"
+                         },
+                         {
+                             "title":  "最初の実行日を確定する",
+                             "description":  "最初に動く日時、場所、行動をカレンダーへ登録したら完了です。"
+                         },
+                         {
+                             "title":  "Trailへ振り返りを残す",
+                             "description":  "実行後に良かった点、迷った点、次に変える点を一つずつTrailへ記録したら完了です。"
+                         }
+                     ]
+    }
+]

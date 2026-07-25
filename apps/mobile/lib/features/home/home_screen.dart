@@ -1,18 +1,26 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../core/experience/experience_settings_controller.dart';
+import '../../core/experience/haptic_feedback_service.dart';
+import '../../core/experience/sound_effect_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../widgets/arc/arc_emotion.dart';
+import '../../widgets/arc/arc_approved_portrait.dart';
 import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
 import '../arc/arc_daily_greeting_service.dart';
+import '../arc/arc_motion_controller.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_state.dart';
 import '../horizon/horizon_next_challenge_service.dart';
@@ -49,7 +57,25 @@ class HomeScreen extends ConsumerWidget {
           ..sort((a, b) => b.progress.compareTo(a.progress));
     final todayMissions = missions
         .where((mission) => mission.status == MissionStatus.todo)
-        .take(5)
+        .take(3)
+        .toList(growable: false);
+    final questItems = activeQuests
+        .take(3)
+        .map(
+          (quest) => _HomeQuestItem(
+            quest: quest,
+            progress: const QuestProgressService().calculate(
+              missions.where((mission) => mission.questId == quest.id),
+            ),
+            nextMission: missions
+                .where(
+                  (mission) =>
+                      mission.questId == quest.id &&
+                      mission.status == MissionStatus.todo,
+                )
+                .firstOrNull,
+          ),
+        )
         .toList(growable: false);
 
     return Scaffold(
@@ -68,7 +94,7 @@ class HomeScreen extends ConsumerWidget {
               onOpenArc: () => context.go(AppRoutes.arc),
             ),
             const SizedBox(height: AppSpacing.xl),
-            const _SimpleSectionTitle(title: '今日やるMission'),
+            const _SimpleSectionTitle(title: '今日のMission'),
             const SizedBox(height: AppSpacing.md),
             _HomeMissionList(
               missions: todayMissions,
@@ -89,30 +115,10 @@ class HomeScreen extends ConsumerWidget {
                 onAction: () => context.go(AppRoutes.arc),
               )
             else
-              ...activeQuests
-                  .take(3)
-                  .map(
-                    (quest) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                      child: _ActiveQuestCard(
-                        quest: quest,
-                        progress: const QuestProgressService().calculate(
-                          missions.where(
-                            (mission) => mission.questId == quest.id,
-                          ),
-                        ),
-                        nextMission: missions
-                            .where(
-                              (mission) =>
-                                  mission.questId == quest.id &&
-                                  mission.status == MissionStatus.todo,
-                            )
-                            .firstOrNull,
-                        onTap: () =>
-                            context.go('${AppRoutes.quest}/${quest.id}'),
-                      ),
-                    ),
-                  ),
+              _HomeQuestDeck(
+                items: questItems,
+                onOpen: (quest) => context.go('${AppRoutes.quest}/${quest.id}'),
+              ),
           ],
         ),
       ),
@@ -394,47 +400,57 @@ class _SimplifiedArcHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _HomeGlassCard(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const ArcWidget(
-            emotion: ArcEmotion.support,
-            size: 100,
-            showSpeechBubble: false,
+    return Semantics(
+      button: true,
+      label: 'Arcに話す',
+      child: InkWell(
+        borderRadius: AppRadius.glassCard,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onOpenArc();
+        },
+        child: _HomeGlassCard(
+          child: Row(
+            children: [
+              const ArcApprovedPortrait(size: 92),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Arc',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      message,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.white,
+                        height: 1.35,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'タップして話す',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.parchment,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.gold),
+            ],
           ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '今日は何を叶えたい？',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  message,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.parchment,
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                FilledButton.icon(
-                  onPressed: onOpenArc,
-                  icon: const Icon(Icons.auto_awesome),
-                  label: const Text('Arcに話す'),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -457,7 +473,7 @@ class _SimpleSectionTitle extends StatelessWidget {
   }
 }
 
-class _HomeMissionList extends StatelessWidget {
+class _HomeMissionList extends ConsumerWidget {
   const _HomeMissionList({
     required this.missions,
     required this.onComplete,
@@ -469,13 +485,13 @@ class _HomeMissionList extends StatelessWidget {
   final VoidCallback onOpenArc;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (missions.isEmpty) {
       return _HomeEmptyActionCard(
         icon: Icons.task_alt_outlined,
-        title: '今日やるMissionはまだありません',
-        message: 'Arcに叶えたいことを話すと、最初の一歩を一緒に整理できます。',
-        actionLabel: 'Arcに話す',
+        title: '今日はまだ自由です',
+        message: '話したいことがあれば、Arcと次の一歩を見つけられます。',
+        actionLabel: 'Arcを開く',
         onAction: onOpenArc,
       );
     }
@@ -484,15 +500,66 @@ class _HomeMissionList extends StatelessWidget {
       child: Column(
         children: [
           for (var index = 0; index < missions.length; index++) ...[
-            _HomeMissionTile(
-              mission: missions[index],
-              onComplete: () => onComplete(missions[index]),
-            ),
+            if (ref
+                .watch(experienceSettingsControllerProvider)
+                .swipeGesturesEnabled)
+              Dismissible(
+                key: ValueKey('home-mission-${missions[index].id}'),
+                direction: DismissDirection.startToEnd,
+                dismissThresholds: const {DismissDirection.startToEnd: 0.55},
+                confirmDismiss: (_) async {
+                  _completeWithFeedback(ref, missions[index]);
+                  return false;
+                },
+                background: Container(
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.auroraTeal.withValues(alpha: 0.22),
+                    borderRadius: AppRadius.card,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle_rounded,
+                    color: AppColors.auroraTeal,
+                  ),
+                ),
+                child: _HomeMissionTile(
+                  mission: missions[index],
+                  onComplete: () => _completeWithFeedback(ref, missions[index]),
+                ),
+              )
+            else
+              _HomeMissionTile(
+                mission: missions[index],
+                onComplete: () => _completeWithFeedback(ref, missions[index]),
+              ),
             if (index != missions.length - 1)
               Divider(color: AppColors.skyBlue.withValues(alpha: 0.18)),
           ],
         ],
       ),
+    );
+  }
+
+  void _completeWithFeedback(WidgetRef ref, Mission mission) {
+    onComplete(mission);
+    final settings = ref.read(experienceSettingsControllerProvider);
+    unawaited(
+      ref
+          .read(hapticFeedbackServiceProvider)
+          .trigger(QuestraHapticCue.success, settings: settings),
+    );
+    unawaited(
+      ref
+          .read(soundEffectServiceProvider)
+          .play(QuestraSoundEffect.missionComplete, settings: settings),
+    );
+    unawaited(
+      ref
+          .read(arcMotionControllerProvider.notifier)
+          .react(ArcAnimationState.cheering),
     );
   }
 }
@@ -850,6 +917,118 @@ class _TodayMissionCard extends StatelessWidget {
   }
 }
 
+class _HomeQuestItem {
+  const _HomeQuestItem({
+    required this.quest,
+    required this.progress,
+    required this.nextMission,
+  });
+
+  final Quest quest;
+  final QuestProgressSnapshot progress;
+  final Mission? nextMission;
+}
+
+class _HomeQuestDeck extends StatefulWidget {
+  const _HomeQuestDeck({required this.items, required this.onOpen});
+
+  final List<_HomeQuestItem> items;
+  final ValueChanged<Quest> onOpen;
+
+  @override
+  State<_HomeQuestDeck> createState() => _HomeQuestDeckState();
+}
+
+class _HomeQuestDeckState extends State<_HomeQuestDeck> {
+  late final PageController _controller;
+  int _page = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController(viewportFraction: 0.94);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 700) {
+          return Column(
+            children: [
+              for (final item in widget.items)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: _questCard(item),
+                ),
+            ],
+          );
+        }
+
+        return Column(
+          children: [
+            SizedBox(
+              height: 178,
+              child: PageView.builder(
+                controller: _controller,
+                padEnds: false,
+                itemCount: widget.items.length,
+                onPageChanged: (page) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _page = page);
+                },
+                itemBuilder: (context, index) => Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.md),
+                  child: _questCard(widget.items[index]),
+                ),
+              ),
+            ),
+            if (widget.items.length > 1) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var index = 0; index < widget.items.length; index++)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: index == _page ? 20 : 6,
+                      height: 6,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: BoxDecoration(
+                        color: index == _page
+                            ? AppColors.gold
+                            : AppColors.white.withValues(alpha: 0.24),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _questCard(_HomeQuestItem item) {
+    return _ActiveQuestCard(
+      quest: item.quest,
+      progress: item.progress,
+      nextMission: item.nextMission,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        widget.onOpen(item.quest);
+      },
+    );
+  }
+}
+
 class _ActiveQuestCard extends StatelessWidget {
   const _ActiveQuestCard({
     required this.quest,
@@ -1093,45 +1272,48 @@ class _HomeEmptyActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _HomeGlassCard(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _HomeIconBadge(icon: icon),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
+    return Semantics(
+      button: true,
+      label: actionLabel,
+      child: InkWell(
+        borderRadius: AppRadius.glassCard,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onAction();
+        },
+        child: _HomeGlassCard(
+          child: Row(
+            children: [
+              _HomeIconBadge(icon: icon),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      message,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.parchment,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  message,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.parchment,
-                    height: 1.45,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: FilledButton.icon(
-                    onPressed: onAction,
-                    icon: const Icon(Icons.add),
-                    label: Text(actionLabel),
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.gold),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

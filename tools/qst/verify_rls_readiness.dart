@@ -14,6 +14,15 @@ const requiredRlsTables = [
   'entity_tags',
   'arc_emotion_events',
   'quest_milestones',
+  'guild_quest_publications',
+  'guild_quest_publication_owners',
+  'guild_mission_publications',
+  'guild_mission_publication_owners',
+  'guild_quest_copy_events',
+  'route_versions',
+  'route_change_proposals',
+  'route_change_items',
+  'mission_progress_events',
 ];
 
 const requiredPolicies = [
@@ -54,6 +63,11 @@ const requiredPolicies = [
   'Quest owners create milestones',
   'Quest owners update milestones',
   'Quest owners delete milestones',
+  'Guild Discovery reads approved public snapshots',
+  'Guild publication ownership is owner private',
+  'Guild Mission Discovery follows approved publication',
+  'Guild Mission ownership is owner private',
+  'Guild copy events are copier private',
 ];
 
 const requiredSnippets = [
@@ -63,6 +77,10 @@ const requiredSnippets = [
   "visibility = 'guild'",
   'public.is_guild_member',
   'public.is_guild_owner',
+  'create policy route_versions_owner_all',
+  'create policy route_proposals_owner_all',
+  'create policy route_items_owner_all',
+  'create policy mission_progress_events_owner_all',
 ];
 
 const requiredBehaviorSnippets = [
@@ -75,6 +93,12 @@ const requiredBehaviorSnippets = [
   'other cannot read owner private media row',
   'other cannot create a Quest for owner',
   'other cannot create an Arc Memory for owner',
+  'other cannot read pending Guild publication',
+  'other cannot read Guild publication ownership',
+  'source owner cannot inspect copier event',
+  'owner can read own private Route version',
+  'other cannot read owner private Route proposal',
+  'other cannot create a Route version for owner',
   'rollback;',
 ];
 

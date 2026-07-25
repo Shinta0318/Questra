@@ -48,6 +48,7 @@ class UserProfile {
     required this.id,
     required this.email,
     required this.nickname,
+    this.loginId,
     this.arcName = 'Arc',
     this.questInterest = QuestInterest.adventure,
     this.signalFrequency = SignalFrequency.balanced,
@@ -62,6 +63,7 @@ class UserProfile {
   final String id;
   final String email;
   final String nickname;
+  final String? loginId;
   final String arcName;
   final QuestInterest questInterest;
   final SignalFrequency signalFrequency;
@@ -76,6 +78,7 @@ class UserProfile {
     String? id,
     String? email,
     String? nickname,
+    String? loginId,
     String? arcName,
     QuestInterest? questInterest,
     SignalFrequency? signalFrequency,
@@ -90,6 +93,7 @@ class UserProfile {
       id: id ?? this.id,
       email: email ?? this.email,
       nickname: nickname ?? this.nickname,
+      loginId: loginId ?? this.loginId,
       arcName: arcName ?? this.arcName,
       questInterest: questInterest ?? this.questInterest,
       signalFrequency: signalFrequency ?? this.signalFrequency,
@@ -105,11 +109,23 @@ class UserProfile {
 }
 
 class AuthState {
-  const AuthState({this.profile, this.isLoading = false, this.errorMessage});
+  const AuthState({
+    this.profile,
+    this.isLoading = false,
+    this.errorMessage,
+    this.registrationCompleted = false,
+    this.passwordResetRequested = false,
+    this.passwordResetCompleted = false,
+    this.isPasswordRecovery = false,
+  });
 
   final UserProfile? profile;
   final bool isLoading;
   final String? errorMessage;
+  final bool registrationCompleted;
+  final bool passwordResetRequested;
+  final bool passwordResetCompleted;
+  final bool isPasswordRecovery;
 
   bool get isAuthenticated => profile != null;
 
@@ -119,11 +135,22 @@ class AuthState {
     bool? isLoading,
     String? errorMessage,
     bool clearError = false,
+    bool? registrationCompleted,
+    bool? passwordResetRequested,
+    bool? passwordResetCompleted,
+    bool? isPasswordRecovery,
   }) {
     return AuthState(
       profile: clearProfile == true ? null : profile ?? this.profile,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+      registrationCompleted:
+          registrationCompleted ?? this.registrationCompleted,
+      passwordResetRequested:
+          passwordResetRequested ?? this.passwordResetRequested,
+      passwordResetCompleted:
+          passwordResetCompleted ?? this.passwordResetCompleted,
+      isPasswordRecovery: isPasswordRecovery ?? this.isPasswordRecovery,
     );
   }
 }

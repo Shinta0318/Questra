@@ -1,9 +1,18 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/analytics/analytics_event.dart';
+import '../../core/analytics/analytics_service.dart';
+import '../../core/experience/experience_settings.dart';
+import '../../core/experience/experience_settings_controller.dart';
+import '../../core/experience/haptic_feedback_service.dart';
+import '../../core/experience/sound_effect_service.dart';
 import '../../core/performance/performance_limits.dart';
 import '../../core/theme/questra_colors.dart';
+import '../../features/arc/arc_motion_controller.dart';
 import '../motion/questra_motion.dart';
 import 'arc_animation_event.dart';
 import 'arc_asset_paths.dart';
@@ -11,13 +20,15 @@ import 'arc_emotion.dart';
 import 'arc_speech_bubble.dart';
 import 'arc_visual_asset.dart';
 
-class ArcWidget extends StatefulWidget {
+class ArcWidget extends StatelessWidget {
   const ArcWidget({
     this.emotion = ArcEmotion.normal,
     this.message,
     this.size = QuestraPerformanceLimits.arcAssetMaxDisplaySize,
     this.showSpeechBubble = true,
     this.animationEvent,
+    this.interactive = true,
+    this.analyticsSurface = 'arc_widget',
     super.key,
   });
 
@@ -26,21 +37,65 @@ class ArcWidget extends StatefulWidget {
   final double size;
   final bool showSpeechBubble;
   final ArcAnimationEvent? animationEvent;
+  final bool interactive;
+  final String analyticsSurface;
 
   @override
-  State<ArcWidget> createState() => _ArcWidgetState();
+  Widget build(BuildContext context) {
+    final connected = _ConnectedArcWidget(
+      emotion: emotion,
+      message: message,
+      size: size,
+      showSpeechBubble: showSpeechBubble,
+      animationEvent: animationEvent,
+      interactive: interactive,
+      analyticsSurface: analyticsSurface,
+    );
+    try {
+      ProviderScope.containerOf(context, listen: false);
+      return connected;
+    } on StateError {
+      return ProviderScope(child: connected);
+    }
+  }
 }
 
-class _ArcWidgetState extends State<ArcWidget>
-    with SingleTickerProviderStateMixin {
+class _ConnectedArcWidget extends ConsumerStatefulWidget {
+  const _ConnectedArcWidget({
+    required this.emotion,
+    required this.message,
+    required this.size,
+    required this.showSpeechBubble,
+    required this.animationEvent,
+    required this.interactive,
+    required this.analyticsSurface,
+  });
+
+  final ArcEmotion emotion;
+  final String? message;
+  final double size;
+  final bool showSpeechBubble;
+  final ArcAnimationEvent? animationEvent;
+  final bool interactive;
+  final String analyticsSurface;
+
+  @override
+  ConsumerState<_ConnectedArcWidget> createState() => _ArcWidgetState();
+}
+
+class _ArcWidgetState extends ConsumerState<_ConnectedArcWidget>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _controller;
+  DateTime? _lastInteractionAt;
+  bool _appIsActive = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller = AnimationController(
       vsync: this,
-      duration: _animationEvent.duration,
+      duration: _resolvedAnimationEvent().duration,
     );
   }
 
@@ -51,53 +106,98 @@ class _ArcWidgetState extends State<ArcWidget>
   }
 
   @override
-  void didUpdateWidget(covariant ArcWidget oldWidget) {
+  void didUpdateWidget(covariant _ConnectedArcWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.emotion != widget.emotion ||
         oldWidget.animationEvent != widget.animationEvent) {
-      _controller.duration = _animationEvent.duration;
+      _controller.duration = _resolvedAnimationEvent().duration;
       _syncAnimation(reset: true);
     }
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appIsActive = state == AppLifecycleState.resumed;
+    _syncAnimation(reset: !_appIsActive);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final visuals = _ArcVisuals.fromEmotion(widget.emotion);
-    final asset = ArcAssetPaths.assetForEmotion(widget.emotion);
-    final animationEvent = _animationEvent;
-    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final settings = ref.watch(experienceSettingsControllerProvider);
+    final reaction = ref.watch(arcMotionControllerProvider);
+    final emotion = reaction.emotionOverride ?? widget.emotion;
+    final visuals = _ArcVisuals.fromEmotion(emotion);
+    final asset = ArcAssetPaths.assetForEmotion(emotion);
+    final animationEvent = _resolvedAnimationEvent(reaction);
+    final motionLevel = settings.effectiveArcMotionLevel(
+      osReduceMotion: MediaQuery.disableAnimationsOf(context),
+    );
+    final disableAnimations = motionLevel == ArcMotionLevel.off ||
+        !_appIsActive ||
+        !TickerMode.valuesOf(context).enabled;
+    final motionScale = motionLevel == ArcMotionLevel.reduced ? 0.32 : 1.0;
+
+    ref.listen<ArcMotionReaction>(arcMotionControllerProvider,
+        (previous, next) {
+      if (previous?.revision == next.revision) return;
+      _controller.duration = _resolvedAnimationEvent(next).duration;
+      _syncAnimation(reset: true);
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncAnimation();
+    });
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (disableAnimations)
-          _ArcStarCharacter(size: widget.size, visuals: visuals, asset: asset)
-        else
-          AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              final t = QuestraMotion.gentle.transform(_controller.value);
-              final scale =
-                  1 + animationEvent.pulseStrength * math.sin(t * math.pi);
-              final tilt = animationEvent.tilt * math.sin(t * math.pi * 2);
+        Semantics(
+          label: widget.interactive ? '星のナビゲーター Arc。タップで反応' : null,
+          button: widget.interactive,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.interactive ? _handleTap : null,
+            onLongPress: widget.interactive ? _handleLongPress : null,
+            child: disableAnimations
+                ? _ArcStarCharacter(
+                    size: widget.size,
+                    visuals: visuals,
+                    asset: asset,
+                  )
+                : AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      final t = QuestraMotion.gentle.transform(
+                        _controller.value,
+                      );
+                      final scale = 1 +
+                          animationEvent.pulseStrength *
+                              motionScale *
+                              math.sin(t * math.pi);
+                      final tilt = animationEvent.tilt *
+                          motionScale *
+                          math.sin(t * math.pi * 2);
 
-              return Transform.rotate(
-                angle: tilt,
-                child: Transform.scale(scale: scale, child: child),
-              );
-            },
-            child: _ArcStarCharacter(
-              size: widget.size,
-              visuals: visuals,
-              asset: asset,
-            ),
+                      return Transform.rotate(
+                        angle: tilt,
+                        child: Transform.scale(scale: scale, child: child),
+                      );
+                    },
+                    child: _ArcStarCharacter(
+                      size: widget.size,
+                      visuals: visuals,
+                      asset: asset,
+                    ),
+                  ),
           ),
+        ),
         if (widget.message != null && widget.showSpeechBubble) ...[
           const SizedBox(height: 14),
           ArcSpeechBubble(message: widget.message!),
@@ -107,21 +207,90 @@ class _ArcWidgetState extends State<ArcWidget>
   }
 
   void _syncAnimation({bool reset = false}) {
-    if (MediaQuery.disableAnimationsOf(context)) {
+    if (!mounted) return;
+    final settings = ref.read(experienceSettingsControllerProvider);
+    final motionLevel = settings.effectiveArcMotionLevel(
+      osReduceMotion: MediaQuery.disableAnimationsOf(context),
+    );
+    if (motionLevel == ArcMotionLevel.off ||
+        !_appIsActive ||
+        !TickerMode.valuesOf(context).enabled) {
       _controller.stop();
       return;
     }
     if (reset) {
       _controller.reset();
     }
-    if (_animationEvent.loop && !_controller.isAnimating) {
+    if (_resolvedAnimationEvent().loop && !_controller.isAnimating) {
       _controller.repeat(reverse: true);
     }
   }
 
-  ArcAnimationEvent get _animationEvent {
+  ArcAnimationEvent _resolvedAnimationEvent([ArcMotionReaction? reaction]) {
+    final ArcMotionReaction activeReaction =
+        reaction ?? ref.read(arcMotionControllerProvider);
     return widget.animationEvent ??
-        ArcAnimationEventResolver.forEmotion(widget.emotion);
+        activeReaction.event ??
+        ArcAnimationEventResolver.forEmotion(
+          activeReaction.emotionOverride ?? widget.emotion,
+        );
+  }
+
+  bool _interactionIsCoolingDown() {
+    final now = DateTime.now();
+    final previous = _lastInteractionAt;
+    if (previous != null && now.difference(previous).inMilliseconds < 500) {
+      return true;
+    }
+    _lastInteractionAt = now;
+    return false;
+  }
+
+  void _handleTap() {
+    if (_interactionIsCoolingDown()) return;
+    final settings = ref.read(experienceSettingsControllerProvider);
+    unawaited(
+      ref.read(hapticFeedbackServiceProvider).trigger(
+            QuestraHapticCue.light,
+            settings: settings,
+          ),
+    );
+    unawaited(
+      ref.read(soundEffectServiceProvider).play(
+            QuestraSoundEffect.arcTap,
+            settings: settings,
+          ),
+    );
+    unawaited(
+      ref
+          .read(arcMotionControllerProvider.notifier)
+          .react(ArcAnimationState.happy),
+    );
+    unawaited(_trackInteraction(AnalyticsEventName.arcTapped));
+  }
+
+  void _handleLongPress() {
+    if (_interactionIsCoolingDown()) return;
+    final settings = ref.read(experienceSettingsControllerProvider);
+    unawaited(
+      ref.read(hapticFeedbackServiceProvider).trigger(
+            QuestraHapticCue.medium,
+            settings: settings,
+          ),
+    );
+    unawaited(
+      ref.read(arcMotionControllerProvider.notifier).reactToLongPress(),
+    );
+    unawaited(_trackInteraction(AnalyticsEventName.arcLongPressed));
+  }
+
+  Future<void> _trackInteraction(AnalyticsEventName eventName) {
+    return ref.read(analyticsServiceProvider).track(
+          AnalyticsEvent(
+            name: eventName,
+            properties: {'surface': widget.analyticsSurface},
+          ),
+        );
   }
 }
 
@@ -392,82 +561,82 @@ class _ArcVisuals {
   factory _ArcVisuals.fromEmotion(ArcEmotion emotion) {
     return switch (emotion) {
       ArcEmotion.normal => const _ArcVisuals(
-        core: QuestraColors.cosmicBlue,
-        highlight: QuestraColors.skyBlue,
-        shadow: QuestraColors.midnightNavy,
-        glow: QuestraColors.skyBlue,
-        expression: _ArcExpression.smile,
-        accentIcon: Icons.auto_awesome,
-        glowAlpha: 0.28,
-        glowRadius: 28,
-        eyeSparkle: true,
-      ),
+          core: QuestraColors.cosmicBlue,
+          highlight: QuestraColors.skyBlue,
+          shadow: QuestraColors.midnightNavy,
+          glow: QuestraColors.skyBlue,
+          expression: _ArcExpression.smile,
+          accentIcon: Icons.auto_awesome,
+          glowAlpha: 0.28,
+          glowRadius: 28,
+          eyeSparkle: true,
+        ),
       ArcEmotion.excited => const _ArcVisuals(
-        core: Color(0xFF1CB5E0),
-        highlight: Color(0xFFB8F7FF),
-        shadow: QuestraColors.cosmicBlue,
-        glow: QuestraColors.gold,
-        expression: _ArcExpression.openSmile,
-        accentIcon: Icons.star,
-        glowAlpha: 0.42,
-        glowRadius: 36,
-        eyeSparkle: true,
-      ),
+          core: Color(0xFF1CB5E0),
+          highlight: Color(0xFFB8F7FF),
+          shadow: QuestraColors.cosmicBlue,
+          glow: QuestraColors.gold,
+          expression: _ArcExpression.openSmile,
+          accentIcon: Icons.star,
+          glowAlpha: 0.42,
+          glowRadius: 36,
+          eyeSparkle: true,
+        ),
       ArcEmotion.support => const _ArcVisuals(
-        core: Color(0xFF2FBF71),
-        highlight: Color(0xFFB8F5D1),
-        shadow: QuestraColors.cosmicBlue,
-        glow: Color(0xFFB8F5D1),
-        expression: _ArcExpression.calm,
-        accentIcon: Icons.favorite,
-        glowAlpha: 0.34,
-        glowRadius: 30,
-        eyeSparkle: false,
-      ),
+          core: Color(0xFF2FBF71),
+          highlight: Color(0xFFB8F5D1),
+          shadow: QuestraColors.cosmicBlue,
+          glow: Color(0xFFB8F5D1),
+          expression: _ArcExpression.calm,
+          accentIcon: Icons.favorite,
+          glowAlpha: 0.34,
+          glowRadius: 30,
+          eyeSparkle: false,
+        ),
       ArcEmotion.serious => const _ArcVisuals(
-        core: QuestraColors.midnightNavy,
-        highlight: QuestraColors.cosmicBlue,
-        shadow: QuestraColors.deepNavy,
-        glow: QuestraColors.cosmicBlue,
-        expression: _ArcExpression.serious,
-        accentIcon: Icons.navigation,
-        glowAlpha: 0.24,
-        glowRadius: 22,
-        eyeSparkle: false,
-      ),
+          core: QuestraColors.midnightNavy,
+          highlight: QuestraColors.cosmicBlue,
+          shadow: QuestraColors.deepNavy,
+          glow: QuestraColors.cosmicBlue,
+          expression: _ArcExpression.serious,
+          accentIcon: Icons.navigation,
+          glowAlpha: 0.24,
+          glowRadius: 22,
+          eyeSparkle: false,
+        ),
       ArcEmotion.worried => const _ArcVisuals(
-        core: Color(0xFF7B61FF),
-        highlight: Color(0xFFD7C8FF),
-        shadow: QuestraColors.midnightNavy,
-        glow: Color(0xFFD7C8FF),
-        expression: _ArcExpression.worried,
-        accentIcon: Icons.help_outline,
-        glowAlpha: 0.26,
-        glowRadius: 24,
-        eyeSparkle: false,
-      ),
+          core: Color(0xFF7B61FF),
+          highlight: Color(0xFFD7C8FF),
+          shadow: QuestraColors.midnightNavy,
+          glow: Color(0xFFD7C8FF),
+          expression: _ArcExpression.worried,
+          accentIcon: Icons.help_outline,
+          glowAlpha: 0.26,
+          glowRadius: 24,
+          eyeSparkle: false,
+        ),
       ArcEmotion.lonely => const _ArcVisuals(
-        core: Color(0xFF5F6F89),
-        highlight: Color(0xFFC7D0DD),
-        shadow: QuestraColors.deepNavy,
-        glow: Color(0xFFC7D0DD),
-        expression: _ArcExpression.small,
-        accentIcon: Icons.nights_stay,
-        glowAlpha: 0.20,
-        glowRadius: 20,
-        eyeSparkle: false,
-      ),
+          core: Color(0xFF5F6F89),
+          highlight: Color(0xFFC7D0DD),
+          shadow: QuestraColors.deepNavy,
+          glow: Color(0xFFC7D0DD),
+          expression: _ArcExpression.small,
+          accentIcon: Icons.nights_stay,
+          glowAlpha: 0.20,
+          glowRadius: 20,
+          eyeSparkle: false,
+        ),
       ArcEmotion.celebrate => const _ArcVisuals(
-        core: QuestraColors.gold,
-        highlight: Color(0xFFFFF1B8),
-        shadow: QuestraColors.cosmicBlue,
-        glow: QuestraColors.gold,
-        expression: _ArcExpression.cheer,
-        accentIcon: Icons.celebration,
-        glowAlpha: 0.50,
-        glowRadius: 40,
-        eyeSparkle: true,
-      ),
+          core: QuestraColors.gold,
+          highlight: Color(0xFFFFF1B8),
+          shadow: QuestraColors.cosmicBlue,
+          glow: QuestraColors.gold,
+          expression: _ArcExpression.cheer,
+          accentIcon: Icons.celebration,
+          glowAlpha: 0.50,
+          glowRadius: 40,
+          eyeSparkle: true,
+        ),
     };
   }
 }

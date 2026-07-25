@@ -1,0 +1,3324 @@
+﻿[
+    {
+        "id":  "travel-01",
+        "category":  "旅行",
+        "title":  "シンガポールへ行く",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "入国",
+                                    "宿泊",
+                                    "保険"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  2834,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "旅の目的と候補日を決める",
+                             "description":  "体験したいことと出発・帰着日の候補を記録したら完了です。"
+                         },
+                         {
+                             "title":  "旅券と公式の入国条件を確認する",
+                             "description":  "公式情報の参照先と確認日を記録したら完了です。"
+                         },
+                         {
+                             "title":  "旅行予算の上限を決める",
+                             "description":  "交通、宿泊、食事、体験、予備費の上限を決めたら完了です。"
+                         },
+                         {
+                             "title":  "主要な移動手段を比較する",
+                             "description":  "料金、時間、変更条件を同じ表で比較したら完了です。"
+                         },
+                         {
+                             "title":  "宿泊エリアと宿を比較する",
+                             "description":  "立地、費用、条件を比較して候補を絞ったら完了です。"
+                         },
+                         {
+                             "title":  "日ごとの旅程を組み立てる",
+                             "description":  "移動時間を含む日別予定を作ったら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約を確定する",
+                             "description":  "予約対象、期限、変更条件を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "現地の通信と交通を決める",
+                             "description":  "通信手段と現地移動の支払い方法を決めたら完了です。"
+                         },
+                         {
+                             "title":  "保険と緊急時の備えを整える",
+                             "description":  "保険の判断、連絡先、書類控えをそろえたら完了です。"
+                         },
+                         {
+                             "title":  "持ち物と出発前手続きを確認する",
+                             "description":  "持ち物と未完了手続きを最終確認したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "travel-02",
+        "category":  "旅行",
+        "title":  "北海道を車で一周したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "宿泊",
+                                    "予算"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1000,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "旅の目的と候補日を決める",
+                             "description":  "体験したいことと出発・帰着日の候補を記録したら完了です。"
+                         },
+                         {
+                             "title":  "旅券と公式の入国条件を確認する",
+                             "description":  "公式情報の参照先と確認日を記録したら完了です。"
+                         },
+                         {
+                             "title":  "旅行予算の上限を決める",
+                             "description":  "交通、宿泊、食事、体験、予備費の上限を決めたら完了です。"
+                         },
+                         {
+                             "title":  "主要な移動手段を比較する",
+                             "description":  "料金、時間、変更条件を同じ表で比較したら完了です。"
+                         },
+                         {
+                             "title":  "宿泊エリアと宿を比較する",
+                             "description":  "立地、費用、条件を比較して候補を絞ったら完了です。"
+                         },
+                         {
+                             "title":  "日ごとの旅程を組み立てる",
+                             "description":  "移動時間を含む日別予定を作ったら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約を確定する",
+                             "description":  "予約対象、期限、変更条件を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "現地の通信と交通を決める",
+                             "description":  "通信手段と現地移動の支払い方法を決めたら完了です。"
+                         },
+                         {
+                             "title":  "保険と緊急時の備えを整える",
+                             "description":  "保険の判断、連絡先、書類控えをそろえたら完了です。"
+                         },
+                         {
+                             "title":  "持ち物と出発前手続きを確認する",
+                             "description":  "持ち物と未完了手続きを最終確認したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "travel-03",
+        "category":  "旅行",
+        "title":  "家族で沖縄旅行を実現する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "宿泊",
+                                    "移動",
+                                    "予約"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  944,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "旅の目的と候補日を決める",
+                             "description":  "体験したいことと出発・帰着日の候補を記録したら完了です。"
+                         },
+                         {
+                             "title":  "旅券と公式の入国条件を確認する",
+                             "description":  "公式情報の参照先と確認日を記録したら完了です。"
+                         },
+                         {
+                             "title":  "旅行予算の上限を決める",
+                             "description":  "交通、宿泊、食事、体験、予備費の上限を決めたら完了です。"
+                         },
+                         {
+                             "title":  "主要な移動手段を比較する",
+                             "description":  "料金、時間、変更条件を同じ表で比較したら完了です。"
+                         },
+                         {
+                             "title":  "宿泊エリアと宿を比較する",
+                             "description":  "立地、費用、条件を比較して候補を絞ったら完了です。"
+                         },
+                         {
+                             "title":  "日ごとの旅程を組み立てる",
+                             "description":  "移動時間を含む日別予定を作ったら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約を確定する",
+                             "description":  "予約対象、期限、変更条件を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "現地の通信と交通を決める",
+                             "description":  "通信手段と現地移動の支払い方法を決めたら完了です。"
+                         },
+                         {
+                             "title":  "保険と緊急時の備えを整える",
+                             "description":  "保険の判断、連絡先、書類控えをそろえたら完了です。"
+                         },
+                         {
+                             "title":  "持ち物と出発前手続きを確認する",
+                             "description":  "持ち物と未完了手続きを最終確認したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "travel-04",
+        "category":  "旅行",
+        "title":  "ヨーロッパを一人旅する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "入国",
+                                    "旅程",
+                                    "宿泊",
+                                    "保険"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  770,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "旅の目的と候補日を決める",
+                             "description":  "体験したいことと出発・帰着日の候補を記録したら完了です。"
+                         },
+                         {
+                             "title":  "旅券と公式の入国条件を確認する",
+                             "description":  "公式情報の参照先と確認日を記録したら完了です。"
+                         },
+                         {
+                             "title":  "旅行予算の上限を決める",
+                             "description":  "交通、宿泊、食事、体験、予備費の上限を決めたら完了です。"
+                         },
+                         {
+                             "title":  "主要な移動手段を比較する",
+                             "description":  "料金、時間、変更条件を同じ表で比較したら完了です。"
+                         },
+                         {
+                             "title":  "宿泊エリアと宿を比較する",
+                             "description":  "立地、費用、条件を比較して候補を絞ったら完了です。"
+                         },
+                         {
+                             "title":  "日ごとの旅程を組み立てる",
+                             "description":  "移動時間を含む日別予定を作ったら完了です。"
+                         },
+                         {
+                             "title":  "必要な予約を確定する",
+                             "description":  "予約対象、期限、変更条件を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "現地の通信と交通を決める",
+                             "description":  "通信手段と現地移動の支払い方法を決めたら完了です。"
+                         },
+                         {
+                             "title":  "保険と緊急時の備えを整える",
+                             "description":  "保険の判断、連絡先、書類控えをそろえたら完了です。"
+                         },
+                         {
+                             "title":  "持ち物と出発前手続きを確認する",
+                             "description":  "持ち物と未完了手続きを最終確認したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-01",
+        "category":  "学習",
+        "title":  "英語で海外の人と自然に話せるようになりたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "会話",
+                                    "教材",
+                                    "練習"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  773,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "身につけたい到達状態を決める",
+                             "description":  "実際にできるようになりたい行動と期限を書いたら完了です。"
+                         },
+                         {
+                             "title":  "現在地を小さな課題で確認する",
+                             "description":  "現状の得意・苦手を記録したら完了です。"
+                         },
+                         {
+                             "title":  "公式の範囲と評価基準を確認する",
+                             "description":  "必要範囲と合格・完成基準を記録したら完了です。"
+                         },
+                         {
+                             "title":  "主教材を一つ選ぶ",
+                             "description":  "比較基準を決めて使う教材を一つに絞ったら完了です。"
+                         },
+                         {
+                             "title":  "週の学習時間を確保する",
+                             "description":  "曜日、時間、場所を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "基礎単元を一つ終える",
+                             "description":  "最初の単元を学び、要点を自分の言葉で残したら完了です。"
+                         },
+                         {
+                             "title":  "実践課題を一つ完成させる",
+                             "description":  "会話、問題、演奏、作品など一つを最後まで実行したら完了です。"
+                         },
+                         {
+                             "title":  "間違いと弱点を復習する",
+                             "description":  "誤りの理由と次の練習方法を記録したら完了です。"
+                         },
+                         {
+                             "title":  "模擬成果を測定する",
+                             "description":  "本番に近い条件で実行し、結果を記録したら完了です。"
+                         },
+                         {
+                             "title":  "次の学習周期を調整する",
+                             "description":  "結果から継続、変更、追加する学習を決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-02",
+        "category":  "学習",
+        "title":  "簿記2級に合格する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "教材",
+                                    "学習",
+                                    "復習"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  925,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "身につけたい到達状態を決める",
+                             "description":  "実際にできるようになりたい行動と期限を書いたら完了です。"
+                         },
+                         {
+                             "title":  "現在地を小さな課題で確認する",
+                             "description":  "現状の得意・苦手を記録したら完了です。"
+                         },
+                         {
+                             "title":  "公式の範囲と評価基準を確認する",
+                             "description":  "必要範囲と合格・完成基準を記録したら完了です。"
+                         },
+                         {
+                             "title":  "主教材を一つ選ぶ",
+                             "description":  "比較基準を決めて使う教材を一つに絞ったら完了です。"
+                         },
+                         {
+                             "title":  "週の学習時間を確保する",
+                             "description":  "曜日、時間、場所を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "基礎単元を一つ終える",
+                             "description":  "最初の単元を学び、要点を自分の言葉で残したら完了です。"
+                         },
+                         {
+                             "title":  "実践課題を一つ完成させる",
+                             "description":  "会話、問題、演奏、作品など一つを最後まで実行したら完了です。"
+                         },
+                         {
+                             "title":  "間違いと弱点を復習する",
+                             "description":  "誤りの理由と次の練習方法を記録したら完了です。"
+                         },
+                         {
+                             "title":  "模擬成果を測定する",
+                             "description":  "本番に近い条件で実行し、結果を記録したら完了です。"
+                         },
+                         {
+                             "title":  "次の学習周期を調整する",
+                             "description":  "結果から継続、変更、追加する学習を決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-03",
+        "category":  "学習",
+        "title":  "Flutterでアプリを作れるようになる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  763,
+        "content_passed":  false,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "身につけたい到達状態を決める",
+                             "description":  "実際にできるようになりたい行動と期限を書いたら完了です。"
+                         },
+                         {
+                             "title":  "現在地を小さな課題で確認する",
+                             "description":  "現状の得意・苦手を記録したら完了です。"
+                         },
+                         {
+                             "title":  "公式の範囲と評価基準を確認する",
+                             "description":  "必要範囲と合格・完成基準を記録したら完了です。"
+                         },
+                         {
+                             "title":  "主教材を一つ選ぶ",
+                             "description":  "比較基準を決めて使う教材を一つに絞ったら完了です。"
+                         },
+                         {
+                             "title":  "週の学習時間を確保する",
+                             "description":  "曜日、時間、場所を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "基礎単元を一つ終える",
+                             "description":  "最初の単元を学び、要点を自分の言葉で残したら完了です。"
+                         },
+                         {
+                             "title":  "実践課題を一つ完成させる",
+                             "description":  "会話、問題、演奏、作品など一つを最後まで実行したら完了です。"
+                         },
+                         {
+                             "title":  "間違いと弱点を復習する",
+                             "description":  "誤りの理由と次の練習方法を記録したら完了です。"
+                         },
+                         {
+                             "title":  "模擬成果を測定する",
+                             "description":  "本番に近い条件で実行し、結果を記録したら完了です。"
+                         },
+                         {
+                             "title":  "次の学習周期を調整する",
+                             "description":  "結果から継続、変更、追加する学習を決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-04",
+        "category":  "学習",
+        "title":  "日本史を学び直したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "教材",
+                                    "学習"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  750,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "身につけたい到達状態を決める",
+                             "description":  "実際にできるようになりたい行動と期限を書いたら完了です。"
+                         },
+                         {
+                             "title":  "現在地を小さな課題で確認する",
+                             "description":  "現状の得意・苦手を記録したら完了です。"
+                         },
+                         {
+                             "title":  "公式の範囲と評価基準を確認する",
+                             "description":  "必要範囲と合格・完成基準を記録したら完了です。"
+                         },
+                         {
+                             "title":  "主教材を一つ選ぶ",
+                             "description":  "比較基準を決めて使う教材を一つに絞ったら完了です。"
+                         },
+                         {
+                             "title":  "週の学習時間を確保する",
+                             "description":  "曜日、時間、場所を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "基礎単元を一つ終える",
+                             "description":  "最初の単元を学び、要点を自分の言葉で残したら完了です。"
+                         },
+                         {
+                             "title":  "実践課題を一つ完成させる",
+                             "description":  "会話、問題、演奏、作品など一つを最後まで実行したら完了です。"
+                         },
+                         {
+                             "title":  "間違いと弱点を復習する",
+                             "description":  "誤りの理由と次の練習方法を記録したら完了です。"
+                         },
+                         {
+                             "title":  "模擬成果を測定する",
+                             "description":  "本番に近い条件で実行し、結果を記録したら完了です。"
+                         },
+                         {
+                             "title":  "次の学習周期を調整する",
+                             "description":  "結果から継続、変更、追加する学習を決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-05",
+        "category":  "学習",
+        "title":  "ピアノで好きな曲を弾きたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "練習",
+                                    "演奏"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  788,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "身につけたい到達状態を決める",
+                             "description":  "実際にできるようになりたい行動と期限を書いたら完了です。"
+                         },
+                         {
+                             "title":  "現在地を小さな課題で確認する",
+                             "description":  "現状の得意・苦手を記録したら完了です。"
+                         },
+                         {
+                             "title":  "公式の範囲と評価基準を確認する",
+                             "description":  "必要範囲と合格・完成基準を記録したら完了です。"
+                         },
+                         {
+                             "title":  "主教材を一つ選ぶ",
+                             "description":  "比較基準を決めて使う教材を一つに絞ったら完了です。"
+                         },
+                         {
+                             "title":  "週の学習時間を確保する",
+                             "description":  "曜日、時間、場所を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "基礎単元を一つ終える",
+                             "description":  "最初の単元を学び、要点を自分の言葉で残したら完了です。"
+                         },
+                         {
+                             "title":  "実践課題を一つ完成させる",
+                             "description":  "会話、問題、演奏、作品など一つを最後まで実行したら完了です。"
+                         },
+                         {
+                             "title":  "間違いと弱点を復習する",
+                             "description":  "誤りの理由と次の練習方法を記録したら完了です。"
+                         },
+                         {
+                             "title":  "模擬成果を測定する",
+                             "description":  "本番に近い条件で実行し、結果を記録したら完了です。"
+                         },
+                         {
+                             "title":  "次の学習周期を調整する",
+                             "description":  "結果から継続、変更、追加する学習を決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "learning-06",
+        "category":  "学習",
+        "title":  "基本情報技術者試験に合格したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "範囲",
+                                    "教材"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  772,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "身につけたい到達状態を決める",
+                             "description":  "実際にできるようになりたい行動と期限を書いたら完了です。"
+                         },
+                         {
+                             "title":  "現在地を小さな課題で確認する",
+                             "description":  "現状の得意・苦手を記録したら完了です。"
+                         },
+                         {
+                             "title":  "公式の範囲と評価基準を確認する",
+                             "description":  "必要範囲と合格・完成基準を記録したら完了です。"
+                         },
+                         {
+                             "title":  "主教材を一つ選ぶ",
+                             "description":  "比較基準を決めて使う教材を一つに絞ったら完了です。"
+                         },
+                         {
+                             "title":  "週の学習時間を確保する",
+                             "description":  "曜日、時間、場所を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "基礎単元を一つ終える",
+                             "description":  "最初の単元を学び、要点を自分の言葉で残したら完了です。"
+                         },
+                         {
+                             "title":  "実践課題を一つ完成させる",
+                             "description":  "会話、問題、演奏、作品など一つを最後まで実行したら完了です。"
+                         },
+                         {
+                             "title":  "間違いと弱点を復習する",
+                             "description":  "誤りの理由と次の練習方法を記録したら完了です。"
+                         },
+                         {
+                             "title":  "模擬成果を測定する",
+                             "description":  "本番に近い条件で実行し、結果を記録したら完了です。"
+                         },
+                         {
+                             "title":  "次の学習周期を調整する",
+                             "description":  "結果から継続、変更、追加する学習を決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-01",
+        "category":  "健康",
+        "title":  "5キロ走れるようになる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "体調",
+                                    "休養"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1720,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "安全に進める条件を確認する",
+                             "description":  "体調上の不安と相談が必要な条件を記録したら完了です。"
+                         },
+                         {
+                             "title":  "現在の状態を一週間記録する",
+                             "description":  "無理に変えず行動、体調、時間帯を記録したら完了です。"
+                         },
+                         {
+                             "title":  "測定できる健康目標を決める",
+                             "description":  "期間と無理のない行動指標を決めたら完了です。"
+                         },
+                         {
+                             "title":  "最小の習慣を一つ選ぶ",
+                             "description":  "負担が小さい行動、時間、場所を決めたら完了です。"
+                         },
+                         {
+                             "title":  "休養と中止基準を決める",
+                             "description":  "休む日と中止・相談する状態を記録したら完了です。"
+                         },
+                         {
+                             "title":  "一週間の実行予定を作る",
+                             "description":  "実行日と休養日を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な環境と道具を整える",
+                             "description":  "安全に続けるための場所と道具を準備したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一週間を実行する",
+                             "description":  "予定した行動と体調を毎回記録したら完了です。"
+                         },
+                         {
+                             "title":  "負担と変化を振り返る",
+                             "description":  "続けやすさ、体調、改善点を一つずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "次週の強度を調整する",
+                             "description":  "維持、軽減、段階的増加のどれにするか決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-02",
+        "category":  "健康",
+        "title":  "睡眠の質を改善したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "記録",
+                                    "習慣"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1165,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "安全に進める条件を確認する",
+                             "description":  "体調上の不安と相談が必要な条件を記録したら完了です。"
+                         },
+                         {
+                             "title":  "現在の状態を一週間記録する",
+                             "description":  "無理に変えず行動、体調、時間帯を記録したら完了です。"
+                         },
+                         {
+                             "title":  "測定できる健康目標を決める",
+                             "description":  "期間と無理のない行動指標を決めたら完了です。"
+                         },
+                         {
+                             "title":  "最小の習慣を一つ選ぶ",
+                             "description":  "負担が小さい行動、時間、場所を決めたら完了です。"
+                         },
+                         {
+                             "title":  "休養と中止基準を決める",
+                             "description":  "休む日と中止・相談する状態を記録したら完了です。"
+                         },
+                         {
+                             "title":  "一週間の実行予定を作る",
+                             "description":  "実行日と休養日を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な環境と道具を整える",
+                             "description":  "安全に続けるための場所と道具を準備したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一週間を実行する",
+                             "description":  "予定した行動と体調を毎回記録したら完了です。"
+                         },
+                         {
+                             "title":  "負担と変化を振り返る",
+                             "description":  "続けやすさ、体調、改善点を一つずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "次週の強度を調整する",
+                             "description":  "維持、軽減、段階的増加のどれにするか決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-03",
+        "category":  "健康",
+        "title":  "健康的に5キロ減量する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "記録"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  752,
+        "content_passed":  false,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "安全に進める条件を確認する",
+                             "description":  "体調上の不安と相談が必要な条件を記録したら完了です。"
+                         },
+                         {
+                             "title":  "現在の状態を一週間記録する",
+                             "description":  "無理に変えず行動、体調、時間帯を記録したら完了です。"
+                         },
+                         {
+                             "title":  "測定できる健康目標を決める",
+                             "description":  "期間と無理のない行動指標を決めたら完了です。"
+                         },
+                         {
+                             "title":  "最小の習慣を一つ選ぶ",
+                             "description":  "負担が小さい行動、時間、場所を決めたら完了です。"
+                         },
+                         {
+                             "title":  "休養と中止基準を決める",
+                             "description":  "休む日と中止・相談する状態を記録したら完了です。"
+                         },
+                         {
+                             "title":  "一週間の実行予定を作る",
+                             "description":  "実行日と休養日を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な環境と道具を整える",
+                             "description":  "安全に続けるための場所と道具を準備したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一週間を実行する",
+                             "description":  "予定した行動と体調を毎回記録したら完了です。"
+                         },
+                         {
+                             "title":  "負担と変化を振り返る",
+                             "description":  "続けやすさ、体調、改善点を一つずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "次週の強度を調整する",
+                             "description":  "維持、軽減、段階的増加のどれにするか決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-04",
+        "category":  "健康",
+        "title":  "筋力トレーニングを習慣にする",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "週",
+                                    "休養"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  736,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "安全に進める条件を確認する",
+                             "description":  "体調上の不安と相談が必要な条件を記録したら完了です。"
+                         },
+                         {
+                             "title":  "現在の状態を一週間記録する",
+                             "description":  "無理に変えず行動、体調、時間帯を記録したら完了です。"
+                         },
+                         {
+                             "title":  "測定できる健康目標を決める",
+                             "description":  "期間と無理のない行動指標を決めたら完了です。"
+                         },
+                         {
+                             "title":  "最小の習慣を一つ選ぶ",
+                             "description":  "負担が小さい行動、時間、場所を決めたら完了です。"
+                         },
+                         {
+                             "title":  "休養と中止基準を決める",
+                             "description":  "休む日と中止・相談する状態を記録したら完了です。"
+                         },
+                         {
+                             "title":  "一週間の実行予定を作る",
+                             "description":  "実行日と休養日を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な環境と道具を整える",
+                             "description":  "安全に続けるための場所と道具を準備したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一週間を実行する",
+                             "description":  "予定した行動と体調を毎回記録したら完了です。"
+                         },
+                         {
+                             "title":  "負担と変化を振り返る",
+                             "description":  "続けやすさ、体調、改善点を一つずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "次週の強度を調整する",
+                             "description":  "維持、軽減、段階的増加のどれにするか決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-05",
+        "category":  "健康",
+        "title":  "自炊で栄養バランスを整える",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  801,
+        "content_passed":  false,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "安全に進める条件を確認する",
+                             "description":  "体調上の不安と相談が必要な条件を記録したら完了です。"
+                         },
+                         {
+                             "title":  "現在の状態を一週間記録する",
+                             "description":  "無理に変えず行動、体調、時間帯を記録したら完了です。"
+                         },
+                         {
+                             "title":  "測定できる健康目標を決める",
+                             "description":  "期間と無理のない行動指標を決めたら完了です。"
+                         },
+                         {
+                             "title":  "最小の習慣を一つ選ぶ",
+                             "description":  "負担が小さい行動、時間、場所を決めたら完了です。"
+                         },
+                         {
+                             "title":  "休養と中止基準を決める",
+                             "description":  "休む日と中止・相談する状態を記録したら完了です。"
+                         },
+                         {
+                             "title":  "一週間の実行予定を作る",
+                             "description":  "実行日と休養日を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な環境と道具を整える",
+                             "description":  "安全に続けるための場所と道具を準備したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一週間を実行する",
+                             "description":  "予定した行動と体調を毎回記録したら完了です。"
+                         },
+                         {
+                             "title":  "負担と変化を振り返る",
+                             "description":  "続けやすさ、体調、改善点を一つずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "次週の強度を調整する",
+                             "description":  "維持、軽減、段階的増加のどれにするか決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "health-06",
+        "category":  "健康",
+        "title":  "ストレスを上手に整えたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "記録",
+                                    "相談",
+                                    "習慣"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  767,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "安全に進める条件を確認する",
+                             "description":  "体調上の不安と相談が必要な条件を記録したら完了です。"
+                         },
+                         {
+                             "title":  "現在の状態を一週間記録する",
+                             "description":  "無理に変えず行動、体調、時間帯を記録したら完了です。"
+                         },
+                         {
+                             "title":  "測定できる健康目標を決める",
+                             "description":  "期間と無理のない行動指標を決めたら完了です。"
+                         },
+                         {
+                             "title":  "最小の習慣を一つ選ぶ",
+                             "description":  "負担が小さい行動、時間、場所を決めたら完了です。"
+                         },
+                         {
+                             "title":  "休養と中止基準を決める",
+                             "description":  "休む日と中止・相談する状態を記録したら完了です。"
+                         },
+                         {
+                             "title":  "一週間の実行予定を作る",
+                             "description":  "実行日と休養日を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な環境と道具を整える",
+                             "description":  "安全に続けるための場所と道具を準備したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一週間を実行する",
+                             "description":  "予定した行動と体調を毎回記録したら完了です。"
+                         },
+                         {
+                             "title":  "負担と変化を振り返る",
+                             "description":  "続けやすさ、体調、改善点を一つずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "次週の強度を調整する",
+                             "description":  "維持、軽減、段階的増加のどれにするか決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "career-01",
+        "category":  "仕事",
+        "title":  "チームリーダーへ昇進したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "上司",
+                                    "実績",
+                                    "能力",
+                                    "フィードバック"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  787,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "望む成果と期限を定義する",
+                             "description":  "誰に何を届ければ完了かを一文で書いたら完了です。"
+                         },
+                         {
+                             "title":  "現状との差を整理する",
+                             "description":  "経験、実績、能力、関係者の不足を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "評価される基準を確認する",
+                             "description":  "上司、顧客、求人などの評価基準を確認したら完了です。"
+                         },
+                         {
+                             "title":  "優先する成果物を一つ決める",
+                             "description":  "最初に見せる実績や資料を一つ選んだら完了です。"
+                         },
+                         {
+                             "title":  "協力者と相談日を決める",
+                             "description":  "相談相手、質問、日時を確定したら完了です。"
+                         },
+                         {
+                             "title":  "成果物の初版を作る",
+                             "description":  "不完全でも確認可能な初版を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "フィードバックを受ける",
+                             "description":  "具体的な改善点を三つ記録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な応募・提案を準備する",
+                             "description":  "相手に合わせた書類や提案文を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "本番の行動を一つ実行する",
+                             "description":  "応募、提案、発表、販売のいずれかを実行したら完了です。"
+                         },
+                         {
+                             "title":  "結果と次の打ち手を決める",
+                             "description":  "結果、学び、次回の変更点を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "career-02",
+        "category":  "仕事",
+        "title":  "納得できる会社へ転職する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "求人",
+                                    "応募"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  753,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "望む成果と期限を定義する",
+                             "description":  "誰に何を届ければ完了かを一文で書いたら完了です。"
+                         },
+                         {
+                             "title":  "現状との差を整理する",
+                             "description":  "経験、実績、能力、関係者の不足を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "評価される基準を確認する",
+                             "description":  "上司、顧客、求人などの評価基準を確認したら完了です。"
+                         },
+                         {
+                             "title":  "優先する成果物を一つ決める",
+                             "description":  "最初に見せる実績や資料を一つ選んだら完了です。"
+                         },
+                         {
+                             "title":  "協力者と相談日を決める",
+                             "description":  "相談相手、質問、日時を確定したら完了です。"
+                         },
+                         {
+                             "title":  "成果物の初版を作る",
+                             "description":  "不完全でも確認可能な初版を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "フィードバックを受ける",
+                             "description":  "具体的な改善点を三つ記録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な応募・提案を準備する",
+                             "description":  "相手に合わせた書類や提案文を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "本番の行動を一つ実行する",
+                             "description":  "応募、提案、発表、販売のいずれかを実行したら完了です。"
+                         },
+                         {
+                             "title":  "結果と次の打ち手を決める",
+                             "description":  "結果、学び、次回の変更点を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "career-03",
+        "category":  "仕事",
+        "title":  "デザインのポートフォリオを完成させる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  869,
+        "content_passed":  false,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "望む成果と期限を定義する",
+                             "description":  "誰に何を届ければ完了かを一文で書いたら完了です。"
+                         },
+                         {
+                             "title":  "現状との差を整理する",
+                             "description":  "経験、実績、能力、関係者の不足を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "評価される基準を確認する",
+                             "description":  "上司、顧客、求人などの評価基準を確認したら完了です。"
+                         },
+                         {
+                             "title":  "優先する成果物を一つ決める",
+                             "description":  "最初に見せる実績や資料を一つ選んだら完了です。"
+                         },
+                         {
+                             "title":  "協力者と相談日を決める",
+                             "description":  "相談相手、質問、日時を確定したら完了です。"
+                         },
+                         {
+                             "title":  "成果物の初版を作る",
+                             "description":  "不完全でも確認可能な初版を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "フィードバックを受ける",
+                             "description":  "具体的な改善点を三つ記録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な応募・提案を準備する",
+                             "description":  "相手に合わせた書類や提案文を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "本番の行動を一つ実行する",
+                             "description":  "応募、提案、発表、販売のいずれかを実行したら完了です。"
+                         },
+                         {
+                             "title":  "結果と次の打ち手を決める",
+                             "description":  "結果、学び、次回の変更点を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "career-04",
+        "category":  "仕事",
+        "title":  "小さな副業を始める",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "顧客",
+                                    "提案"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  750,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "望む成果と期限を定義する",
+                             "description":  "誰に何を届ければ完了かを一文で書いたら完了です。"
+                         },
+                         {
+                             "title":  "現状との差を整理する",
+                             "description":  "経験、実績、能力、関係者の不足を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "評価される基準を確認する",
+                             "description":  "上司、顧客、求人などの評価基準を確認したら完了です。"
+                         },
+                         {
+                             "title":  "優先する成果物を一つ決める",
+                             "description":  "最初に見せる実績や資料を一つ選んだら完了です。"
+                         },
+                         {
+                             "title":  "協力者と相談日を決める",
+                             "description":  "相談相手、質問、日時を確定したら完了です。"
+                         },
+                         {
+                             "title":  "成果物の初版を作る",
+                             "description":  "不完全でも確認可能な初版を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "フィードバックを受ける",
+                             "description":  "具体的な改善点を三つ記録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な応募・提案を準備する",
+                             "description":  "相手に合わせた書類や提案文を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "本番の行動を一つ実行する",
+                             "description":  "応募、提案、発表、販売のいずれかを実行したら完了です。"
+                         },
+                         {
+                             "title":  "結果と次の打ち手を決める",
+                             "description":  "結果、学び、次回の変更点を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "career-05",
+        "category":  "仕事",
+        "title":  "大切なプレゼンを成功させる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "資料"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1002,
+        "content_passed":  false,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "望む成果と期限を定義する",
+                             "description":  "誰に何を届ければ完了かを一文で書いたら完了です。"
+                         },
+                         {
+                             "title":  "現状との差を整理する",
+                             "description":  "経験、実績、能力、関係者の不足を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "評価される基準を確認する",
+                             "description":  "上司、顧客、求人などの評価基準を確認したら完了です。"
+                         },
+                         {
+                             "title":  "優先する成果物を一つ決める",
+                             "description":  "最初に見せる実績や資料を一つ選んだら完了です。"
+                         },
+                         {
+                             "title":  "協力者と相談日を決める",
+                             "description":  "相談相手、質問、日時を確定したら完了です。"
+                         },
+                         {
+                             "title":  "成果物の初版を作る",
+                             "description":  "不完全でも確認可能な初版を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "フィードバックを受ける",
+                             "description":  "具体的な改善点を三つ記録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な応募・提案を準備する",
+                             "description":  "相手に合わせた書類や提案文を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "本番の行動を一つ実行する",
+                             "description":  "応募、提案、発表、販売のいずれかを実行したら完了です。"
+                         },
+                         {
+                             "title":  "結果と次の打ち手を決める",
+                             "description":  "結果、学び、次回の変更点を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "creative-01",
+        "category":  "創作",
+        "title":  "短編小説を書き上げる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "テーマ",
+                                    "推敲",
+                                    "公開"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  704,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "作品のテーマと届けたい相手を決める",
+                             "description":  "テーマ、感情、想定する受け手を一文ずつ書いたら完了です。"
+                         },
+                         {
+                             "title":  "完成形と規模を決める",
+                             "description":  "長さ、点数、時間など完成条件を数字で決めたら完了です。"
+                         },
+                         {
+                             "title":  "参考資料を集めて方向性を選ぶ",
+                             "description":  "参考を三つ集め、採用する要素を記録したら完了です。"
+                         },
+                         {
+                             "title":  "構成またはラフを作る",
+                             "description":  "全体を確認できる下書きを一つ完成させたら完了です。"
+                         },
+                         {
+                             "title":  "制作時間を予定へ置く",
+                             "description":  "制作する曜日、時間、場所を登録したら完了です。"
+                         },
+                         {
+                             "title":  "作品の初版を最後まで作る",
+                             "description":  "未完成部分があっても全体の初版を通したら完了です。"
+                         },
+                         {
+                             "title":  "信頼できる人から感想を得る",
+                             "description":  "良い点と伝わりにくい点を一つずつ聞いたら完了です。"
+                         },
+                         {
+                             "title":  "推敲または仕上げを行う",
+                             "description":  "改善点を反映し完成版を書き出したら完了です。"
+                         },
+                         {
+                             "title":  "権利と公開設定を確認する",
+                             "description":  "素材の権利、公開範囲、クレジットを確認したら完了です。"
+                         },
+                         {
+                             "title":  "作品を公開または展示する",
+                             "description":  "選んだ場所へ公開し、公開先を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "creative-02",
+        "category":  "創作",
+        "title":  "デジタルイラストを描けるようになる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "資料",
+                                    "ラフ",
+                                    "完成"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  731,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "作品のテーマと届けたい相手を決める",
+                             "description":  "テーマ、感情、想定する受け手を一文ずつ書いたら完了です。"
+                         },
+                         {
+                             "title":  "完成形と規模を決める",
+                             "description":  "長さ、点数、時間など完成条件を数字で決めたら完了です。"
+                         },
+                         {
+                             "title":  "参考資料を集めて方向性を選ぶ",
+                             "description":  "参考を三つ集め、採用する要素を記録したら完了です。"
+                         },
+                         {
+                             "title":  "構成またはラフを作る",
+                             "description":  "全体を確認できる下書きを一つ完成させたら完了です。"
+                         },
+                         {
+                             "title":  "制作時間を予定へ置く",
+                             "description":  "制作する曜日、時間、場所を登録したら完了です。"
+                         },
+                         {
+                             "title":  "作品の初版を最後まで作る",
+                             "description":  "未完成部分があっても全体の初版を通したら完了です。"
+                         },
+                         {
+                             "title":  "信頼できる人から感想を得る",
+                             "description":  "良い点と伝わりにくい点を一つずつ聞いたら完了です。"
+                         },
+                         {
+                             "title":  "推敲または仕上げを行う",
+                             "description":  "改善点を反映し完成版を書き出したら完了です。"
+                         },
+                         {
+                             "title":  "権利と公開設定を確認する",
+                             "description":  "素材の権利、公開範囲、クレジットを確認したら完了です。"
+                         },
+                         {
+                             "title":  "作品を公開または展示する",
+                             "description":  "選んだ場所へ公開し、公開先を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "creative-03",
+        "category":  "創作",
+        "title":  "自分の写真展を開く",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "テーマ",
+                                    "展示"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  688,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "作品のテーマと届けたい相手を決める",
+                             "description":  "テーマ、感情、想定する受け手を一文ずつ書いたら完了です。"
+                         },
+                         {
+                             "title":  "完成形と規模を決める",
+                             "description":  "長さ、点数、時間など完成条件を数字で決めたら完了です。"
+                         },
+                         {
+                             "title":  "参考資料を集めて方向性を選ぶ",
+                             "description":  "参考を三つ集め、採用する要素を記録したら完了です。"
+                         },
+                         {
+                             "title":  "構成またはラフを作る",
+                             "description":  "全体を確認できる下書きを一つ完成させたら完了です。"
+                         },
+                         {
+                             "title":  "制作時間を予定へ置く",
+                             "description":  "制作する曜日、時間、場所を登録したら完了です。"
+                         },
+                         {
+                             "title":  "作品の初版を最後まで作る",
+                             "description":  "未完成部分があっても全体の初版を通したら完了です。"
+                         },
+                         {
+                             "title":  "信頼できる人から感想を得る",
+                             "description":  "良い点と伝わりにくい点を一つずつ聞いたら完了です。"
+                         },
+                         {
+                             "title":  "推敲または仕上げを行う",
+                             "description":  "改善点を反映し完成版を書き出したら完了です。"
+                         },
+                         {
+                             "title":  "権利と公開設定を確認する",
+                             "description":  "素材の権利、公開範囲、クレジットを確認したら完了です。"
+                         },
+                         {
+                             "title":  "作品を公開または展示する",
+                             "description":  "選んだ場所へ公開し、公開先を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "creative-04",
+        "category":  "創作",
+        "title":  "ポッドキャストを始める",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  719,
+        "content_passed":  false,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "作品のテーマと届けたい相手を決める",
+                             "description":  "テーマ、感情、想定する受け手を一文ずつ書いたら完了です。"
+                         },
+                         {
+                             "title":  "完成形と規模を決める",
+                             "description":  "長さ、点数、時間など完成条件を数字で決めたら完了です。"
+                         },
+                         {
+                             "title":  "参考資料を集めて方向性を選ぶ",
+                             "description":  "参考を三つ集め、採用する要素を記録したら完了です。"
+                         },
+                         {
+                             "title":  "構成またはラフを作る",
+                             "description":  "全体を確認できる下書きを一つ完成させたら完了です。"
+                         },
+                         {
+                             "title":  "制作時間を予定へ置く",
+                             "description":  "制作する曜日、時間、場所を登録したら完了です。"
+                         },
+                         {
+                             "title":  "作品の初版を最後まで作る",
+                             "description":  "未完成部分があっても全体の初版を通したら完了です。"
+                         },
+                         {
+                             "title":  "信頼できる人から感想を得る",
+                             "description":  "良い点と伝わりにくい点を一つずつ聞いたら完了です。"
+                         },
+                         {
+                             "title":  "推敲または仕上げを行う",
+                             "description":  "改善点を反映し完成版を書き出したら完了です。"
+                         },
+                         {
+                             "title":  "権利と公開設定を確認する",
+                             "description":  "素材の権利、公開範囲、クレジットを確認したら完了です。"
+                         },
+                         {
+                             "title":  "作品を公開または展示する",
+                             "description":  "選んだ場所へ公開し、公開先を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "creative-05",
+        "category":  "創作",
+        "title":  "オリジナル曲を完成させる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "テーマ",
+                                    "完成"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  753,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "作品のテーマと届けたい相手を決める",
+                             "description":  "テーマ、感情、想定する受け手を一文ずつ書いたら完了です。"
+                         },
+                         {
+                             "title":  "完成形と規模を決める",
+                             "description":  "長さ、点数、時間など完成条件を数字で決めたら完了です。"
+                         },
+                         {
+                             "title":  "参考資料を集めて方向性を選ぶ",
+                             "description":  "参考を三つ集め、採用する要素を記録したら完了です。"
+                         },
+                         {
+                             "title":  "構成またはラフを作る",
+                             "description":  "全体を確認できる下書きを一つ完成させたら完了です。"
+                         },
+                         {
+                             "title":  "制作時間を予定へ置く",
+                             "description":  "制作する曜日、時間、場所を登録したら完了です。"
+                         },
+                         {
+                             "title":  "作品の初版を最後まで作る",
+                             "description":  "未完成部分があっても全体の初版を通したら完了です。"
+                         },
+                         {
+                             "title":  "信頼できる人から感想を得る",
+                             "description":  "良い点と伝わりにくい点を一つずつ聞いたら完了です。"
+                         },
+                         {
+                             "title":  "推敲または仕上げを行う",
+                             "description":  "改善点を反映し完成版を書き出したら完了です。"
+                         },
+                         {
+                             "title":  "権利と公開設定を確認する",
+                             "description":  "素材の権利、公開範囲、クレジットを確認したら完了です。"
+                         },
+                         {
+                             "title":  "作品を公開または展示する",
+                             "description":  "選んだ場所へ公開し、公開先を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "relationship-01",
+        "category":  "家族",
+        "title":  "家族で夕食を囲む時間を増やす",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "予定",
+                                    "分担"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  738,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "大切にしたい関係の状態を言葉にする",
+                             "description":  "自分が望む変化を責めない表現で書いたら完了です。"
+                         },
+                         {
+                             "title":  "相手の都合と境界を考える",
+                             "description":  "避けたい負担と確認したいことを整理したら完了です。"
+                         },
+                         {
+                             "title":  "小さな声かけを一つ選ぶ",
+                             "description":  "短く自然な連絡内容を決めたら完了です。"
+                         },
+                         {
+                             "title":  "話せる日時を相談する",
+                             "description":  "相手が断りやすい形で候補を伝えたら完了です。"
+                         },
+                         {
+                             "title":  "互いの希望を聞く",
+                             "description":  "自分と相手の希望を一つずつ確認したら完了です。"
+                         },
+                         {
+                             "title":  "一緒に試す行動を決める",
+                             "description":  "期間と分担を含む小さな行動を合意したら完了です。"
+                         },
+                         {
+                             "title":  "必要な予定や準備を整える",
+                             "description":  "日時、場所、費用、分担を確認したら完了です。"
+                         },
+                         {
+                             "title":  "決めた行動を一度実行する",
+                             "description":  "互いの無理がない範囲で一度試したら完了です。"
+                         },
+                         {
+                             "title":  "相手の感想を聞く",
+                             "description":  "良かった点と変えたい点を聞いて記録したら完了です。"
+                         },
+                         {
+                             "title":  "次に続ける形を合意する",
+                             "description":  "続ける頻度または別案を一緒に決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "relationship-02",
+        "category":  "人間関係",
+        "title":  "疎遠になった友人とまた話したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "連絡",
+                                    "相手",
+                                    "予定",
+                                    "境界"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  767,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "大切にしたい関係の状態を言葉にする",
+                             "description":  "自分が望む変化を責めない表現で書いたら完了です。"
+                         },
+                         {
+                             "title":  "相手の都合と境界を考える",
+                             "description":  "避けたい負担と確認したいことを整理したら完了です。"
+                         },
+                         {
+                             "title":  "小さな声かけを一つ選ぶ",
+                             "description":  "短く自然な連絡内容を決めたら完了です。"
+                         },
+                         {
+                             "title":  "話せる日時を相談する",
+                             "description":  "相手が断りやすい形で候補を伝えたら完了です。"
+                         },
+                         {
+                             "title":  "互いの希望を聞く",
+                             "description":  "自分と相手の希望を一つずつ確認したら完了です。"
+                         },
+                         {
+                             "title":  "一緒に試す行動を決める",
+                             "description":  "期間と分担を含む小さな行動を合意したら完了です。"
+                         },
+                         {
+                             "title":  "必要な予定や準備を整える",
+                             "description":  "日時、場所、費用、分担を確認したら完了です。"
+                         },
+                         {
+                             "title":  "決めた行動を一度実行する",
+                             "description":  "互いの無理がない範囲で一度試したら完了です。"
+                         },
+                         {
+                             "title":  "相手の感想を聞く",
+                             "description":  "良かった点と変えたい点を聞いて記録したら完了です。"
+                         },
+                         {
+                             "title":  "次に続ける形を合意する",
+                             "description":  "続ける頻度または別案を一緒に決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "relationship-03",
+        "category":  "家族",
+        "title":  "結婚記念日を大切に祝う",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "相手",
+                                    "希望"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  701,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "大切にしたい関係の状態を言葉にする",
+                             "description":  "自分が望む変化を責めない表現で書いたら完了です。"
+                         },
+                         {
+                             "title":  "相手の都合と境界を考える",
+                             "description":  "避けたい負担と確認したいことを整理したら完了です。"
+                         },
+                         {
+                             "title":  "小さな声かけを一つ選ぶ",
+                             "description":  "短く自然な連絡内容を決めたら完了です。"
+                         },
+                         {
+                             "title":  "話せる日時を相談する",
+                             "description":  "相手が断りやすい形で候補を伝えたら完了です。"
+                         },
+                         {
+                             "title":  "互いの希望を聞く",
+                             "description":  "自分と相手の希望を一つずつ確認したら完了です。"
+                         },
+                         {
+                             "title":  "一緒に試す行動を決める",
+                             "description":  "期間と分担を含む小さな行動を合意したら完了です。"
+                         },
+                         {
+                             "title":  "必要な予定や準備を整える",
+                             "description":  "日時、場所、費用、分担を確認したら完了です。"
+                         },
+                         {
+                             "title":  "決めた行動を一度実行する",
+                             "description":  "互いの無理がない範囲で一度試したら完了です。"
+                         },
+                         {
+                             "title":  "相手の感想を聞く",
+                             "description":  "良かった点と変えたい点を聞いて記録したら完了です。"
+                         },
+                         {
+                             "title":  "次に続ける形を合意する",
+                             "description":  "続ける頻度または別案を一緒に決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "relationship-04",
+        "category":  "家族",
+        "title":  "育児と仕事の分担を見直したい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "分担",
+                                    "試す"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  773,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "大切にしたい関係の状態を言葉にする",
+                             "description":  "自分が望む変化を責めない表現で書いたら完了です。"
+                         },
+                         {
+                             "title":  "相手の都合と境界を考える",
+                             "description":  "避けたい負担と確認したいことを整理したら完了です。"
+                         },
+                         {
+                             "title":  "小さな声かけを一つ選ぶ",
+                             "description":  "短く自然な連絡内容を決めたら完了です。"
+                         },
+                         {
+                             "title":  "話せる日時を相談する",
+                             "description":  "相手が断りやすい形で候補を伝えたら完了です。"
+                         },
+                         {
+                             "title":  "互いの希望を聞く",
+                             "description":  "自分と相手の希望を一つずつ確認したら完了です。"
+                         },
+                         {
+                             "title":  "一緒に試す行動を決める",
+                             "description":  "期間と分担を含む小さな行動を合意したら完了です。"
+                         },
+                         {
+                             "title":  "必要な予定や準備を整える",
+                             "description":  "日時、場所、費用、分担を確認したら完了です。"
+                         },
+                         {
+                             "title":  "決めた行動を一度実行する",
+                             "description":  "互いの無理がない範囲で一度試したら完了です。"
+                         },
+                         {
+                             "title":  "相手の感想を聞く",
+                             "description":  "良かった点と変えたい点を聞いて記録したら完了です。"
+                         },
+                         {
+                             "title":  "次に続ける形を合意する",
+                             "description":  "続ける頻度または別案を一緒に決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "lifestyle-01",
+        "category":  "生活",
+        "title":  "部屋をすっきり片付ける",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "場所",
+                                    "維持"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  1198,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "改善したい場所と状態を決める",
+                             "description":  "対象範囲と終わった状態を写真または文章で残したら完了です。"
+                         },
+                         {
+                             "title":  "現在の困りごとを記録する",
+                             "description":  "時間、物、費用、習慣の問題を三つまで挙げたら完了です。"
+                         },
+                         {
+                             "title":  "必要なルールと条件を確認する",
+                             "description":  "地域、住居、季節に関わる条件を確認したら完了です。"
+                         },
+                         {
+                             "title":  "最初に整える一区画を選ぶ",
+                             "description":  "一回で終えられる範囲を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な道具と費用を決める",
+                             "description":  "購入、再利用、不要を分けて予算を決めたら完了です。"
+                         },
+                         {
+                             "title":  "作業する日時を確保する",
+                             "description":  "作業と休憩の時間を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一区画を整える",
+                             "description":  "選んだ範囲の作業を最後まで終えたら完了です。"
+                         },
+                         {
+                             "title":  "使いやすさと安全を確認する",
+                             "description":  "動線、負担、危険がないか確認したら完了です。"
+                         },
+                         {
+                             "title":  "維持する仕組みを一つ作る",
+                             "description":  "戻す場所、点検日、毎日の行動を一つ決めたら完了です。"
+                         },
+                         {
+                             "title":  "一週間後に見直す",
+                             "description":  "続いた点と変える点を一つずつ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "lifestyle-02",
+        "category":  "生活",
+        "title":  "新しい街へ引っ越す",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "条件",
+                                    "費用"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  751,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "改善したい場所と状態を決める",
+                             "description":  "対象範囲と終わった状態を写真または文章で残したら完了です。"
+                         },
+                         {
+                             "title":  "現在の困りごとを記録する",
+                             "description":  "時間、物、費用、習慣の問題を三つまで挙げたら完了です。"
+                         },
+                         {
+                             "title":  "必要なルールと条件を確認する",
+                             "description":  "地域、住居、季節に関わる条件を確認したら完了です。"
+                         },
+                         {
+                             "title":  "最初に整える一区画を選ぶ",
+                             "description":  "一回で終えられる範囲を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な道具と費用を決める",
+                             "description":  "購入、再利用、不要を分けて予算を決めたら完了です。"
+                         },
+                         {
+                             "title":  "作業する日時を確保する",
+                             "description":  "作業と休憩の時間を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一区画を整える",
+                             "description":  "選んだ範囲の作業を最後まで終えたら完了です。"
+                         },
+                         {
+                             "title":  "使いやすさと安全を確認する",
+                             "description":  "動線、負担、危険がないか確認したら完了です。"
+                         },
+                         {
+                             "title":  "維持する仕組みを一つ作る",
+                             "description":  "戻す場所、点検日、毎日の行動を一つ決めたら完了です。"
+                         },
+                         {
+                             "title":  "一週間後に見直す",
+                             "description":  "続いた点と変える点を一つずつ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "lifestyle-03",
+        "category":  "生活",
+        "title":  "朝の時間を有効に使いたい",
+        "status":  "ok",
+        "source_type":  "gemini_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "起床",
+                                    "前夜",
+                                    "読書",
+                                    "運動",
+                                    "記録"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  7019,
+        "content_passed":  true,
+        "passed":  true,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  true
+                   },
+        "missions":  [
+                         {
+                             "title":  "朝の時間の「現状の課題」を書き出す",
+                             "description":  "現在、起床してから出発するまでのタイムスケジュールと、ついスマホを見てしまうなどの「時間のロス」をノートやスマホに書き出します。現状の課題が3つ以上リストアップできたら完了です。"
+                         },
+                         {
+                             "title":  "朝の理想のタイムスケジュールを設計する",
+                             "description":  "読書と軽い運動（例：ストレッチ10分、読書15分）を組み込んだ、無理のない朝のタイムテーブルを作成します。起床・就寝時間と各活動の配分が決まったスケジュール表が完成したら完了です。"
+                         },
+                         {
+                             "title":  "朝の活動に必要な「マイルール」を決定する",
+                             "description":  "「雨の日は運動をストレッチのみにする」「前夜の睡眠が6時間未満なら読書は5分にする」など、体調に合わせた継続可能なルールを定めます。ルールを2つ以上メモに書き留めたら完了です。"
+                         },
+                         {
+                             "title":  "最初に整える「朝の特等席」を1箇所選ぶ",
+                             "description":  "起きてすぐに迷わず読書や運動に入れるよう、リビングの一角や机の上など、朝最初に使うスペースを1箇所決定します。その場所を決定し、片付けの対象として決定したら完了です。"
+                         },
+                         {
+                             "title":  "必要な本と運動道具を準備し費用を計算する",
+                             "description":  "明日から読む本1冊と、運動用のマットや動画などを準備します。新たに購入が必要な場合の予算（プロテインやヨガマット代など）を算出し、準備が整ったら完了です。"
+                         },
+                         {
+                             "title":  "朝活を実行する「最初の日時」をカレンダーに確保する",
+                             "description":  "今週の中で、朝活を実際に試してみる最初の「お試し日」をカレンダーに登録します。家族と同居している場合は事前に朝の予定を共有し、日時の確保と共有ができたら完了です。"
+                         },
+                         {
+                             "title":  "選んだ「朝の特等席」を前夜のうちにセットする",
+                             "description":  "決定したお試し日の前夜に、机の上に本を開いて置き、運動用ウェアを枕元に用意します。朝起きてから10秒以内に行動に移せる環境が整ったら完了です。"
+                         },
+                         {
+                             "title":  "お試し朝活を実行し、安全性を確認する",
+                             "description":  "実際に朝起きて、用意した本を読み、軽い運動を行います。寝起きすぐの運動で体に痛みや無理がないか、部屋の明るさは十分かなどの安全面を確認し、実施後の感想を記録したら完了です。"
+                         },
+                         {
+                             "title":  "朝活を維持するための「トリガー」を1つ設定する",
+                             "description":  "「ケトルでお湯を沸かしている間にストレッチをする」「白湯を飲んだら本を開く」など、既存の習慣と朝活を結びつける仕組みを1つ決め、紙に書いて目立つ場所に貼ったら完了です。"
+                         },
+                         {
+                             "title":  "一週間後に朝の習慣化プロセスを見直す",
+                             "description":  "一週間実践してみて、睡眠不足になっていないか、本の難易度は適切かなどを振り返ります。翌週に向けて「本を変更する」「運動の強度を下げる」などの改善点を1つ以上決定したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "lifestyle-04",
+        "category":  "生活",
+        "title":  "ベランダで野菜を育てたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "季節"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  784,
+        "content_passed":  false,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "改善したい場所と状態を決める",
+                             "description":  "対象範囲と終わった状態を写真または文章で残したら完了です。"
+                         },
+                         {
+                             "title":  "現在の困りごとを記録する",
+                             "description":  "時間、物、費用、習慣の問題を三つまで挙げたら完了です。"
+                         },
+                         {
+                             "title":  "必要なルールと条件を確認する",
+                             "description":  "地域、住居、季節に関わる条件を確認したら完了です。"
+                         },
+                         {
+                             "title":  "最初に整える一区画を選ぶ",
+                             "description":  "一回で終えられる範囲を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な道具と費用を決める",
+                             "description":  "購入、再利用、不要を分けて予算を決めたら完了です。"
+                         },
+                         {
+                             "title":  "作業する日時を確保する",
+                             "description":  "作業と休憩の時間を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一区画を整える",
+                             "description":  "選んだ範囲の作業を最後まで終えたら完了です。"
+                         },
+                         {
+                             "title":  "使いやすさと安全を確認する",
+                             "description":  "動線、負担、危険がないか確認したら完了です。"
+                         },
+                         {
+                             "title":  "維持する仕組みを一つ作る",
+                             "description":  "戻す場所、点検日、毎日の行動を一つ決めたら完了です。"
+                         },
+                         {
+                             "title":  "一週間後に見直す",
+                             "description":  "続いた点と変える点を一つずつ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "lifestyle-05",
+        "category":  "生活",
+        "title":  "家庭の防災対策を整える",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "点検"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  802,
+        "content_passed":  false,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "改善したい場所と状態を決める",
+                             "description":  "対象範囲と終わった状態を写真または文章で残したら完了です。"
+                         },
+                         {
+                             "title":  "現在の困りごとを記録する",
+                             "description":  "時間、物、費用、習慣の問題を三つまで挙げたら完了です。"
+                         },
+                         {
+                             "title":  "必要なルールと条件を確認する",
+                             "description":  "地域、住居、季節に関わる条件を確認したら完了です。"
+                         },
+                         {
+                             "title":  "最初に整える一区画を選ぶ",
+                             "description":  "一回で終えられる範囲を決めたら完了です。"
+                         },
+                         {
+                             "title":  "必要な道具と費用を決める",
+                             "description":  "購入、再利用、不要を分けて予算を決めたら完了です。"
+                         },
+                         {
+                             "title":  "作業する日時を確保する",
+                             "description":  "作業と休憩の時間を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一区画を整える",
+                             "description":  "選んだ範囲の作業を最後まで終えたら完了です。"
+                         },
+                         {
+                             "title":  "使いやすさと安全を確認する",
+                             "description":  "動線、負担、危険がないか確認したら完了です。"
+                         },
+                         {
+                             "title":  "維持する仕組みを一つ作る",
+                             "description":  "戻す場所、点検日、毎日の行動を一つ決めたら完了です。"
+                         },
+                         {
+                             "title":  "一週間後に見直す",
+                             "description":  "続いた点と変える点を一つずつ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "finance-01",
+        "category":  "お金",
+        "title":  "一年で50万円貯める",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "収支",
+                                    "目標",
+                                    "予算",
+                                    "積立",
+                                    "見直し"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  753,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "お金の目的と期限を決める",
+                             "description":  "必要額、期限、理由を数字と文章で記録したら完了です。"
+                         },
+                         {
+                             "title":  "一か月の収支を集める",
+                             "description":  "収入と主な支出を同じ表へ記録したら完了です。"
+                         },
+                         {
+                             "title":  "固定費と変動費を分類する",
+                             "description":  "支出を分類し金額の大きい順に並べたら完了です。"
+                         },
+                         {
+                             "title":  "無理のない月間目標を決める",
+                             "description":  "生活防衛を損なわない積立または削減額を決めたら完了です。"
+                         },
+                         {
+                             "title":  "自動化できる方法を確認する",
+                             "description":  "利用する口座、日付、金額を決めたら完了です。"
+                         },
+                         {
+                             "title":  "制度とリスクを公式情報で学ぶ",
+                             "description":  "参照先、確認日、自分が理解したリスクを記録したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一か月を実行する",
+                             "description":  "決めた記録または積立を一か月続けたら完了です。"
+                         },
+                         {
+                             "title":  "予算との差を確認する",
+                             "description":  "差額と理由を費目ごとに確認したら完了です。"
+                         },
+                         {
+                             "title":  "一つだけ改善する",
+                             "description":  "翌月に変える支出または仕組みを一つ決めたら完了です。"
+                         },
+                         {
+                             "title":  "月次の見直し日を固定する",
+                             "description":  "毎月の確認日と確認項目を予定へ登録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "finance-02",
+        "category":  "お金",
+        "title":  "家計を見える化する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "支出",
+                                    "分類",
+                                    "予算",
+                                    "記録"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  719,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "お金の目的と期限を決める",
+                             "description":  "必要額、期限、理由を数字と文章で記録したら完了です。"
+                         },
+                         {
+                             "title":  "一か月の収支を集める",
+                             "description":  "収入と主な支出を同じ表へ記録したら完了です。"
+                         },
+                         {
+                             "title":  "固定費と変動費を分類する",
+                             "description":  "支出を分類し金額の大きい順に並べたら完了です。"
+                         },
+                         {
+                             "title":  "無理のない月間目標を決める",
+                             "description":  "生活防衛を損なわない積立または削減額を決めたら完了です。"
+                         },
+                         {
+                             "title":  "自動化できる方法を確認する",
+                             "description":  "利用する口座、日付、金額を決めたら完了です。"
+                         },
+                         {
+                             "title":  "制度とリスクを公式情報で学ぶ",
+                             "description":  "参照先、確認日、自分が理解したリスクを記録したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一か月を実行する",
+                             "description":  "決めた記録または積立を一か月続けたら完了です。"
+                         },
+                         {
+                             "title":  "予算との差を確認する",
+                             "description":  "差額と理由を費目ごとに確認したら完了です。"
+                         },
+                         {
+                             "title":  "一つだけ改善する",
+                             "description":  "翌月に変える支出または仕組みを一つ決めたら完了です。"
+                         },
+                         {
+                             "title":  "月次の見直し日を固定する",
+                             "description":  "毎月の確認日と確認項目を予定へ登録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "finance-03",
+        "category":  "お金",
+        "title":  "投資の基礎を学びたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "リスク",
+                                    "制度"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  732,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "お金の目的と期限を決める",
+                             "description":  "必要額、期限、理由を数字と文章で記録したら完了です。"
+                         },
+                         {
+                             "title":  "一か月の収支を集める",
+                             "description":  "収入と主な支出を同じ表へ記録したら完了です。"
+                         },
+                         {
+                             "title":  "固定費と変動費を分類する",
+                             "description":  "支出を分類し金額の大きい順に並べたら完了です。"
+                         },
+                         {
+                             "title":  "無理のない月間目標を決める",
+                             "description":  "生活防衛を損なわない積立または削減額を決めたら完了です。"
+                         },
+                         {
+                             "title":  "自動化できる方法を確認する",
+                             "description":  "利用する口座、日付、金額を決めたら完了です。"
+                         },
+                         {
+                             "title":  "制度とリスクを公式情報で学ぶ",
+                             "description":  "参照先、確認日、自分が理解したリスクを記録したら完了です。"
+                         },
+                         {
+                             "title":  "最初の一か月を実行する",
+                             "description":  "決めた記録または積立を一か月続けたら完了です。"
+                         },
+                         {
+                             "title":  "予算との差を確認する",
+                             "description":  "差額と理由を費目ごとに確認したら完了です。"
+                         },
+                         {
+                             "title":  "一つだけ改善する",
+                             "description":  "翌月に変える支出または仕組みを一つ決めたら完了です。"
+                         },
+                         {
+                             "title":  "月次の見直し日を固定する",
+                             "description":  "毎月の確認日と確認項目を予定へ登録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "community-01",
+        "category":  "地域活動",
+        "title":  "地域の清掃ボランティアに参加する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "団体",
+                                    "日程",
+                                    "持ち物",
+                                    "参加"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  750,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "活動の目的と対象を決める",
+                             "description":  "誰にどんな時間を届けるか一文で書いたら完了です。"
+                         },
+                         {
+                             "title":  "既存の団体や活動を確認する",
+                             "description":  "協力できる団体と連絡先を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "参加者の安全条件を整理する",
+                             "description":  "危険、個人情報、同意への対応を記録したら完了です。"
+                         },
+                         {
+                             "title":  "小さく実施する規模を決める",
+                             "description":  "人数、時間、内容の上限を決めたら完了です。"
+                         },
+                         {
+                             "title":  "会場と日程を確認する",
+                             "description":  "利用条件を確認し候補日時を決めたら完了です。"
+                         },
+                         {
+                             "title":  "協力者と役割を決める",
+                             "description":  "担当、連絡方法、当日の集合を合意したら完了です。"
+                         },
+                         {
+                             "title":  "参加方法と案内を作る",
+                             "description":  "対象、日時、持ち物、連絡先を含む案内を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "当日の進行と緊急対応を準備する",
+                             "description":  "進行表と中止・緊急時の対応を確認したら完了です。"
+                         },
+                         {
+                             "title":  "活動を一度実施する",
+                             "description":  "安全確認を行い予定した活動を終えたら完了です。"
+                         },
+                         {
+                             "title":  "参加者の声から次回を決める",
+                             "description":  "感想と改善点を記録し次回の有無を決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "community-02",
+        "category":  "地域活動",
+        "title":  "近所で小さな交流イベントを開く",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "目的",
+                                    "会場",
+                                    "安全"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  684,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "活動の目的と対象を決める",
+                             "description":  "誰にどんな時間を届けるか一文で書いたら完了です。"
+                         },
+                         {
+                             "title":  "既存の団体や活動を確認する",
+                             "description":  "協力できる団体と連絡先を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "参加者の安全条件を整理する",
+                             "description":  "危険、個人情報、同意への対応を記録したら完了です。"
+                         },
+                         {
+                             "title":  "小さく実施する規模を決める",
+                             "description":  "人数、時間、内容の上限を決めたら完了です。"
+                         },
+                         {
+                             "title":  "会場と日程を確認する",
+                             "description":  "利用条件を確認し候補日時を決めたら完了です。"
+                         },
+                         {
+                             "title":  "協力者と役割を決める",
+                             "description":  "担当、連絡方法、当日の集合を合意したら完了です。"
+                         },
+                         {
+                             "title":  "参加方法と案内を作る",
+                             "description":  "対象、日時、持ち物、連絡先を含む案内を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "当日の進行と緊急対応を準備する",
+                             "description":  "進行表と中止・緊急時の対応を確認したら完了です。"
+                         },
+                         {
+                             "title":  "活動を一度実施する",
+                             "description":  "安全確認を行い予定した活動を終えたら完了です。"
+                         },
+                         {
+                             "title":  "参加者の声から次回を決める",
+                             "description":  "感想と改善点を記録し次回の有無を決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "community-03",
+        "category":  "地域活動",
+        "title":  "読書会を立ち上げる",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "参加者",
+                                    "日程",
+                                    "会場",
+                                    "進行"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  708,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "活動の目的と対象を決める",
+                             "description":  "誰にどんな時間を届けるか一文で書いたら完了です。"
+                         },
+                         {
+                             "title":  "既存の団体や活動を確認する",
+                             "description":  "協力できる団体と連絡先を一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "参加者の安全条件を整理する",
+                             "description":  "危険、個人情報、同意への対応を記録したら完了です。"
+                         },
+                         {
+                             "title":  "小さく実施する規模を決める",
+                             "description":  "人数、時間、内容の上限を決めたら完了です。"
+                         },
+                         {
+                             "title":  "会場と日程を確認する",
+                             "description":  "利用条件を確認し候補日時を決めたら完了です。"
+                         },
+                         {
+                             "title":  "協力者と役割を決める",
+                             "description":  "担当、連絡方法、当日の集合を合意したら完了です。"
+                         },
+                         {
+                             "title":  "参加方法と案内を作る",
+                             "description":  "対象、日時、持ち物、連絡先を含む案内を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "当日の進行と緊急対応を準備する",
+                             "description":  "進行表と中止・緊急時の対応を確認したら完了です。"
+                         },
+                         {
+                             "title":  "活動を一度実施する",
+                             "description":  "安全確認を行い予定した活動を終えたら完了です。"
+                         },
+                         {
+                             "title":  "参加者の声から次回を決める",
+                             "description":  "感想と改善点を記録し次回の有無を決めたら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "challenge-01",
+        "category":  "挑戦",
+        "title":  "富士山に登る",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "体力",
+                                    "装備",
+                                    "天候",
+                                    "安全"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  736,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "挑戦の達成条件と日程を決める",
+                             "description":  "距離、場所、資格などの達成条件と期限を記録したら完了です。"
+                         },
+                         {
+                             "title":  "健康と参加条件を確認する",
+                             "description":  "公式条件と相談が必要な体調を確認したら完了です。"
+                         },
+                         {
+                             "title":  "現在の体力と経験を確認する",
+                             "description":  "安全な小テストで現在地を記録したら完了です。"
+                         },
+                         {
+                             "title":  "段階的な練習計画を作る",
+                             "description":  "練習日、休養日、増やし方を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な装備を確認する",
+                             "description":  "必須、レンタル、購入に分けて一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "安全な場所または指導者を選ぶ",
+                             "description":  "場所、講習、同行者のいずれかを確保したら完了です。"
+                         },
+                         {
+                             "title":  "最初の練習を実行する",
+                             "description":  "無理のない初回練習と体調記録を終えたら完了です。"
+                         },
+                         {
+                             "title":  "本番条件で予行する",
+                             "description":  "装備、補給、時間を本番に近づけて一度試したら完了です。"
+                         },
+                         {
+                             "title":  "天候と中止基準を確認する",
+                             "description":  "公式情報の確認先と中止判断を決めたら完了です。"
+                         },
+                         {
+                             "title":  "本番後の回復と振り返りを行う",
+                             "description":  "体調、成果、次回の改善点を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "challenge-02",
+        "category":  "挑戦",
+        "title":  "フルマラソンを完走する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "距離",
+                                    "休養",
+                                    "補給"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  767,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "挑戦の達成条件と日程を決める",
+                             "description":  "距離、場所、資格などの達成条件と期限を記録したら完了です。"
+                         },
+                         {
+                             "title":  "健康と参加条件を確認する",
+                             "description":  "公式条件と相談が必要な体調を確認したら完了です。"
+                         },
+                         {
+                             "title":  "現在の体力と経験を確認する",
+                             "description":  "安全な小テストで現在地を記録したら完了です。"
+                         },
+                         {
+                             "title":  "段階的な練習計画を作る",
+                             "description":  "練習日、休養日、増やし方を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な装備を確認する",
+                             "description":  "必須、レンタル、購入に分けて一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "安全な場所または指導者を選ぶ",
+                             "description":  "場所、講習、同行者のいずれかを確保したら完了です。"
+                         },
+                         {
+                             "title":  "最初の練習を実行する",
+                             "description":  "無理のない初回練習と体調記録を終えたら完了です。"
+                         },
+                         {
+                             "title":  "本番条件で予行する",
+                             "description":  "装備、補給、時間を本番に近づけて一度試したら完了です。"
+                         },
+                         {
+                             "title":  "天候と中止基準を確認する",
+                             "description":  "公式情報の確認先と中止判断を決めたら完了です。"
+                         },
+                         {
+                             "title":  "本番後の回復と振り返りを行う",
+                             "description":  "体調、成果、次回の改善点を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "challenge-03",
+        "category":  "挑戦",
+        "title":  "家族で初めてキャンプをする",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "場所",
+                                    "装備",
+                                    "安全"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  762,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "挑戦の達成条件と日程を決める",
+                             "description":  "距離、場所、資格などの達成条件と期限を記録したら完了です。"
+                         },
+                         {
+                             "title":  "健康と参加条件を確認する",
+                             "description":  "公式条件と相談が必要な体調を確認したら完了です。"
+                         },
+                         {
+                             "title":  "現在の体力と経験を確認する",
+                             "description":  "安全な小テストで現在地を記録したら完了です。"
+                         },
+                         {
+                             "title":  "段階的な練習計画を作る",
+                             "description":  "練習日、休養日、増やし方を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な装備を確認する",
+                             "description":  "必須、レンタル、購入に分けて一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "安全な場所または指導者を選ぶ",
+                             "description":  "場所、講習、同行者のいずれかを確保したら完了です。"
+                         },
+                         {
+                             "title":  "最初の練習を実行する",
+                             "description":  "無理のない初回練習と体調記録を終えたら完了です。"
+                         },
+                         {
+                             "title":  "本番条件で予行する",
+                             "description":  "装備、補給、時間を本番に近づけて一度試したら完了です。"
+                         },
+                         {
+                             "title":  "天候と中止基準を確認する",
+                             "description":  "公式情報の確認先と中止判断を決めたら完了です。"
+                         },
+                         {
+                             "title":  "本番後の回復と振り返りを行う",
+                             "description":  "体調、成果、次回の改善点を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "challenge-04",
+        "category":  "挑戦",
+        "title":  "スキューバダイビングの資格を取る",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "講習",
+                                    "健康",
+                                    "資格"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  702,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "挑戦の達成条件と日程を決める",
+                             "description":  "距離、場所、資格などの達成条件と期限を記録したら完了です。"
+                         },
+                         {
+                             "title":  "健康と参加条件を確認する",
+                             "description":  "公式条件と相談が必要な体調を確認したら完了です。"
+                         },
+                         {
+                             "title":  "現在の体力と経験を確認する",
+                             "description":  "安全な小テストで現在地を記録したら完了です。"
+                         },
+                         {
+                             "title":  "段階的な練習計画を作る",
+                             "description":  "練習日、休養日、増やし方を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "必要な装備を確認する",
+                             "description":  "必須、レンタル、購入に分けて一覧にしたら完了です。"
+                         },
+                         {
+                             "title":  "安全な場所または指導者を選ぶ",
+                             "description":  "場所、講習、同行者のいずれかを確保したら完了です。"
+                         },
+                         {
+                             "title":  "最初の練習を実行する",
+                             "description":  "無理のない初回練習と体調記録を終えたら完了です。"
+                         },
+                         {
+                             "title":  "本番条件で予行する",
+                             "description":  "装備、補給、時間を本番に近づけて一度試したら完了です。"
+                         },
+                         {
+                             "title":  "天候と中止基準を確認する",
+                             "description":  "公式情報の確認先と中止判断を決めたら完了です。"
+                         },
+                         {
+                             "title":  "本番後の回復と振り返りを行う",
+                             "description":  "体調、成果、次回の改善点を記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "product-01",
+        "category":  "プロダクト",
+        "title":  "個人アプリをリリースする",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "利用者",
+                                    "公開"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  754,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "利用者と解決する課題を決める",
+                             "description":  "一人の利用者と一つの困りごとを文章にしたら完了です。"
+                         },
+                         {
+                             "title":  "最小の公開範囲を決める",
+                             "description":  "初版に含めるものと含めないものを分けたら完了です。"
+                         },
+                         {
+                             "title":  "必要な規約と公開条件を確認する",
+                             "description":  "利用規約、権利、審査条件の参照先を記録したら完了です。"
+                         },
+                         {
+                             "title":  "画面または内容の構成を作る",
+                             "description":  "利用の流れが分かる構成図を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "初版を制作する",
+                             "description":  "主要な利用経路を一度通せる状態にしたら完了です。"
+                         },
+                         {
+                             "title":  "実際の利用者に試してもらう",
+                             "description":  "観察した迷いと感想を三つ記録したら完了です。"
+                         },
+                         {
+                             "title":  "重要な問題を修正する",
+                             "description":  "公開を妨げる問題を優先順に修正したら完了です。"
+                         },
+                         {
+                             "title":  "公開情報と運用方法を整える",
+                             "description":  "説明、問い合わせ先、更新方法を用意したら完了です。"
+                         },
+                         {
+                             "title":  "小さな範囲へ公開する",
+                             "description":  "対象を限定して公開しアクセスを確認したら完了です。"
+                         },
+                         {
+                             "title":  "反応を測り次の改善を決める",
+                             "description":  "利用数、感想、次の変更を一つずつ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "product-02",
+        "category":  "プロダクト",
+        "title":  "自分のポートフォリオサイトを公開する",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "構成",
+                                    "確認",
+                                    "公開"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  704,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "利用者と解決する課題を決める",
+                             "description":  "一人の利用者と一つの困りごとを文章にしたら完了です。"
+                         },
+                         {
+                             "title":  "最小の公開範囲を決める",
+                             "description":  "初版に含めるものと含めないものを分けたら完了です。"
+                         },
+                         {
+                             "title":  "必要な規約と公開条件を確認する",
+                             "description":  "利用規約、権利、審査条件の参照先を記録したら完了です。"
+                         },
+                         {
+                             "title":  "画面または内容の構成を作る",
+                             "description":  "利用の流れが分かる構成図を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "初版を制作する",
+                             "description":  "主要な利用経路を一度通せる状態にしたら完了です。"
+                         },
+                         {
+                             "title":  "実際の利用者に試してもらう",
+                             "description":  "観察した迷いと感想を三つ記録したら完了です。"
+                         },
+                         {
+                             "title":  "重要な問題を修正する",
+                             "description":  "公開を妨げる問題を優先順に修正したら完了です。"
+                         },
+                         {
+                             "title":  "公開情報と運用方法を整える",
+                             "description":  "説明、問い合わせ先、更新方法を用意したら完了です。"
+                         },
+                         {
+                             "title":  "小さな範囲へ公開する",
+                             "description":  "対象を限定して公開しアクセスを確認したら完了です。"
+                         },
+                         {
+                             "title":  "反応を測り次の改善を決める",
+                             "description":  "利用数、感想、次の変更を一つずつ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "product-03",
+        "category":  "プロダクト",
+        "title":  "週刊ニュースレターを始める",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  717,
+        "content_passed":  false,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "利用者と解決する課題を決める",
+                             "description":  "一人の利用者と一つの困りごとを文章にしたら完了です。"
+                         },
+                         {
+                             "title":  "最小の公開範囲を決める",
+                             "description":  "初版に含めるものと含めないものを分けたら完了です。"
+                         },
+                         {
+                             "title":  "必要な規約と公開条件を確認する",
+                             "description":  "利用規約、権利、審査条件の参照先を記録したら完了です。"
+                         },
+                         {
+                             "title":  "画面または内容の構成を作る",
+                             "description":  "利用の流れが分かる構成図を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "初版を制作する",
+                             "description":  "主要な利用経路を一度通せる状態にしたら完了です。"
+                         },
+                         {
+                             "title":  "実際の利用者に試してもらう",
+                             "description":  "観察した迷いと感想を三つ記録したら完了です。"
+                         },
+                         {
+                             "title":  "重要な問題を修正する",
+                             "description":  "公開を妨げる問題を優先順に修正したら完了です。"
+                         },
+                         {
+                             "title":  "公開情報と運用方法を整える",
+                             "description":  "説明、問い合わせ先、更新方法を用意したら完了です。"
+                         },
+                         {
+                             "title":  "小さな範囲へ公開する",
+                             "description":  "対象を限定して公開しアクセスを確認したら完了です。"
+                         },
+                         {
+                             "title":  "反応を測り次の改善を決める",
+                             "description":  "利用数、感想、次の変更を一つずつ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "product-04",
+        "category":  "プロダクト",
+        "title":  "小さなオンラインショップを開く",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "公開"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  735,
+        "content_passed":  false,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  false,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "利用者と解決する課題を決める",
+                             "description":  "一人の利用者と一つの困りごとを文章にしたら完了です。"
+                         },
+                         {
+                             "title":  "最小の公開範囲を決める",
+                             "description":  "初版に含めるものと含めないものを分けたら完了です。"
+                         },
+                         {
+                             "title":  "必要な規約と公開条件を確認する",
+                             "description":  "利用規約、権利、審査条件の参照先を記録したら完了です。"
+                         },
+                         {
+                             "title":  "画面または内容の構成を作る",
+                             "description":  "利用の流れが分かる構成図を完成させたら完了です。"
+                         },
+                         {
+                             "title":  "初版を制作する",
+                             "description":  "主要な利用経路を一度通せる状態にしたら完了です。"
+                         },
+                         {
+                             "title":  "実際の利用者に試してもらう",
+                             "description":  "観察した迷いと感想を三つ記録したら完了です。"
+                         },
+                         {
+                             "title":  "重要な問題を修正する",
+                             "description":  "公開を妨げる問題を優先順に修正したら完了です。"
+                         },
+                         {
+                             "title":  "公開情報と運用方法を整える",
+                             "description":  "説明、問い合わせ先、更新方法を用意したら完了です。"
+                         },
+                         {
+                             "title":  "小さな範囲へ公開する",
+                             "description":  "対象を限定して公開しアクセスを確認したら完了です。"
+                         },
+                         {
+                             "title":  "反応を測り次の改善を決める",
+                             "description":  "利用数、感想、次の変更を一つずつ記録したら完了です。"
+                         }
+                     ]
+    },
+    {
+        "id":  "growth-01",
+        "category":  "自己成長",
+        "title":  "人前で自信を持って話せるようになりたい",
+        "status":  "ok",
+        "source_type":  "local_arc_quest_guide",
+        "mission_count":  10,
+        "done_condition_count":  10,
+        "domain_keyword_hits":  [
+                                    "練習",
+                                    "録画"
+                                ],
+        "unique_title_count":  10,
+        "duration_ms":  701,
+        "content_passed":  true,
+        "passed":  false,
+        "checks":  {
+                       "mission_count":  true,
+                       "done_conditions":  true,
+                       "domain_specificity":  true,
+                       "unique_titles":  true,
+                       "gemini_source":  false
+                   },
+        "missions":  [
+                         {
+                             "title":  "変えたい場面を具体的にする",
+                             "description":  "いつ、どこで、どうなりたいかを一場面に絞ったら完了です。"
+                         },
+                         {
+                             "title":  "現在の反応を責めずに記録する",
+                             "description":  "考え、感情、行動を一度記録したら完了です。"
+                         },
+                         {
+                             "title":  "小さな成功条件を決める",
+                             "description":  "結果ではなく自分で選べる行動を一つ決めたら完了です。"
+                         },
+                         {
+                             "title":  "安心して試せる場所を選ぶ",
+                             "description":  "失敗しても戻れる練習環境を決めたら完了です。"
+                         },
+                         {
+                             "title":  "短い練習を一度行う",
+                             "description":  "決めた行動を短時間試し、感想を残したら完了です。"
+                         },
+                         {
+                             "title":  "録画または記録で振り返る",
+                             "description":  "できた点と次に変える点を一つずつ記録したら完了です。"
+                         },
+                         {
+                             "title":  "信頼できる人へ感想を聞く",
+                             "description":  "具体的な良かった点を一つ聞いたら完了です。"
+                         },
+                         {
+                             "title":  "少し難しい場面で再実行する",
+                             "description":  "難しさを一段だけ上げて試したら完了です。"
+                         },
+                         {
+                             "title":  "続ける頻度と休む条件を決める",
+                             "description":  "週の回数と休止条件を予定へ登録したら完了です。"
+                         },
+                         {
+                             "title":  "一か月後の変化を確認する",
+                             "description":  "最初の記録と比べ、続ける一歩を決めたら完了です。"
+                         }
+                     ]
+    }
+]

@@ -1,11 +1,12 @@
 version: 1
-updated: 2026-06-21
+updated: 2026-07-24
 source: docs/product/qst_backlog.md
 notes:
   - QST-037 through QST-043 already exist in the current backlog as completed MVP/beta work.
   - The requested Arc Experience Epic has been renumbered to QST-046 through QST-059 to avoid collisions.
   - Existing QST-044 and QST-045 are deferred while Arc Experience work is promoted to MVP priority.
   - QST-073 through QST-090 are planned in docs/qst/FEATURE_EXPANSION_BACKLOG.yaml.
+  - QST-178 through QST-187 form the Quest Planning and Safety expansion requested after QST-177.
 rules:
   selection:
     - Pick the first Ready item by numeric order.
@@ -35,6 +36,27 @@ epics:
     starts_after: QST-072
     assigned_range: QST-073-QST-090
     source: docs/qst/FEATURE_EXPANSION_BACKLOG.yaml
+  - id: QUEST-PLANNING-V2
+    title: Quest Planning V2 Epic
+    status: Planned
+    priority: P0
+    rationale: Separate Quest outcomes from Mission actions and add explainable AI effort, duration, and deadline planning.
+    starts_after: QST-177
+    assigned_range: QST-178-QST-187
+  - id: TRUST-SAFETY
+    title: Trust and Safety Foundation Epic
+    status: Planned
+    priority: P0
+    rationale: Prevent harmful planning while preserving legitimate sensitive use cases, privacy, review, and appeal boundaries.
+    starts_after: QST-177
+    assigned_range: QST-179-QST-187
+  - id: MISSION-SUPPORT
+    title: Mission Support Foundation Epic
+    status: Planned
+    priority: P1
+    rationale: Give each Mission verifiable references and future transparent support without turning Arc into a sales surface.
+    starts_after: QST-183
+    assigned_range: QST-184-QST-187
 items:
   - id: QST-046
     requested_id: QST-037
@@ -1642,7 +1664,1011 @@ items:
     acceptance:
       - Every P0 gate has candidate-specific evidence.
       - GO is issued only with zero open S0 and all required sign-offs.
- deferred_existing_items:
+  - id: QST-168
+    title: Input Validation Hardening
+    status: Done
+    priority: P0
+    epic: BETA-QUALITY
+    depends_on: [QST-152, QST-155, QST-156]
+    scope: Standardize required-field, format, and length validation across authentication, Quest, Mission, Trail, onboarding, feedback, and Arc input flows.
+    likely_files:
+      - apps/mobile/lib/core/validation/input_validators.dart
+      - apps/mobile/lib/features/auth
+      - apps/mobile/lib/features/quest
+      - apps/mobile/lib/features/trail
+      - apps/mobile/lib/features/arc
+      - apps/mobile/test/input_validators_test.dart
+      - reports/qst/QST-168.md
+    acceptance:
+      - Required fields show actionable Japanese validation messages before submission.
+      - Email and future phone inputs have centralized practical format validation.
+      - Arc Chat and content forms enforce documented length limits at UI and service boundaries.
+      - Static analysis and the complete Flutter test suite pass.
+    progress:
+      - Centralized validators and limits are applied to all targeted MVP and Beta input flows.
+      - Arc Chat is limited to 1,200 characters and its service payload is trimmed and capped.
+      - Dart analysis and all 230 Flutter tests pass.
+  - id: QST-169
+    title: Authentication Lifecycle and Login Hardening
+    status: In Progress
+    priority: P0
+    epic: BETA-QUALITY
+    depends_on: [QST-160, QST-168]
+    scope: Finalize first-use registration, platform-specific session persistence, password recovery, login ID support, and temporary account locking after repeated failures.
+    likely_files:
+      - apps/mobile/lib/core/auth
+      - apps/mobile/lib/features/auth
+      - apps/mobile/lib/features/splash/splash_screen.dart
+      - supabase/functions/auth-login/index.ts
+      - supabase/migrations/202607190001_auth_login_hardening.sql
+      - docs/product/authentication_spec_v1.md
+      - reports/qst/QST-169.md
+    acceptance:
+      - Registration returns the user to login after email confirmation is requested.
+      - Mobile securely restores a valid session while Web requires login after a reload or revisit.
+      - Login ID or linked email can authenticate without exposing their mapping.
+      - Password recovery returns through allowlisted Web and native deep links.
+      - Ten failures within fifteen minutes lock new login attempts for thirty minutes.
+      - Static analysis, the complete Flutter test suite, and the authentication security contract pass.
+    progress:
+      - Flutter, database migration, Edge Function, deep links, recovery UI, tests, and specification are implemented locally.
+      - Dart analysis passes and all 238 Flutter tests pass.
+      - Supabase Beta deployment is pending because the CLI personal access token is not available in the current environment.
+  - id: QST-170
+    requested_id: QST-141
+    title: Arc Motion, Haptics, and Experience Preferences
+    status: In Progress
+    priority: P1
+    epic: ARC-EXPERIENCE
+    depends_on: [QST-084, QST-168]
+    scope: Add user-controlled Arc motion, haptics, sound readiness, swipe completion, onboarding presets, accessibility reduction, and owner-bound persistence without replacing the approved Arc design.
+    likely_files:
+      - apps/mobile/lib/core/experience
+      - apps/mobile/lib/features/arc/arc_motion_controller.dart
+      - apps/mobile/lib/widgets/arc/arc_widget.dart
+      - apps/mobile/lib/features/settings/widgets/experience_settings_card.dart
+      - apps/mobile/lib/features/mission/mission_screen.dart
+      - apps/mobile/lib/features/onboarding/onboarding_screen.dart
+      - supabase/migrations/202607200001_user_experience_settings.sql
+      - reports/qst/QST-170.md
+    acceptance:
+      - The approved seven-expression Arc PNG set remains the visual source for reactions.
+      - Arc tap and long press reactions use a shared controller with a 500 ms cooldown.
+      - Mission completion works by right swipe and by an explicit button.
+      - Motion, haptics, sound readiness, completion effects, swipe, and power saving can be configured.
+      - Local settings are immediate and signed-in settings synchronize through owner-bound RLS.
+      - OS reduced motion, background state, and power saving cap animation intensity.
+      - Static analysis and focused regression tests pass.
+    progress:
+      - Phase 1 and Phase 2 foundations, settings UI, Arc interactions, Mission feedback, onboarding presets, local persistence, Supabase schema, and tests are implemented.
+      - Dart analysis passes and all 249 Flutter tests pass.
+      - Approved sound assets, Quest completion entry point/effect UI, production Supabase deployment, and device performance measurement remain Phase 3/4 work.
+  - id: QST-173
+    title: Arc Conversation to Quest Planning
+    status: In Progress
+    priority: P0
+    epic: ARC-EXPERIENCE
+    depends_on: [QST-042, QST-043, QST-168]
+    scope: Turn a concrete wish expressed in Arc Chat into one editable Quest, an AI-generated route, and selectable Mission candidates before persistence.
+    likely_files:
+      - apps/mobile/lib/features/arc/arc_chat_service.dart
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - apps/mobile/lib/features/quest/arc_quest_guide_controller.dart
+      - apps/mobile/lib/features/quest/quest_form_screen.dart
+      - supabase/functions/arc-chat/index.ts
+      - apps/mobile/test/arc_chat_service_test.dart
+      - reports/qst/QST-173.md
+    acceptance:
+      - A concrete wish in Arc Chat can surface an explicit Quest planning action.
+      - The user reviews the Quest title, category, difficulty, route, cautions, and Mission candidates before saving.
+      - Arc proposes 8 to 10 ordered Missions with one concrete outcome and a clear done condition each.
+      - Confirming the plan creates one Quest and the selected Missions without duplicate guide generation.
+      - Ordinary chat is not forced into a Quest.
+      - Gemini failure preserves a usable local planning fallback.
+      - Static analysis and focused regression tests pass.
+    progress:
+      - Flutter conversation-to-Quest flow, Quest form simplification, structured Edge Function response, and focused tests are implemented locally.
+      - Dart analysis and all 253 Flutter tests pass; focused detailed-guide tests also pass.
+      - The prompt, response schema, parser, and fallback require 8 to 10 detailed Missions with explicit completion conditions.
+      - The updated arc-quest-guide is deployed to Supabase Beta; a Singapore travel smoke test returned 10 Gemini-generated Missions covering the full preparation route.
+      - The structured arc-chat deployment and device input validation remain pending.
+  - id: QST-174
+    title: Quest Planning Template Matrix
+    status: Done
+    priority: P0
+    epic: ARC-EXPERIENCE
+    depends_on: [QST-173]
+    scope: Evaluate 50 diverse wishes and keep Quest-specific Mission quality across Gemini and free-tier fallback paths with an automatically selected planning template.
+    likely_files:
+      - supabase/functions/arc-quest-guide/index.ts
+      - supabase/functions/arc-quest-guide/quest_planning_templates.ts
+      - tools/qst/arc_quest_guide_eval_cases.json
+      - tools/qst/evaluate_arc_quest_guides.ps1
+      - reports/qst/evaluations/arc_quest_guide_final.json
+      - reports/qst/QST-174.md
+    acceptance:
+      - Fifty wishes spanning travel, learning, health, career, creation, relationships, lifestyle, finance, community, challenge, product, and personal growth are evaluated.
+      - Every result contains 8 to 10 unique ordered Missions with observable done conditions.
+      - Planning templates are selected from Quest category, title, and description without adding a required user choice.
+      - Gemini and server fallback share the same domain and safety planning checkpoints.
+      - Free-tier exhaustion does not collapse the guide into generic unrelated Missions.
+      - Evaluation evidence distinguishes Gemini output from fallback output.
+    progress:
+      - Baseline live evaluation completed for 50 cases with 5 Gemini and 45 fallback responses; 17 of 50 met all content checks.
+      - Twelve planning templates and strong-signal routing were deployed to Supabase Beta.
+      - Final live evaluation completed for the same 50 cases; all 50 met mission count, completion condition, uniqueness, and domain-specificity checks with no errors.
+      - The final pass used fallback responses because the Gemini free quota was exhausted; a Gemini-only 50-case rerun remains an operational follow-up.
+  - id: QST-175
+    title: 60-App UI and Arc Conversation Refresh
+    status: Done
+    priority: P0
+    epic: BETA-QUALITY
+    depends_on: [QST-174]
+    scope: Benchmark sixty established apps, distill reusable interaction principles, simplify Home and Arc, and make Arc conversation turns shorter and more natural without copying branded interfaces.
+    likely_files:
+      - docs/product/APP_UI_BENCHMARK_60.md
+      - apps/mobile/lib/features/home/home_screen.dart
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - apps/mobile/lib/features/arc/arc_chat_service.dart
+      - apps/mobile/lib/widgets/arc/arc_speech_bubble.dart
+      - supabase/functions/arc-chat/index.ts
+      - apps/mobile/test/arc_chat_service_test.dart
+      - reports/qst/QST-175.md
+    acceptance:
+      - At least fifty well-known apps are compared and their reusable UI or interaction principles are documented.
+      - Questra applies principles rather than copying trademarks, layouts, product copy, or dark patterns.
+      - Home prioritizes Arc, today's Missions, and the current Quest with reduced explanatory text.
+      - Arc Chat prioritizes conversation, keeps supporting history behind progressive disclosure, and exposes contextual action chips.
+      - Arc responses use natural Japanese, two to four short sentences, no more than one question, and restrained star or voyage metaphors.
+      - Flutter analysis, relevant tests, and Web visual review pass.
+    progress:
+      - A sixty-app benchmark and a measurable 100-point UX gate were documented.
+      - Home and Arc information hierarchy, message presentation, quick actions, input affordance, and local/backend conversation rules were refreshed.
+      - Static analysis, tests, deployment, and visual review results are recorded in QST-175.md.
+  - id: QST-176
+    title: Quest Planning Input and Mission Relationship Repair
+    status: Done
+    priority: P0
+    epic: ARC-EXPERIENCE
+    depends_on: [QST-173, QST-174, QST-175]
+    scope: Repair Arc consultation and Quest creation inputs, make Quest-to-Mission ownership explicit, support partial Mission progress and post-completion additions, unify form labels, and retain owner-scoped aggregate planning outcomes for unfamiliar wishes.
+    likely_files:
+      - apps/mobile/lib/widgets/forms/questra_field_label.dart
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - apps/mobile/lib/features/quest
+      - apps/mobile/lib/features/mission
+      - apps/mobile/lib/features/auth
+      - apps/mobile/lib/features/trail/trail_screen.dart
+      - supabase/functions/arc-quest-guide/index.ts
+      - supabase/migrations/202607240001_mission_progress_and_planning_feedback.sql
+      - reports/qst/QST-176.md
+    acceptance:
+      - Arc consultation preserves the original Japanese prompt and accepts multiline IME input without submitting on composition confirmation.
+      - Quest planning exposes an optional target date before generation.
+      - Quest and Mission are visually and structurally distinct, and every Mission identifies its parent Quest.
+      - Mission progress can be updated from 0 to 100 percent and persisted.
+      - New or regenerated Missions can be added after existing Missions are completed.
+      - Input labels remain outside field borders across all feature forms.
+      - The Arc navigation item uses the same selected treatment as other destinations without a gold circle.
+      - Owner-scoped aggregate plan outcomes can guide future plans without storing raw consultation text.
+      - Flutter analysis and the complete Flutter test suite pass.
+    progress:
+      - All acceptance items are implemented locally.
+      - No feature form retains a floating labelText decoration.
+      - Flutter analysis passes and all 258 Flutter tests pass.
+      - Supabase migration and updated arc-quest-guide deployment remain operational follow-ups.
+  - id: QST-177
+    title: Arc Clarifying Questions
+    status: Done
+    priority: P0
+    epic: ARC-EXPERIENCE
+    depends_on: [QST-176]
+    scope: Ask at most three missing-information questions for deadline, budget, location, experience, or safety constraints before final Quest planning, while preserving a skip path.
+    likely_files:
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - apps/mobile/lib/features/quest/arc_quest_guide_service.dart
+      - supabase/functions/arc-chat/index.ts
+      - supabase/functions/arc-quest-guide/index.ts
+      - reports/qst/QST-177.md
+    acceptance:
+      - Arc asks only questions that materially change the route.
+      - No more than three questions are shown before planning.
+      - Users can skip unknown answers and still generate a safe plan.
+      - Answers are shown in the confirmation view before persistence.
+      - Flutter analysis and focused tests pass.
+    progress:
+      - Theme-aware missing-information selection is implemented for deadline, budget, location, experience, and safety context.
+      - The Arc planning sheet displays at most three optional questions and keeps unknown answers skippable.
+      - Answered conditions are displayed before confirmation and passed to Gemini as explicit planning context.
+      - Focused tests cover travel, supplied facts, unknown wishes, and skipped answers.
+  - id: QST-178
+    title: Quest and Mission Domain Contract Repair
+    status: Done
+    priority: P0
+    epic: QUEST-PLANNING-V2
+    depends_on: [QST-177]
+    goal: Questを達成したい結果、MissionをそのQuestを進める具体行動として分離し、親子関係をデータと画面で一貫させる。
+    scope: Enforce Quest-to-Mission ownership, prevent generated Missions from duplicating the Quest title or outcome, repair orphan or ambiguous records, and render the child Mission list directly under its parent Quest.
+    likely_files:
+      - apps/mobile/lib/features/quest
+      - apps/mobile/lib/features/mission
+      - apps/mobile/test/quest_mission_contract_test.dart
+      - supabase/functions/arc-quest-guide/index.ts
+      - supabase/migrations
+      - reports/qst/QST-178.md
+    acceptance:
+      - Every persisted Mission has exactly one valid quest_id owned by the same user.
+      - Quest titles describe outcomes while Mission titles describe observable actions and generated duplicates are rejected or regenerated.
+      - Quest Detail displays its Missions in order with progress, duration, and completion state.
+      - Mission surfaces identify and navigate to the parent Quest.
+      - Deleting or archiving a Quest follows an explicit Mission retention policy without creating orphans.
+      - Existing ambiguous data is detected and a safe migration or repair report is provided.
+      - Flutter analysis, repository tests, RLS tests, and relationship UI tests pass.
+    progress:
+      - Mission title validation prevents Quest-title reuse and duplicate Mission titles within one Quest.
+      - Arc-generated plans repair Quest-title candidates and remove duplicate candidates before persistence.
+      - Supabase Mission reads now join the authoritative parent Quest title instead of falling back to a generic label.
+      - Quest Detail retains the ordered child Mission list with progress and parent context.
+      - Database checks keep Mission titles nonblank and retain the existing required cascade relationship.
+  - id: QST-179
+    title: Quest Intent Safety Moderation Gate
+    status: Done
+    priority: P0
+    epic: TRUST-SAFETY
+    depends_on: [QST-177]
+    goal: Arc ChatとQuest生成の前に危険・違法・搾取的な要望を検出し、安全な代替案または拒否へ切り替える。
+    scope: Add provider-neutral structured moderation, deterministic high-risk rules, policy categories, safe refusal copy, audit metadata, and fail-closed handling for severe categories before Quest or Mission generation.
+    likely_files:
+      - apps/mobile/lib/core/safety
+      - apps/mobile/lib/features/arc/arc_chat_service.dart
+      - apps/mobile/lib/features/quest/arc_quest_guide_service.dart
+      - supabase/functions/_shared/safety
+      - supabase/functions/arc-chat/index.ts
+      - supabase/functions/arc-quest-guide/index.ts
+      - supabase/migrations
+      - reports/qst/QST-179.md
+    acceptance:
+      - Requests facilitating violent crime, exploitation, non-consensual sexual content, sexual content involving minors, or similarly severe harm cannot create a Quest or Mission plan.
+      - Legitimate health, safety, education, and consensual adult wellbeing contexts are not rejected merely because they contain sensitive words.
+      - Moderation uses structured category, severity, confidence, reason code, provider, model, and policy version rather than free-form parsing.
+      - Provider failure cannot silently allow a severe request; a conservative retry or safe fallback is shown.
+      - Arc refuses briefly without reproducing operational harmful details and offers a safe alternative where appropriate.
+      - Raw private prompts are not retained in moderation logs by default.
+      - Adversarial Japanese and English safety evaluation cases pass.
+  - id: QST-180
+    title: Arc Wish Articulation and Reality Framing
+    status: Done
+    priority: P0
+    epic: ARC-EXPERIENCE
+    depends_on: [QST-179]
+    goal: 曖昧な「やりたいこと」をArcとの短い対話で、本人が納得できるQuestの目的・成功条件・理由へ言語化する。
+    scope: Generate an editable Quest statement, motivation, observable success condition, assumptions, and at most three clarifying questions; distinguish impossible, uncertain, ambitious, and symbolic wishes without dismissing meaningful aspirations.
+    likely_files:
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - apps/mobile/lib/features/quest/quest_intent_model.dart
+      - apps/mobile/lib/features/quest/quest_clarification_service.dart
+      - supabase/functions/arc-chat/index.ts
+      - supabase/functions/arc-quest-guide/index.ts
+      - apps/mobile/test/quest_intent_service_test.dart
+      - reports/qst/QST-180.md
+    acceptance:
+      - Arc proposes an editable one-sentence Quest outcome from an ambiguous wish.
+      - The user confirms or edits the outcome, reason, and observable completion condition before persistence.
+      - Logically or physically impossible literal outcomes are not accepted as factual plans; Arc offers an achievable interpretation when one is reasonable.
+      - Ambitious or low-probability goals are framed with uncertainty and checkpoints rather than automatically rejected.
+      - Safety-blocked intent never reaches the articulation or generation service.
+      - Arc asks no more than three questions in one planning turn and preserves a skip path.
+  - id: QST-181
+    title: Abuse Signals and Account Restriction Readiness
+    status: Done
+    priority: P0
+    epic: TRUST-SAFETY
+    depends_on: [QST-179]
+    goal: 繰り返される重大なポリシー違反を最小限のデータで記録し、将来の利用制限・BAN・異議申立てへ安全につなげる。
+    scope: Add owner-bound abuse signals, severity-weighted counters, cooldowns, rate limits, review states, temporary restriction hooks, administrator review boundaries, retention rules, and appeal readiness without enabling opaque automatic permanent bans.
+    likely_files:
+      - apps/mobile/lib/core/safety
+      - apps/mobile/lib/features/settings
+      - supabase/functions/_shared/safety
+      - supabase/functions/auth-login
+      - supabase/migrations
+      - docs/product/trust_safety_enforcement_spec.md
+      - reports/qst/QST-181.md
+    acceptance:
+      - Confirmed moderation outcomes can create idempotent abuse signals with category, severity, policy version, and timestamp.
+      - Repeated low-confidence results alone cannot permanently restrict an account.
+      - Permanent bans require a documented review decision; severe repeated activity may trigger a reversible temporary restriction or rate limit.
+      - Users receive a clear generic restriction reason, duration when applicable, and an appeal path without exposing detection internals.
+      - Signal retention, deletion, administrator access, and RLS are explicitly defined and tested.
+      - No raw Arc conversation is stored solely for future punishment by default.
+  - id: QST-182
+    title: AI Quest and Mission Effort Estimation
+    status: Done
+    priority: P0
+    epic: QUEST-PLANNING-V2
+    depends_on: [QST-178, QST-180]
+    goal: ユーザー自己申告の難易度選択を廃止し、ArcがQuestと各Missionの難しさ・工数・不確実性を一貫して評価する。
+    scope: Add provider-neutral structured estimates for difficulty, active effort, calendar duration, confidence, rationale, and risk factors with deterministic fallback and recalculation when the plan changes.
+    likely_files:
+      - apps/mobile/lib/features/quest
+      - apps/mobile/lib/features/mission
+      - apps/mobile/lib/features/arc
+      - supabase/functions/arc-quest-guide/index.ts
+      - supabase/migrations
+      - apps/mobile/test/effort_estimation_test.dart
+      - reports/qst/QST-182.md
+    acceptance:
+      - Quest creation no longer asks the user to choose a difficulty level.
+      - Every generated Quest and Mission receives an AI-derived difficulty band, effort estimate, confidence, short rationale, and estimate version.
+      - Estimates are presented as guidance rather than certainty and distinguish active work from elapsed calendar time.
+      - Editing, adding, deleting, or regenerating Missions recalculates affected estimates without overwriting completed history.
+      - Medical, legal, financial, and other high-risk estimates include appropriate uncertainty and verification guidance.
+      - Invalid or missing AI output uses a bounded fallback and never blocks manual Mission creation.
+  - id: QST-183
+    title: Quest Target Month and Feasibility Replanning
+    status: Done
+    priority: P0
+    epic: QUEST-PLANNING-V2
+    depends_on: [QST-182]
+    goal: ユーザーの希望期限をyyyy/MMで確認し、AI推定期間と比較して無理のない期限・Mission配分を提案する。
+    scope: Add a YearMonth target selector, estimated earliest/likely/latest completion windows, feasibility status, Mission schedule allocation, and explicit alternative-month proposals when the requested target is unlikely.
+    likely_files:
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - apps/mobile/lib/features/quest
+      - apps/mobile/lib/features/mission
+      - apps/mobile/lib/widgets/forms
+      - supabase/functions/arc-quest-guide/index.ts
+      - supabase/migrations
+      - apps/mobile/test/quest_feasibility_test.dart
+      - reports/qst/QST-183.md
+    acceptance:
+      - The Arc planning flow asks for an optional target month in yyyy/MM without requiring an arbitrary day.
+      - Quest and Mission screens show AI-estimated duration and confidence in clear Japanese.
+      - Feasibility compares the requested month with current scope, effort, dependencies, and user constraints.
+      - When the target is unlikely, Arc proposes a realistic month, reduced scope, or changed pace and explains the tradeoff.
+      - The requested target is never silently changed; the user explicitly accepts or rejects a proposal.
+      - Replanning preserves the original requested month and prior estimates for auditability.
+  - id: QST-184
+    title: AI Mission Research and Support Hub V1
+    status: Done
+    priority: P1
+    epic: MISSION-SUPPORT
+    depends_on: [QST-178, QST-182]
+    goal: Mission達成に必要な最新情報をAIが安全に検索・要約・引用し、実行方法、確認事項、参考情報を一か所で確認できる画面を作る。
+    scope: Add an on-demand server-side Mission research service and a Mission Support screen with Arc guidance, search queries derived from the parent Quest and Mission, grounded summaries, inline citations, ordered steps, source metadata, safety notes, saved resources, cache and rate limits, and a separately labeled enterprise support area without fabricating current facts or sources.
+    likely_files:
+      - apps/mobile/lib/features/mission
+      - apps/mobile/lib/features/mission_support
+      - apps/mobile/lib/core/router
+      - supabase/functions/research-mission-resources
+      - supabase/functions/_shared/search_provider.ts
+      - supabase/migrations
+      - apps/mobile/test/mission_support_screen_test.dart
+      - apps/mobile/test/mission_research_service_test.dart
+      - reports/qst/QST-184.md
+    acceptance:
+      - Every Mission can open a support screen that clearly identifies its parent Quest.
+      - A user can run or refresh `Arcが調べた情報` for the selected Mission without sending unrelated Quest, Trail, profile, or chat data.
+      - Search runs on the server through a provider abstraction; provider credentials and unrestricted fetch capability are never shipped to Flutter clients.
+      - The AI response separates a concise answer, actionable checkpoints, cautions, and three to eight supporting sources.
+      - Every factual current claim is linked to an inline citation and every external reference shows title, publisher, URL, retrieval date, verification state, and relevance.
+      - Unverified AI-generated URLs are never presented as factual references and inaccessible or contradictory sources are visibly marked rather than hidden.
+      - Search requests, fetched URLs, redirects, MIME types, response sizes, and timeouts are constrained to prevent SSRF and resource abuse.
+      - Results use owner-scoped persistence, freshness metadata, cache TTL, refresh, and per-user rate limits to protect free-tier capacity.
+      - The screen visibly separates `Arcが調べた情報`, `実行のポイント`, `安全上の確認`, and `企業からの支援`.
+      - Users can save, hide, report, or open a reference without changing Mission completion state.
+      - Empty, loading, offline, and source-failure states remain useful and do not invent information.
+  - id: QST-185
+    title: Transparent Enterprise Quest Support Preview
+    status: Done
+    priority: P1
+    epic: MISSION-SUPPORT
+    depends_on: [QST-184]
+    goal: 企業がMission達成に役立つ支援を提案でき、ユーザーがAI検索情報と混同せず条件を判断できる透明な表示・審査データ契約を実装する。
+    scope: Add a reviewed enterprise Mission support proposal contract and feature-flagged cards for Sponsor, Coach, Partner, and Official Event Host with disclosure, eligibility, recommendation reason, non-sponsored alternatives, dismissal, feedback, validity dates, and safe application links; do not add payment or behavioral targeting logic.
+    likely_files:
+      - apps/mobile/lib/features/mission_support
+      - apps/mobile/lib/core/feature_flags
+      - supabase/functions/list-mission-support-proposals
+      - supabase/migrations
+      - apps/mobile/test/enterprise_support_boundary_test.dart
+      - docs/product/enterprise_support_display_spec.md
+      - reports/qst/QST-185.md
+    acceptance:
+      - Enterprise support is disabled by default and uses mock or curated data only in Beta.
+      - A proposal records enterprise identity, support role, applicable Mission or Quest DNA tags, title, description, benefit, user cost, eligibility, region, age restrictions, valid-from/to dates, application URL, sponsorship disclosure, and review status.
+      - Only reviewed, active, non-expired proposals can appear; enterprises cannot publish directly to a user's Mission screen.
+      - A support card identifies the enterprise, provider role, benefit, conditions, cost, validity, sponsorship relationship, selection reason, application destination, and non-sponsored alternatives.
+      - Enterprise proposals appear only in the separately labeled `企業からの支援` section and are never used as citations for `Arcが調べた情報`.
+      - Users can dismiss, hide, and report support without harming Quest progress or Arc relationship state.
+      - Arc never presents paid placement as neutral advice and never becomes a sales representative.
+      - No individual Quest data is exposed to an enterprise without separate explicit consent.
+      - Matching uses approved proposal metadata against local or server-side Quest DNA and returns only the minimum explanation needed by the user.
+      - Application links use validated HTTPS destinations and opening one is an explicit user action.
+      - The Mission Support screen remains complete when enterprise support is unavailable.
+  - id: QST-186
+    title: Arc Chat Keyboard Composer Contract
+    status: Done
+    priority: P1
+    epic: ARC-EXPERIENCE
+    depends_on: [QST-175, QST-177]
+    goal: Web・デスクトップのArc ChatでEnter送信、Alt+Enter改行を安定させ、日本語IME確定時の誤送信を防ぐ。
+    scope: Implement hardware-keyboard composer intents for Enter submit and Alt+Enter newline while preserving the mobile send button, multiline editing, accessibility, input limits, and IME composition safety.
+    likely_files:
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - apps/mobile/lib/widgets/forms
+      - apps/mobile/test/arc_chat_keyboard_test.dart
+      - reports/qst/QST-186.md
+    acceptance:
+      - Enter sends one non-empty message on Web and desktop hardware keyboards.
+      - Alt+Enter inserts a newline without sending.
+      - Enter used to confirm Japanese IME composition never sends the message in the same key event.
+      - Mobile users retain an explicit send button and normal multiline input behavior.
+      - Empty, over-limit, rapidly repeated, and in-flight submissions are safely blocked.
+      - Keyboard behavior is discoverable through a concise tooltip or accessibility hint rather than persistent explanatory text.
+  - id: QST-187
+    title: Quest Planning and Safety Integration Review
+    status: In Progress
+    priority: P0
+    epic: BETA-QUALITY
+    depends_on: [QST-178, QST-179, QST-180, QST-181, QST-182, QST-183, QST-184, QST-185, QST-186]
+    goal: QST-178〜186を一連の体験として検証し、Quest/Missionの整合性、安全性、期間提案、支援表示、Arc操作をBeta品質へ引き上げる。
+    scope: Run end-to-end, RLS, moderation variance, accessibility, Japanese IME, responsive UI, provider fallback, and migration reviews; repair findings until no release-blocking issue remains.
+    likely_files:
+      - apps/mobile/test
+      - supabase/tests
+      - tools/qst
+      - docs/product
+      - reports/qst/QST-187.md
+    acceptance:
+      - Arc consultation creates one distinct Quest with correctly linked, non-duplicate Missions.
+      - Unsafe intent is blocked before generation and safe sensitive requests are not overblocked in the evaluation set.
+      - Difficulty, duration, target month, and replanning remain explainable and editable only through explicit user decisions.
+      - Mission references and enterprise support comply with source and transparency rules.
+      - AI research citations and enterprise support proposals remain visually, semantically, and analytically separated.
+      - Enter, Alt+Enter, Japanese IME, mobile send, and input validation pass automated and manual checks.
+      - Release Manager has zero critical blockers and all migrations include rollback or remediation guidance.
+      - A QST report records residual risks, operational deployment steps, and the next Beta candidates.
+  - id: QST-188
+    title: Beta Backend Deployment and Grounded Search Verification
+    status: In Progress
+    priority: P0
+    epic: BETA-QUALITY
+    depends_on: [QST-187]
+    goal: QST-179〜186のMigrationとEdge FunctionをBeta Supabaseへ安全に配備し、実Gemini grounding、RLS、認証、rate limitを証跡付きで検証する。
+    scope: Extend the deployment manifest and bootstrap script, verify migration history before push, deploy auth-login, moderate-quest-intent, and research-mission-resources, run two-account RLS and grounded-source smoke tests, and record sanitized cloud evidence without secrets.
+    likely_files:
+      - supabase/config.toml
+      - supabase/functions
+      - supabase/migrations
+      - tools/qst/bootstrap_supabase_beta.ps1
+      - docs/qst/BETA_SUPABASE_PROJECT.yaml
+      - reports/qst/QST-188.md
+    acceptance:
+      - Supabase CLI access to the recorded Beta project is verified before any remote write.
+      - Local and remote migration histories are reviewed and the remote head reaches 202607240006 without repair shortcuts.
+      - All required Edge Functions are deployed with the intended JWT setting and server-side secrets only.
+      - Real Arc Chat, moderation, Quest guide, and grounded Mission research requests succeed for a test owner.
+      - A second account cannot read or mutate the first account's Quest, Mission, safety signal, or research cache.
+      - Rate limits and search source metadata are observed without storing raw research queries.
+      - Sanitized cloud evidence passes the require-cloud verifier.
+  - id: QST-189
+    title: AI Dynamic Mission Generation Engine
+    status: Completed
+    priority: P0
+    epic: QUEST-INTELLIGENCE-V1
+    depends_on: [QST-182, QST-183]
+    goal: 固定件数・テンプレート中心のMission生成を廃止し、Questの複雑さと文脈に応じてGeminiが3〜30件のMissionグラフを設計する。
+    scope: Generate a variable-size Mission plan with purpose, duration, parent Mission, dependencies, priority, category, cost guidance, reference hints, and enterprise support hints; validate and repair graph integrity before persistence.
+    likely_files:
+      - apps/mobile/lib/features/mission
+      - apps/mobile/lib/features/quest/arc_quest_guide_service.dart
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - supabase/functions/arc-quest-guide/index.ts
+      - supabase/migrations
+      - apps/mobile/test/dynamic_mission_plan_test.dart
+      - reports/qst/QST-189.md
+    acceptance:
+      - No production layer requires exactly eight or ten generated Missions.
+      - Gemini chooses between 3 and 30 Missions according to Quest complexity.
+      - Mission titles and purposes remain distinct from the parent Quest outcome.
+      - Sub-Missions, parent references, and dependency references form an acyclic owner-bound graph.
+      - Invalid AI graph references are removed or repaired before persistence.
+      - Mission metadata includes duration, priority, category, cost guidance, references, and support hints.
+      - Local fallback also varies plan size and never blocks manual Mission creation.
+      - Flutter analysis and graph contract tests pass.
+  - id: QST-190
+    title: AI Quest Evaluation Engine V2
+    status: Completed
+    priority: P0
+    epic: QUEST-INTELLIGENCE-V1
+    depends_on: [QST-189]
+    goal: Questの難易度・期間・Mission数・費用・リスク・成功見込み・推奨開始日をAIが一貫して評価し、編集不可の助言として保存・表示する。
+    scope: Add versioned Quest and Mission evaluations, Gemini structured output, bounded fallback, explicit database columns, UI display, and a user-triggered reevaluation action without manual score editing.
+    likely_files:
+      - apps/mobile/lib/features/quest
+      - apps/mobile/lib/features/mission
+      - supabase/functions/arc-quest-guide/index.ts
+      - supabase/migrations
+      - apps/mobile/test/quest_evaluation_test.dart
+      - reports/qst/QST-190.md
+    acceptance:
+      - Quest creation exposes no manual difficulty, duration, or Mission-count input.
+      - Quest evaluation stores difficulty score 1-5, duration days, cost guidance, risk summary, success likelihood, Mission count, recommended start date, version, confidence, and evaluated time.
+      - Every generated Mission stores duration days, difficulty score, priority, and dependencies.
+      - Evaluation values are read-only and clearly presented as estimates rather than promises.
+      - Users can request reevaluation and see when and why it changed.
+      - Invalid AI output uses bounded fallback values and cannot corrupt persisted data.
+  - id: QST-191
+    title: Arc Adaptive Route Replanning
+    status: Completed
+    priority: P1
+    epic: QUEST-INTELLIGENCE-V1
+    depends_on: [QST-189, QST-190]
+    goal: 進捗速度、期限、状況変化をもとにArcが航路の前倒し・再配分・再生成を提案し、ユーザー同意後だけMission計画へ反映する。
+    scope: Detect ahead, delayed, blocked, and context-changed states; produce a versioned replan proposal; preserve completed Missions and Trail history; preview additions, removals, reorder, and target-month tradeoffs before explicit acceptance.
+    likely_files:
+      - apps/mobile/lib/features/quest
+      - apps/mobile/lib/features/mission
+      - apps/mobile/lib/features/arc
+      - supabase/functions/arc-quest-guide/index.ts
+      - supabase/migrations
+      - apps/mobile/test/quest_replanning_test.dart
+      - reports/qst/QST-191.md
+    acceptance:
+      - Arc detects material schedule or context changes without rewriting the route automatically.
+      - Completed Missions and linked Trail history are never deleted by replanning.
+      - Users preview and explicitly accept or reject every route change.
+      - A replan records reason, previous plan version, proposed version, changed Missions, and timestamp.
+      - Early progress can pull eligible Missions forward while delays offer scope, pace, or target-month alternatives.
+      - Replanning never changes the user's requested target month silently.
+  - id: QST-192
+    title: Arc Quest Companion Enhancement
+    status: Completed
+    priority: P0
+    epic: QUEST-INTELLIGENCE-V1
+    depends_on: [QST-189, QST-190, QST-191]
+    goal: Arc Chatを回答で終わらせず、会話と検索からQuestのMission・参考情報・期限改善を提案するQuest Companionへ拡張する。
+    scope: Add bounded structured Quest-change proposals to Arc Chat, optionally ground current-information questions, validate owner-bound Quest and Mission references, preview every change, and apply only after explicit user approval. Initially apply add-Mission, add-reference, and deadline-review changes; route destructive edits to a diff review.
+    likely_files:
+      - apps/mobile/lib/features/arc/arc_chat_service.dart
+      - apps/mobile/lib/features/arc/arc_quest_change_proposal.dart
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - apps/mobile/lib/features/mission_support
+      - supabase/functions/arc-chat/index.ts
+      - apps/mobile/test/arc_chat_service_test.dart
+      - reports/qst/QST-192.md
+    acceptance:
+      - Arc can propose a Quest-linked Mission change after answering a relevant question.
+      - Current-information questions may use grounded search and preserve validated HTTPS source metadata.
+      - Mission additions and reference hints reuse existing persistence and duplicate-title validation.
+      - Quest and Mission IDs returned by AI are checked against the supplied owner context.
+      - Nothing changes before the user selects apply; later and reject leave the current route unchanged.
+      - Enterprise support is never invented from search and remains separated from general references.
+      - Flutter analysis and Arc Chat contract tests pass.
+  - id: QST-193
+    title: Living Quest Engine and Quest Canvas Foundation
+    status: Completed
+    priority: P1
+    epic: QUEST-INTELLIGENCE-V1
+    depends_on: [QST-192]
+    goal: Questを固定データではなく、航路、行動、参考情報、スキル、注意、支援、記録、Arc提案が育つ設計図として扱う。
+    scope: Derive a Quest Canvas from canonical Quest, Mission, Trail, reference, risk, and support data without duplicating ownership; display its growth on Quest Detail; then add versioned proposal diffs for destructive edits in a later pass.
+    likely_files:
+      - apps/mobile/lib/features/quest/quest_canvas_service.dart
+      - apps/mobile/lib/features/quest/quest_detail_screen.dart
+      - apps/mobile/lib/features/arc
+      - apps/mobile/test/quest_canvas_service_test.dart
+      - reports/qst/QST-193.md
+    acceptance:
+      - Quest Detail presents route, knowledge, skill, risk, support, and Trail growth from canonical data.
+      - Canvas derivation does not create a second source of truth for Quest or Mission ownership.
+      - Completed Missions and Trail history remain immutable during proposal preview.
+      - Destructive Mission changes require a before/after diff and explicit acceptance.
+      - Proposal versions and rejection outcomes can be audited before QST-193 is completed.
+  - id: QST-194
+    title: Route Replanning Trigger Automation
+    status: Planned
+    priority: P1
+    epic: QUEST-INTELLIGENCE-V1
+    depends_on: [QST-191, QST-193]
+    goal: Mission延期、期限超過、未着手、週次レビュー、明示的な状況変更から、重複なく航路再評価を予約する。
+    scope: Persist trigger events and cooldown state, add idempotent background retry, record model-call cost, and surface pending proposals without changing Quest data automatically.
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_trigger_service.dart
+      - apps/mobile/lib/features/quest/route_replanning_repository.dart
+      - supabase/functions
+      - supabase/migrations
+      - reports/qst/QST-194.md
+    acceptance:
+      - Only material progress events schedule a route review.
+      - Duplicate events do not create duplicate proposals.
+      - Normal reviews observe a 24-hour cooldown while manual and urgent reviews can bypass it.
+      - Failed background work retries without mutating current Missions.
+      - AI call count and estimated cost are auditable.
+  - id: QST-195
+    title: Adaptive Difficulty and Personal Pace Review
+    status: Planned
+    priority: P1
+    epic: QUEST-INTELLIGENCE-V1
+    depends_on: [QST-194]
+    goal: 一般的なQuest難易度とユーザー個人の進行ペースを分離し、遅延を能力評価と誤認しない継続評価を実装する。
+    scope: Preserve initial and latest estimates, model personal pace separately, show reasons and history, and support reevaluation without editable AI scores.
+    likely_files:
+      - apps/mobile/lib/features/quest/quest_evaluation.dart
+      - apps/mobile/lib/features/quest/quest_evaluation_service.dart
+      - apps/mobile/lib/features/quest/quest_detail_screen.dart
+      - supabase/migrations
+      - reports/qst/QST-195.md
+    acceptance:
+      - General difficulty never increases only because a user progresses slowly.
+      - Initial and latest duration estimates remain separately auditable.
+      - Personal pace is shown as ahead, on track, slower, or insufficient data.
+      - Every reassessment shows its reason and timestamp.
+  - id: QST-196
+    title: Durable Route Rollback and Transaction Review
+    status: Completed
+    priority: P1
+    epic: QUEST-INTELLIGENCE-V1
+    depends_on: [QST-194, QST-195]
+    goal: 再起動後や複数端末でも、航路承認とRollbackを一貫して行えるTransaction境界を完成させる。
+    scope: Apply accepted items through an owner-bound RPC transaction, restore server snapshots, handle stale proposal conflicts, and verify RLS boundaries.
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_repository.dart
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - supabase/migrations
+      - apps/mobile/test
+      - reports/qst/QST-196.md
+    acceptance:
+      - Route changes commit atomically or not at all.
+      - A stored route snapshot can be restored after app restart.
+      - Stale proposals cannot overwrite a newer accepted version.
+      - RLS prevents cross-owner proposal access and mutation.
+  - id: QST-197
+    title: Trail and Guild Beta Scope Decision
+    status: Completed
+    priority: P0
+    epic: BETA-RELEASE
+    depends_on: [QST-187]
+    goal: TrailとGuildをBetaで有効化するか対象外にするか正式決定し、Router、Navigation、説明、テストを同じ判断へ揃える。
+    scope: Audit implemented surfaces, data safety, persistence, and release evidence; record an explicit include or defer decision for each feature and remove contradictory routes or copy.
+    likely_files: [apps/mobile/lib/core/router/app_router.dart, apps/mobile/lib/core/router/app_shell.dart, docs/product/beta_readiness_report.md, apps/mobile/test, reports/qst/QST-197.md]
+    acceptance:
+      - Trail and Guild each have an explicit Beta include or defer decision with reasons and owner.
+      - Router, bottom navigation, Home shortcuts, onboarding, and release notes match the decision.
+      - Deferred features preserve source and data without presenting incomplete actions as available.
+      - Included features pass persistence, empty/error, accessibility, and responsive checks.
+  - id: QST-198
+    title: Beta Supabase Migration and Edge Function Deployment
+    status: Completed
+    priority: P0
+    epic: BETA-RELEASE
+    depends_on: [QST-188, QST-197]
+    goal: 最新Migrationと必要なEdge Functionsを記録済みBeta Supabaseへ配備し、ローカル実装と実環境の差を解消する。
+    scope: Verify target project, migration history, secrets, JWT settings, function inventory, deployment order, rollback guidance, and sanitized smoke evidence.
+    likely_files: [supabase/config.toml, supabase/functions, supabase/migrations, tools/qst/bootstrap_supabase_beta.ps1, docs/qst/BETA_SUPABASE_PROJECT.yaml, reports/qst/QST-198.md]
+    acceptance:
+      - The exact target project and current remote migration head are verified before writes.
+      - All approved migrations and required Edge Functions deploy without repair shortcuts.
+      - Server-side secrets remain outside source and logs.
+      - Auth, Arc Chat, Quest guide, moderation, route, media, and Guild publication smoke checks are recorded.
+      - Rollback or forward-remediation steps are documented for every deployment unit.
+  - id: QST-199
+    title: Two-Account RLS Cloud Proof
+    status: Completed
+    priority: P0
+    epic: BETA-RELEASE
+    depends_on: [QST-198]
+    goal: 二つの実テストアカウントでQuest、Mission、Arc Memory、Route、Media、Guild公開境界のRLSを実証する。
+    scope: Run owner, other-user, anonymous, and service-role behavior tests against the Beta project and retain sanitized query/result evidence.
+    likely_files: [supabase/tests/rls_behavior.sql, tools/qst/verify_rls_readiness.dart, docs/product/security, reports/qst/QST-199.md]
+    acceptance:
+      - Account B cannot read or mutate Account A private data across every required table.
+      - Approved public snapshots expose only their documented public columns.
+      - Owner operations and service-only moderation boundaries work as designed.
+      - Storage object access matches media row visibility and ownership.
+      - Sanitized evidence identifies project, migration head, test time, and result without secrets.
+  - id: QST-200
+    title: Beta Candidate Freeze and Rollback Point
+    status: Planned
+    priority: P0
+    epic: BETA-RELEASE
+    depends_on: [QST-196, QST-197, QST-198, QST-199]
+    goal: Beta候補の変更を整理し、Candidate SHA、再現可能Artifact、DB地点、Rollback手順を固定する。
+    scope: Review the dirty worktree, separate intentional changes, commit by coherent scope, tag the candidate, build artifacts, capture checksums, and write app/database rollback instructions.
+    likely_files: [docs/product/beta_readiness_report.md, docs/product/beta_release_notes.md, tools/qst, reports/qst/QST-200.md]
+    acceptance:
+      - Candidate commit SHA and remote branch are immutable and recorded.
+      - Working tree contains no unexplained release changes.
+      - Android and Web artifacts are reproducible and checksummed.
+      - App and database rollback points are tested or explicitly rehearsed.
+      - Release Manager records a Go or No-Go decision.
+  - id: QST-201
+    title: Android and Web Device E2E Evidence
+    status: Planned
+    priority: P0
+    epic: BETA-RELEASE
+    depends_on: [QST-200]
+    goal: Android実機とWebで主要フローを通し、クラッシュ、入力、画像、AI待機、画面遷移を録画と証跡で確認する。
+    scope: Execute onboarding, auth, Arc consultation, Quest creation, Mission generation/progress, Trail/media according to scope, Route review, settings, reset password, and logout/session flows.
+    likely_files: [integration_test, apps/mobile/test, docs/product/beta_readiness_report.md, reports/qst/QST-201.md]
+    acceptance:
+      - Required flows pass on a supported Android device and production-like Web build.
+      - Japanese IME, keyboard, camera/gallery, responsive layout, and offline/error states are exercised.
+      - Screen recording and sanitized issue log are attached to the candidate evidence.
+      - No critical crash, data loss, cross-account leak, or blocked primary flow remains.
+  - id: QST-202
+    title: Quest DNA V2 Persistence
+    status: Planned
+    priority: P1
+    epic: QUEST-INTELLIGENCE-V2
+    depends_on: [QST-190]
+    goal: Quest DNAを16属性、AI生成根拠、Version付きの中核データとして永続化する。
+    scope: Add category, theme, difficulty, duration, budget, location, season, skills, interests, risk, emotional weight, life stage, motivation, social type, monetization relevance, and enterprise relevance with structured Gemini output and history.
+    likely_files: [apps/mobile/lib/features/quest/quest_dna_snapshot.dart, supabase/functions, supabase/migrations, apps/mobile/test, reports/qst/QST-202.md]
+    acceptance:
+      - All 16 Master Spec attributes have typed, bounded values and provenance.
+      - AI output is schema-validated and versioned before persistence.
+      - Users can inspect relevant DNA explanations without editing AI facts as if self-declared.
+      - Guild, Horizon, and enterprise support consume only consented, appropriate attributes.
+  - id: QST-203
+    title: Guild Repository and Moderated Interaction
+    status: Planned
+    priority: P1
+    epic: GUILD-FOUNDATION
+    depends_on: [QST-197, QST-199]
+    goal: Guild参加、投稿、削除、通報、ModerationをRepositoryとSupabaseへ接続し、交流機能の所有権を完成させる。
+    scope: Add Guild membership and post repositories, owner deletion, pagination, moderation states, report/block, RLS, and honest UI states without popularity mechanics.
+    likely_files: [apps/mobile/lib/features/guild, supabase/migrations, supabase/functions, supabase/tests, reports/qst/QST-203.md]
+    acceptance:
+      - Membership and posts persist with owner-bound create/read/delete behavior.
+      - Removed, blocked, pending, and rejected content is handled consistently.
+      - Posting safety never exposes private Quest, Trail, or contact details by default.
+      - Two-account RLS and moderation behavior pass in Beta Supabase.
+  - id: QST-204
+    title: Trail Primary Navigation and Media Device Proof
+    status: Planned
+    priority: P1
+    epic: TRAIL-BETA
+    depends_on: [QST-197, QST-198, QST-199]
+    goal: TrailをPrimary Navigationへ復帰できる品質へ整え、画像追加、圧縮、置換、削除を実機で検証する。
+    scope: Align navigation, upload progress, retry, thumbnail, ownership, Storage policy, keyboard, permission, and device evidence with the QST-197 scope decision.
+    likely_files: [apps/mobile/lib/features/trail, apps/mobile/lib/features/media, apps/mobile/lib/core/router, supabase/storage, integration_test, reports/qst/QST-204.md]
+    acceptance:
+      - Trail is either fully reachable as decided or remains consistently deferred.
+      - Image upload, replace, delete, and failure recovery work on Android and Web where supported.
+      - Media size, format, visibility, owner path, and Storage RLS are verified.
+      - Navigation and Home links never lead to Coming Soon when Trail is included.
+  - id: QST-205
+    title: Gemini Mission Quality Evaluation 50
+    status: Planned
+    priority: P1
+    epic: AI-QUALITY
+    depends_on: [QST-188, QST-189, QST-190]
+    goal: 旅行、学習、健康、仕事、家族、創作など50種類のQuestでGemini Mission生成品質を再現可能に評価する。
+    scope: Build a diverse evaluation corpus, rubric, structured result capture, safety cases, fallback comparison, graph validation, and regression thresholds.
+    likely_files: [tools/qst, supabase/functions/arc-quest-guide, docs/product/ai_evaluation, reports/qst/QST-205.md]
+    acceptance:
+      - At least 50 representative and edge-case Quest intents are evaluated.
+      - Relevance, coverage, ordering, feasibility, duration, safety, and duplication are scored.
+      - Failures produce prompt or schema changes plus repeatable regression cases.
+      - Model, prompt version, latency, fallback, and sanitized output evidence are recorded.
+  - id: QST-206
+    title: AI Usage and Cost Observability
+    status: Planned
+    priority: P1
+    epic: AI-QUALITY
+    depends_on: [QST-188]
+    goal: AI利用回数、Latency、Token、推定Cost、Fallback率を監査可能にし、本文を保存せず品質と無料枠を管理する。
+    scope: Add privacy-safe invocation telemetry, model and prompt version, token usage, latency, outcome, cache/fallback, budget alerts, and aggregate dashboards.
+    likely_files: [supabase/functions/_shared, supabase/migrations, tools/qst, reports/qst/QST-206.md]
+    acceptance:
+      - Every AI operation emits a bounded metadata event without raw user prompts.
+      - Usage, latency percentiles, token totals, estimated cost, failures, and fallbacks are queryable.
+      - User, feature, and daily limits can be audited without exposing conversation text.
+      - Alert thresholds support the Gemini free-tier operating plan.
+  - id: QST-207
+    title: Home Journey Sections Restore
+    status: Planned
+    priority: P1
+    epic: HOME-EXPERIENCE
+    depends_on: [QST-197, QST-202, QST-203, QST-204]
+    goal: HomeへRecent Trail、Horizon、Guild PreviewをBeta範囲に合わせて段階的に復帰し、Arcと今日のMissionを主役に保つ。
+    scope: Restore only release-ready sections with minimal queries, progressive loading, compact responsive design, and no fabricated content.
+    likely_files: [apps/mobile/lib/features/home/home_screen.dart, apps/mobile/lib/features/horizon, apps/mobile/lib/features/guild, apps/mobile/test, reports/qst/QST-207.md]
+    acceptance:
+      - Arc, today's Mission, and active Quest remain above secondary discovery sections.
+      - Every restored section has real data, empty, loading, error, and hidden states.
+      - Home query count and initial rendering remain within the performance budget.
+      - Deferred features do not leave dead shortcuts or explanatory clutter.
+  - id: QST-208
+    title: Questra Design Bible V2 and Golden Baseline
+    status: Planned
+    priority: P1
+    epic: DESIGN-SYSTEM
+    depends_on: [QST-197]
+    goal: Design Bible v2を正式文書化し、主要画面の視覚、文言、操作、レスポンシブ、Accessibility基準を固定する。
+    scope: Define tokens, component anatomy, Arc presentation, photography, motion, density, Japanese copy, input patterns, empty/error states, and screen-level Golden references.
+    likely_files: [docs/product, apps/mobile/lib/core/theme, apps/mobile/test/goldens, reports/qst/QST-208.md]
+    acceptance:
+      - Master Specとの優先関係とDesign Bibleの適用範囲が明記される。
+      - Home, Arc, Quest, Mission, Trail, Guild, Auth, and Profile have approved baselines.
+      - Compact, medium, expanded, large text, and contrast criteria are documented.
+      - Golden changes require an intentional review record.
+  - id: QST-209
+    title: Feature Widget Decomposition
+    status: Planned
+    priority: P2
+    epic: MAINTAINABILITY
+    depends_on: [QST-208]
+    goal: Home、Arc、Quest Detailの巨大Widgetを責務別Feature Widgetへ分割し、状態と表示の境界を読みやすくする。
+    scope: Extract cohesive sections without changing behavior, remove file-level unused suppressions where possible, and add focused widget tests.
+    likely_files: [apps/mobile/lib/features/home, apps/mobile/lib/features/arc, apps/mobile/lib/features/quest, apps/mobile/test, reports/qst/QST-209.md]
+    acceptance:
+      - Large screens delegate stable sections to named widgets with narrow inputs.
+      - No architecture rewrite or unrelated visual redesign is introduced.
+      - Existing behavior and full test suite remain green.
+      - File-level warning suppressions are reduced and ownership is clearer.
+  - id: QST-210
+    title: Integration Test and GitHub Actions Release Gate
+    status: Planned
+    priority: P2
+    epic: RELEASE-ENGINEERING
+    depends_on: [QST-196, QST-199]
+    goal: 主要フローのIntegration TestとGitHub Actionsを追加し、候補ビルドが解析、テスト、セキュリティ契約を通らなければ進めないRelease Gateを作る。
+    scope: Add deterministic test environment, Flutter analyze/test, selected integration flows, RLS verifier, migration checks, artifact build, caching, and branch protection guidance.
+    likely_files: [integration_test, .github/workflows, tools/qst, reports/qst/QST-210.md]
+    acceptance:
+      - Pull requests run Flutter analysis, unit/widget tests, RLS verification, and migration contract checks.
+      - Candidate workflow builds repeatable Android and Web artifacts.
+      - Secrets are scoped to protected environments and never exposed to forked jobs.
+      - Failed required checks block release promotion.
+  - id: QST-211
+    title: Gemini Function Calling for Typed Quest Operations
+    status: Planned
+    priority: P2
+    epic: AI-ARCHITECTURE
+    depends_on: [QST-192, QST-196, QST-205]
+    goal: MissionとRoute操作を自由文JSONから型付きFunction Callingへ移し、Arc提案の検証と承認境界を強化する。
+    scope: Define bounded tools for add, split, merge, reorder, reschedule, reference, and route review; validate ownership and schema; preserve preview and explicit approval.
+    likely_files: [supabase/functions/_shared, supabase/functions/arc-chat, apps/mobile/lib/features/arc, apps/mobile/lib/features/quest, reports/qst/QST-211.md]
+    acceptance:
+      - Gemini can select only registered, versioned operations with typed arguments.
+      - Tool calls never mutate data directly and become validated proposals first.
+      - Unknown IDs, stale versions, duplicate calls, and unsafe arguments are rejected.
+      - Audit logs identify tool, model, schema version, validation result, and user decision.
+  - id: QST-212
+    title: Web Security Headers and Threat Model
+    status: Planned
+    priority: P2
+    epic: SECURITY
+    depends_on: [QST-198, QST-199]
+    goal: Web CSP、CORS、Security Header、外部リンク、認証Token、AI/Storage境界のThreat Modelを整備する。
+    scope: Add production hosting headers, least-privilege CORS, frame and referrer controls, permissions policy, trusted navigation, dependency review, and persisted threat model.
+    likely_files: [apps/mobile/web, supabase/functions/_shared, docs/product/security, tools/qst, reports/qst/QST-212.md]
+    acceptance:
+      - Production Web responses include tested CSP, frame, content-type, referrer, and permissions policies.
+      - Edge Function CORS is origin-scoped for production and handles preflight safely.
+      - Threat model covers auth, XSS, CSRF-like flows, storage, RLS, AI injection, abuse, and supply chain.
+      - Security checks run in the release gate without logging secrets.
+  - id: QST-213
+    title: Internationalization and Store Readiness
+    status: Planned
+    priority: P3
+    epic: RELEASE-READINESS
+    depends_on: [QST-208]
+    goal: 国際化基盤、正式App説明、Store Metadata、Privacy導線、最終Screenshot要件を整備する。
+    scope: Extract user-facing Japanese strings, add locale architecture, replace template metadata, define store copy and screenshot matrix, and verify text expansion.
+    likely_files: [apps/mobile/lib/l10n, apps/mobile/pubspec.yaml, apps/mobile/android, apps/mobile/ios, docs/product/store, reports/qst/QST-213.md]
+    acceptance:
+      - User-facing strings use the localization framework and Japanese remains the complete default locale.
+      - App name, description, icons, permissions, privacy links, and version metadata are release-ready.
+      - Store screenshot requirements cover supported devices and approved Design Bible states.
+      - Text expansion and large text do not break primary flows.
+  - id: QST-214
+    title: Guild Discovery Platform
+    status: In Progress
+    priority: P1
+    epic: GUILD-DISCOVERY
+    depends_on: [QST-187, QST-196]
+    goal: Guildを交流量ではなく、公開QuestとMissionを安全に発見し、自分の航路へ取り入れるプラットフォームへ再定義する。
+    scope: Establish publication, explainable discovery ranking, Quest and Mission detail, copy and Arc optimization contracts while keeping Home -> Arc -> Quest as the primary flow and preventing popularity competition.
+    likely_files: [apps/mobile/lib/features/guild, apps/mobile/test/guild_discovery_ranking_service_test.dart, docs/product/GUILD_DISCOVERY_PLATFORM.md, reports/qst/QST-214.md]
+    acceptance:
+      - Only approved public Quest and Mission publications can enter Discovery.
+      - Ranking combines relevance, usefulness, recency, and bounded popularity and displays a selection reason.
+      - Private, unlisted, pending, and rejected content never appears.
+      - Copy options cover Missions, Arc optimization, and pre-save editing without mutating the source.
+      - Followers and reactions are not the primary value or sole ranking signal.
+      - Guild remains optional and Home -> Arc -> Quest remains the primary product flow.
+  - id: QST-215
+    title: Guild Publication Persistence and RLS
+    status: In Progress
+    priority: P0
+    epic: GUILD-DISCOVERY
+    depends_on: [QST-188, QST-214]
+    goal: 公開用Quest・Mission・レビュー・コピーイベントをSupabaseへ保存し、所有データから分離したRLS境界を完成させる。
+    scope: Add publication snapshots, moderation status, visibility, derivation events, report and block foundations, owner writes, approved-public reads, and two-account security evidence.
+    likely_files: [supabase/migrations, supabase/tests, apps/mobile/lib/features/guild/guild_discovery_repository.dart, reports/qst/QST-215.md]
+    acceptance:
+      - Private Quest, Mission, Trail, and Arc Memory fields are never copied into publication snapshots.
+      - Owners can create, update, unpublish, and delete their own publications.
+      - Discovery reads return approved public columns only and unlisted content remains outside indexes.
+      - Copy events expose no destination owner data to the source author.
+      - Cross-account RLS and rollback tests pass against the Beta project.
+  - id: QST-216
+    title: Guild Discovery Home and Detail UI
+    status: In Progress
+    priority: P1
+    epic: GUILD-DISCOVERY
+    depends_on: [QST-215]
+    goal: Guildトップを説明過多でないDiscovery UIへ刷新し、公開Quest・Missionの詳細を安全に確認できるようにする。
+    scope: Build responsive sections, filters, finite pagination, public Quest detail, Mission library detail, and accessible empty/loading/error states.
+    likely_files: [apps/mobile/lib/features/guild/guild_screen.dart, apps/mobile/lib/features/guild/guild_discovery_detail_screen.dart, apps/mobile/lib/core/router/app_router.dart, reports/qst/QST-216.md]
+    acceptance:
+      - Users can browse recommended, noteworthy, recent, companion-seeking, and Mission-library sections.
+      - Detail shows summary, Missions, duration, cost guidance, difficulty, Quest DNA, reviews, copy evidence, publication date, and author display name.
+      - Every recommendation shows a concise reason and sponsorship disclosure when applicable.
+      - Pagination is bounded and no addictive infinite-feed mechanism is introduced.
+      - Empty, loading, error, blocked, and removed states are accessible and localized.
+  - id: QST-217
+    title: Guild Quest and Mission Copy Flow
+    status: Planned
+    priority: P1
+    epic: GUILD-DISCOVERY
+    depends_on: [QST-215, QST-216]
+    goal: 公開QuestまたはMissionを、自分の所有データとして安全に複製し、保存前に選択・編集できるようにする。
+    scope: Add transactional copy, new owner IDs, Mission dependency remapping, source attribution, duplicate prevention, Arc optimization opt-in, and copy preview.
+    likely_files: [apps/mobile/lib/features/guild, apps/mobile/lib/features/quest, apps/mobile/lib/features/mission, supabase/migrations, reports/qst/QST-217.md]
+    acceptance:
+      - Users can copy a whole Quest, selected Missions, or one Mission into an owned Quest.
+      - Copied entities receive new IDs and preserve valid internal dependencies without sharing ownership.
+      - The source remains unchanged and records only a privacy-preserving copy event.
+      - Users choose whether to include Missions, request Arc optimization, and edit before saving.
+      - Duplicate taps and transaction retries do not create duplicate copies.
+  - id: QST-218
+    title: Quest DNA Discovery and Ranking Transparency
+    status: Planned
+    priority: P1
+    epic: GUILD-DISCOVERY
+    depends_on: [QST-202, QST-217]
+    goal: Quest DNAを使ってDiscovery検索と推薦を個別化し、順位理由と制御手段をユーザーへ示す。
+    scope: Add DNA filters, explanations, recency and diversity controls, ranking analytics, hide and not-interested feedback, and bias review.
+    likely_files: [apps/mobile/lib/features/guild, apps/mobile/lib/features/quest/quest_dna_snapshot.dart, supabase/functions, reports/qst/QST-218.md]
+    acceptance:
+      - Recommendations use only consented Quest DNA and explicit preferences.
+      - Users can see why an item appeared and hide it without affecting Bond or Quest progress.
+      - Popularity is bounded and cannot override privacy, moderation, or relevance.
+      - New and diverse publications retain a measurable discovery opportunity.
+  - id: QST-219
+    title: Guild Reviews, Navigator Spotlight, and Trust
+    status: Planned
+    priority: P1
+    epic: GUILD-DISCOVERY
+    depends_on: [QST-215, QST-218]
+    goal: Questの有用性を評価しつつ、人気競争を避けたレビュー、貢献者紹介、通報、ブロックを実装する。
+    scope: Add completion-aware reviews, helpfulness, beginner fit, cost and difficulty feedback, Navigator Spotlight quality criteria, report, block, moderation audit, and appeal boundaries.
+    likely_files: [apps/mobile/lib/features/guild, supabase/functions, supabase/migrations, reports/qst/QST-219.md]
+    acceptance:
+      - Reviews distinguish subjective feedback from AI estimates and verified completion signals.
+      - Navigator Spotlight uses sustained usefulness and safety, not follower count alone.
+      - Users can report and block content or authors and immediately stop seeing them.
+      - Authors cannot infer the identity or private progress of users who copied a Quest.
+  - id: QST-220
+    title: Arc Discovery Optimization and Guild Beta Review
+    status: Planned
+    priority: P0
+    epic: GUILD-DISCOVERY
+    depends_on: [QST-216, QST-217, QST-218, QST-219]
+    goal: コピーした航路をArcが本人向けに再設計し、Guild DiscoveryをBetaへ再公開できるか総合判定する。
+    scope: Generate structured optimization diffs for schedule, budget, life context, risk, and Mission graph; require approval; run accessibility, performance, moderation, RLS, recommendation, and E2E reviews before enabling the Guild route.
+    likely_files: [apps/mobile/lib/features/arc, apps/mobile/lib/features/guild, apps/mobile/lib/features/quest, supabase/functions, apps/mobile/test, reports/qst/QST-220.md]
+    acceptance:
+      - Arc can adapt a copied route for the user's explicit deadline, budget, availability, and constraints.
+      - Optimization is previewed as a diff and never applied before explicit approval.
+      - Discovery performance, accessibility, moderation, RLS, and copy E2E checks pass.
+      - Guild replaces Coming Soon only after Release Manager records zero critical blockers.
+deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass
     reason: Superseded by QST-067 after Arc Experience Epic completion.

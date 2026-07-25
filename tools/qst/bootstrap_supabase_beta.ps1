@@ -41,7 +41,10 @@ $requiredFunctions = @(
   'generate-arc-advice',
   'generate-mission',
   'generate-quest-guides',
-  'generate-star-map'
+  'generate-star-map',
+  'auth-login',
+  'moderate-quest-intent',
+  'research-mission-resources'
 )
 $latestMigrationFile = Get-ChildItem 'supabase/migrations/*.sql' |
   Sort-Object Name |

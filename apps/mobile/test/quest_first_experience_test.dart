@@ -11,13 +11,15 @@ void main() {
       const ProviderScope(child: MaterialApp(home: QuestFormScreen())),
     );
 
-    expect(find.text('最初のQuestは小さく始めましょう'), findsOneWidget);
-    expect(find.text('1. 叶えたい景色を一文で置く'), findsOneWidget);
-    expect(find.text('2. 理由や背景を短く残す'), findsOneWidget);
-    expect(find.text('3. 保存後、Arcガイドから最初のMissionを選ぶ'), findsOneWidget);
-    expect(find.text('まずは一文で大丈夫です。'), findsOneWidget);
+    expect(find.text('Arcと話しながら決める'), findsOneWidget);
+    expect(find.text('迷ったら、今見たい景色から'), findsOneWidget);
     expect(
-      find.text('保存後にArcガイドとMission候補を生成します。候補はあとで採用・編集できます。'),
+      find.text('叶えたい状態を一文にします。あとから変更できます。'),
+      findsOneWidget,
+    );
+    expect(find.text('いつまでに叶えたい？'), findsOneWidget);
+    expect(
+      find.text('保存後、Arcが道筋と最初のMission候補を描きます。'),
       findsOneWidget,
     );
   });
@@ -27,13 +29,13 @@ void main() {
       const ProviderScope(child: MaterialApp(home: QuestFormScreen())),
     );
 
-    final saveAction = find.text('Questを保存');
+    final saveAction = find.text('保存して航路を描く');
     await tester.ensureVisible(saveAction);
     await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(saveAction);
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('Quest名を一文で入力してください。'), findsOneWidget);
+    expect(find.text('Quest名を入力してください。'), findsOneWidget);
   });
 }

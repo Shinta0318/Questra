@@ -1,17 +1,36 @@
 version: 1
-status: ready_to_run
-updated_at_utc: null
-candidate_source_commit: null
+status: verified
+updated_at_utc: "2026-07-25T05:29:15.209332Z"
+source_commit_at_execution: "e33c8421b0f6a11b4415ab9ec55339f895b69eb0"
+working_tree_clean_at_execution: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
 acceptance:
-  account_a_profile_after_relogin: pending
-  account_a_quest_after_relogin: pending
-  account_a_mission_after_relogin: pending
-  account_a_arc_memory_after_relogin: pending
-  account_b_private_quest_visibility: pending
-  account_b_private_mission_visibility: pending
-  account_b_private_arc_memory_visibility: pending
-  test_records_cleaned: pending
+  account_a_profile_after_relogin: passed
+  account_a_quest_after_relogin: passed
+  account_a_mission_after_relogin: passed
+  account_a_arc_memory_after_relogin: passed
+  account_a_trail_after_relogin: passed
+  account_a_media_after_relogin: passed
+  account_a_route_after_relogin: passed
+  account_a_storage_object_read: passed
+  account_b_private_quest_visibility: denied
+  account_b_private_mission_visibility: denied
+  account_b_private_arc_memory_visibility: denied
+  account_b_private_trail_visibility: denied
+  account_b_private_media_visibility: denied
+  account_b_private_route_visibility: denied
+  account_b_private_route_write: denied
+  account_b_private_storage_object_read: denied
+  account_b_pending_guild_publication_visibility: denied
+  account_b_guild_owner_mapping_visibility: denied
+  account_b_route_apply_rpc: denied
+  account_a_route_apply_after_relogin: passed
+  account_a_route_rollback_restore: passed
+  anonymous_private_quest_visibility: denied
+  anonymous_private_route_visibility: denied
+  anonymous_private_storage_object_read: denied
+  anonymous_pending_guild_publication_visibility: denied
+  test_records_cleaned: true
 guardrails:
   credential_values_recorded: false
   anon_key_recorded: false

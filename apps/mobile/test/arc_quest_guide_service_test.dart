@@ -25,15 +25,46 @@ void main() {
       expect(guide.path, isNotEmpty);
       expect(guide.cautions, isNotEmpty);
       expect(guide.encouragement, contains('Arc'));
-      expect(guide.missionCandidates, hasLength(greaterThanOrEqualTo(3)));
+      expect(guide.missionCandidates, hasLength(inInclusiveRange(8, 10)));
       expect(
         guide.missionCandidates.map((candidate) => candidate.guideType),
         containsAll([GuideType.route, GuideType.knowledge, GuideType.training]),
       );
       expect(
         guide.missionCandidates.map((candidate) => candidate.difficulty),
-        everyElement(MissionDifficulty.easy),
+        containsAll([MissionDifficulty.easy, MissionDifficulty.normal]),
       );
     },
   );
+
+  test('travel Quest is decomposed into practical preparation steps', () async {
+    const service = LocalArcQuestGuideService();
+    final guide = await service.generate(
+      quest: Quest(
+        title: 'シンガポールへ行く',
+        description: '文化と食を楽しむ旅を実現したい',
+        difficulty: QuestDifficulty.normal,
+        status: QuestStatus.active,
+        visibility: QuestVisibility.private,
+        category: '旅行',
+      ),
+    );
+
+    expect(guide.missionCandidates, hasLength(10));
+    final titles = guide.missionCandidates.map((mission) => mission.title);
+    expect(titles, contains('旅券と入国条件を公式情報で確認する'));
+    expect(titles, contains('旅行予算の上限を決める'));
+    expect(titles, contains('宿泊エリアと宿を比較する'));
+    expect(titles, contains('持ち物を最終確認する'));
+    expect(
+      guide.missionCandidates,
+      everyElement(
+        isA<ArcMissionCandidate>().having(
+          (mission) => mission.description,
+          'done condition',
+          contains('完了です'),
+        ),
+      ),
+    );
+  });
 }

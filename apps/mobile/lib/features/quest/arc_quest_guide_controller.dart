@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 import '../../core/config/supabase_config.dart';
+import '../../core/safety/quest_safety_service.dart';
+import '../../core/safety/safety_providers.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
@@ -19,8 +21,8 @@ final arcQuestGuideServiceProvider = Provider<ArcQuestGuideService>((ref) {
 
 final arcQuestGuideControllerProvider =
     NotifierProvider<ArcQuestGuideController, ArcQuestGuideState>(
-      ArcQuestGuideController.new,
-    );
+  ArcQuestGuideController.new,
+);
 
 class ArcQuestGuideState {
   const ArcQuestGuideState({
@@ -67,9 +69,24 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
     );
 
     try {
-      final guide = await ref
-          .read(arcQuestGuideServiceProvider)
-          .generate(quest: quest);
+      final safety = await ref
+          .read(questSafetyServiceProvider)
+          .assess('${quest.title}\n${quest.description}');
+      if (safety.action != QuestSafetyAction.allow) {
+        unawaited(
+          ref.read(safetySignalRecorderProvider).record(
+                userId: ref.read(authControllerProvider).profile?.id,
+                assessment: safety,
+              ),
+        );
+        state = state.copyWith(
+          loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
+          errorsByQuest: {...state.errorsByQuest, quest.id: safety.userMessage},
+        );
+        return;
+      }
+      final guide =
+          await ref.read(arcQuestGuideServiceProvider).generate(quest: quest);
       state = state.copyWith(
         guidesByQuest: {...state.guidesByQuest, quest.id: guide},
         loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
@@ -83,6 +100,15 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
     }
   }
 
+  void acceptGeneratedGuide(Quest quest, ArcQuestGuide guide) {
+    state = state.copyWith(
+      guidesByQuest: {...state.guidesByQuest, quest.id: guide},
+      loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
+      errorsByQuest: {...state.errorsByQuest}..remove(quest.id),
+    );
+    unawaited(_rememberGuide(quest, guide));
+  }
+
   Future<void> _rememberGuide(Quest quest, ArcQuestGuide guide) async {
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
@@ -90,17 +116,14 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
     }
 
     try {
-      await ref
-          .read(memoryExtractionServiceProvider)
-          .extractAndSave(
+      await ref.read(memoryExtractionServiceProvider).extractAndSave(
             MemoryExtractionEvent(
               userId: userId,
               questId: quest.id,
               sourceId: quest.id,
               sourceType: ArcMemorySourceType.questUpdated,
               title: 'Arcガイドを生成',
-              text:
-                  '${guide.summary}\n${guide.path}\n'
+              text: '${guide.summary}\n${guide.path}\n'
                   '${guide.missionCandidates.map((candidate) => candidate.title).join(' / ')}',
               metadata: {
                 'source': guide.sourceType,

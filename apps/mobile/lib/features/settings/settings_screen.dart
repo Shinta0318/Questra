@@ -15,6 +15,7 @@ import '../trust/trust_privacy_review_service.dart';
 import 'settings_information_architecture_service.dart';
 import 'widgets/arc_memory_management_preview_card.dart';
 import 'widgets/beta_feedback_entry_card.dart';
+import 'widgets/experience_settings_card.dart';
 import 'widgets/settings_tutorial_card.dart';
 import 'widgets/trust_privacy_card.dart';
 
@@ -24,13 +25,13 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trustReview = const TrustPrivacyReviewService().buildReview();
-    final memoryPreview = const ArcMemoryManagementPreviewService()
-        .buildPreview();
+    final memoryPreview =
+        const ArcMemoryManagementPreviewService().buildPreview();
     final dataRequests = const DataRequestCopyService().buildReview();
-    final consentRegistry = const ConsentPurposeRegistryService()
-        .buildRegistry();
-    final settingsMap = const SettingsInformationArchitectureService()
-        .buildOverview();
+    final consentRegistry =
+        const ConsentPurposeRegistryService().buildRegistry();
+    final settingsMap =
+        const SettingsInformationArchitectureService().buildOverview();
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
@@ -43,12 +44,14 @@ class SettingsScreen extends ConsumerWidget {
               Text(
                 '設定',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w900,
-                ),
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
               ),
               const SizedBox(height: AppSpacing.lg),
               _SettingsMapCard(map: settingsMap),
+              const SizedBox(height: AppSpacing.lg),
+              const ExperienceSettingsCard(),
               const SizedBox(height: AppSpacing.lg),
               SettingsTutorialCard(
                 onReplay: () => ref
@@ -120,18 +123,18 @@ class _SettingsMapCard extends StatelessWidget {
                     Text(
                       map.heading,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       map.summary,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.parchment,
-                        height: 1.55,
-                        fontWeight: FontWeight.w600,
-                      ),
+                            color: AppColors.parchment,
+                            height: 1.55,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                   ],
                 ),
@@ -186,10 +189,10 @@ class _SettingsMapTile extends StatelessWidget {
                 Text(
                   section.summary,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.parchment,
-                    height: 1.35,
-                    fontWeight: FontWeight.w600,
-                  ),
+                        color: AppColors.parchment,
+                        height: 1.35,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ],
             ),
@@ -259,18 +262,18 @@ class _ConsentPurposeRegistryCard extends StatelessWidget {
                     Text(
                       registry.heading,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       registry.summary,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.parchment,
-                        height: 1.55,
-                        fontWeight: FontWeight.w600,
-                      ),
+                            color: AppColors.parchment,
+                            height: 1.55,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                   ],
                 ),
@@ -365,10 +368,10 @@ class _ConsentPurposeTile extends StatelessWidget {
           Text(
             purpose.summary,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.parchment,
-              height: 1.4,
-              fontWeight: FontWeight.w600,
-            ),
+                  color: AppColors.parchment,
+                  height: 1.4,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
@@ -442,18 +445,18 @@ class _DataRequestCopyCard extends StatelessWidget {
                     Text(
                       review.heading,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       review.summary,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.parchment,
-                        height: 1.55,
-                        fontWeight: FontWeight.w600,
-                      ),
+                            color: AppColors.parchment,
+                            height: 1.55,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                   ],
                 ),
@@ -528,10 +531,10 @@ class _DataRequestTile extends StatelessWidget {
           Text(
             request.summary,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.parchment,
-              height: 1.4,
-              fontWeight: FontWeight.w600,
-            ),
+                  color: AppColors.parchment,
+                  height: 1.4,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
@@ -603,10 +606,10 @@ class _SafetyNoteBlock extends StatelessWidget {
               child: Text(
                 note,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.parchment,
-                  height: 1.35,
-                  fontWeight: FontWeight.w700,
-                ),
+                      color: AppColors.parchment,
+                      height: 1.35,
+                      fontWeight: FontWeight.w700,
+                    ),
               ),
             ),
           ),

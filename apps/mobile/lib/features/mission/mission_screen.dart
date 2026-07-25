@@ -1,8 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../core/analytics/analytics_event.dart';
+import '../../core/analytics/analytics_service.dart';
+import '../../core/experience/experience_settings_controller.dart';
+import '../../core/experience/haptic_feedback_service.dart';
+import '../../core/experience/sound_effect_service.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_presence.dart';
@@ -14,6 +21,7 @@ import '../../widgets/questra_card.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_expression_engine.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../arc/arc_motion_controller.dart';
 import '../auth/auth_controller.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_guide_model.dart';
@@ -47,11 +55,10 @@ class MissionScreen extends ConsumerWidget {
         child: QuestraResponsiveListView(
           onRefresh: profile == null
               ? null
-              : () => ref
-                    .read(missionControllerProvider.notifier)
-                    .loadForQuests(
-                      quests.map((quest) => quest.id).toList(growable: false),
-                    ),
+              : () =>
+                  ref.read(missionControllerProvider.notifier).loadForQuests(
+                        quests.map((quest) => quest.id).toList(growable: false),
+                      ),
           padding: const EdgeInsets.all(20),
           children: [
             PersistenceSyncBanner(
@@ -89,51 +96,143 @@ class MissionScreen extends ConsumerWidget {
               ...missions.map(
                 (mission) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: QuestraCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          mission.title,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(mission.description),
-                        const SizedBox(height: 10),
-                        Text('Quest: ${mission.questTitle}'),
-                        Text('Guide: ${mission.guideType.label}'),
-                        const SizedBox(height: 12),
-                        QuestraActionButton(
-                          onPressed: mission.status == MissionStatus.completed
-                              ? null
-                              : () => _completeMission(context, ref, mission),
-                          icon: Icon(
-                            mission.status == MissionStatus.completed
-                                ? Icons.check_circle
-                                : Icons.check_circle_outline,
-                            color: QuestraColors.gold,
-                          ),
-                          label: AnimatedSwitcher(
-                            duration: QuestraMotion.fast,
-                            switchInCurve: QuestraMotion.standard,
-                            switchOutCurve: QuestraMotion.standard,
-                            child: Text(
-                              key: ValueKey(mission.status),
-                              mission.status == MissionStatus.completed
-                                  ? '完了済み'
-                                  : 'Missionを完了',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: _InteractiveMissionCard(mission: mission),
                 ),
               ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _InteractiveMissionCard extends ConsumerWidget {
+  const _InteractiveMissionCard({required this.mission});
+
+  final Mission mission;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(experienceSettingsControllerProvider);
+    final canComplete = mission.status != MissionStatus.completed;
+    final card = QuestraCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(mission.title, style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          Text(mission.description),
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: () =>
+                context.go('${AppRoutes.quest}/${mission.questId}'),
+            icon: const Icon(Icons.route_outlined, size: 18),
+            label: Text('Quest「${mission.questTitle}」のMission'),
+          ),
+          Text('進め方: ${mission.guideType.label}'),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: mission.progressPercent / 100,
+                    minHeight: 8,
+                    backgroundColor: QuestraColors.cloud,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      QuestraColors.gold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '${mission.progressPercent}%',
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+              PopupMenuButton<int>(
+                tooltip: '進捗を更新',
+                icon: const Icon(Icons.tune_outlined),
+                onSelected: (value) => ref
+                    .read(missionControllerProvider.notifier)
+                    .updateProgress(mission.id, value),
+                itemBuilder: (context) => [
+                  for (final value in const [0, 25, 50, 75, 100])
+                    PopupMenuItem(value: value, child: Text('$value%')),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          QuestraActionButton(
+            onPressed: canComplete
+                ? () => _completeMission(
+                      context,
+                      ref,
+                      mission,
+                      source: _MissionCompletionSource.button,
+                    )
+                : null,
+            icon: Icon(
+              canComplete ? Icons.check_circle_outline : Icons.check_circle,
+              color: QuestraColors.gold,
+            ),
+            label: AnimatedSwitcher(
+              duration: settings.reduceScreenMotion(
+                osReduceMotion: MediaQuery.disableAnimationsOf(context),
+              )
+                  ? Duration.zero
+                  : QuestraMotion.fast,
+              switchInCurve: QuestraMotion.standard,
+              switchOutCurve: QuestraMotion.standard,
+              child: Text(
+                key: ValueKey(mission.status),
+                canComplete ? 'Missionを完了' : '完了済み',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (!settings.swipeGesturesEnabled || !canComplete) return card;
+    return Dismissible(
+      key: ValueKey('mission-swipe-${mission.id}'),
+      direction: DismissDirection.startToEnd,
+      dismissThresholds: const {DismissDirection.startToEnd: 0.55},
+      confirmDismiss: (_) async {
+        _completeMission(
+          context,
+          ref,
+          mission,
+          source: _MissionCompletionSource.swipe,
+        );
+        return false;
+      },
+      background: Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: BoxDecoration(
+          color: QuestraColors.cosmicBlue.withValues(alpha: 0.20),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: QuestraColors.gold),
+            SizedBox(width: 8),
+            Text(
+              '完了',
+              style: TextStyle(
+                color: QuestraColors.gold,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+      ),
+      child: card,
     );
   }
 }
@@ -210,18 +309,57 @@ class _MissionSignalTile extends StatelessWidget {
   }
 }
 
-void _completeMission(BuildContext context, WidgetRef ref, Mission mission) {
-  final completedMission = ref
-      .read(missionControllerProvider.notifier)
-      .completeMission(mission.id);
+enum _MissionCompletionSource { button, swipe }
+
+void _completeMission(
+  BuildContext context,
+  WidgetRef ref,
+  Mission mission, {
+  required _MissionCompletionSource source,
+}) {
+  final completedMission =
+      ref.read(missionControllerProvider.notifier).completeMission(mission.id);
   if (completedMission == null) {
+    final settings = ref.read(experienceSettingsControllerProvider);
+    unawaited(
+      ref.read(hapticFeedbackServiceProvider).trigger(
+            QuestraHapticCue.error,
+            settings: settings,
+          ),
+    );
     return;
   }
+  final settings = ref.read(experienceSettingsControllerProvider);
+  unawaited(
+    ref.read(hapticFeedbackServiceProvider).trigger(
+          QuestraHapticCue.success,
+          settings: settings,
+        ),
+  );
+  unawaited(
+    ref.read(soundEffectServiceProvider).play(
+          QuestraSoundEffect.missionComplete,
+          settings: settings,
+        ),
+  );
+  unawaited(
+    ref
+        .read(arcMotionControllerProvider.notifier)
+        .react(ArcAnimationState.cheering),
+  );
+  unawaited(
+    ref.read(analyticsServiceProvider).track(
+          AnalyticsEvent(
+            name: source == _MissionCompletionSource.swipe
+                ? AnalyticsEventName.missionCompletedBySwipe
+                : AnalyticsEventName.missionCompletedByButton,
+            properties: {'source': source.name},
+          ),
+        ),
+  );
   showArcCelebrationSnackBar(
     context,
-    ref
-        .read(arcCelebrationServiceProvider)
-        .build(
+    ref.read(arcCelebrationServiceProvider).build(
           event: ArcCelebrationEvent.missionCompleted,
           subject: completedMission.title,
         ),
