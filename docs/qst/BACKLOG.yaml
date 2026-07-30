@@ -2370,7 +2370,7 @@ items:
       - Sanitized evidence identifies project, migration head, test time, and result without secrets.
   - id: QST-200
     title: Beta Candidate Freeze and Rollback Point
-    status: Planned
+    status: Completed
     priority: P0
     epic: BETA-RELEASE
     depends_on: [QST-196, QST-197, QST-198, QST-199]

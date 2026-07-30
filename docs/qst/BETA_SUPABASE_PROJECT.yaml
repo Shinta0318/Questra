@@ -1,7 +1,7 @@
 version: 1
-status: deployed_pending_candidate_freeze
-updated_at_utc: "2026-07-25T05:05:29Z"
-candidate_source_commit: "e33c8421b0f6a11b4415ab9ec55339f895b69eb0"
+status: verified
+updated_at_utc: "2026-07-31T07:08:00Z"
+candidate_source_commit: "aa6a2791a15693f5aa79c6ddc314e74d5f8d7f5c"
 working_tree_clean_at_deploy: false
 project:
   ref: "dhbmgwarnrtelrcrmmfk"
