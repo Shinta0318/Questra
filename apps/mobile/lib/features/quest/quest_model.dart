@@ -1,6 +1,7 @@
 import 'package:uuid/uuid.dart';
 
 import '../../core/estimation/effort_estimate.dart';
+import 'quest_dna.dart';
 import 'quest_evaluation.dart';
 
 const _uuid = Uuid();
@@ -24,6 +25,7 @@ class Quest {
     this.targetDate,
     this.effortEstimate,
     this.evaluation,
+    this.dna,
   }) : id = id ?? _uuid.v4();
 
   final String id;
@@ -37,6 +39,7 @@ class Quest {
   final DateTime? targetDate;
   final EffortEstimate? effortEstimate;
   final QuestEvaluation? evaluation;
+  final QuestDna? dna;
 
   Quest copyWith({
     String? title,
@@ -50,6 +53,7 @@ class Quest {
     bool clearTargetDate = false,
     EffortEstimate? effortEstimate,
     QuestEvaluation? evaluation,
+    QuestDna? dna,
   }) {
     return Quest(
       id: id,
@@ -63,6 +67,7 @@ class Quest {
       targetDate: clearTargetDate ? null : targetDate ?? this.targetDate,
       effortEstimate: effortEstimate ?? this.effortEstimate,
       evaluation: evaluation ?? this.evaluation,
+      dna: dna ?? this.dna,
     );
   }
 }

@@ -7,6 +7,7 @@ import '../mission/mission_model.dart';
 import '../mission/mission_plan_graph_service.dart';
 import 'quest_guide_model.dart';
 import 'quest_evaluation.dart';
+import 'quest_dna.dart';
 import 'quest_evaluation_service.dart';
 import 'quest_model.dart';
 
@@ -104,6 +105,7 @@ class ArcQuestGuide {
     required this.sourceType,
     this.effortEstimate,
     this.questEvaluation,
+    this.questDna,
   });
 
   final String questId;
@@ -115,6 +117,7 @@ class ArcQuestGuide {
   final String sourceType;
   final EffortEstimate? effortEstimate;
   final QuestEvaluation? questEvaluation;
+  final QuestDna? questDna;
 }
 
 abstract interface class ArcQuestGuideService {
@@ -154,6 +157,7 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
         missionCount: candidates.length,
       ),
       questEvaluation: evaluation,
+      questDna: QuestDna.fallback(quest),
     );
   }
 
@@ -444,6 +448,8 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
                 (candidate) => candidate.estimatedDurationDays,
               ),
             ),
+        questDna:
+            QuestDna.fromJson(data['quest_dna']) ?? QuestDna.fallback(quest),
       );
     } catch (_) {
       return fallback.generate(quest: quest);

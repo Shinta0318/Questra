@@ -152,6 +152,7 @@ const questGuideSchema = {
     encouragement: { type: "string" },
     effort_estimate: effortEstimateSchema(),
     quest_evaluation: questEvaluationSchema(),
+    quest_dna: questDnaSchema(),
     mission_candidates: {
       type: "array",
       minItems: 3,
@@ -183,8 +184,31 @@ const questGuideSchema = {
       },
     },
   },
-  required: ["summary", "path", "cautions", "encouragement", "effort_estimate", "quest_evaluation", "mission_candidates"],
+  required: ["summary", "path", "cautions", "encouragement", "effort_estimate", "quest_evaluation", "quest_dna", "mission_candidates"],
 };
+
+function questDnaSchema() {
+  const attributes = [
+    "category", "theme", "difficulty", "duration", "budget", "location",
+    "season", "required_skills", "related_interests", "risk_level",
+    "emotional_weight", "life_stage", "motivation_type", "social_type",
+    "monetization_relevance", "enterprise_relevance",
+  ];
+  return {
+    type: "object",
+    properties: {
+      attributes: {
+        type: "object",
+        properties: Object.fromEntries(attributes.map((key) => [key, { type: "string", maxLength: 120 }])),
+        required: attributes,
+      },
+      version: { type: "string", maxLength: 40 },
+      evaluated_at: { type: "string" },
+      provenance: { type: "string", maxLength: 80 },
+    },
+    required: ["attributes", "version", "evaluated_at", "provenance"],
+  };
+}
 
 function questEvaluationSchema() {
   return {
@@ -262,6 +286,7 @@ function normalizeGuide(
         ? normalizedCandidates
         : fallbackCandidates.mission_candidates,
     ),
+    quest_dna: normalizeQuestDna(data.quest_dna, quest),
     source_type: sourceType,
   };
 }
@@ -275,6 +300,7 @@ function fallbackGuideWithoutRecursion(quest: QuestPayload) {
     cautions: template.safety,
     encouragement: "このQuestに合う航路は確保できています。最初のMissionから一つずつ進めましょう。",
     effort_estimate: normalizeEffortEstimate(null, 720, 60),
+    quest_dna: normalizeQuestDna(null, quest),
     mission_candidates: template.steps.map((item, index) => ({
       plan_key: `mission-${index + 1}`,
       title: item.title,
@@ -293,6 +319,37 @@ function fallbackGuideWithoutRecursion(quest: QuestPayload) {
       enterprise_support_hints: [],
       effort_estimate: normalizeEffortEstimate(null, 90, 5),
     })).slice(0, 30),
+  };
+}
+
+function normalizeQuestDna(value: unknown, quest: QuestPayload) {
+  const raw = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const rawAttributes = raw.attributes && typeof raw.attributes === "object"
+    ? raw.attributes as Record<string, unknown>
+    : {};
+  const fallback: Record<string, string> = {
+    category: textOr(rawAttributes.category, quest.category || "冒険"),
+    theme: textOr(rawAttributes.theme, "人生の航路"),
+    difficulty: textOr(rawAttributes.difficulty, "未評価"),
+    duration: textOr(rawAttributes.duration, "未評価"),
+    budget: textOr(rawAttributes.budget, "未評価"),
+    location: textOr(rawAttributes.location, "柔軟"),
+    season: textOr(rawAttributes.season, "通年"),
+    required_skills: textOr(rawAttributes.required_skills, "小さな実行・振り返り"),
+    related_interests: textOr(rawAttributes.related_interests, quest.category || "挑戦"),
+    risk_level: textOr(rawAttributes.risk_level, "低〜中"),
+    emotional_weight: textOr(rawAttributes.emotional_weight, "中"),
+    life_stage: textOr(rawAttributes.life_stage, "個人の状況に応じる"),
+    motivation_type: textOr(rawAttributes.motivation_type, "成長"),
+    social_type: textOr(rawAttributes.social_type, "個人"),
+    monetization_relevance: textOr(rawAttributes.monetization_relevance, "未評価"),
+    enterprise_relevance: textOr(rawAttributes.enterprise_relevance, "必要時に透明な支援を検討"),
+  };
+  return {
+    attributes: fallback,
+    version: textOr(raw.version, "quest-dna-v2"),
+    evaluated_at: new Date().toISOString(),
+    provenance: "gemini_structured_output",
   };
 }
 

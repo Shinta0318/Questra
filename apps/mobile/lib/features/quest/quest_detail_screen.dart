@@ -63,11 +63,12 @@ class QuestDetailScreen extends ConsumerWidget {
     final pendingRouteProposal = ref.watch(
       routeReplanningControllerProvider.select((state) => state[questId]),
     );
-    final missions = ref
-        .watch(missionControllerProvider)
-        .where((mission) => mission.questId == questId)
-        .toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final missions =
+        ref
+            .watch(missionControllerProvider)
+            .where((mission) => mission.questId == questId)
+            .toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     final questTrails = ref
         .watch(trailControllerProvider)
         .where((trail) => trail.questId == questId)
@@ -138,8 +139,8 @@ class _QuestCanvasCard extends StatelessWidget {
                 child: Text(
                   'Quest Canvas',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
@@ -304,12 +305,12 @@ class _QuestEvaluationAndRouteCard extends ConsumerWidget {
             onPressed: isLoading
                 ? null
                 : () => _reviewRoute(
-                      context,
-                      ref,
-                      quest,
-                      missions,
-                      existing: pendingProposal,
-                    ),
+                    context,
+                    ref,
+                    quest,
+                    missions,
+                    existing: pendingProposal,
+                  ),
             icon: Icon(
               proposal == null
                   ? Icons.analytics_outlined
@@ -319,8 +320,8 @@ class _QuestEvaluationAndRouteCard extends ConsumerWidget {
               pendingProposal != null
                   ? 'Arcからの提案を確認'
                   : proposal == null
-                      ? 'AI評価を更新'
-                      : '航路の再提案を確認',
+                  ? 'AI評価を更新'
+                  : '航路の再提案を確認',
             ),
           ),
           const SizedBox(height: 6),
@@ -341,15 +342,16 @@ Future<void> _reviewRoute(
   List<Mission> missions, {
   RouteChangeProposal? existing,
 }) async {
-  final proposal = existing ??
+  final proposal =
+      existing ??
       await ref
           .read(routeReplanningControllerProvider.notifier)
           .review(quest, missions);
   if (!context.mounted) return;
   if (proposal == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('今は航路を変更する必要はなさそうです。')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('今は航路を変更する必要はなさそうです。')));
     return;
   }
   final selected = proposal.items.map((item) => item.id).toSet();
@@ -369,8 +371,10 @@ Future<void> _reviewRoute(
                 const SizedBox(height: 8),
                 Text(
                   '提案の確度 ${(proposal.confidence * 100).round()}%',
-                  style:
-                      const TextStyle(fontSize: 12, color: QuestraColors.slate),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: QuestraColors.slate,
+                  ),
                 ),
                 const Divider(height: 24),
                 for (final item in proposal.items)
@@ -385,9 +389,7 @@ Future<void> _reviewRoute(
                       }
                     }),
                     title: Text(item.title),
-                    subtitle: Text(
-                      '${item.reason}\n${_routeDiffLabel(item)}',
-                    ),
+                    subtitle: Text('${item.reason}\n${_routeDiffLabel(item)}'),
                     isThreeLine: true,
                     controlAffinity: ListTileControlAffinity.leading,
                   ),
@@ -414,8 +416,9 @@ Future<void> _reviewRoute(
           FilledButton(
             onPressed: selected.isEmpty
                 ? null
-                : () =>
-                    Navigator.of(dialogContext).pop(_RouteReviewResult.accept),
+                : () => Navigator.of(
+                    dialogContext,
+                  ).pop(_RouteReviewResult.accept),
             child: const Text('選んだ変更を反映'),
           ),
         ],
@@ -536,7 +539,9 @@ Future<void> _showQuestEditDialog(
     ),
   );
   if (shouldSave == true && titleController.text.trim().isNotEmpty) {
-    ref.read(questControllerProvider.notifier).update(
+    ref
+        .read(questControllerProvider.notifier)
+        .update(
           quest.copyWith(
             title: titleController.text.trim(),
             description: descriptionController.text.trim(),
@@ -604,9 +609,7 @@ class _QuestHeader extends StatelessWidget {
                         Expanded(
                           child: Text(
                             quest.title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
+                            style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(color: QuestraColors.white),
                           ),
                         ),
@@ -698,7 +701,7 @@ class _QuestJourneyOverview extends ConsumerWidget {
     final latestTrail = trails.isEmpty
         ? null
         : (trails.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
-            .first;
+              .first;
     final nextAction = _nextActionLabel(openMissions, hasArcGuide, trails);
     final theme = const QuestThemeResolver().resolve(quest);
 
@@ -722,8 +725,8 @@ class _QuestJourneyOverview extends ConsumerWidget {
                     Text(
                       '旅路の概要 / ${theme.dnaLabel}',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -832,9 +835,9 @@ class _OverviewMetric extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: QuestraColors.deepNavy,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
@@ -869,9 +872,9 @@ class _QuestDnaSnapshotSection extends StatelessWidget {
           Text(
             'Quest DNA Snapshot',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: QuestraColors.deepNavy,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -956,8 +959,8 @@ class _QuestDnaSnapshotSection extends StatelessWidget {
                                   : Icons.auto_awesome_outlined,
                               color:
                                   attribute.source == QuestDnaSource.userInput
-                                      ? QuestraColors.gold
-                                      : QuestraColors.cosmicBlue,
+                                  ? QuestraColors.gold
+                                  : QuestraColors.cosmicBlue,
                             ),
                             title: Text(attribute.label),
                             subtitle: Text(
@@ -1039,16 +1042,17 @@ class _DnaAttributeChip extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: QuestraColors.deepNavy,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             isUserInput ? '入力' : '推定',
             style: TextStyle(
-              color:
-                  isUserInput ? QuestraColors.gold : QuestraColors.cosmicBlue,
+              color: isUserInput
+                  ? QuestraColors.gold
+                  : QuestraColors.cosmicBlue,
               fontSize: 11,
               fontWeight: FontWeight.w900,
             ),
@@ -1090,9 +1094,9 @@ class _ChallengeGraphPreviewSection extends StatelessWidget {
           Text(
             'Challenge Graph Preview',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: QuestraColors.deepNavy,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -1129,8 +1133,9 @@ class _ChallengeGraphPreviewSection extends StatelessWidget {
               ),
               _GraphMetric(
                 label: 'Trail',
-                value:
-                    preview.countNodes(ChallengeGraphNodeType.trail).toString(),
+                value: preview
+                    .countNodes(ChallengeGraphNodeType.trail)
+                    .toString(),
                 icon: Icons.timeline_outlined,
               ),
             ],
@@ -1139,9 +1144,9 @@ class _ChallengeGraphPreviewSection extends StatelessWidget {
           Text(
             'Arc Graph Insight',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: QuestraColors.deepNavy,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 8),
           ...insights.map(
@@ -1407,9 +1412,9 @@ class _GraphMetric extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: QuestraColors.deepNavy,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           Text(
             label,
@@ -1484,9 +1489,9 @@ class _QuestSupportBoundarySection extends StatelessWidget {
                     Text(
                       'Quest支援の透明性',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: QuestraColors.deepNavy,
-                            fontWeight: FontWeight.w900,
-                          ),
+                        color: QuestraColors.deepNavy,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -1676,23 +1681,23 @@ class _NextStepPanel extends StatelessWidget {
     final title = openMission != null
         ? openMission!.title
         : hasArcGuide
-            ? latestTrail?.title ?? 'Trailを残す'
-            : 'Arcガイドを生成';
+        ? latestTrail?.title ?? 'Trailを残す'
+        : 'Arcガイドを生成';
     final message = openMission != null
         ? openMission!.description
         : hasArcGuide
-            ? latestTrail?.summary ?? '今日の進み方を短く残して、次のMissionにつなげましょう。'
-            : 'Questの要約、進め方、最初のMission候補をArcがまとめます。';
+        ? latestTrail?.summary ?? '今日の進み方を短く残して、次のMissionにつなげましょう。'
+        : 'Questの要約、進め方、最初のMission候補をArcがまとめます。';
     final actionLabel = openMission != null
         ? 'Missionへ'
         : hasArcGuide
-            ? 'Trailへ'
-            : 'Arcガイドを生成';
+        ? 'Trailへ'
+        : 'Arcガイドを生成';
     final actionIcon = openMission != null
         ? Icons.task_alt_outlined
         : hasArcGuide
-            ? Icons.timeline_outlined
-            : Icons.auto_awesome_outlined;
+        ? Icons.timeline_outlined
+        : Icons.auto_awesome_outlined;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1715,9 +1720,9 @@ class _NextStepPanel extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: QuestraColors.deepNavy,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 4),
           Text(message, style: const TextStyle(color: QuestraColors.slate)),
@@ -1730,8 +1735,8 @@ class _NextStepPanel extends StatelessWidget {
                 onPressed: openMission != null
                     ? onOpenMission
                     : hasArcGuide
-                        ? onOpenTrail
-                        : onGenerateGuide,
+                    ? onOpenTrail
+                    : onGenerateGuide,
                 icon: Icon(actionIcon),
                 label: Text(actionLabel),
               ),
@@ -1866,8 +1871,9 @@ class _MilestoneTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final percent = (milestone.progress.clamp(0, 1) * 100).round();
-    final nextStatus =
-        ref.read(questMilestoneServiceProvider).nextStatus(milestone.status);
+    final nextStatus = ref
+        .read(questMilestoneServiceProvider)
+        .nextStatus(milestone.status);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -1888,8 +1894,8 @@ class _MilestoneTile extends ConsumerWidget {
                 radius: 15,
                 backgroundColor:
                     milestone.status == QuestMilestoneStatus.completed
-                        ? QuestraColors.gold
-                        : QuestraColors.cosmicBlue,
+                    ? QuestraColors.gold
+                    : QuestraColors.cosmicBlue,
                 child: Text(
                   '${milestone.sortOrder + 1}',
                   style: const TextStyle(
@@ -1993,7 +1999,9 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
     };
     for (var index = 0; index < draft.validCandidates.length; index++) {
       final candidate = draft.validCandidates[index];
-      ref.read(missionControllerProvider.notifier).addMissionDraft(
+      ref
+          .read(missionControllerProvider.notifier)
+          .addMissionDraft(
             quest: widget.quest,
             id: missionIds[candidate.planKey],
             title: candidate.title.trim(),
@@ -2022,13 +2030,20 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
       if (guide.questEvaluation != null) {
         ref
             .read(questControllerProvider.notifier)
-            .update(widget.quest.copyWith(evaluation: guide.questEvaluation));
+            .update(
+              widget.quest.copyWith(
+                evaluation: guide.questEvaluation,
+                dna: guide.questDna,
+              ),
+            );
       }
       final unchanged = <int>{};
-      for (var index = 0;
-          index < draft.validCandidates.length &&
-              index < guide.missionCandidates.length;
-          index++) {
+      for (
+        var index = 0;
+        index < draft.validCandidates.length &&
+            index < guide.missionCandidates.length;
+        index++
+      ) {
         final candidate = draft.validCandidates[index];
         final original = guide.missionCandidates[index];
         if (candidate.title.trim() == original.title.trim() &&
@@ -2037,7 +2052,9 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
         }
       }
       unawaited(
-        ref.read(questPlanningFeedbackRepositoryProvider).save(
+        ref
+            .read(questPlanningFeedbackRepositoryProvider)
+            .save(
               QuestPlanningFeedback(
                 questId: widget.quest.id,
                 categoryKey: widget.quest.category.trim().toLowerCase(),
@@ -2055,7 +2072,9 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
     }
     showArcCelebrationSnackBar(
       context,
-      ref.read(arcCelebrationServiceProvider).build(
+      ref
+          .read(arcCelebrationServiceProvider)
+          .build(
             event: ArcCelebrationEvent.missionStarted,
             subject: widget.quest.title,
           ),
@@ -2156,18 +2175,18 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
                     onMoveUp: index == 0
                         ? null
                         : () => setState(
-                              () => _draft = _draft?.move(index, index - 1),
-                            ),
+                            () => _draft = _draft?.move(index, index - 1),
+                          ),
                     onMoveDown: index == draft.candidates.length - 1
                         ? null
                         : () => setState(
-                              () => _draft = _draft?.move(index, index + 1),
-                            ),
+                            () => _draft = _draft?.move(index, index + 1),
+                          ),
                     onRemove: draft.candidates.length <= 1
                         ? null
                         : () => setState(
-                              () => _draft = _draft?.remove(candidate.id),
-                            ),
+                            () => _draft = _draft?.remove(candidate.id),
+                          ),
                     onToday: () => setState(
                       () => _draft = _draft?.markToday(candidate.id),
                     ),
@@ -2439,7 +2458,9 @@ class _GuideCard extends ConsumerWidget {
                   .generateMission(quest: quest, guide: guide, advice: advice);
               showArcCelebrationSnackBar(
                 context,
-                ref.read(arcCelebrationServiceProvider).build(
+                ref
+                    .read(arcCelebrationServiceProvider)
+                    .build(
                       event: ArcCelebrationEvent.missionStarted,
                       subject: guide.guideType.japaneseLabel,
                     ),
@@ -2508,8 +2529,8 @@ class _MissionsSection extends ConsumerWidget {
                         onChanged: mission.status == MissionStatus.completed
                             ? null
                             : (_) => ref
-                                .read(missionControllerProvider.notifier)
-                                .completeMission(mission.id),
+                                  .read(missionControllerProvider.notifier)
+                                  .completeMission(mission.id),
                       ),
                       Expanded(
                         child: Column(
@@ -2534,8 +2555,8 @@ class _MissionsSection extends ConsumerWidget {
                                 fontWeight: FontWeight.w900,
                                 decoration:
                                     mission.status == MissionStatus.completed
-                                        ? TextDecoration.lineThrough
-                                        : null,
+                                    ? TextDecoration.lineThrough
+                                    : null,
                               ),
                             ),
                             if (mission.description.isNotEmpty) ...[
@@ -2558,8 +2579,8 @@ class _MissionsSection extends ConsumerWidget {
                                       backgroundColor: QuestraColors.cloud,
                                       valueColor:
                                           const AlwaysStoppedAnimation<Color>(
-                                        QuestraColors.gold,
-                                      ),
+                                            QuestraColors.gold,
+                                          ),
                                     ),
                                   ),
                                 ),
@@ -2606,8 +2627,8 @@ class _MissionsSection extends ConsumerWidget {
                             onPressed: mission.status == MissionStatus.completed
                                 ? null
                                 : () => ref
-                                    .read(missionControllerProvider.notifier)
-                                    .setToday(quest.id, mission.id),
+                                      .read(missionControllerProvider.notifier)
+                                      .setToday(quest.id, mission.id),
                             icon: Icon(
                               mission.isToday
                                   ? Icons.today
@@ -2658,14 +2679,14 @@ class _MissionsSection extends ConsumerWidget {
                                 onPressed: index == 0
                                     ? null
                                     : () => ref
-                                        .read(
-                                          missionControllerProvider.notifier,
-                                        )
-                                        .reorderForQuest(
-                                          quest.id,
-                                          index,
-                                          index - 1,
-                                        ),
+                                          .read(
+                                            missionControllerProvider.notifier,
+                                          )
+                                          .reorderForQuest(
+                                            quest.id,
+                                            index,
+                                            index - 1,
+                                          ),
                                 icon: const Icon(Icons.arrow_upward, size: 18),
                                 tooltip: '上へ移動',
                               ),
@@ -2673,14 +2694,14 @@ class _MissionsSection extends ConsumerWidget {
                                 onPressed: index == missions.length - 1
                                     ? null
                                     : () => ref
-                                        .read(
-                                          missionControllerProvider.notifier,
-                                        )
-                                        .reorderForQuest(
-                                          quest.id,
-                                          index,
-                                          index + 1,
-                                        ),
+                                          .read(
+                                            missionControllerProvider.notifier,
+                                          )
+                                          .reorderForQuest(
+                                            quest.id,
+                                            index,
+                                            index + 1,
+                                          ),
                                 icon: const Icon(
                                   Icons.arrow_downward,
                                   size: 18,
@@ -2807,7 +2828,9 @@ Future<void> _showMissionCreateDialog(
     ),
   );
   if (shouldSave == true) {
-    ref.read(missionControllerProvider.notifier).addMissionDraft(
+    ref
+        .read(missionControllerProvider.notifier)
+        .addMissionDraft(
           quest: quest,
           title: titleController.text.trim(),
           description: descriptionController.text.trim(),
@@ -2911,7 +2934,9 @@ Future<void> _showMissionEditDialog(
     ),
   );
   if (shouldSave == true && titleController.text.trim().isNotEmpty) {
-    ref.read(missionControllerProvider.notifier).updateMission(
+    ref
+        .read(missionControllerProvider.notifier)
+        .updateMission(
           mission.copyWith(
             title: titleController.text.trim(),
             description: descriptionController.text.trim(),
@@ -2982,8 +3007,9 @@ class _TrailSection extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 13,
-                    backgroundColor:
-                        i == 0 ? QuestraColors.gold : QuestraColors.cosmicBlue,
+                    backgroundColor: i == 0
+                        ? QuestraColors.gold
+                        : QuestraColors.cosmicBlue,
                     child: Text(
                       '${i + 1}',
                       style: const TextStyle(
@@ -3015,14 +3041,18 @@ class _TrailSection extends ConsumerWidget {
           OutlinedButton.icon(
             onPressed: () {
               final latestMission = missions.isEmpty ? null : missions.first;
-              ref.read(trailControllerProvider.notifier).addQuestTrail(
+              ref
+                  .read(trailControllerProvider.notifier)
+                  .addQuestTrail(
                     questId: quest.id,
                     missionId: latestMission?.id,
                     questTitle: quest.title,
                   );
               showArcCelebrationSnackBar(
                 context,
-                ref.read(arcCelebrationServiceProvider).build(
+                ref
+                    .read(arcCelebrationServiceProvider)
+                    .build(
                       event: ArcCelebrationEvent.trailRecorded,
                       subject: quest.title,
                     ),
@@ -3045,7 +3075,8 @@ class _DreamBoardSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(dreamBoardControllerProvider)[quest.id] ??
+    final items =
+        ref.watch(dreamBoardControllerProvider)[quest.id] ??
         const <DreamBoardItem>[];
     final controller = ref.read(dreamBoardControllerProvider.notifier);
     final firstReference = starMap.isEmpty ? null : starMap.first;
@@ -3069,16 +3100,16 @@ class _DreamBoardSection extends ConsumerWidget {
               onAddReference: firstReference == null
                   ? null
                   : () => controller.addItem(
-                        questId: quest.id,
-                        title: firstReference.title,
-                        note: firstReference.description,
-                        itemType: DreamBoardItemType.reference,
-                        sourceUrl: firstReference.url,
-                        metadata: {
-                          'guide_type': firstReference.guideType.name,
-                          'content_type': firstReference.contentType,
-                        },
-                      ),
+                      questId: quest.id,
+                      title: firstReference.title,
+                      note: firstReference.description,
+                      itemType: DreamBoardItemType.reference,
+                      sourceUrl: firstReference.url,
+                      metadata: {
+                        'guide_type': firstReference.guideType.name,
+                        'content_type': firstReference.contentType,
+                      },
+                    ),
             )
           else ...[
             ...items.map(
@@ -3257,9 +3288,9 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       '$number $title',
       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: QuestraColors.white,
-            fontWeight: FontWeight.w900,
-          ),
+        color: QuestraColors.white,
+        fontWeight: FontWeight.w900,
+      ),
     );
   }
 }

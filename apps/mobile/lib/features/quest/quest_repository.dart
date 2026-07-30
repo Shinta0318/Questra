@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 import '../../core/performance/performance_limits.dart';
 import '../../core/estimation/effort_estimate.dart';
 import 'quest_model.dart';
+import 'quest_dna.dart';
 import 'quest_evaluation.dart';
 
 const _questColumns =
@@ -10,7 +11,8 @@ const _questColumns =
     'requested_target_month,effort_estimate,quest_evaluation,'
     'difficulty_score,estimated_duration_days,estimated_cost,'
     'estimated_success_rate,estimated_mission_count,evaluation_version,'
-    'evaluated_at,recommended_start_date,risk_summary,created_at';
+    'evaluated_at,recommended_start_date,risk_summary,quest_dna,'
+    'quest_dna_version,quest_dna_evaluated_at,created_at';
 
 abstract interface class QuestRepository {
   Future<List<Quest>> findByUser(
@@ -120,6 +122,9 @@ class SupabaseQuestRepository implements QuestRepository {
           ? null
           : effortEstimateToJson(quest.effortEstimate!),
       'quest_evaluation': quest.evaluation?.toJson(),
+      'quest_dna': quest.dna?.toJson(),
+      'quest_dna_version': quest.dna?.version,
+      'quest_dna_evaluated_at': quest.dna?.evaluatedAt.toIso8601String(),
       'difficulty_score': quest.evaluation?.difficultyScore,
       'estimated_duration_days': quest.evaluation?.estimatedDurationDays,
       'estimated_cost': quest.evaluation?.estimatedCostLabel,
@@ -151,6 +156,7 @@ class SupabaseQuestRepository implements QuestRepository {
           : DateTime.parse(row['target_date'] as String),
       effortEstimate: effortEstimateFromJson(row['effort_estimate']),
       evaluation: QuestEvaluation.fromJson(row['quest_evaluation']),
+      dna: QuestDna.fromJson(row['quest_dna']),
     );
   }
 }

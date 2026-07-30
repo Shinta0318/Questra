@@ -2399,7 +2399,7 @@ items:
       - No critical crash, data loss, cross-account leak, or blocked primary flow remains.
   - id: QST-202
     title: Quest DNA V2 Persistence
-    status: Planned
+    status: In Progress
     priority: P1
     epic: QUEST-INTELLIGENCE-V2
     depends_on: [QST-190]
