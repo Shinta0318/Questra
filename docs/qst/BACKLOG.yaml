@@ -2413,7 +2413,7 @@ items:
       - Guild, Horizon, and enterprise support consume only consented, appropriate attributes.
   - id: QST-203
     title: Guild Repository and Moderated Interaction
-    status: Planned
+    status: In Progress
     priority: P1
     epic: GUILD-FOUNDATION
     depends_on: [QST-197, QST-199]
