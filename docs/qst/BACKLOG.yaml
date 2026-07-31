@@ -1761,7 +1761,7 @@ items:
     acceptance:
       - A concrete wish in Arc Chat can surface an explicit Quest planning action.
       - The user reviews the Quest title, category, difficulty, route, cautions, and Mission candidates before saving.
-      - Arc proposes 8 to 10 ordered Missions with one concrete outcome and a clear done condition each.
+      - Arc proposes the minimum sufficient ordered Missions or Milestones for the specific Quest, normally 3 to 20, with one concrete outcome and a clear done condition each.
       - Confirming the plan creates one Quest and the selected Missions without duplicate guide generation.
       - Ordinary chat is not forced into a Quest.
       - Gemini failure preserves a usable local planning fallback.
@@ -1769,16 +1769,16 @@ items:
     progress:
       - Flutter conversation-to-Quest flow, Quest form simplification, structured Edge Function response, and focused tests are implemented locally.
       - Dart analysis and all 253 Flutter tests pass; focused detailed-guide tests also pass.
-      - The prompt, response schema, parser, and fallback require 8 to 10 detailed Missions with explicit completion conditions.
+      - Superseded by QST-221 through QST-224. Fixed Mission counts and template-derived Mission content must be removed before this flow is considered complete.
       - The updated arc-quest-guide is deployed to Supabase Beta; a Singapore travel smoke test returned 10 Gemini-generated Missions covering the full preparation route.
       - The structured arc-chat deployment and device input validation remain pending.
   - id: QST-174
     title: Quest Planning Template Matrix
-    status: Done
+    status: Superseded
     priority: P0
     epic: ARC-EXPERIENCE
     depends_on: [QST-173]
-    scope: Evaluate 50 diverse wishes and keep Quest-specific Mission quality across Gemini and free-tier fallback paths with an automatically selected planning template.
+    scope: Retain templates only as quality-check and fallback planning viewpoints; templates must not generate Mission content or enforce a fixed Mission count. Superseded by QST-221 and QST-231.
     likely_files:
       - supabase/functions/arc-quest-guide/index.ts
       - supabase/functions/arc-quest-guide/quest_planning_templates.ts
@@ -1788,8 +1788,8 @@ items:
       - reports/qst/QST-174.md
     acceptance:
       - Fifty wishes spanning travel, learning, health, career, creation, relationships, lifestyle, finance, community, challenge, product, and personal growth are evaluated.
-      - Every result contains 8 to 10 unique ordered Missions with observable done conditions.
-      - Planning templates are selected from Quest category, title, and description without adding a required user choice.
+      - Every result contains the minimum sufficient set of unique ordered Missions or Milestones with observable done conditions.
+      - Planning viewpoints may identify missing safety or planning concerns, but cannot supply fixed Mission wording or ordering.
       - Gemini and server fallback share the same domain and safety planning checkpoints.
       - Free-tier exhaustion does not collapse the guide into generic unrelated Missions.
       - Evaluation evidence distinguishes Gemini output from fallback output.
@@ -2668,6 +2668,166 @@ items:
       - Optimization is previewed as a diff and never applied before explicit approval.
       - Discovery performance, accessibility, moderation, RLS, and copy E2E checks pass.
       - Guild replaces Coming Soon only after Release Manager records zero critical blockers.
+  - id: QST-221
+    title: Adaptive Quest Planning Engine V3
+    status: Ready
+    priority: P0
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-177, QST-178, QST-180, QST-182, QST-205]
+    goal: Quest固有の成功条件と制約から、固定テンプレート・固定件数に依存しない実行可能な航路を設計する。
+    scope: Deprecate template-derived Missions; infer planning structure, dependencies, parallelism, and a 3-20 minimum-sufficient Mission/Milestone plan; add a Quest-informed dynamic fallback.
+    likely_files: [supabase/functions/arc-quest-guide, apps/mobile/lib/features/quest, tools/qst, reports/qst/QST-221.md]
+    acceptance: [Mission counts vary from 3 to 20, fixed 8-10 constraints are removed, user constraints alter plans, and Gemini/fallback paths pass quality checks.]
+  - id: QST-222
+    title: Quest Understanding and Success Contract
+    status: Ready
+    priority: P0
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-180, QST-221]
+    goal: Mission生成前に願い、成功証拠、制約、不明点、仮定をバージョン付きで構造化する。
+    scope: Add originalWish, outcome, successEvidence, motivation, currentState, constraints, resources, unknowns, risks, planningMode, assumptions, and a maximum-three-question clarification flow.
+    likely_files: [apps/mobile/lib/features/quest, supabase/functions/arc-quest-guide, supabase/migrations, reports/qst/QST-222.md]
+    acceptance: [Success contracts precede Mission generation, assumptions are distinct from facts, and Quest edits can re-check the contract.]
+  - id: QST-223
+    title: Multi-Pass Mission Generation and Critic
+    status: Ready
+    priority: P0
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-221, QST-222]
+    goal: Planner, Generator, Critic, Repairer, Validatorを分離し、初回生成を無条件保存しない。
+    scope: Score relevance, specificity, feasibility, done conditions, order, coverage, duplication, and granularity; repair only failed Missions with bounded retries.
+    likely_files: [supabase/functions/arc-quest-guide, supabase/functions/_shared, apps/mobile/lib/features/quest, reports/qst/QST-223.md]
+    acceptance: [Low quality items are repaired, duplicate items merge, invalid dependency graphs are rejected, and quality/version metadata persists.]
+  - id: QST-224
+    title: Mission Specificity and Done-Condition Contract
+    status: Ready
+    priority: P0
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-223]
+    goal: 抽象Missionを排除し、行動・目的・完了条件・成果物・所要時間・検証方法を必須化する。
+    scope: Add action, purpose, doneCondition, expectedOutput, effort, duration, dependencies, optionality, verificationType, sourceRequirement, and confidence validation.
+    likely_files: [apps/mobile/lib/features/mission, supabase/functions/arc-quest-guide, supabase/migrations, reports/qst/QST-224.md]
+    acceptance: [Abstract-only verbs are repaired or rejected, research has target/source/recording method, and purchases remain user-approved.]
+  - id: QST-225
+    title: Flexible Quest Proposal Generator
+    status: Ready
+    priority: P0
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-222]
+    goal: 曖昧な願いに、目的・期間・進め方が異なる最大3つのQuest候補を提案する。
+    scope: Return a best-fit option and up to two genuinely distinct alternatives, while allowing edit and combination.
+    likely_files: [apps/mobile/lib/features/arc, supabase/functions/arc-chat, reports/qst/QST-225.md]
+    acceptance: [No forced choice for concrete wishes, no assumed user intent, and selection flows to Mission generation.]
+  - id: QST-226
+    title: Personal Context-Aware Planning
+    status: Ready
+    priority: P0
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-222, QST-225]
+    goal: 明示的に許可された経験、時間、予算、地域、実績を計画へ反映する。
+    scope: Apply consented context and Arc Memory boundaries without treating inference as fact or retaining personal data in telemetry.
+    likely_files: [apps/mobile/lib/features/auth, apps/mobile/lib/features/quest, supabase/functions, reports/qst/QST-226.md]
+    acceptance: [Plans differ for availability and experience, budget alternatives are offered, and Memory use remains visible and consented.]
+  - id: QST-227
+    title: Dynamic Mission Count and Progressive Route Reveal
+    status: Ready
+    priority: P0
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-221, QST-224]
+    goal: 今日、直近、将来Milestoneの3層で航路を見せ、長期計画の圧迫感をなくす。
+    scope: Separate generated from initially visible Missions and expand distant Milestones as context becomes known.
+    likely_files: [apps/mobile/lib/features/home, apps/mobile/lib/features/quest, reports/qst/QST-227.md]
+    acceptance: [Home emphasizes one next Mission and users can expand the full route without mistaking hidden items for deletion.]
+  - id: QST-228
+    title: Mission Regeneration by Intent
+    status: Ready
+    priority: P1
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-223, QST-224]
+    goal: ユーザーの不満に応じ、航路全体でなく対象Missionだけを安全に再生成する。
+    scope: Support specificity, size, count, deadline, budget, beginner, order, and done-condition intents with diff and approval.
+    likely_files: [apps/mobile/lib/features/quest, supabase/functions, reports/qst/QST-228.md]
+    acceptance: [Completed Missions stay immutable, diffs require approval, and versioned feedback prevents repeated low-quality output.]
+  - id: QST-229
+    title: Today's Best Next Mission
+    status: Ready
+    priority: P0
+    epic: DAILY-EXPERIENCE
+    depends_on: [QST-227]
+    goal: Homeの最上位で、今日の可処分時間と航路に合う次の一歩を一件だけ提案する。
+    scope: Testable ranking, alternate choice, rest, and five-minute progress options without penalties.
+    likely_files: [apps/mobile/lib/features/home, apps/mobile/lib/features/mission, reports/qst/QST-229.md]
+    acceptance: [One explainable feasible recommendation is shown and users can choose an alternative or rest.]
+  - id: QST-230
+    title: Gentle Recovery and Route Replanning
+    status: Ready
+    priority: P1
+    epic: DAILY-EXPERIENCE
+    depends_on: [QST-194, QST-229]
+    goal: 停滞を失敗扱いせず、最小の確認と承認制の航路調整で再開を支援する。
+    scope: Offer deadline, size, order, pause, and five-minute adjustments without warning floods.
+    likely_files: [apps/mobile/lib/features/arc, apps/mobile/lib/features/quest, reports/qst/QST-230.md]
+    acceptance: [Arc asks at most one recovery question and all structural changes remain previewed and approved.]
+  - id: QST-231
+    title: Quest Planning Quality Evaluation 200
+    status: Ready
+    priority: P0
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-221, QST-222, QST-223, QST-224, QST-225, QST-226, QST-227, QST-228]
+    goal: ペルソナと制約差を含む200件以上の評価で計画品質をリリースゲート化する。
+    scope: Measure relevance, specificity, done conditions, duplication, order, constraint reflection, safety, model/source/version, and regression deltas.
+    likely_files: [tools/qst, .github/workflows, reports/qst/QST-231.md]
+    acceptance: [Gemini/fallback are measured separately and threshold failures block release promotion.]
+  - id: QST-232
+    title: Quest Plan User Feedback Loop
+    status: Ready
+    priority: P1
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-228, QST-231]
+    goal: 1〜2タップの匿名化フィードバックを次回計画改善へ結びつける。
+    scope: Capture bounded feedback reasons, generation version, anonymized aggregates, and no Bond penalty.
+    likely_files: [apps/mobile/lib/features/quest, supabase/migrations, reports/qst/QST-232.md]
+    acceptance: [Feedback is private by default, versioned, and does not transmit raw chat history.]
+  - id: QST-233
+    title: First 10 Minutes Quest Success Flow
+    status: Ready
+    priority: P1
+    epic: ONBOARDING
+    depends_on: [QST-225, QST-227]
+    goal: 願いを話す、Questを選ぶ、Missionを確認する、今日の一歩を決める初回体験に集中する。
+    scope: Defer Guild, Trail, Bond, Stardust, and Rank explanations until after the first meaningful action.
+    likely_files: [apps/mobile/lib/features/onboarding, apps/mobile/lib/features/arc, reports/qst/QST-233.md]
+    acceptance: [First-time users can reach a chosen first step without jargon or unrelated feature tours.]
+  - id: QST-234
+    title: Arc Intent Action Chips
+    status: Ready
+    priority: P1
+    epic: ARC-EXPERIENCE
+    depends_on: [QST-225]
+    goal: AIに慣れていないユーザーがArcへ相談を始めやすい選択肢を提供する。
+    scope: Add wish, Quest, next step, plan review, and research chips without reducing free input.
+    likely_files: [apps/mobile/lib/features/arc, reports/qst/QST-234.md]
+    acceptance: [Chips are concise, accessible, contextual, and never force a Quest.]
+  - id: QST-235
+    title: Quest Plan Source and Freshness Verification
+    status: Ready
+    priority: P1
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-224]
+    goal: 最新情報が必要なMissionに参照元、確認日、再確認要件を持たせる。
+    scope: Handle travel, rules, qualifications, health, and finance without unsupported assertions.
+    likely_files: [apps/mobile/lib/features/mission, supabase/functions, reports/qst/QST-235.md]
+    acceptance: [Freshness-sensitive Missions disclose source requirements and never execute purchases or bookings.]
+  - id: QST-236
+    title: Calendar and Availability Planning Foundation
+    status: Ready
+    priority: P1
+    epic: QUEST-INTELLIGENCE-V3
+    depends_on: [QST-226]
+    goal: 曜日別の可処分時間を明示的に登録し、計画量へ反映する。
+    scope: Add simple local and persisted availability settings before external calendar integration.
+    likely_files: [apps/mobile/lib/features/profile, apps/mobile/lib/features/quest, supabase/migrations, reports/qst/QST-236.md]
+    acceptance: [Availability changes plan volume without claiming calendar access or storing inferred schedules.]
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass
