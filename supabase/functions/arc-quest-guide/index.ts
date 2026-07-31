@@ -4,9 +4,7 @@ import {
   preflightResponse,
   readJson,
 } from "../_shared/http.ts";
-import {
-  resolveQuestPlanningTemplate,
-} from "./quest_planning_templates.ts";
+import { resolveQuestPlanningTemplate } from "./quest_planning_templates.ts";
 import { deterministicSafetyAssessment } from "../_shared/safety_guard.ts";
 
 type QuestPayload = {
@@ -55,6 +53,21 @@ type PlanningFeedback = {
   target_window?: string;
 };
 
+type QuestUnderstanding = {
+  original_wish: string;
+  quest_outcome: string;
+  success_evidence: string;
+  motivation: string;
+  current_state: string;
+  constraints: string[];
+  known_resources: string[];
+  unknowns: string[];
+  planning_risks: string[];
+  planning_mode: string;
+  assumptions: string[];
+  version: number;
+};
+
 Deno.serve(async (req) => {
   const preflight = preflightResponse(req);
   if (preflight) return preflight;
@@ -64,6 +77,7 @@ Deno.serve(async (req) => {
   const payload = await readJson<{
     quest?: QuestPayload;
     planning_feedback?: PlanningFeedback[];
+    quest_understanding?: QuestUnderstanding;
   }>(req);
   if (!payload) {
     return jsonResponse({ error: "Invalid JSON body" }, { status: 400 });
@@ -78,13 +92,14 @@ Deno.serve(async (req) => {
       { status: 422 },
     );
   }
-  const guide = await buildArcQuestGuide(quest ?? {}, planningFeedback ?? []);
+  const guide = await buildArcQuestGuide(quest ?? {}, planningFeedback ?? [], payload.quest_understanding);
   return jsonResponse(guide);
 });
 
 async function buildArcQuestGuide(
   quest: QuestPayload,
   planningFeedback: PlanningFeedback[],
+  understanding?: QuestUnderstanding,
 ) {
   const template = resolveQuestPlanningTemplate(quest);
   const feedbackHint = summarizePlanningFeedback(planningFeedback);
@@ -103,6 +118,7 @@ async function buildArcQuestGuide(
           checkpoints: template.steps.map((item) => item.title),
         },
         quest,
+        quest_understanding: understanding ?? null,
       },
       responseSchema: questGuideSchema,
       maxOutputTokens: 6_000,
