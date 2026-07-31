@@ -12,5 +12,7 @@ void main() {
     expect(guide, contains('from the Quest\'s success condition'));
     expect(guide, contains('quality_viewpoint'));
     expect(guide, isNot(contains('template.steps.map((item, index)')));
+    expect(guide, contains('reviewMissionCandidates'));
+    expect(guide, contains('abstractOnly'));
   });
 }

@@ -280,6 +280,7 @@ function normalizeGuide(
   const normalizedCandidates = candidates
     .map(normalizeCandidate)
     .filter((candidate): candidate is MissionCandidate => candidate !== null);
+  const reviewedCandidates = reviewMissionCandidates(normalizedCandidates);
 
   const fallbackCandidates = fallbackGuideWithoutRecursion(quest);
   return {
@@ -290,19 +291,39 @@ function normalizeGuide(
       data.encouragement,
       fallbackCandidates.encouragement,
     ),
-    mission_candidates: normalizedCandidates.length >= 3
-      ? normalizedCandidates.slice(0, 30)
+    mission_candidates: reviewedCandidates.length >= 3
+      ? reviewedCandidates.slice(0, 20)
       : fallbackCandidates.mission_candidates,
     effort_estimate: normalizeEffortEstimate(data.effort_estimate, 720, 60),
     quest_evaluation: normalizeQuestEvaluation(
       data.quest_evaluation,
-      normalizedCandidates.length >= 3
-        ? normalizedCandidates
+      reviewedCandidates.length >= 3
+        ? reviewedCandidates
         : fallbackCandidates.mission_candidates,
     ),
     quest_dna: normalizeQuestDna(data.quest_dna, quest),
     source_type: sourceType,
   };
+}
+
+// The deterministic critic is deliberately conservative. It never mutates
+// user data; it removes invalid AI candidates before the preview is shown.
+function reviewMissionCandidates(candidates: MissionCandidate[]) {
+  const knownKeys = new Set(candidates.map((item) => item.plan_key));
+  const titles = new Set<string>();
+  return candidates.filter((item) => {
+    const title = item.title.replace(/\s+/g, "").toLowerCase();
+    const abstractOnly = /^(調べる|準備する|検討する|頑張る)$/.test(item.title.trim());
+    const doneCondition = /完了です[。]?$/.test(item.description);
+    const dependenciesValid = item.dependency_plan_keys.every((key) =>
+      key !== item.plan_key && knownKeys.has(key)
+    );
+    if (!title || titles.has(title) || abstractOnly || !doneCondition || !dependenciesValid) {
+      return false;
+    }
+    titles.add(title);
+    return true;
+  });
 }
 
 function fallbackGuideWithoutRecursion(quest: QuestPayload) {
