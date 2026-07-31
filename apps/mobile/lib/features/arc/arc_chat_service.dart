@@ -92,10 +92,12 @@ class LocalArcChatService implements ArcChatService {
     required List<ArcChatMessage> history,
     required ArcChatContext context,
   }) async {
-    final quest =
-        context.activeQuests.isEmpty ? null : context.activeQuests.first;
-    final trail =
-        context.recentTrails.isEmpty ? null : context.recentTrails.first;
+    final quest = context.activeQuests.isEmpty
+        ? null
+        : context.activeQuests.first;
+    final trail = context.recentTrails.isEmpty
+        ? null
+        : context.recentTrails.first;
     final suggestion = inferArcQuestSuggestion(userMessage);
     final questChanges = _inferLocalQuestChanges(userMessage, context);
     final hasConcern = RegExp(r'不安|心配|怖|疲れ|つら|しんど|落ち込').hasMatch(userMessage);
@@ -116,7 +118,13 @@ class LocalArcChatService implements ArcChatService {
     return ArcChatResponse(
       message: message,
       sourceType: 'local_fallback',
-      quickActions: const ['Missionを相談', '小さな一歩', 'Trailを振り返る'],
+      quickActions: const [
+        'やりたいことを相談',
+        'Questを作る',
+        '今日の一歩を決める',
+        '計画を見直す',
+        '情報を調べる',
+      ],
       questSuggestion: suggestion,
       questChanges: questChanges,
     );
@@ -161,8 +169,9 @@ class SupabaseArcChatService implements ArcChatService {
         data,
         sourceInput: userMessage,
         allowedQuestIds: context.activeQuests.map((quest) => quest.id).toSet(),
-        allowedMissionIds:
-            context.recentMissions.map((mission) => mission.id).toSet(),
+        allowedMissionIds: context.recentMissions
+            .map((mission) => mission.id)
+            .toSet(),
       );
     } catch (_) {
       return fallback.send(
@@ -193,7 +202,7 @@ class SupabaseArcChatService implements ArcChatService {
       sourceType: data['source_type'] as String? ?? 'arc_chat',
       quickActions:
           (data['quick_actions'] as List?)?.whereType<String>().toList() ??
-              const [],
+          const [],
       questSuggestion: suggestion,
       questChanges: _questChangesFromData(
         data,
@@ -208,7 +217,8 @@ class SupabaseArcChatService implements ArcChatService {
     required Set<String> allowedQuestIds,
     required Set<String> allowedMissionIds,
   }) {
-    final sources = (data['grounding_sources'] as List?)
+    final sources =
+        (data['grounding_sources'] as List?)
             ?.whereType<Map>()
             .map((item) => Map<String, dynamic>.from(item))
             .map(_groundingSourceFromData)
@@ -224,8 +234,8 @@ class SupabaseArcChatService implements ArcChatService {
         .map((item) {
           final kind = arcQuestChangeKindFromStorage(item['kind'] as String?);
           final questId = (item['quest_id'] as String?)?.trim() ?? '';
-          final targetMissionId =
-              (item['target_mission_id'] as String?)?.trim();
+          final targetMissionId = (item['target_mission_id'] as String?)
+              ?.trim();
           if (kind == null ||
               questId.isEmpty ||
               (allowedQuestIds.isNotEmpty &&
@@ -246,8 +256,9 @@ class SupabaseArcChatService implements ArcChatService {
             ),
             kind: kind,
             questId: questId,
-            targetMissionId:
-                targetMissionId?.isEmpty == true ? null : targetMissionId,
+            targetMissionId: targetMissionId?.isEmpty == true
+                ? null
+                : targetMissionId,
             title: _limitText(title, limit: InputLimits.missionTitle),
             description: _limitText(
               (item['description'] as String?)?.trim() ?? '',
@@ -278,10 +289,7 @@ class SupabaseArcChatService implements ArcChatService {
     final uri = Uri.tryParse(data['url'] as String? ?? '');
     if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) return null;
     return ArcGroundingSource(
-      title: _limitText(
-        data['title'] as String? ?? uri.host,
-        limit: 180,
-      ),
+      title: _limitText(data['title'] as String? ?? uri.host, limit: 180),
       publisher: _limitText(
         data['publisher'] as String? ?? uri.host,
         limit: 120,

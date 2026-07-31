@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     return jsonResponse({
       message: "静かな星図だね。話したいことが見えたら、そっと教えて。",
       source_type: "arc_chat_fallback",
-      quick_actions: ["Missionを選ぶ", "Trailを振り返る"],
+      quick_actions: ["やりたいことを相談", "Questを作る", "今日の一歩を決める", "計画を見直す", "情報を調べる"],
     });
   }
   const safety = deterministicSafetyAssessment(message);
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
     return jsonResponse({
       message: messageText,
       source_type: result.sourceType,
-      quick_actions: ["Missionを選ぶ", "Trailを振り返る", "小さな一歩"],
+      quick_actions: ["やりたいことを相談", "Questを作る", "今日の一歩を決める", "計画を見直す", "情報を調べる"],
       quest_suggestion: normalizeQuestSuggestion(parsed, message),
       quest_changes: normalizeQuestChanges(parsed, payload.context),
       grounding_sources: grounding?.sources ?? [],

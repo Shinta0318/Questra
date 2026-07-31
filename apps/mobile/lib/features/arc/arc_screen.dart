@@ -71,7 +71,13 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       createdAt: DateTime.now(),
     ),
   ];
-  List<String> _quickActions = const ['Missionを相談', 'やりたいこと', 'Trailを振り返る'];
+  List<String> _quickActions = const [
+    'やりたいことを相談',
+    'Questを作る',
+    '今日の一歩を決める',
+    '計画を見直す',
+    '情報を調べる',
+  ];
   bool _isThinking = false;
   String? _chatInputError;
   ArcQuestSuggestion? _pendingQuestSuggestion;
@@ -132,7 +138,8 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                     _ArcMessageBubble(
                       text: _messages[index].text,
                       fromArc: _messages[index].fromArc,
-                      showIdentity: _messages[index].fromArc &&
+                      showIdentity:
+                          _messages[index].fromArc &&
                           (index == 0 || !_messages[index - 1].fromArc),
                       emotion: _messages[index].fromArc
                           ? ArcEmotion.support
@@ -156,13 +163,10 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                       onApply: (proposal) =>
                           _applyQuestChange(proposal, quests, missions),
                       onLater: (proposal) => _removeQuestChange(proposal),
-                      onReject: (proposal) => _removeQuestChange(
-                        proposal,
-                        addFeedback: true,
-                      ),
-                      onOpenQuest: (proposal) => context.go(
-                        '${AppRoutes.quest}/${proposal.questId}',
-                      ),
+                      onReject: (proposal) =>
+                          _removeQuestChange(proposal, addFeedback: true),
+                      onOpenQuest: (proposal) =>
+                          context.go('${AppRoutes.quest}/${proposal.questId}'),
                     ),
                   ],
                   if (_isThinking) const _ArcThinkingBubble(),
@@ -230,7 +234,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     };
     for (var index = 0; index < result.missions.length; index++) {
       final mission = result.missions[index];
-      ref.read(missionControllerProvider.notifier).addMissionDraft(
+      ref
+          .read(missionControllerProvider.notifier)
+          .addMissionDraft(
             quest: quest,
             id: missionIds[mission.planKey],
             title: mission.title.trim(),
@@ -297,7 +303,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     });
     _scrollToLatest();
     unawaited(
-      ref.read(analyticsServiceProvider).arcChatSent(
+      ref
+          .read(analyticsServiceProvider)
+          .arcChatSent(
             userId: ref.read(authControllerProvider).profile?.id,
             hasQuest: quests.any((quest) => quest.status == QuestStatus.active),
             hasTrail: trails.isNotEmpty,
@@ -310,7 +318,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
           .toList(growable: false),
       recentMissions: missions.take(5).toList(growable: false),
       recentTrails: trails.take(5).toList(growable: false),
-      memories: ref.read(arcMemoryRetrievalServiceProvider).retrieve(
+      memories: ref
+          .read(arcMemoryRetrievalServiceProvider)
+          .retrieve(
             memories: memories,
             query: text,
             questIds: quests
@@ -340,7 +350,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
           _isThinking = false;
         });
         unawaited(
-          ref.read(safetySignalRecorderProvider).record(
+          ref
+              .read(safetySignalRecorderProvider)
+              .record(
                 userId: ref.read(authControllerProvider).profile?.id,
                 assessment: safety,
               ),
@@ -365,7 +377,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         _pendingQuestChanges = response.questChanges;
         _quickActions = response.quickActions.isEmpty
             ? _quickActions
-            : response.quickActions.take(3).toList(growable: false);
+            : response.quickActions.take(5).toList(growable: false);
         _isThinking = false;
       });
       _scrollToLatest();
@@ -395,8 +407,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     List<Quest> quests,
     List<Mission> missions,
   ) async {
-    final quest =
-        quests.where((item) => item.id == proposal.questId).firstOrNull;
+    final quest = quests
+        .where((item) => item.id == proposal.questId)
+        .firstOrNull;
     if (quest == null) {
       _showQuestChangeMessage('対象のQuestが見つかりません。');
       _removeQuestChange(proposal);
@@ -409,7 +422,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
             ...[proposal.referenceQuery].whereType<String>(),
             ...proposal.groundingSources.map((source) => source.url.toString()),
           ];
-          ref.read(missionControllerProvider.notifier).addMissionDraft(
+          ref
+              .read(missionControllerProvider.notifier)
+              .addMissionDraft(
                 quest: quest,
                 title: proposal.title,
                 description: proposal.description,
@@ -454,7 +469,8 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       _removeQuestChange(proposal);
     } on ArgumentError catch (error) {
       _showQuestChangeMessage(
-          error.message?.toString() ?? '同じMissionがすでにあるみたい。');
+        error.message?.toString() ?? '同じMissionがすでにあるみたい。',
+      );
       _removeQuestChange(proposal);
     } catch (_) {
       _showQuestChangeMessage('今は反映できなかった。Questの詳細からもう一度確認してみて。');
@@ -485,11 +501,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     if (!mounted) return;
     setState(() {
       _messages.add(
-        ArcChatMessage(
-          text: message,
-          fromArc: true,
-          createdAt: DateTime.now(),
-        ),
+        ArcChatMessage(text: message, fromArc: true, createdAt: DateTime.now()),
       );
     });
     _scrollToLatest();
@@ -510,7 +522,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     final decision = ref
         .read(arcActionTriggerServiceProvider)
         .resolve(trigger: trigger, surface: 'Arc Chat');
-    ref.read(arcEmotionTimelineControllerProvider.notifier).record(
+    ref
+        .read(arcEmotionTimelineControllerProvider.notifier)
+        .record(
           emotion: decision.emotion,
           sourceType: decision.sourceType,
           reason: decision.message,
@@ -526,12 +540,16 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     if (profile == null) {
       return;
     }
-    final quest =
-        context.activeQuests.isEmpty ? null : context.activeQuests.first;
-    final trail =
-        context.recentTrails.isEmpty ? null : context.recentTrails.first;
+    final quest = context.activeQuests.isEmpty
+        ? null
+        : context.activeQuests.first;
+    final trail = context.recentTrails.isEmpty
+        ? null
+        : context.recentTrails.first;
     try {
-      await ref.read(memoryExtractionServiceProvider).extractAndSave(
+      await ref
+          .read(memoryExtractionServiceProvider)
+          .extractAndSave(
             MemoryExtractionEvent(
               userId: profile.id,
               questId: quest?.id,
@@ -545,8 +563,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
               },
             ),
           );
-      final growth =
-          ref.read(arcBondGrowthServiceProvider).forArcConversation();
+      final growth = ref
+          .read(arcBondGrowthServiceProvider)
+          .forArcConversation();
       final award = ref.read(stardustServiceProvider).forArcConversation();
       await ref
           .read(authControllerProvider.notifier)
@@ -589,9 +608,9 @@ class _ArcHeader extends StatelessWidget {
                 Text(
                   '星の航海士',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.parchment,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: AppColors.parchment,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -652,10 +671,10 @@ class _ArcMessageBubble extends StatelessWidget {
             child: Text(
               text,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.white,
-                    height: 1.45,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: AppColors.white,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),
@@ -684,19 +703,19 @@ class _ArcMessageBubble extends StatelessWidget {
                     Text(
                       'Arc',
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: AppColors.gold,
-                            fontWeight: FontWeight.w800,
-                          ),
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                   ],
                   Text(
                     text,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppColors.white,
-                          height: 1.55,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      color: AppColors.white,
+                      height: 1.55,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -736,9 +755,9 @@ class _ArcActionCard extends StatelessWidget {
         Text(
           '話してみる',
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: AppColors.parchment,
-                fontWeight: FontWeight.w700,
-              ),
+            color: AppColors.parchment,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         SingleChildScrollView(
@@ -811,9 +830,9 @@ class _ArcCommandCenterCard extends StatelessWidget {
                       ? 'まだQuestはありません'
                       : '$activeQuestCount件のQuestが進行中',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -885,9 +904,9 @@ class _ArcDetailsDisclosure extends StatelessWidget {
         title: Text(
           'Arcとの記録',
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: AppColors.white,
-                fontWeight: FontWeight.w700,
-              ),
+            color: AppColors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         subtitle: Text(
           events.isEmpty ? '会話を重ねると、ここに変化が残ります' : '最近の変化 ${events.length}件',
@@ -942,9 +961,9 @@ class _ArcEmotionTimelineCard extends StatelessWidget {
           Text(
             'Arcが旅の感情を少しずつ覚えていきます。',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.parchment,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: AppColors.parchment,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           if (visibleEvents.isEmpty)
@@ -960,9 +979,9 @@ class _ArcEmotionTimelineCard extends StatelessWidget {
                   child: Text(
                     'まだ静かな星図です。Quest、Mission、Trailを進めると、Arcの表情もここに残ります。',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.white,
-                          height: 1.45,
-                        ),
+                      color: AppColors.white,
+                      height: 1.45,
+                    ),
                   ),
                 ),
               ],
@@ -1002,18 +1021,18 @@ class _ArcEmotionTimelineTile extends StatelessWidget {
                     child: Text(
                       event.sourceType.label,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.gold,
-                            fontWeight: FontWeight.w900,
-                          ),
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     _formatTime(event.createdAt),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.parchment,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      color: AppColors.parchment,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
@@ -1021,9 +1040,9 @@ class _ArcEmotionTimelineTile extends StatelessWidget {
               Text(
                 event.reason,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.white,
-                      height: 1.35,
-                    ),
+                  color: AppColors.white,
+                  height: 1.35,
+                ),
               ),
             ],
           ),
@@ -1115,7 +1134,8 @@ class _ArcInputBar extends StatelessWidget {
                     final action = ArcChatKeyboardContract.resolve(
                       event: event,
                       isAltPressed: HardwareKeyboard.instance.isAltPressed,
-                      isComposing: controller.value.composing.isValid &&
+                      isComposing:
+                          controller.value.composing.isValid &&
                           !controller.value.composing.isCollapsed,
                       isSending: isSending,
                       text: controller.text,
@@ -1277,9 +1297,9 @@ class _ArcQuestCreationSheetState
       );
 
   Map<QuestClarificationType, String> get _clarificationAnswers => {
-        for (final entry in _clarificationControllers.entries)
-          entry.key: entry.value.text.trim(),
-      };
+    for (final entry in _clarificationControllers.entries)
+      entry.key: entry.value.text.trim(),
+  };
 
   String get _planningDescription {
     final base = QuestClarificationService.appendAnsweredContext(
@@ -1345,7 +1365,9 @@ class _ArcQuestCreationSheetState
       if (!mounted) return;
       setState(() => _error = safety.userMessage);
       unawaited(
-        ref.read(safetySignalRecorderProvider).record(
+        ref
+            .read(safetySignalRecorderProvider)
+            .record(
               userId: ref.read(authControllerProvider).profile?.id,
               assessment: safety,
             ),
@@ -1391,8 +1413,9 @@ class _ArcQuestCreationSheetState
       _intentDraft = intent;
     });
     try {
-      final guide =
-          await ref.read(arcQuestGuideServiceProvider).generate(quest: quest);
+      final guide = await ref
+          .read(arcQuestGuideServiceProvider)
+          .generate(quest: quest);
       if (!mounted) return;
       setState(() {
         _draftQuest = quest;
@@ -1485,9 +1508,7 @@ class _ArcQuestCreationSheetState
                         children: [
                           Text(
                             '相談から航路を描く',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
+                            style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(
                                   color: AppColors.white,
                                   fontWeight: FontWeight.w900,
@@ -1697,9 +1718,9 @@ class _ArcQuestCreationSheetState
                   Text(
                     '最初のMission',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w900,
-                        ),
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   ...List.generate(guide.missionCandidates.length, (index) {
@@ -1742,8 +1763,9 @@ class _ArcQuestCreationSheetState
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   FilledButton.icon(
-                    onPressed:
-                        _selectedMissionIndexes.isEmpty ? null : _confirm,
+                    onPressed: _selectedMissionIndexes.isEmpty
+                        ? null
+                        : _confirm,
                     icon: const Icon(Icons.rocket_launch_outlined),
                     label: Text(
                       'Questと${_selectedMissionIndexes.length}件のMissionを始める',
@@ -1809,9 +1831,9 @@ class _ArcClarificationPanel extends StatelessWidget {
                 child: Text(
                   '航路を整える確認',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
               Text(
@@ -1928,9 +1950,9 @@ class _ArcQuestChangesCard extends StatelessWidget {
                 child: Text(
                   'この情報をQuestへ反映できるよ',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
@@ -1941,7 +1963,8 @@ class _ArcQuestChangesCard extends StatelessWidget {
               Divider(color: AppColors.skyBlue.withValues(alpha: 0.2)),
             _ArcQuestChangeRow(
               proposal: proposals[index],
-              questTitle: quests
+              questTitle:
+                  quests
                       .where((quest) => quest.id == proposals[index].questId)
                       .firstOrNull
                       ?.title ??
@@ -2042,9 +2065,7 @@ class _ArcQuestChangeRow extends StatelessWidget {
                     ? Icons.check_circle_outline
                     : Icons.compare_arrows,
               ),
-              label: Text(
-                proposal.canApplyDirectly ? '反映する' : 'Questで差分を確認',
-              ),
+              label: Text(proposal.canApplyDirectly ? '反映する' : 'Questで差分を確認'),
             ),
             TextButton(onPressed: onLater, child: const Text('あとで')),
             IconButton(
@@ -2091,9 +2112,9 @@ class _ArcQuestSuggestionCard extends StatelessWidget {
                 child: Text(
                   'Questの種を見つけました',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
               IconButton(
