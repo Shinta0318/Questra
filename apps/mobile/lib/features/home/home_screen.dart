@@ -34,6 +34,7 @@ import '../signal/mission_signal_model.dart';
 import '../star_map/star_map_recommendation_service.dart';
 import '../trail/trail_model.dart';
 import '../trail/trail_controller.dart';
+import 'widgets/home_horizon_card.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -147,74 +148,9 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.xl),
             const _SimpleSectionTitle(title: '次の航路'),
             const SizedBox(height: AppSpacing.md),
-            _HorizonChallengeCard(challenge: horizon),
+            HomeHorizonCard(challenge: horizon),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _HorizonChallengeCard extends StatelessWidget {
-  const _HorizonChallengeCard({required this.challenge});
-
-  final HorizonNextChallenge challenge;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.midnightNavy.withValues(alpha: 0.74),
-        borderRadius: AppRadius.glassCard,
-        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.22)),
-        boxShadow: AppShadows.glassCard,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.public, color: AppColors.gold, size: 34),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  challenge.readinessLabel,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.gold,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  challenge.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  challenge.reason,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.parchment,
-                    height: 1.45,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  challenge.suggestedAction,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.skyBlue,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

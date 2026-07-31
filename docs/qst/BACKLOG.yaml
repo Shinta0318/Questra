@@ -2497,7 +2497,7 @@ items:
       - Golden changes require an intentional review record.
   - id: QST-209
     title: Feature Widget Decomposition
-    status: Planned
+    status: In Progress
     priority: P2
     epic: MAINTAINABILITY
     depends_on: [QST-208]
