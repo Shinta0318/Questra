@@ -1,0 +1,3002 @@
+﻿[
+    {
+        "id":  "travel-01-beginner",
+        "title":  "シンガポールへ行く",
+        "description":  "現地の文化と食を楽しみながら安全に旅したい Planning context: beginner; 2 hours per week",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "日程",
+                                  "入国",
+                                  "航空",
+                                  "宿泊",
+                                  "保険"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "travel-01-busy",
+        "title":  "シンガポールへ行く",
+        "description":  "現地の文化と食を楽しみながら安全に旅したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "日程",
+                                  "入国",
+                                  "航空",
+                                  "宿泊",
+                                  "保険"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "travel-01-low_budget",
+        "title":  "シンガポールへ行く",
+        "description":  "現地の文化と食を楽しみながら安全に旅したい Planning context: minimal budget",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "日程",
+                                  "入国",
+                                  "航空",
+                                  "宿泊",
+                                  "保険"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "travel-01-experienced",
+        "title":  "シンガポールへ行く",
+        "description":  "現地の文化と食を楽しみながら安全に旅したい Planning context: experienced; efficiency focused",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "日程",
+                                  "入国",
+                                  "航空",
+                                  "宿泊",
+                                  "保険"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "travel-02-beginner",
+        "title":  "北海道を車で一周したい",
+        "description":  "夏に10日ほどかけて景色と温泉を楽しみたい Planning context: beginner; 2 hours per week",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "日程",
+                                  "ルート",
+                                  "車",
+                                  "宿泊",
+                                  "予算"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "travel-02-busy",
+        "title":  "北海道を車で一周したい",
+        "description":  "夏に10日ほどかけて景色と温泉を楽しみたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "日程",
+                                  "ルート",
+                                  "車",
+                                  "宿泊",
+                                  "予算"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "travel-02-low_budget",
+        "title":  "北海道を車で一周したい",
+        "description":  "夏に10日ほどかけて景色と温泉を楽しみたい Planning context: minimal budget",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "日程",
+                                  "ルート",
+                                  "車",
+                                  "宿泊",
+                                  "予算"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "travel-02-experienced",
+        "title":  "北海道を車で一周したい",
+        "description":  "夏に10日ほどかけて景色と温泉を楽しみたい Planning context: experienced; efficiency focused",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "日程",
+                                  "ルート",
+                                  "車",
+                                  "宿泊",
+                                  "予算"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "travel-03-beginner",
+        "title":  "家族で沖縄旅行を実現する",
+        "description":  "子どもと祖父母も無理なく楽しめる旅行にしたい Planning context: beginner; 2 hours per week",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "家族",
+                                  "日程",
+                                  "宿泊",
+                                  "移動",
+                                  "予約"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "travel-03-busy",
+        "title":  "家族で沖縄旅行を実現する",
+        "description":  "子どもと祖父母も無理なく楽しめる旅行にしたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "家族",
+                                  "日程",
+                                  "宿泊",
+                                  "移動",
+                                  "予約"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "travel-03-low_budget",
+        "title":  "家族で沖縄旅行を実現する",
+        "description":  "子どもと祖父母も無理なく楽しめる旅行にしたい Planning context: minimal budget",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "家族",
+                                  "日程",
+                                  "宿泊",
+                                  "移動",
+                                  "予約"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "travel-03-experienced",
+        "title":  "家族で沖縄旅行を実現する",
+        "description":  "子どもと祖父母も無理なく楽しめる旅行にしたい Planning context: experienced; efficiency focused",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "家族",
+                                  "日程",
+                                  "宿泊",
+                                  "移動",
+                                  "予約"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "travel-04-beginner",
+        "title":  "ヨーロッパを一人旅する",
+        "description":  "初めての一人海外旅行を安全に計画したい Planning context: beginner; 2 hours per week",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "入国",
+                                  "旅程",
+                                  "宿泊",
+                                  "安全",
+                                  "保険"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "travel-04-busy",
+        "title":  "ヨーロッパを一人旅する",
+        "description":  "初めての一人海外旅行を安全に計画したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "入国",
+                                  "旅程",
+                                  "宿泊",
+                                  "安全",
+                                  "保険"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "travel-04-low_budget",
+        "title":  "ヨーロッパを一人旅する",
+        "description":  "初めての一人海外旅行を安全に計画したい Planning context: minimal budget",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "入国",
+                                  "旅程",
+                                  "宿泊",
+                                  "安全",
+                                  "保険"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "travel-04-experienced",
+        "title":  "ヨーロッパを一人旅する",
+        "description":  "初めての一人海外旅行を安全に計画したい Planning context: experienced; efficiency focused",
+        "category":  "旅行",
+        "expected_keywords":  [
+                                  "入国",
+                                  "旅程",
+                                  "宿泊",
+                                  "安全",
+                                  "保険"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "learning-01-beginner",
+        "title":  "英語で海外の人と自然に話せるようになりたい",
+        "description":  "半年後の旅行までに日常会話を身につけたい Planning context: beginner; 2 hours per week",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "英語",
+                                  "会話",
+                                  "教材",
+                                  "練習",
+                                  "振り返り"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "learning-01-busy",
+        "title":  "英語で海外の人と自然に話せるようになりたい",
+        "description":  "半年後の旅行までに日常会話を身につけたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "英語",
+                                  "会話",
+                                  "教材",
+                                  "練習",
+                                  "振り返り"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "learning-01-low_budget",
+        "title":  "英語で海外の人と自然に話せるようになりたい",
+        "description":  "半年後の旅行までに日常会話を身につけたい Planning context: minimal budget",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "英語",
+                                  "会話",
+                                  "教材",
+                                  "練習",
+                                  "振り返り"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "learning-01-experienced",
+        "title":  "英語で海外の人と自然に話せるようになりたい",
+        "description":  "半年後の旅行までに日常会話を身につけたい Planning context: experienced; efficiency focused",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "英語",
+                                  "会話",
+                                  "教材",
+                                  "練習",
+                                  "振り返り"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "learning-02-beginner",
+        "title":  "簿記2級に合格する",
+        "description":  "仕事を続けながら4か月で合格を目指したい Planning context: beginner; 2 hours per week",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "試験",
+                                  "教材",
+                                  "学習",
+                                  "過去問",
+                                  "復習"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "learning-02-busy",
+        "title":  "簿記2級に合格する",
+        "description":  "仕事を続けながら4か月で合格を目指したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "試験",
+                                  "教材",
+                                  "学習",
+                                  "過去問",
+                                  "復習"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "learning-02-low_budget",
+        "title":  "簿記2級に合格する",
+        "description":  "仕事を続けながら4か月で合格を目指したい Planning context: minimal budget",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "試験",
+                                  "教材",
+                                  "学習",
+                                  "過去問",
+                                  "復習"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "learning-02-experienced",
+        "title":  "簿記2級に合格する",
+        "description":  "仕事を続けながら4か月で合格を目指したい Planning context: experienced; efficiency focused",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "試験",
+                                  "教材",
+                                  "学習",
+                                  "過去問",
+                                  "復習"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "learning-03-beginner",
+        "title":  "Flutterでアプリを作れるようになる",
+        "description":  "基礎から学んで小さなアプリを公開したい Planning context: beginner; 2 hours per week",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "Flutter",
+                                  "環境",
+                                  "実装",
+                                  "アプリ",
+                                  "公開"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "learning-03-busy",
+        "title":  "Flutterでアプリを作れるようになる",
+        "description":  "基礎から学んで小さなアプリを公開したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "Flutter",
+                                  "環境",
+                                  "実装",
+                                  "アプリ",
+                                  "公開"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "learning-03-low_budget",
+        "title":  "Flutterでアプリを作れるようになる",
+        "description":  "基礎から学んで小さなアプリを公開したい Planning context: minimal budget",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "Flutter",
+                                  "環境",
+                                  "実装",
+                                  "アプリ",
+                                  "公開"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "learning-03-experienced",
+        "title":  "Flutterでアプリを作れるようになる",
+        "description":  "基礎から学んで小さなアプリを公開したい Planning context: experienced; efficiency focused",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "Flutter",
+                                  "環境",
+                                  "実装",
+                                  "アプリ",
+                                  "公開"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "learning-04-beginner",
+        "title":  "日本史を学び直したい",
+        "description":  "時代の流れを理解して史跡巡りを楽しみたい Planning context: beginner; 2 hours per week",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "時代",
+                                  "教材",
+                                  "学習",
+                                  "史跡",
+                                  "振り返り"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "learning-04-busy",
+        "title":  "日本史を学び直したい",
+        "description":  "時代の流れを理解して史跡巡りを楽しみたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "時代",
+                                  "教材",
+                                  "学習",
+                                  "史跡",
+                                  "振り返り"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "learning-04-low_budget",
+        "title":  "日本史を学び直したい",
+        "description":  "時代の流れを理解して史跡巡りを楽しみたい Planning context: minimal budget",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "時代",
+                                  "教材",
+                                  "学習",
+                                  "史跡",
+                                  "振り返り"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "learning-04-experienced",
+        "title":  "日本史を学び直したい",
+        "description":  "時代の流れを理解して史跡巡りを楽しみたい Planning context: experienced; efficiency focused",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "時代",
+                                  "教材",
+                                  "学習",
+                                  "史跡",
+                                  "振り返り"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "learning-05-beginner",
+        "title":  "ピアノで好きな曲を弾きたい",
+        "description":  "初心者から3か月で一曲通して弾けるようになりたい Planning context: beginner; 2 hours per week",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "曲",
+                                  "楽譜",
+                                  "練習",
+                                  "録音",
+                                  "演奏"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "learning-05-busy",
+        "title":  "ピアノで好きな曲を弾きたい",
+        "description":  "初心者から3か月で一曲通して弾けるようになりたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "曲",
+                                  "楽譜",
+                                  "練習",
+                                  "録音",
+                                  "演奏"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "learning-05-low_budget",
+        "title":  "ピアノで好きな曲を弾きたい",
+        "description":  "初心者から3か月で一曲通して弾けるようになりたい Planning context: minimal budget",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "曲",
+                                  "楽譜",
+                                  "練習",
+                                  "録音",
+                                  "演奏"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "learning-05-experienced",
+        "title":  "ピアノで好きな曲を弾きたい",
+        "description":  "初心者から3か月で一曲通して弾けるようになりたい Planning context: experienced; efficiency focused",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "曲",
+                                  "楽譜",
+                                  "練習",
+                                  "録音",
+                                  "演奏"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "learning-06-beginner",
+        "title":  "基本情報技術者試験に合格したい",
+        "description":  "平日30分と休日2時間で学習する Planning context: beginner; 2 hours per week",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "試験",
+                                  "範囲",
+                                  "教材",
+                                  "過去問",
+                                  "模試"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "learning-06-busy",
+        "title":  "基本情報技術者試験に合格したい",
+        "description":  "平日30分と休日2時間で学習する Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "試験",
+                                  "範囲",
+                                  "教材",
+                                  "過去問",
+                                  "模試"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "learning-06-low_budget",
+        "title":  "基本情報技術者試験に合格したい",
+        "description":  "平日30分と休日2時間で学習する Planning context: minimal budget",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "試験",
+                                  "範囲",
+                                  "教材",
+                                  "過去問",
+                                  "模試"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "learning-06-experienced",
+        "title":  "基本情報技術者試験に合格したい",
+        "description":  "平日30分と休日2時間で学習する Planning context: experienced; efficiency focused",
+        "category":  "学習",
+        "expected_keywords":  [
+                                  "試験",
+                                  "範囲",
+                                  "教材",
+                                  "過去問",
+                                  "模試"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "health-01-beginner",
+        "title":  "5キロ走れるようになる",
+        "description":  "運動習慣がない状態から3か月で走り切りたい Planning context: beginner; 2 hours per week",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "体調",
+                                  "歩く",
+                                  "走る",
+                                  "距離",
+                                  "休養"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "health-01-busy",
+        "title":  "5キロ走れるようになる",
+        "description":  "運動習慣がない状態から3か月で走り切りたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "体調",
+                                  "歩く",
+                                  "走る",
+                                  "距離",
+                                  "休養"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "health-01-low_budget",
+        "title":  "5キロ走れるようになる",
+        "description":  "運動習慣がない状態から3か月で走り切りたい Planning context: minimal budget",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "体調",
+                                  "歩く",
+                                  "走る",
+                                  "距離",
+                                  "休養"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "health-01-experienced",
+        "title":  "5キロ走れるようになる",
+        "description":  "運動習慣がない状態から3か月で走り切りたい Planning context: experienced; efficiency focused",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "体調",
+                                  "歩く",
+                                  "走る",
+                                  "距離",
+                                  "休養"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "health-02-beginner",
+        "title":  "睡眠の質を改善したい",
+        "description":  "朝すっきり起きられる生活に変えたい Planning context: beginner; 2 hours per week",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "睡眠",
+                                  "記録",
+                                  "就寝",
+                                  "起床",
+                                  "習慣"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "health-02-busy",
+        "title":  "睡眠の質を改善したい",
+        "description":  "朝すっきり起きられる生活に変えたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "睡眠",
+                                  "記録",
+                                  "就寝",
+                                  "起床",
+                                  "習慣"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "health-02-low_budget",
+        "title":  "睡眠の質を改善したい",
+        "description":  "朝すっきり起きられる生活に変えたい Planning context: minimal budget",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "睡眠",
+                                  "記録",
+                                  "就寝",
+                                  "起床",
+                                  "習慣"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "health-02-experienced",
+        "title":  "睡眠の質を改善したい",
+        "description":  "朝すっきり起きられる生活に変えたい Planning context: experienced; efficiency focused",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "睡眠",
+                                  "記録",
+                                  "就寝",
+                                  "起床",
+                                  "習慣"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "health-03-beginner",
+        "title":  "健康的に5キロ減量する",
+        "description":  "無理な食事制限をせず半年かけて進めたい Planning context: beginner; 2 hours per week",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "食事",
+                                  "運動",
+                                  "体重",
+                                  "記録",
+                                  "医療"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "health-03-busy",
+        "title":  "健康的に5キロ減量する",
+        "description":  "無理な食事制限をせず半年かけて進めたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "食事",
+                                  "運動",
+                                  "体重",
+                                  "記録",
+                                  "医療"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "health-03-low_budget",
+        "title":  "健康的に5キロ減量する",
+        "description":  "無理な食事制限をせず半年かけて進めたい Planning context: minimal budget",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "食事",
+                                  "運動",
+                                  "体重",
+                                  "記録",
+                                  "医療"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "health-03-experienced",
+        "title":  "健康的に5キロ減量する",
+        "description":  "無理な食事制限をせず半年かけて進めたい Planning context: experienced; efficiency focused",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "食事",
+                                  "運動",
+                                  "体重",
+                                  "記録",
+                                  "医療"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "health-04-beginner",
+        "title":  "筋力トレーニングを習慣にする",
+        "description":  "週3回、自宅で無理なく続けたい Planning context: beginner; 2 hours per week",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "筋力",
+                                  "フォーム",
+                                  "回数",
+                                  "週",
+                                  "休養"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "health-04-busy",
+        "title":  "筋力トレーニングを習慣にする",
+        "description":  "週3回、自宅で無理なく続けたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "筋力",
+                                  "フォーム",
+                                  "回数",
+                                  "週",
+                                  "休養"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "health-04-low_budget",
+        "title":  "筋力トレーニングを習慣にする",
+        "description":  "週3回、自宅で無理なく続けたい Planning context: minimal budget",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "筋力",
+                                  "フォーム",
+                                  "回数",
+                                  "週",
+                                  "休養"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "health-04-experienced",
+        "title":  "筋力トレーニングを習慣にする",
+        "description":  "週3回、自宅で無理なく続けたい Planning context: experienced; efficiency focused",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "筋力",
+                                  "フォーム",
+                                  "回数",
+                                  "週",
+                                  "休養"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "health-05-beginner",
+        "title":  "自炊で栄養バランスを整える",
+        "description":  "平日の夕食を簡単に作れるようにしたい Planning context: beginner; 2 hours per week",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "献立",
+                                  "食材",
+                                  "買い物",
+                                  "調理",
+                                  "栄養"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "health-05-busy",
+        "title":  "自炊で栄養バランスを整える",
+        "description":  "平日の夕食を簡単に作れるようにしたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "献立",
+                                  "食材",
+                                  "買い物",
+                                  "調理",
+                                  "栄養"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "health-05-low_budget",
+        "title":  "自炊で栄養バランスを整える",
+        "description":  "平日の夕食を簡単に作れるようにしたい Planning context: minimal budget",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "献立",
+                                  "食材",
+                                  "買い物",
+                                  "調理",
+                                  "栄養"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "health-05-experienced",
+        "title":  "自炊で栄養バランスを整える",
+        "description":  "平日の夕食を簡単に作れるようにしたい Planning context: experienced; efficiency focused",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "献立",
+                                  "食材",
+                                  "買い物",
+                                  "調理",
+                                  "栄養"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "health-06-beginner",
+        "title":  "ストレスを上手に整えたい",
+        "description":  "仕事の疲れを翌日に持ち越さない方法を見つけたい Planning context: beginner; 2 hours per week",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "ストレス",
+                                  "記録",
+                                  "休息",
+                                  "相談",
+                                  "習慣"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "health-06-busy",
+        "title":  "ストレスを上手に整えたい",
+        "description":  "仕事の疲れを翌日に持ち越さない方法を見つけたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "ストレス",
+                                  "記録",
+                                  "休息",
+                                  "相談",
+                                  "習慣"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "health-06-low_budget",
+        "title":  "ストレスを上手に整えたい",
+        "description":  "仕事の疲れを翌日に持ち越さない方法を見つけたい Planning context: minimal budget",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "ストレス",
+                                  "記録",
+                                  "休息",
+                                  "相談",
+                                  "習慣"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "health-06-experienced",
+        "title":  "ストレスを上手に整えたい",
+        "description":  "仕事の疲れを翌日に持ち越さない方法を見つけたい Planning context: experienced; efficiency focused",
+        "category":  "健康",
+        "expected_keywords":  [
+                                  "ストレス",
+                                  "記録",
+                                  "休息",
+                                  "相談",
+                                  "習慣"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "career-01-beginner",
+        "title":  "チームリーダーへ昇進したい",
+        "description":  "半年以内に必要な実績と能力を身につけたい Planning context: beginner; 2 hours per week",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "役割",
+                                  "上司",
+                                  "実績",
+                                  "能力",
+                                  "フィードバック"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "career-01-busy",
+        "title":  "チームリーダーへ昇進したい",
+        "description":  "半年以内に必要な実績と能力を身につけたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "役割",
+                                  "上司",
+                                  "実績",
+                                  "能力",
+                                  "フィードバック"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "career-01-low_budget",
+        "title":  "チームリーダーへ昇進したい",
+        "description":  "半年以内に必要な実績と能力を身につけたい Planning context: minimal budget",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "役割",
+                                  "上司",
+                                  "実績",
+                                  "能力",
+                                  "フィードバック"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "career-01-experienced",
+        "title":  "チームリーダーへ昇進したい",
+        "description":  "半年以内に必要な実績と能力を身につけたい Planning context: experienced; efficiency focused",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "役割",
+                                  "上司",
+                                  "実績",
+                                  "能力",
+                                  "フィードバック"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "career-02-beginner",
+        "title":  "納得できる会社へ転職する",
+        "description":  "今の仕事を続けながら自分に合う職場を探したい Planning context: beginner; 2 hours per week",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "条件",
+                                  "求人",
+                                  "職務経歴",
+                                  "面接",
+                                  "応募"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "career-02-busy",
+        "title":  "納得できる会社へ転職する",
+        "description":  "今の仕事を続けながら自分に合う職場を探したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "条件",
+                                  "求人",
+                                  "職務経歴",
+                                  "面接",
+                                  "応募"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "career-02-low_budget",
+        "title":  "納得できる会社へ転職する",
+        "description":  "今の仕事を続けながら自分に合う職場を探したい Planning context: minimal budget",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "条件",
+                                  "求人",
+                                  "職務経歴",
+                                  "面接",
+                                  "応募"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "career-02-experienced",
+        "title":  "納得できる会社へ転職する",
+        "description":  "今の仕事を続けながら自分に合う職場を探したい Planning context: experienced; efficiency focused",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "条件",
+                                  "求人",
+                                  "職務経歴",
+                                  "面接",
+                                  "応募"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "career-03-beginner",
+        "title":  "デザインのポートフォリオを完成させる",
+        "description":  "転職活動で見せられる作品集を2か月で作りたい Planning context: beginner; 2 hours per week",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "作品",
+                                  "構成",
+                                  "制作",
+                                  "レビュー",
+                                  "公開"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "career-03-busy",
+        "title":  "デザインのポートフォリオを完成させる",
+        "description":  "転職活動で見せられる作品集を2か月で作りたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "作品",
+                                  "構成",
+                                  "制作",
+                                  "レビュー",
+                                  "公開"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "career-03-low_budget",
+        "title":  "デザインのポートフォリオを完成させる",
+        "description":  "転職活動で見せられる作品集を2か月で作りたい Planning context: minimal budget",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "作品",
+                                  "構成",
+                                  "制作",
+                                  "レビュー",
+                                  "公開"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "career-03-experienced",
+        "title":  "デザインのポートフォリオを完成させる",
+        "description":  "転職活動で見せられる作品集を2か月で作りたい Planning context: experienced; efficiency focused",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "作品",
+                                  "構成",
+                                  "制作",
+                                  "レビュー",
+                                  "公開"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "career-04-beginner",
+        "title":  "小さな副業を始める",
+        "description":  "得意な文章作成を生かして最初の売上を作りたい Planning context: beginner; 2 hours per week",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "顧客",
+                                  "サービス",
+                                  "価格",
+                                  "提案",
+                                  "売上"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "career-04-busy",
+        "title":  "小さな副業を始める",
+        "description":  "得意な文章作成を生かして最初の売上を作りたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "顧客",
+                                  "サービス",
+                                  "価格",
+                                  "提案",
+                                  "売上"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "career-04-low_budget",
+        "title":  "小さな副業を始める",
+        "description":  "得意な文章作成を生かして最初の売上を作りたい Planning context: minimal budget",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "顧客",
+                                  "サービス",
+                                  "価格",
+                                  "提案",
+                                  "売上"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "career-04-experienced",
+        "title":  "小さな副業を始める",
+        "description":  "得意な文章作成を生かして最初の売上を作りたい Planning context: experienced; efficiency focused",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "顧客",
+                                  "サービス",
+                                  "価格",
+                                  "提案",
+                                  "売上"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "career-05-beginner",
+        "title":  "大切なプレゼンを成功させる",
+        "description":  "経営会議で新規企画を分かりやすく提案したい Planning context: beginner; 2 hours per week",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "聴衆",
+                                  "構成",
+                                  "資料",
+                                  "練習",
+                                  "質疑"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "career-05-busy",
+        "title":  "大切なプレゼンを成功させる",
+        "description":  "経営会議で新規企画を分かりやすく提案したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "聴衆",
+                                  "構成",
+                                  "資料",
+                                  "練習",
+                                  "質疑"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "career-05-low_budget",
+        "title":  "大切なプレゼンを成功させる",
+        "description":  "経営会議で新規企画を分かりやすく提案したい Planning context: minimal budget",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "聴衆",
+                                  "構成",
+                                  "資料",
+                                  "練習",
+                                  "質疑"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "career-05-experienced",
+        "title":  "大切なプレゼンを成功させる",
+        "description":  "経営会議で新規企画を分かりやすく提案したい Planning context: experienced; efficiency focused",
+        "category":  "仕事",
+        "expected_keywords":  [
+                                  "聴衆",
+                                  "構成",
+                                  "資料",
+                                  "練習",
+                                  "質疑"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "creative-01-beginner",
+        "title":  "短編小説を書き上げる",
+        "description":  "一万字程度の作品を完成させて公開したい Planning context: beginner; 2 hours per week",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "プロット",
+                                  "執筆",
+                                  "推敲",
+                                  "公開"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "creative-01-busy",
+        "title":  "短編小説を書き上げる",
+        "description":  "一万字程度の作品を完成させて公開したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "プロット",
+                                  "執筆",
+                                  "推敲",
+                                  "公開"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "creative-01-low_budget",
+        "title":  "短編小説を書き上げる",
+        "description":  "一万字程度の作品を完成させて公開したい Planning context: minimal budget",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "プロット",
+                                  "執筆",
+                                  "推敲",
+                                  "公開"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "creative-01-experienced",
+        "title":  "短編小説を書き上げる",
+        "description":  "一万字程度の作品を完成させて公開したい Planning context: experienced; efficiency focused",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "プロット",
+                                  "執筆",
+                                  "推敲",
+                                  "公開"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "creative-02-beginner",
+        "title":  "デジタルイラストを描けるようになる",
+        "description":  "オリジナルキャラクターを一枚完成させたい Planning context: beginner; 2 hours per week",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "資料",
+                                  "ラフ",
+                                  "線画",
+                                  "着色",
+                                  "完成"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "creative-02-busy",
+        "title":  "デジタルイラストを描けるようになる",
+        "description":  "オリジナルキャラクターを一枚完成させたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "資料",
+                                  "ラフ",
+                                  "線画",
+                                  "着色",
+                                  "完成"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "creative-02-low_budget",
+        "title":  "デジタルイラストを描けるようになる",
+        "description":  "オリジナルキャラクターを一枚完成させたい Planning context: minimal budget",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "資料",
+                                  "ラフ",
+                                  "線画",
+                                  "着色",
+                                  "完成"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "creative-02-experienced",
+        "title":  "デジタルイラストを描けるようになる",
+        "description":  "オリジナルキャラクターを一枚完成させたい Planning context: experienced; efficiency focused",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "資料",
+                                  "ラフ",
+                                  "線画",
+                                  "着色",
+                                  "完成"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "creative-03-beginner",
+        "title":  "自分の写真展を開く",
+        "description":  "街の夜景をテーマに20点展示したい Planning context: beginner; 2 hours per week",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "撮影",
+                                  "選定",
+                                  "会場",
+                                  "展示"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "creative-03-busy",
+        "title":  "自分の写真展を開く",
+        "description":  "街の夜景をテーマに20点展示したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "撮影",
+                                  "選定",
+                                  "会場",
+                                  "展示"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "creative-03-low_budget",
+        "title":  "自分の写真展を開く",
+        "description":  "街の夜景をテーマに20点展示したい Planning context: minimal budget",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "撮影",
+                                  "選定",
+                                  "会場",
+                                  "展示"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "creative-03-experienced",
+        "title":  "自分の写真展を開く",
+        "description":  "街の夜景をテーマに20点展示したい Planning context: experienced; efficiency focused",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "撮影",
+                                  "選定",
+                                  "会場",
+                                  "展示"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "creative-04-beginner",
+        "title":  "ポッドキャストを始める",
+        "description":  "月2回配信できる番組を立ち上げたい Planning context: beginner; 2 hours per week",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "企画",
+                                  "収録",
+                                  "編集",
+                                  "配信",
+                                  "継続"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "creative-04-busy",
+        "title":  "ポッドキャストを始める",
+        "description":  "月2回配信できる番組を立ち上げたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "企画",
+                                  "収録",
+                                  "編集",
+                                  "配信",
+                                  "継続"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "creative-04-low_budget",
+        "title":  "ポッドキャストを始める",
+        "description":  "月2回配信できる番組を立ち上げたい Planning context: minimal budget",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "企画",
+                                  "収録",
+                                  "編集",
+                                  "配信",
+                                  "継続"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "creative-04-experienced",
+        "title":  "ポッドキャストを始める",
+        "description":  "月2回配信できる番組を立ち上げたい Planning context: experienced; efficiency focused",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "企画",
+                                  "収録",
+                                  "編集",
+                                  "配信",
+                                  "継続"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "creative-05-beginner",
+        "title":  "オリジナル曲を完成させる",
+        "description":  "歌詞とメロディを作り一曲録音したい Planning context: beginner; 2 hours per week",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "歌詞",
+                                  "作曲",
+                                  "録音",
+                                  "完成"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "creative-05-busy",
+        "title":  "オリジナル曲を完成させる",
+        "description":  "歌詞とメロディを作り一曲録音したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "歌詞",
+                                  "作曲",
+                                  "録音",
+                                  "完成"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "creative-05-low_budget",
+        "title":  "オリジナル曲を完成させる",
+        "description":  "歌詞とメロディを作り一曲録音したい Planning context: minimal budget",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "歌詞",
+                                  "作曲",
+                                  "録音",
+                                  "完成"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "creative-05-experienced",
+        "title":  "オリジナル曲を完成させる",
+        "description":  "歌詞とメロディを作り一曲録音したい Planning context: experienced; efficiency focused",
+        "category":  "創作",
+        "expected_keywords":  [
+                                  "テーマ",
+                                  "歌詞",
+                                  "作曲",
+                                  "録音",
+                                  "完成"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "relationship-01-beginner",
+        "title":  "家族で夕食を囲む時間を増やす",
+        "description":  "週に3日は一緒に食べられるよう調整したい Planning context: beginner; 2 hours per week",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "家族",
+                                  "予定",
+                                  "夕食",
+                                  "分担",
+                                  "振り返り"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "relationship-01-busy",
+        "title":  "家族で夕食を囲む時間を増やす",
+        "description":  "週に3日は一緒に食べられるよう調整したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "家族",
+                                  "予定",
+                                  "夕食",
+                                  "分担",
+                                  "振り返り"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "relationship-01-low_budget",
+        "title":  "家族で夕食を囲む時間を増やす",
+        "description":  "週に3日は一緒に食べられるよう調整したい Planning context: minimal budget",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "家族",
+                                  "予定",
+                                  "夕食",
+                                  "分担",
+                                  "振り返り"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "relationship-01-experienced",
+        "title":  "家族で夕食を囲む時間を増やす",
+        "description":  "週に3日は一緒に食べられるよう調整したい Planning context: experienced; efficiency focused",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "家族",
+                                  "予定",
+                                  "夕食",
+                                  "分担",
+                                  "振り返り"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "relationship-02-beginner",
+        "title":  "疎遠になった友人とまた話したい",
+        "description":  "相手に負担をかけず自然に連絡を取りたい Planning context: beginner; 2 hours per week",
+        "category":  "人間関係",
+        "expected_keywords":  [
+                                  "連絡",
+                                  "相手",
+                                  "会話",
+                                  "予定",
+                                  "境界"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "relationship-02-busy",
+        "title":  "疎遠になった友人とまた話したい",
+        "description":  "相手に負担をかけず自然に連絡を取りたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "人間関係",
+        "expected_keywords":  [
+                                  "連絡",
+                                  "相手",
+                                  "会話",
+                                  "予定",
+                                  "境界"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "relationship-02-low_budget",
+        "title":  "疎遠になった友人とまた話したい",
+        "description":  "相手に負担をかけず自然に連絡を取りたい Planning context: minimal budget",
+        "category":  "人間関係",
+        "expected_keywords":  [
+                                  "連絡",
+                                  "相手",
+                                  "会話",
+                                  "予定",
+                                  "境界"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "relationship-02-experienced",
+        "title":  "疎遠になった友人とまた話したい",
+        "description":  "相手に負担をかけず自然に連絡を取りたい Planning context: experienced; efficiency focused",
+        "category":  "人間関係",
+        "expected_keywords":  [
+                                  "連絡",
+                                  "相手",
+                                  "会話",
+                                  "予定",
+                                  "境界"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "relationship-03-beginner",
+        "title":  "結婚記念日を大切に祝う",
+        "description":  "パートナーが喜ぶ一日を一緒に作りたい Planning context: beginner; 2 hours per week",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "相手",
+                                  "希望",
+                                  "予算",
+                                  "予約",
+                                  "当日"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "relationship-03-busy",
+        "title":  "結婚記念日を大切に祝う",
+        "description":  "パートナーが喜ぶ一日を一緒に作りたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "相手",
+                                  "希望",
+                                  "予算",
+                                  "予約",
+                                  "当日"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "relationship-03-low_budget",
+        "title":  "結婚記念日を大切に祝う",
+        "description":  "パートナーが喜ぶ一日を一緒に作りたい Planning context: minimal budget",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "相手",
+                                  "希望",
+                                  "予算",
+                                  "予約",
+                                  "当日"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "relationship-03-experienced",
+        "title":  "結婚記念日を大切に祝う",
+        "description":  "パートナーが喜ぶ一日を一緒に作りたい Planning context: experienced; efficiency focused",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "相手",
+                                  "希望",
+                                  "予算",
+                                  "予約",
+                                  "当日"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "relationship-04-beginner",
+        "title":  "育児と仕事の分担を見直したい",
+        "description":  "夫婦どちらにも無理が偏らない形にしたい Planning context: beginner; 2 hours per week",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "分担",
+                                  "時間",
+                                  "対話",
+                                  "試す",
+                                  "見直し"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "relationship-04-busy",
+        "title":  "育児と仕事の分担を見直したい",
+        "description":  "夫婦どちらにも無理が偏らない形にしたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "分担",
+                                  "時間",
+                                  "対話",
+                                  "試す",
+                                  "見直し"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "relationship-04-low_budget",
+        "title":  "育児と仕事の分担を見直したい",
+        "description":  "夫婦どちらにも無理が偏らない形にしたい Planning context: minimal budget",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "分担",
+                                  "時間",
+                                  "対話",
+                                  "試す",
+                                  "見直し"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "relationship-04-experienced",
+        "title":  "育児と仕事の分担を見直したい",
+        "description":  "夫婦どちらにも無理が偏らない形にしたい Planning context: experienced; efficiency focused",
+        "category":  "家族",
+        "expected_keywords":  [
+                                  "分担",
+                                  "時間",
+                                  "対話",
+                                  "試す",
+                                  "見直し"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "lifestyle-01-beginner",
+        "title":  "部屋をすっきり片付ける",
+        "description":  "物が多いリビングを落ち着ける空間にしたい Planning context: beginner; 2 hours per week",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "分類",
+                                  "処分",
+                                  "収納",
+                                  "場所",
+                                  "維持"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "lifestyle-01-busy",
+        "title":  "部屋をすっきり片付ける",
+        "description":  "物が多いリビングを落ち着ける空間にしたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "分類",
+                                  "処分",
+                                  "収納",
+                                  "場所",
+                                  "維持"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "lifestyle-01-low_budget",
+        "title":  "部屋をすっきり片付ける",
+        "description":  "物が多いリビングを落ち着ける空間にしたい Planning context: minimal budget",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "分類",
+                                  "処分",
+                                  "収納",
+                                  "場所",
+                                  "維持"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "lifestyle-01-experienced",
+        "title":  "部屋をすっきり片付ける",
+        "description":  "物が多いリビングを落ち着ける空間にしたい Planning context: experienced; efficiency focused",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "分類",
+                                  "処分",
+                                  "収納",
+                                  "場所",
+                                  "維持"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "lifestyle-02-beginner",
+        "title":  "新しい街へ引っ越す",
+        "description":  "3か月後までに住まい探しと手続きを終えたい Planning context: beginner; 2 hours per week",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "条件",
+                                  "物件",
+                                  "費用",
+                                  "契約",
+                                  "手続き"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "lifestyle-02-busy",
+        "title":  "新しい街へ引っ越す",
+        "description":  "3か月後までに住まい探しと手続きを終えたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "条件",
+                                  "物件",
+                                  "費用",
+                                  "契約",
+                                  "手続き"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "lifestyle-02-low_budget",
+        "title":  "新しい街へ引っ越す",
+        "description":  "3か月後までに住まい探しと手続きを終えたい Planning context: minimal budget",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "条件",
+                                  "物件",
+                                  "費用",
+                                  "契約",
+                                  "手続き"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "lifestyle-02-experienced",
+        "title":  "新しい街へ引っ越す",
+        "description":  "3か月後までに住まい探しと手続きを終えたい Planning context: experienced; efficiency focused",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "条件",
+                                  "物件",
+                                  "費用",
+                                  "契約",
+                                  "手続き"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "lifestyle-03-beginner",
+        "title":  "朝の時間を有効に使いたい",
+        "description":  "出勤前に読書と軽い運動ができる習慣を作りたい Planning context: beginner; 2 hours per week",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "起床",
+                                  "前夜",
+                                  "読書",
+                                  "運動",
+                                  "記録"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "lifestyle-03-busy",
+        "title":  "朝の時間を有効に使いたい",
+        "description":  "出勤前に読書と軽い運動ができる習慣を作りたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "起床",
+                                  "前夜",
+                                  "読書",
+                                  "運動",
+                                  "記録"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "lifestyle-03-low_budget",
+        "title":  "朝の時間を有効に使いたい",
+        "description":  "出勤前に読書と軽い運動ができる習慣を作りたい Planning context: minimal budget",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "起床",
+                                  "前夜",
+                                  "読書",
+                                  "運動",
+                                  "記録"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "lifestyle-03-experienced",
+        "title":  "朝の時間を有効に使いたい",
+        "description":  "出勤前に読書と軽い運動ができる習慣を作りたい Planning context: experienced; efficiency focused",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "起床",
+                                  "前夜",
+                                  "読書",
+                                  "運動",
+                                  "記録"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "lifestyle-04-beginner",
+        "title":  "ベランダで野菜を育てたい",
+        "description":  "初心者でも育てやすい野菜から始めたい Planning context: beginner; 2 hours per week",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "野菜",
+                                  "季節",
+                                  "容器",
+                                  "土",
+                                  "世話"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "lifestyle-04-busy",
+        "title":  "ベランダで野菜を育てたい",
+        "description":  "初心者でも育てやすい野菜から始めたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "野菜",
+                                  "季節",
+                                  "容器",
+                                  "土",
+                                  "世話"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "lifestyle-04-low_budget",
+        "title":  "ベランダで野菜を育てたい",
+        "description":  "初心者でも育てやすい野菜から始めたい Planning context: minimal budget",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "野菜",
+                                  "季節",
+                                  "容器",
+                                  "土",
+                                  "世話"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "lifestyle-04-experienced",
+        "title":  "ベランダで野菜を育てたい",
+        "description":  "初心者でも育てやすい野菜から始めたい Planning context: experienced; efficiency focused",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "野菜",
+                                  "季節",
+                                  "容器",
+                                  "土",
+                                  "世話"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "lifestyle-05-beginner",
+        "title":  "家庭の防災対策を整える",
+        "description":  "家族が災害時に迷わず行動できるようにしたい Planning context: beginner; 2 hours per week",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "災害",
+                                  "備蓄",
+                                  "避難",
+                                  "連絡",
+                                  "点検"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "lifestyle-05-busy",
+        "title":  "家庭の防災対策を整える",
+        "description":  "家族が災害時に迷わず行動できるようにしたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "災害",
+                                  "備蓄",
+                                  "避難",
+                                  "連絡",
+                                  "点検"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "lifestyle-05-low_budget",
+        "title":  "家庭の防災対策を整える",
+        "description":  "家族が災害時に迷わず行動できるようにしたい Planning context: minimal budget",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "災害",
+                                  "備蓄",
+                                  "避難",
+                                  "連絡",
+                                  "点検"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "lifestyle-05-experienced",
+        "title":  "家庭の防災対策を整える",
+        "description":  "家族が災害時に迷わず行動できるようにしたい Planning context: experienced; efficiency focused",
+        "category":  "生活",
+        "expected_keywords":  [
+                                  "災害",
+                                  "備蓄",
+                                  "避難",
+                                  "連絡",
+                                  "点検"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "finance-01-beginner",
+        "title":  "一年で50万円貯める",
+        "description":  "生活を楽しみながら無理なく貯金したい Planning context: beginner; 2 hours per week",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "収支",
+                                  "目標",
+                                  "予算",
+                                  "積立",
+                                  "見直し"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "finance-01-busy",
+        "title":  "一年で50万円貯める",
+        "description":  "生活を楽しみながら無理なく貯金したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "収支",
+                                  "目標",
+                                  "予算",
+                                  "積立",
+                                  "見直し"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "finance-01-low_budget",
+        "title":  "一年で50万円貯める",
+        "description":  "生活を楽しみながら無理なく貯金したい Planning context: minimal budget",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "収支",
+                                  "目標",
+                                  "予算",
+                                  "積立",
+                                  "見直し"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "finance-01-experienced",
+        "title":  "一年で50万円貯める",
+        "description":  "生活を楽しみながら無理なく貯金したい Planning context: experienced; efficiency focused",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "収支",
+                                  "目標",
+                                  "予算",
+                                  "積立",
+                                  "見直し"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "finance-02-beginner",
+        "title":  "家計を見える化する",
+        "description":  "毎月何に使っているか把握して改善したい Planning context: beginner; 2 hours per week",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "家計",
+                                  "支出",
+                                  "分類",
+                                  "予算",
+                                  "記録"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "finance-02-busy",
+        "title":  "家計を見える化する",
+        "description":  "毎月何に使っているか把握して改善したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "家計",
+                                  "支出",
+                                  "分類",
+                                  "予算",
+                                  "記録"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "finance-02-low_budget",
+        "title":  "家計を見える化する",
+        "description":  "毎月何に使っているか把握して改善したい Planning context: minimal budget",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "家計",
+                                  "支出",
+                                  "分類",
+                                  "予算",
+                                  "記録"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "finance-02-experienced",
+        "title":  "家計を見える化する",
+        "description":  "毎月何に使っているか把握して改善したい Planning context: experienced; efficiency focused",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "家計",
+                                  "支出",
+                                  "分類",
+                                  "予算",
+                                  "記録"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "finance-03-beginner",
+        "title":  "投資の基礎を学びたい",
+        "description":  "リスクを理解して自分に合う判断ができるようになりたい Planning context: beginner; 2 hours per week",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "リスク",
+                                  "制度",
+                                  "手数料",
+                                  "分散",
+                                  "判断"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "finance-03-busy",
+        "title":  "投資の基礎を学びたい",
+        "description":  "リスクを理解して自分に合う判断ができるようになりたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "リスク",
+                                  "制度",
+                                  "手数料",
+                                  "分散",
+                                  "判断"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "finance-03-low_budget",
+        "title":  "投資の基礎を学びたい",
+        "description":  "リスクを理解して自分に合う判断ができるようになりたい Planning context: minimal budget",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "リスク",
+                                  "制度",
+                                  "手数料",
+                                  "分散",
+                                  "判断"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "finance-03-experienced",
+        "title":  "投資の基礎を学びたい",
+        "description":  "リスクを理解して自分に合う判断ができるようになりたい Planning context: experienced; efficiency focused",
+        "category":  "お金",
+        "expected_keywords":  [
+                                  "リスク",
+                                  "制度",
+                                  "手数料",
+                                  "分散",
+                                  "判断"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "community-01-beginner",
+        "title":  "地域の清掃ボランティアに参加する",
+        "description":  "初めてでも無理なく地域活動へ関わりたい Planning context: beginner; 2 hours per week",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "団体",
+                                  "日程",
+                                  "申込",
+                                  "持ち物",
+                                  "参加"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "community-01-busy",
+        "title":  "地域の清掃ボランティアに参加する",
+        "description":  "初めてでも無理なく地域活動へ関わりたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "団体",
+                                  "日程",
+                                  "申込",
+                                  "持ち物",
+                                  "参加"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "community-01-low_budget",
+        "title":  "地域の清掃ボランティアに参加する",
+        "description":  "初めてでも無理なく地域活動へ関わりたい Planning context: minimal budget",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "団体",
+                                  "日程",
+                                  "申込",
+                                  "持ち物",
+                                  "参加"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "community-01-experienced",
+        "title":  "地域の清掃ボランティアに参加する",
+        "description":  "初めてでも無理なく地域活動へ関わりたい Planning context: experienced; efficiency focused",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "団体",
+                                  "日程",
+                                  "申込",
+                                  "持ち物",
+                                  "参加"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "community-02-beginner",
+        "title":  "近所で小さな交流イベントを開く",
+        "description":  "子どもから高齢者まで安心して参加できる場にしたい Planning context: beginner; 2 hours per week",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "目的",
+                                  "会場",
+                                  "安全",
+                                  "告知",
+                                  "運営"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "community-02-busy",
+        "title":  "近所で小さな交流イベントを開く",
+        "description":  "子どもから高齢者まで安心して参加できる場にしたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "目的",
+                                  "会場",
+                                  "安全",
+                                  "告知",
+                                  "運営"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "community-02-low_budget",
+        "title":  "近所で小さな交流イベントを開く",
+        "description":  "子どもから高齢者まで安心して参加できる場にしたい Planning context: minimal budget",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "目的",
+                                  "会場",
+                                  "安全",
+                                  "告知",
+                                  "運営"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "community-02-experienced",
+        "title":  "近所で小さな交流イベントを開く",
+        "description":  "子どもから高齢者まで安心して参加できる場にしたい Planning context: experienced; efficiency focused",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "目的",
+                                  "会場",
+                                  "安全",
+                                  "告知",
+                                  "運営"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "community-03-beginner",
+        "title":  "読書会を立ち上げる",
+        "description":  "月1回、気軽に本の感想を話せる場を作りたい Planning context: beginner; 2 hours per week",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "参加者",
+                                  "本",
+                                  "日程",
+                                  "会場",
+                                  "進行"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "community-03-busy",
+        "title":  "読書会を立ち上げる",
+        "description":  "月1回、気軽に本の感想を話せる場を作りたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "参加者",
+                                  "本",
+                                  "日程",
+                                  "会場",
+                                  "進行"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "community-03-low_budget",
+        "title":  "読書会を立ち上げる",
+        "description":  "月1回、気軽に本の感想を話せる場を作りたい Planning context: minimal budget",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "参加者",
+                                  "本",
+                                  "日程",
+                                  "会場",
+                                  "進行"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "community-03-experienced",
+        "title":  "読書会を立ち上げる",
+        "description":  "月1回、気軽に本の感想を話せる場を作りたい Planning context: experienced; efficiency focused",
+        "category":  "地域活動",
+        "expected_keywords":  [
+                                  "参加者",
+                                  "本",
+                                  "日程",
+                                  "会場",
+                                  "進行"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "challenge-01-beginner",
+        "title":  "富士山に登る",
+        "description":  "初心者として安全に登頂を目指したい Planning context: beginner; 2 hours per week",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "体力",
+                                  "装備",
+                                  "ルート",
+                                  "天候",
+                                  "安全"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "challenge-01-busy",
+        "title":  "富士山に登る",
+        "description":  "初心者として安全に登頂を目指したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "体力",
+                                  "装備",
+                                  "ルート",
+                                  "天候",
+                                  "安全"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "challenge-01-low_budget",
+        "title":  "富士山に登る",
+        "description":  "初心者として安全に登頂を目指したい Planning context: minimal budget",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "体力",
+                                  "装備",
+                                  "ルート",
+                                  "天候",
+                                  "安全"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "challenge-01-experienced",
+        "title":  "富士山に登る",
+        "description":  "初心者として安全に登頂を目指したい Planning context: experienced; efficiency focused",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "体力",
+                                  "装備",
+                                  "ルート",
+                                  "天候",
+                                  "安全"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "challenge-02-beginner",
+        "title":  "フルマラソンを完走する",
+        "description":  "8か月後の大会で無理なくゴールしたい Planning context: beginner; 2 hours per week",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "大会",
+                                  "走行",
+                                  "距離",
+                                  "休養",
+                                  "補給"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "challenge-02-busy",
+        "title":  "フルマラソンを完走する",
+        "description":  "8か月後の大会で無理なくゴールしたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "大会",
+                                  "走行",
+                                  "距離",
+                                  "休養",
+                                  "補給"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "challenge-02-low_budget",
+        "title":  "フルマラソンを完走する",
+        "description":  "8か月後の大会で無理なくゴールしたい Planning context: minimal budget",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "大会",
+                                  "走行",
+                                  "距離",
+                                  "休養",
+                                  "補給"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "challenge-02-experienced",
+        "title":  "フルマラソンを完走する",
+        "description":  "8か月後の大会で無理なくゴールしたい Planning context: experienced; efficiency focused",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "大会",
+                                  "走行",
+                                  "距離",
+                                  "休養",
+                                  "補給"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "challenge-03-beginner",
+        "title":  "家族で初めてキャンプをする",
+        "description":  "子どもと安全に一泊キャンプを楽しみたい Planning context: beginner; 2 hours per week",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "場所",
+                                  "予約",
+                                  "装備",
+                                  "食事",
+                                  "安全"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "challenge-03-busy",
+        "title":  "家族で初めてキャンプをする",
+        "description":  "子どもと安全に一泊キャンプを楽しみたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "場所",
+                                  "予約",
+                                  "装備",
+                                  "食事",
+                                  "安全"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "challenge-03-low_budget",
+        "title":  "家族で初めてキャンプをする",
+        "description":  "子どもと安全に一泊キャンプを楽しみたい Planning context: minimal budget",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "場所",
+                                  "予約",
+                                  "装備",
+                                  "食事",
+                                  "安全"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "challenge-03-experienced",
+        "title":  "家族で初めてキャンプをする",
+        "description":  "子どもと安全に一泊キャンプを楽しみたい Planning context: experienced; efficiency focused",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "場所",
+                                  "予約",
+                                  "装備",
+                                  "食事",
+                                  "安全"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "challenge-04-beginner",
+        "title":  "スキューバダイビングの資格を取る",
+        "description":  "泳ぎに自信がなくても安全に基礎から学びたい Planning context: beginner; 2 hours per week",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "講習",
+                                  "健康",
+                                  "器材",
+                                  "実習",
+                                  "資格"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "challenge-04-busy",
+        "title":  "スキューバダイビングの資格を取る",
+        "description":  "泳ぎに自信がなくても安全に基礎から学びたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "講習",
+                                  "健康",
+                                  "器材",
+                                  "実習",
+                                  "資格"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "challenge-04-low_budget",
+        "title":  "スキューバダイビングの資格を取る",
+        "description":  "泳ぎに自信がなくても安全に基礎から学びたい Planning context: minimal budget",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "講習",
+                                  "健康",
+                                  "器材",
+                                  "実習",
+                                  "資格"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "challenge-04-experienced",
+        "title":  "スキューバダイビングの資格を取る",
+        "description":  "泳ぎに自信がなくても安全に基礎から学びたい Planning context: experienced; efficiency focused",
+        "category":  "挑戦",
+        "expected_keywords":  [
+                                  "講習",
+                                  "健康",
+                                  "器材",
+                                  "実習",
+                                  "資格"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "product-01-beginner",
+        "title":  "個人アプリをリリースする",
+        "description":  "生活の記録アプリを作ってストアへ公開したい Planning context: beginner; 2 hours per week",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "利用者",
+                                  "要件",
+                                  "実装",
+                                  "テスト",
+                                  "公開"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "product-01-busy",
+        "title":  "個人アプリをリリースする",
+        "description":  "生活の記録アプリを作ってストアへ公開したい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "利用者",
+                                  "要件",
+                                  "実装",
+                                  "テスト",
+                                  "公開"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "product-01-low_budget",
+        "title":  "個人アプリをリリースする",
+        "description":  "生活の記録アプリを作ってストアへ公開したい Planning context: minimal budget",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "利用者",
+                                  "要件",
+                                  "実装",
+                                  "テスト",
+                                  "公開"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "product-01-experienced",
+        "title":  "個人アプリをリリースする",
+        "description":  "生活の記録アプリを作ってストアへ公開したい Planning context: experienced; efficiency focused",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "利用者",
+                                  "要件",
+                                  "実装",
+                                  "テスト",
+                                  "公開"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "product-02-beginner",
+        "title":  "自分のポートフォリオサイトを公開する",
+        "description":  "作品とプロフィールを伝えられるサイトを作りたい Planning context: beginner; 2 hours per week",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "構成",
+                                  "作品",
+                                  "実装",
+                                  "確認",
+                                  "公開"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "product-02-busy",
+        "title":  "自分のポートフォリオサイトを公開する",
+        "description":  "作品とプロフィールを伝えられるサイトを作りたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "構成",
+                                  "作品",
+                                  "実装",
+                                  "確認",
+                                  "公開"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "product-02-low_budget",
+        "title":  "自分のポートフォリオサイトを公開する",
+        "description":  "作品とプロフィールを伝えられるサイトを作りたい Planning context: minimal budget",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "構成",
+                                  "作品",
+                                  "実装",
+                                  "確認",
+                                  "公開"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "product-02-experienced",
+        "title":  "自分のポートフォリオサイトを公開する",
+        "description":  "作品とプロフィールを伝えられるサイトを作りたい Planning context: experienced; efficiency focused",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "構成",
+                                  "作品",
+                                  "実装",
+                                  "確認",
+                                  "公開"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "product-03-beginner",
+        "title":  "週刊ニュースレターを始める",
+        "description":  "学んだことを毎週読者へ届けたい Planning context: beginner; 2 hours per week",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "読者",
+                                  "テーマ",
+                                  "執筆",
+                                  "配信",
+                                  "継続"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "product-03-busy",
+        "title":  "週刊ニュースレターを始める",
+        "description":  "学んだことを毎週読者へ届けたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "読者",
+                                  "テーマ",
+                                  "執筆",
+                                  "配信",
+                                  "継続"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "product-03-low_budget",
+        "title":  "週刊ニュースレターを始める",
+        "description":  "学んだことを毎週読者へ届けたい Planning context: minimal budget",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "読者",
+                                  "テーマ",
+                                  "執筆",
+                                  "配信",
+                                  "継続"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "product-03-experienced",
+        "title":  "週刊ニュースレターを始める",
+        "description":  "学んだことを毎週読者へ届けたい Planning context: experienced; efficiency focused",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "読者",
+                                  "テーマ",
+                                  "執筆",
+                                  "配信",
+                                  "継続"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "product-04-beginner",
+        "title":  "小さなオンラインショップを開く",
+        "description":  "手作り雑貨を5種類販売できる状態にしたい Planning context: beginner; 2 hours per week",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "商品",
+                                  "価格",
+                                  "写真",
+                                  "決済",
+                                  "公開"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "product-04-busy",
+        "title":  "小さなオンラインショップを開く",
+        "description":  "手作り雑貨を5種類販売できる状態にしたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "商品",
+                                  "価格",
+                                  "写真",
+                                  "決済",
+                                  "公開"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "product-04-low_budget",
+        "title":  "小さなオンラインショップを開く",
+        "description":  "手作り雑貨を5種類販売できる状態にしたい Planning context: minimal budget",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "商品",
+                                  "価格",
+                                  "写真",
+                                  "決済",
+                                  "公開"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "product-04-experienced",
+        "title":  "小さなオンラインショップを開く",
+        "description":  "手作り雑貨を5種類販売できる状態にしたい Planning context: experienced; efficiency focused",
+        "category":  "プロダクト",
+        "expected_keywords":  [
+                                  "商品",
+                                  "価格",
+                                  "写真",
+                                  "決済",
+                                  "公開"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    },
+    {
+        "id":  "growth-01-beginner",
+        "title":  "人前で自信を持って話せるようになりたい",
+        "description":  "緊張と付き合いながら自分の意見を伝えたい Planning context: beginner; 2 hours per week",
+        "category":  "自己成長",
+        "expected_keywords":  [
+                                  "緊張",
+                                  "話す",
+                                  "練習",
+                                  "録画",
+                                  "フィードバック"
+                              ],
+        "persona":  "beginner",
+        "planning_context":  "beginner; 2 hours per week"
+    },
+    {
+        "id":  "growth-01-busy",
+        "title":  "人前で自信を持って話せるようになりたい",
+        "description":  "緊張と付き合いながら自分の意見を伝えたい Planning context: 15 minutes weekdays; 1 hour weekend",
+        "category":  "自己成長",
+        "expected_keywords":  [
+                                  "緊張",
+                                  "話す",
+                                  "練習",
+                                  "録画",
+                                  "フィードバック"
+                              ],
+        "persona":  "busy",
+        "planning_context":  "15 minutes weekdays; 1 hour weekend"
+    },
+    {
+        "id":  "growth-01-low_budget",
+        "title":  "人前で自信を持って話せるようになりたい",
+        "description":  "緊張と付き合いながら自分の意見を伝えたい Planning context: minimal budget",
+        "category":  "自己成長",
+        "expected_keywords":  [
+                                  "緊張",
+                                  "話す",
+                                  "練習",
+                                  "録画",
+                                  "フィードバック"
+                              ],
+        "persona":  "low_budget",
+        "planning_context":  "minimal budget"
+    },
+    {
+        "id":  "growth-01-experienced",
+        "title":  "人前で自信を持って話せるようになりたい",
+        "description":  "緊張と付き合いながら自分の意見を伝えたい Planning context: experienced; efficiency focused",
+        "category":  "自己成長",
+        "expected_keywords":  [
+                                  "緊張",
+                                  "話す",
+                                  "練習",
+                                  "録画",
+                                  "フィードバック"
+                              ],
+        "persona":  "experienced",
+        "planning_context":  "experienced; efficiency focused"
+    }
+]
