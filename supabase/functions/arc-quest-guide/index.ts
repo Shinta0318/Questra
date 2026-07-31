@@ -108,15 +108,11 @@ async function buildArcQuestGuide(
       feature: "arc_quest_guide",
       promptVersion: "quest_guide_v2",
       systemInstruction:
-        `You are Arc, Questra's star navigator and journey planner. Reply only as compact JSON in natural Japanese. Never describe Arc as an assistant. A Quest is the desired outcome; a Mission is one concrete action that advances it. Design the smallest complete route and choose its Mission count dynamically from 3 to 30: simple Quests usually need 3-6, moderate Quests 7-14, and complex multi-month Quests 15-30. Never pad a plan to reach a round number. Never reuse the Quest title as a Mission title or emit duplicates. Each Mission must produce one observable outcome and its description must end with 「〜したら完了です」. Use stable plan_key values and only reference existing plan keys in parent_plan_key and dependency_plan_keys; keep the graph acyclic. A parent represents decomposition, while a dependency represents execution order. Treat non-empty planning_context as explicit constraints and never invent skipped values. Evaluate the Quest and every Mission. Estimates are guidance, not promises. The selected planning template is 「${template.label}」; adapt these checkpoints rather than copying them: ${template.steps.map((item) => item.title).join(" / ")}. Safety rule: ${template.safety} ${feedbackHint} Infer a new plan shape for an unfamiliar intent. Do not invent current prices, laws, visa rules, schedules, medical outcomes, financial returns, or availability; create a verification Mission using official or professional sources. Enterprise support hints must be generic support categories, never hidden promotion or a fabricated company offer.`,
+        `You are Arc, Questra's star navigator and journey planner. Reply only as compact JSON in natural Japanese. Never describe Arc as an assistant. A Quest is the desired outcome; a Mission is one concrete action that advances it. Design the smallest complete route from the Quest's success condition and explicit constraints, not from a category template. Choose 3-20 Missions or Milestones dynamically; never pad to a round number. Never reuse the Quest title as a Mission title or emit duplicates. Each Mission must produce one observable outcome and its description must end with 「〜したら完了です」. Use stable plan_key values and only reference existing plan keys in parent_plan_key and dependency_plan_keys; keep the graph acyclic. A parent represents decomposition, while a dependency represents execution order. Treat non-empty planning_context as explicit constraints and never invent skipped values. Evaluate the Quest and every Mission. Estimates are guidance, not promises. Use this quality and safety viewpoint only to catch omissions, never to copy wording or order: ${template.safety} ${feedbackHint} Infer a new plan shape for an unfamiliar intent. Do not invent current prices, laws, visa rules, schedules, medical outcomes, financial returns, or availability; create a verification Mission using official or professional sources. Enterprise support hints must be generic support categories, never hidden promotion or a fabricated company offer.`,
       input: {
         task:
           "Create a concrete Quest guide, a Quest evaluation, and a dynamically sized Mission graph. Return only fields in the schema.",
-        planning_template: {
-          id: template.id,
-          label: template.label,
-          checkpoints: template.steps.map((item) => item.title),
-        },
+        quality_viewpoint: { id: template.id, safety: template.safety },
         quest,
         quest_understanding: understanding ?? null,
       },
@@ -312,27 +308,33 @@ function normalizeGuide(
 function fallbackGuideWithoutRecursion(quest: QuestPayload) {
   const title = quest.title?.trim() || "新しいQuest";
   const template = resolveQuestPlanningTemplate(quest);
+  const detail = quest.description?.trim() || "";
+  const target = quest.target_date ? `期限 ${quest.target_date} を確認し、` : "";
+  const steps = [
+    ["達成した状態を言葉にする", `「${title}」で何ができれば達成かを一文で記録したら完了です。`, "設計"],
+    ["今の条件と不明点を分ける", `${detail ? `「${detail}」を前提に、` : ""}${target}使える時間、予算、場所、不明点をQuestメモへ分けて記録したら完了です。`, "設計"],
+    ["最初に確認する情報源を決める", `${template.safety} 公式または専門家の確認先と確認日をQuestメモに残したら完了です。`, "確認"],
+    ["今日の最小の一歩を予定する", "15分から始められる具体的な行動、実行日時、完了の印を決めたら完了です。", "実行"],
+  ];
   return {
-    summary: `「${title}」を${template.label}の航路として整理しました。`,
-    path: `${template.steps[0].title}から始め、準備、実行、振り返りの順に進みます。`,
+    summary: `「${title}」の成功条件と今わかっている条件から、最初の航路を整理しました。`,
+    path: "成功条件を定め、条件を確認し、今日の一歩から具体化します。",
     cautions: template.safety,
     encouragement: "このQuestに合う航路は確保できています。最初のMissionから一つずつ進めましょう。",
     effort_estimate: normalizeEffortEstimate(null, 720, 60),
     quest_dna: normalizeQuestDna(null, quest),
-    mission_candidates: template.steps.map((item, index) => ({
+    mission_candidates: steps.map(([missionTitle, done, category], index) => ({
       plan_key: `mission-${index + 1}`,
-      title: item.title,
-      description: index === 0
-        ? `「${title}」${quest.description?.trim() ? `（${quest.description.trim()}）` : ""}について、${item.done}`
-        : item.done,
-      guide_type: item.guide_type,
-      difficulty: item.difficulty,
-      purpose: item.title,
+      title: missionTitle,
+      description: done,
+      guide_type: "route",
+      difficulty: "easy",
+      purpose: `「${title}」を一歩進める`,
       dependency_plan_keys: index === 0 ? [] : [`mission-${index}`],
       priority: index < 2 ? "high" : "normal",
-      category: index < 2 ? "設計" : "実行",
+      category,
       estimated_duration_days: 5,
-      difficulty_score: item.difficulty === "easy" ? 2 : 3,
+      difficulty_score: 2,
       reference_hints: [],
       enterprise_support_hints: [],
       effort_estimate: normalizeEffortEstimate(null, 90, 5),
