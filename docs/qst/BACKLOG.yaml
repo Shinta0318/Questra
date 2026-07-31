@@ -2441,7 +2441,7 @@ items:
       - Navigation and Home links never lead to Coming Soon when Trail is included.
   - id: QST-205
     title: Gemini Mission Quality Evaluation 50
-    status: Planned
+    status: In Progress
     priority: P1
     epic: AI-QUALITY
     depends_on: [QST-188, QST-189, QST-190]

@@ -48,7 +48,9 @@ foreach ($case in $selected) {
       $combined -match [regex]::Escape([string]$_)
     })
     $uniqueTitleCount = @($titles | Sort-Object -Unique).Count
-    $countPass = $missions.Count -ge 8 -and $missions.Count -le 10
+    # QST-183 made Mission count adaptive: simple Quests need fewer steps,
+    # while long journeys can legitimately require a deeper route.
+    $countPass = $missions.Count -ge 3 -and $missions.Count -le 30
     $donePass = $missions.Count -gt 0 -and ($doneCount / $missions.Count) -ge 0.8
     $domainPass = $domainHits.Count -ge 2
     $uniquePass = $uniqueTitleCount -eq $missions.Count
