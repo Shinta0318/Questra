@@ -16,6 +16,7 @@ import 'settings_information_architecture_service.dart';
 import 'widgets/arc_memory_management_preview_card.dart';
 import 'widgets/beta_feedback_entry_card.dart';
 import 'widgets/experience_settings_card.dart';
+import 'widgets/planning_preferences_card.dart';
 import 'widgets/settings_tutorial_card.dart';
 import 'widgets/trust_privacy_card.dart';
 
@@ -52,6 +53,8 @@ class SettingsScreen extends ConsumerWidget {
               _SettingsMapCard(map: settingsMap),
               const SizedBox(height: AppSpacing.lg),
               const ExperienceSettingsCard(),
+              const SizedBox(height: AppSpacing.lg),
+              const PlanningPreferencesCard(),
               const SizedBox(height: AppSpacing.lg),
               SettingsTutorialCard(
                 onReplay: () => ref

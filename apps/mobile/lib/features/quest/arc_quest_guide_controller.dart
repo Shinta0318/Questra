@@ -10,6 +10,7 @@ import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
 import 'arc_quest_guide_service.dart';
+import 'planning_preferences_controller.dart';
 import 'quest_model.dart';
 
 final arcQuestGuideServiceProvider = Provider<ArcQuestGuideService>((ref) {
@@ -21,8 +22,8 @@ final arcQuestGuideServiceProvider = Provider<ArcQuestGuideService>((ref) {
 
 final arcQuestGuideControllerProvider =
     NotifierProvider<ArcQuestGuideController, ArcQuestGuideState>(
-  ArcQuestGuideController.new,
-);
+      ArcQuestGuideController.new,
+    );
 
 class ArcQuestGuideState {
   const ArcQuestGuideState({
@@ -74,7 +75,9 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
           .assess('${quest.title}\n${quest.description}');
       if (safety.action != QuestSafetyAction.allow) {
         unawaited(
-          ref.read(safetySignalRecorderProvider).record(
+          ref
+              .read(safetySignalRecorderProvider)
+              .record(
                 userId: ref.read(authControllerProvider).profile?.id,
                 assessment: safety,
               ),
@@ -85,8 +88,10 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
         );
         return;
       }
-      final guide =
-          await ref.read(arcQuestGuideServiceProvider).generate(quest: quest);
+      final planning = ref.read(planningPreferencesControllerProvider);
+      final guide = await ref
+          .read(arcQuestGuideServiceProvider)
+          .generate(quest: quest, planningContext: planning.contextForPlanning);
       state = state.copyWith(
         guidesByQuest: {...state.guidesByQuest, quest.id: guide},
         loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
@@ -116,14 +121,17 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
     }
 
     try {
-      await ref.read(memoryExtractionServiceProvider).extractAndSave(
+      await ref
+          .read(memoryExtractionServiceProvider)
+          .extractAndSave(
             MemoryExtractionEvent(
               userId: userId,
               questId: quest.id,
               sourceId: quest.id,
               sourceType: ArcMemorySourceType.questUpdated,
               title: 'Arcガイドを生成',
-              text: '${guide.summary}\n${guide.path}\n'
+              text:
+                  '${guide.summary}\n${guide.path}\n'
                   '${guide.missionCandidates.map((candidate) => candidate.title).join(' / ')}',
               metadata: {
                 'source': guide.sourceType,

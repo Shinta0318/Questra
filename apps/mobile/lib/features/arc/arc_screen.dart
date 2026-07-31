@@ -41,6 +41,7 @@ import '../quest/quest_feasibility_service.dart';
 import '../quest/quest_intent_model.dart';
 import '../quest/quest_intent_service.dart';
 import '../quest/quest_model.dart';
+import '../quest/planning_preferences_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
@@ -1426,7 +1427,12 @@ class _ArcQuestCreationSheetState
     try {
       final guide = await ref
           .read(arcQuestGuideServiceProvider)
-          .generate(quest: quest);
+          .generate(
+            quest: quest,
+            planningContext: ref
+                .read(planningPreferencesControllerProvider)
+                .contextForPlanning,
+          );
       if (!mounted) return;
       setState(() {
         _draftQuest = quest;

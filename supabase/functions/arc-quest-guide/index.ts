@@ -14,7 +14,15 @@ type QuestPayload = {
   difficulty?: string;
   category?: string;
   target_date?: string | null;
-  planning_context?: string | null;
+  planning_context?: {
+    consent_granted?: boolean;
+    weekly_minutes?: number | null;
+    budget_label?: string | null;
+    location?: string | null;
+    experience?: string | null;
+    available_resources?: string[];
+    preferences?: string[];
+  } | null;
 };
 
 type MissionCandidate = {
@@ -86,8 +94,12 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Invalid JSON body" }, { status: 400 });
   }
   const { quest, planning_feedback: planningFeedback } = payload;
+  const sanitizedQuest: QuestPayload = {
+    ...(quest ?? {}),
+    planning_context: sanitizePlanningContext(quest?.planning_context),
+  };
   const safety = deterministicSafetyAssessment(
-    `${quest?.title ?? ""}\n${quest?.description ?? ""}`,
+    `${sanitizedQuest.title ?? ""}\n${sanitizedQuest.description ?? ""}`,
   );
   if (safety) {
     return jsonResponse(
@@ -95,9 +107,40 @@ Deno.serve(async (req) => {
       { status: 422 },
     );
   }
-  const guide = await buildArcQuestGuide(quest ?? {}, planningFeedback ?? [], payload.quest_understanding);
+  const guide = await buildArcQuestGuide(
+    sanitizedQuest,
+    planningFeedback ?? [],
+    payload.quest_understanding,
+  );
   return jsonResponse(guide);
 });
+
+function sanitizePlanningContext(
+  context: QuestPayload["planning_context"],
+): QuestPayload["planning_context"] {
+  if (!context || context.consent_granted !== true) return null;
+  const boundedText = (value: unknown, max: number) =>
+    typeof value === "string" ? value.trim().slice(0, max) || null : null;
+  const boundedList = (value: unknown) =>
+    Array.isArray(value)
+      ? value.filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim().slice(0, 120))
+        .filter(Boolean)
+        .slice(0, 20)
+      : [];
+  const weeklyMinutes = Number.isFinite(context.weekly_minutes)
+    ? Math.max(0, Math.min(10_080, Math.round(Number(context.weekly_minutes))))
+    : null;
+  return {
+    consent_granted: true,
+    weekly_minutes: weeklyMinutes,
+    budget_label: boundedText(context.budget_label, 120),
+    location: boundedText(context.location, 120),
+    experience: boundedText(context.experience, 240),
+    available_resources: boundedList(context.available_resources),
+    preferences: boundedList(context.preferences),
+  };
+}
 
 async function buildArcQuestGuide(
   quest: QuestPayload,
@@ -111,7 +154,7 @@ async function buildArcQuestGuide(
       feature: "arc_quest_guide",
       promptVersion: "quest_guide_v2",
       systemInstruction:
-        `You are Arc, Questra's star navigator and journey planner. Reply only as compact JSON in natural Japanese. Never describe Arc as an assistant. A Quest is the desired outcome; a Mission is one concrete action that advances it. Design the smallest complete route from the Quest's success condition and explicit constraints, not from a category template. Choose 3-20 Missions or Milestones dynamically; never pad to a round number. Never reuse the Quest title as a Mission title or emit duplicates. Each Mission must produce one observable outcome and its description must end with 「〜したら完了です」. Use stable plan_key values and only reference existing plan keys in parent_plan_key and dependency_plan_keys; keep the graph acyclic. A parent represents decomposition, while a dependency represents execution order. Treat non-empty planning_context as explicit constraints and never invent skipped values. Evaluate the Quest and every Mission. Estimates are guidance, not promises. Use this quality and safety viewpoint only to catch omissions, never to copy wording or order: ${template.safety} ${feedbackHint} Infer a new plan shape for an unfamiliar intent. Do not invent current prices, laws, visa rules, schedules, medical outcomes, financial returns, or availability; create a verification Mission using official or professional sources. Enterprise support hints must be generic support categories, never hidden promotion or a fabricated company offer.`,
+        `You are Arc, Questra's star navigator and journey planner. Reply only as compact JSON in natural Japanese. Never describe Arc as an assistant. A Quest is the desired outcome; a Mission is one concrete action that advances it. Design the smallest complete route from the Quest's success condition and explicit constraints, not from a category template. Choose 3-20 Missions or Milestones dynamically; never pad to a round number. Never reuse the Quest title as a Mission title or emit duplicates. Each Mission must produce one observable outcome and its description must end with 「〜したら完了です」. Use stable plan_key values and only reference existing plan keys in parent_plan_key and dependency_plan_keys; keep the graph acyclic. A parent represents decomposition, while a dependency represents execution order. Use planning_context only when consent_granted is true. Treat omitted or null values as unknown and never infer them. Adjust Mission volume and active effort to weekly_minutes, while keeping necessary future Milestones visible. Offer lower-cost alternatives when budget is constrained. Evaluate the Quest and every Mission. Estimates are guidance, not promises. Use this quality and safety viewpoint only to catch omissions, never to copy wording or order: ${template.safety} ${feedbackHint} Infer a new plan shape for an unfamiliar intent. Do not invent current prices, laws, visa rules, schedules, medical outcomes, financial returns, or availability; create a verification Mission using official or professional sources. Enterprise support hints must be generic support categories, never hidden promotion or a fabricated company offer.`,
       input: {
         task:
           "Create a concrete Quest guide, a Quest evaluation, and a dynamically sized Mission graph. Return only fields in the schema.",

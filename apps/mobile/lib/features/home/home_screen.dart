@@ -30,6 +30,8 @@ import '../mission/mission_model.dart';
 import '../mission/today_best_next_mission_service.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_model.dart';
+import '../quest/planning_preferences_controller.dart';
+import '../quest/weekly_availability.dart';
 import '../quest/quest_progress_service.dart';
 import '../signal/mission_signal_model.dart';
 import '../star_map/star_map_recommendation_service.dart';
@@ -45,6 +47,9 @@ class HomeScreen extends ConsumerWidget {
     final profile = ref.watch(authControllerProvider).profile;
     final quests = ref.watch(questControllerProvider);
     final missions = ref.watch(missionControllerProvider);
+    final planningPreferences = ref.watch(
+      planningPreferencesControllerProvider,
+    );
     final trails = ref.watch(trailControllerProvider);
     final navigatorRank = ref
         .watch(navigatorRankServiceProvider)
@@ -69,7 +74,14 @@ class HomeScreen extends ConsumerWidget {
     final activeQuests =
         quests.where((quest) => quest.status == QuestStatus.active).toList()
           ..sort((a, b) => b.progress.compareTo(a.progress));
-    final todayRecommendation = TodayBestNextMissionService.recommend(missions);
+    final today = WeekdayLabel.fromDateTime(DateTime.now());
+    final todayMinutes = planningPreferences.context.consentGranted
+        ? planningPreferences.availability.minutesFor(today)
+        : null;
+    final todayRecommendation = TodayBestNextMissionService.recommend(
+      missions,
+      availableMinutes: todayMinutes,
+    );
     final todayMissions = todayRecommendation == null
         ? const <Mission>[]
         : <Mission>[todayRecommendation.mission];

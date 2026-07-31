@@ -10,6 +10,7 @@ import 'quest_evaluation.dart';
 import 'quest_dna.dart';
 import 'quest_evaluation_service.dart';
 import 'quest_model.dart';
+import 'planning_context.dart';
 import 'quest_understanding.dart';
 
 class ArcMissionCandidate {
@@ -136,16 +137,22 @@ class ArcQuestGuide {
 }
 
 abstract interface class ArcQuestGuideService {
-  Future<ArcQuestGuide> generate({required Quest quest});
+  Future<ArcQuestGuide> generate({
+    required Quest quest,
+    PlanningContext? planningContext,
+  });
 }
 
 class LocalArcQuestGuideService implements ArcQuestGuideService {
   const LocalArcQuestGuideService();
 
   @override
-  Future<ArcQuestGuide> generate({required Quest quest}) async {
+  Future<ArcQuestGuide> generate({
+    required Quest quest,
+    PlanningContext? planningContext,
+  }) async {
     final candidates = MissionPlanGraphService.normalize(
-      _adaptiveFallbackCandidates(quest),
+      _adaptiveFallbackCandidates(quest, planningContext),
     );
     final evaluation = QuestEvaluationService.fallback(
       quest: quest,
@@ -158,8 +165,7 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
       questId: quest.id,
       summary:
           '「${quest.title}」は、${quest.category}の星へ向かう${quest.difficulty.label}Questです。${_descriptionHint(quest)}',
-      path:
-          'まず目的地を一文で固定し、今日できる小さなMissionを選びます。次にTrailへ気づきを残し、3日ごとに進み方を見直しましょう。',
+      path: _planningPath(planningContext),
       cautions:
           '最初から完璧な計画にしすぎないでください。難所はMissionを小さく分け、迷ったらTrailに現在地を書き残すのが安全です。',
       encouragement:
@@ -196,11 +202,34 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
     return '背景には「${quest.description.trim()}」があります。';
   }
 
-  List<ArcMissionCandidate> _adaptiveFallbackCandidates(Quest quest) {
+  String _planningPath(PlanningContext? context) {
+    final weeklyMinutes = context?.consentGranted == true
+        ? context?.weeklyMinutes
+        : null;
+    if (weeklyMinutes != null && weeklyMinutes > 0) {
+      return '週$weeklyMinutes分のペースを上限に、まず目的地と今日の小さなMissionを決めます。Trailへ気づきを残し、無理のない量へ航路を調整しましょう。';
+    }
+    return 'まず目的地を一文で固定し、今日できる小さなMissionを選びます。次にTrailへ気づきを残し、3日ごとに進み方を見直しましょう。';
+  }
+
+  List<ArcMissionCandidate> _adaptiveFallbackCandidates(
+    Quest quest,
+    PlanningContext? context,
+  ) {
     final title = quest.title.trim();
     final target = quest.targetDate == null
         ? '希望する時期'
         : '${quest.targetDate!.year}年${quest.targetDate!.month}月';
+    final explicitConditions = context?.consentGranted == true
+        ? [
+            if ((context?.weeklyMinutes ?? 0) > 0)
+              '週${context!.weeklyMinutes}分',
+            if (context?.budgetLabel?.trim().isNotEmpty == true)
+              '予算 ${context!.budgetLabel!.trim()}',
+            if (context?.experience?.trim().isNotEmpty == true)
+              '経験 ${context!.experience!.trim()}',
+          ].join('、')
+        : '';
     return [
       ArcMissionCandidate(
         planKey: 'success-contract',
@@ -220,7 +249,9 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
         planKey: 'constraints',
         title: '今の条件と不明点を分ける',
         purpose: '推測と事実を分ける',
-        description: '使える時間、予算、場所、$target、不明点を分けて記録したら完了です。',
+        description: explicitConditions.isEmpty
+            ? '使える時間、予算、場所、$target、不明点を分けて記録したら完了です。'
+            : '登録済みの条件（$explicitConditions）と、$targetまでの不明点を分けて記録したら完了です。',
         doneCondition: '条件と不明点を別々に記録する',
         expectedOutput: '確認済み条件と質問の一覧',
         verificationType: 'artifact',
@@ -488,9 +519,12 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
   final ArcQuestGuideService fallback;
 
   @override
-  Future<ArcQuestGuide> generate({required Quest quest}) async {
+  Future<ArcQuestGuide> generate({
+    required Quest quest,
+    PlanningContext? planningContext,
+  }) async {
     if (!SupabaseConfig.isConfigured) {
-      return fallback.generate(quest: quest);
+      return fallback.generate(quest: quest, planningContext: planningContext);
     }
 
     try {
@@ -505,6 +539,9 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
             'difficulty': quest.difficulty.storageKey,
             'category': quest.category,
             'target_date': quest.targetDate?.toIso8601String(),
+            'planning_context': planningContext?.consentGranted == true
+                ? planningContext!.toPlanningJson()
+                : null,
           },
           'planning_feedback': feedbackSignals,
         },
@@ -519,7 +556,10 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
           const [];
       final candidates = MissionPlanGraphService.normalize(parsedCandidates);
       if (candidates.length < MissionPlanGraphService.minMissionCount) {
-        return fallback.generate(quest: quest);
+        return fallback.generate(
+          quest: quest,
+          planningContext: planningContext,
+        );
       }
       return ArcQuestGuide(
         questId: quest.id,
@@ -552,7 +592,7 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
         ),
       );
     } catch (_) {
-      return fallback.generate(quest: quest);
+      return fallback.generate(quest: quest, planningContext: planningContext);
     }
   }
 

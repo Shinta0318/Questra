@@ -11,7 +11,11 @@ class TodayMissionRecommendation {
 }
 
 abstract final class TodayBestNextMissionService {
-  static TodayMissionRecommendation? recommend(List<Mission> missions) {
+  static TodayMissionRecommendation? recommend(
+    List<Mission> missions, {
+    int? availableMinutes,
+  }) {
+    if (availableMinutes != null && availableMinutes <= 0) return null;
     final completed = missions
         .where((mission) => mission.status == MissionStatus.completed)
         .map((mission) => mission.id)
@@ -25,23 +29,42 @@ abstract final class TodayBestNextMissionService {
         )
         .toList();
     if (candidates.isEmpty) return null;
-    candidates.sort((a, b) => _score(b).compareTo(_score(a)));
+    candidates.sort(
+      (a, b) =>
+          _score(b, availableMinutes).compareTo(_score(a, availableMinutes)),
+    );
     final mission = candidates.first;
+    final effortMinutes = mission.effortEstimate?.activeEffortMinutes;
+    final fitsAvailability =
+        availableMinutes != null &&
+        effortMinutes != null &&
+        effortMinutes <= availableMinutes;
     return TodayMissionRecommendation(
       mission: mission,
-      reason: mission.isToday ? '今日選んだ一歩です。' : '今の航路で、無理なく次に進める一歩です。',
+      reason: fitsAvailability
+          ? '今日の$availableMinutes分に収まる、次の一歩です。'
+          : mission.isToday
+          ? '今日選んだ一歩です。'
+          : '今の航路で、無理なく次に進める一歩です。',
     );
   }
 
-  static int _score(Mission mission) {
+  static int _score(Mission mission, int? availableMinutes) {
     final priority = switch (mission.priority) {
       MissionPriority.critical => 40,
       MissionPriority.high => 30,
       MissionPriority.normal => 20,
       MissionPriority.low => 10,
     };
+    final effortMinutes = mission.effortEstimate?.activeEffortMinutes;
+    final availabilityScore = availableMinutes == null || effortMinutes == null
+        ? 0
+        : effortMinutes <= availableMinutes
+        ? 60
+        : -(effortMinutes - availableMinutes).clamp(0, 240);
     return priority +
         (mission.isToday ? 100 : 0) -
-        mission.sortOrder.clamp(0, 20);
+        mission.sortOrder.clamp(0, 20) +
+        availabilityScore;
   }
 }

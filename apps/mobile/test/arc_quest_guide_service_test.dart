@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/features/quest/arc_quest_guide_service.dart';
+import 'package:questra/features/quest/planning_context.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
 import 'package:questra/features/quest/quest_model.dart';
 
@@ -71,6 +72,34 @@ void main() {
             contains('完了です'),
           ),
         ),
+      );
+    },
+  );
+
+  test(
+    'local planning reflects explicitly consented weekly capacity',
+    () async {
+      const service = LocalArcQuestGuideService();
+      final guide = await service.generate(
+        quest: Quest(
+          title: '新しい技術を学ぶ',
+          description: '仕事の幅を広げたい',
+          difficulty: QuestDifficulty.normal,
+          status: QuestStatus.active,
+          visibility: QuestVisibility.private,
+          category: '学習',
+        ),
+        planningContext: const PlanningContext(
+          weeklyMinutes: 90,
+          experience: '初めて',
+          consentGranted: true,
+        ),
+      );
+
+      expect(guide.path, contains('週90分'));
+      expect(
+        guide.missionCandidates.map((item) => item.description).join(),
+        contains('経験 初めて'),
       );
     },
   );

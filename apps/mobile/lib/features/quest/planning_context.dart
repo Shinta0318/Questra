@@ -17,6 +17,49 @@ class PlanningContext {
   final List<String> preferences;
   final bool consentGranted;
 
+  PlanningContext copyWith({
+    int? weeklyMinutes,
+    String? budgetLabel,
+    String? location,
+    String? experience,
+    List<String>? availableResources,
+    List<String>? preferences,
+    bool? consentGranted,
+  }) {
+    return PlanningContext(
+      weeklyMinutes: weeklyMinutes ?? this.weeklyMinutes,
+      budgetLabel: budgetLabel ?? this.budgetLabel,
+      location: location ?? this.location,
+      experience: experience ?? this.experience,
+      availableResources: availableResources ?? this.availableResources,
+      preferences: preferences ?? this.preferences,
+      consentGranted: consentGranted ?? this.consentGranted,
+    );
+  }
+
+  factory PlanningContext.fromJson(Map<String, dynamic> json) {
+    List<String> strings(Object? value) => value is List
+        ? value
+              .whereType<String>()
+              .map((item) => item.trim())
+              .where((item) => item.isNotEmpty)
+              .take(20)
+              .toList(growable: false)
+        : const [];
+    return PlanningContext(
+      weeklyMinutes: (json['weekly_minutes'] as num?)?.round(),
+      budgetLabel: json['budget_label'] as String?,
+      location: json['location'] as String?,
+      experience: json['experience'] as String?,
+      availableResources: strings(json['available_resources']),
+      preferences: strings(json['preferences']),
+      consentGranted:
+          json['planning_consent_granted'] as bool? ??
+          json['consent_granted'] as bool? ??
+          false,
+    );
+  }
+
   Map<String, Object?> toPlanningJson() {
     if (!consentGranted) return const {'consent_granted': false};
     return {
