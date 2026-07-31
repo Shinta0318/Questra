@@ -27,6 +27,8 @@ Deno.serve(async (req) => {
 
   try {
     const result = await generateAiText({
+      feature: "star_map_generation",
+      promptVersion: "star_map_v1",
       systemInstruction:
         "You are Arc, Questra's gentle star navigator. Return only compact Japanese JSON. Suggest useful search directions, but never invent URLs, sources, facts, or endorsements.",
       input: {

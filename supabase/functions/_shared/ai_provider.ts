@@ -3,6 +3,10 @@ export type AiProvider = "gemini" | "openai";
 export type GenerateAiTextOptions = {
   systemInstruction: string;
   input: unknown;
+  // Metadata only. User input must never be copied into this field.
+  feature?: string;
+  promptVersion?: string;
+  userId?: string | null;
   responseSchema?: Record<string, unknown>;
   maxOutputTokens?: number;
   temperature?: number;
@@ -12,6 +16,7 @@ export type AiTextResult = {
   text: string;
   provider: AiProvider;
   sourceType: string;
+  model: string;
 };
 
 const GEMINI_INTERACTIONS_URL =
@@ -26,15 +31,87 @@ export async function generateAiText(
   options: GenerateAiTextOptions,
 ): Promise<AiTextResult | null> {
   const provider = selectedProvider();
-  return provider === "openai"
-    ? await generateWithOpenAi(options)
-    : await generateWithGemini(options);
+  const startedAt = Date.now();
+  let result: AiTextResult | null = null;
+  try {
+    result = provider === "openai"
+      ? await generateWithOpenAi(options)
+      : await generateWithGemini(options);
+    return result;
+  } finally {
+    // Observability must never make Arc unavailable.
+    await recordAiUsage({
+      feature: boundedFeature(options.feature ?? "unknown"),
+      promptVersion: boundedFeature(options.promptVersion ?? "v1"),
+      userId: options.userId ?? null,
+      provider,
+      model: result?.model ?? selectedModel(provider),
+      outcome: result ? "succeeded" : "fallback",
+      latencyMs: Date.now() - startedAt,
+      inputChars: boundedJson(options.input).length,
+      outputChars: result?.text.length ?? 0,
+    });
+  }
 }
 
 function selectedProvider(): AiProvider {
   return Deno.env.get("AI_PROVIDER")?.toLowerCase() === "openai"
     ? "openai"
     : "gemini";
+}
+
+function selectedModel(provider: AiProvider) {
+  return provider === "openai"
+    ? Deno.env.get("OPENAI_MODEL") ?? "gpt-4.1-mini"
+    : Deno.env.get("GEMINI_MODEL") ?? DEFAULT_GEMINI_MODEL;
+}
+
+type AiUsageEvent = {
+  feature: string;
+  promptVersion: string;
+  userId: string | null;
+  provider: AiProvider;
+  model: string;
+  outcome: "succeeded" | "fallback";
+  latencyMs: number;
+  inputChars: number;
+  outputChars: number;
+};
+
+async function recordAiUsage(event: AiUsageEvent) {
+  const url = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !serviceRoleKey) return;
+
+  try {
+    await fetch(`${url}/rest/v1/ai_usage_events`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        user_id: event.userId,
+        feature: event.feature,
+        prompt_version: event.promptVersion,
+        provider: event.provider,
+        model_name: event.model,
+        outcome: event.outcome,
+        latency_ms: Math.min(60_000, Math.max(0, event.latencyMs)),
+        input_chars: Math.min(40_000, Math.max(0, event.inputChars)),
+        output_chars: Math.min(40_000, Math.max(0, event.outputChars)),
+      }),
+    });
+  } catch (error) {
+    const name = error instanceof Error ? error.name : "UnknownError";
+    console.warn(`AI usage telemetry failed: ${name}`);
+  }
+}
+
+function boundedFeature(value: string) {
+  return value.replace(/[^a-z0-9_.-]/gi, "_").slice(0, 80) || "unknown";
 }
 
 async function generateWithGemini(
@@ -46,7 +123,7 @@ async function generateWithGemini(
     return null;
   }
 
-  const model = Deno.env.get("GEMINI_MODEL") ?? DEFAULT_GEMINI_MODEL;
+  const model = selectedModel("gemini");
   const body: Record<string, unknown> = {
     model,
     input: boundedJson(options.input),
@@ -84,7 +161,7 @@ async function generateWithGemini(
   const data = await response.json() as Record<string, unknown>;
   const text = extractGeminiText(data);
   return text
-    ? { text, provider: "gemini", sourceType: "gemini_interactions" }
+    ? { text, provider: "gemini", sourceType: "gemini_interactions", model }
     : null;
 }
 
@@ -95,7 +172,7 @@ async function generateWithOpenAi(
   if (!apiKey) return null;
 
   const body: Record<string, unknown> = {
-    model: Deno.env.get("OPENAI_MODEL") ?? "gpt-4.1-mini",
+    model: selectedModel("openai"),
     input: [
       { role: "system", content: options.systemInstruction },
       { role: "user", content: boundedJson(options.input) },
@@ -124,7 +201,12 @@ async function generateWithOpenAi(
   const data = await response.json() as Record<string, unknown>;
   const text = extractOpenAiText(data);
   return text
-    ? { text, provider: "openai", sourceType: "openai_responses" }
+    ? {
+      text,
+      provider: "openai",
+      sourceType: "openai_responses",
+      model: selectedModel("openai"),
+    }
     : null;
 }
 

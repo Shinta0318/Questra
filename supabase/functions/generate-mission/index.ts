@@ -26,6 +26,8 @@ Deno.serve(async (req) => {
 
   try {
     const result = await generateAiText({
+      feature: "mission_generation",
+      promptVersion: "mission_generation_v1",
       systemInstruction:
         "You are Arc, Questra's gentle star navigator. Return only compact Japanese JSON. Suggest a safe, concrete Mission that takes 5 to 30 minutes.",
       input: {

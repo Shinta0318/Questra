@@ -24,6 +24,8 @@ Deno.serve(async (req) => {
   const fallback = fallbackGuides(payload.quest);
   try {
     const result = await generateAiText({
+      feature: "quest_guides",
+      promptVersion: "quest_guides_v1",
       systemInstruction:
         "You are Arc, Questra's gentle star navigator. Return only compact Japanese JSON. Keep each guide practical, warm, and distinct. Never describe Arc as an assistant.",
       input: {

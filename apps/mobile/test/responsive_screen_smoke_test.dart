@@ -83,9 +83,7 @@ void main() {
     expect(find.byTooltip('メッセージを送信'), findsOneWidget);
   });
 
-  testWidgets('Home exposes only Arc, Mission, and active Quest sections', (
-    tester,
-  ) async {
+  testWidgets('Home keeps Arc and journey sections coherent', (tester) async {
     tester.view.physicalSize = const Size(390, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -113,10 +111,10 @@ void main() {
     expect(find.text('進行中のQuest'), findsOneWidget);
     expect(find.text('Mission 0/0'), findsWidgets);
     expect(find.byType(PageView), findsOneWidget);
-    expect(find.text('最近のTrail'), findsNothing);
+    expect(find.text('最近のTrail'), findsOneWidget);
     expect(find.text('Guildの動き'), findsNothing);
     expect(find.text('Star Map'), findsNothing);
-    expect(find.text('Horizon'), findsNothing);
+    expect(find.text('次の航路'), findsOneWidget);
   });
 
   testWidgets('Home exposes a right-swipe Mission completion gesture', (

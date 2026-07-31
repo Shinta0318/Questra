@@ -2455,7 +2455,7 @@ items:
       - Model, prompt version, latency, fallback, and sanitized output evidence are recorded.
   - id: QST-206
     title: AI Usage and Cost Observability
-    status: Planned
+    status: In Progress
     priority: P1
     epic: AI-QUALITY
     depends_on: [QST-188]
@@ -2469,7 +2469,7 @@ items:
       - Alert thresholds support the Gemini free-tier operating plan.
   - id: QST-207
     title: Home Journey Sections Restore
-    status: Planned
+    status: In Progress
     priority: P1
     epic: HOME-EXPERIENCE
     depends_on: [QST-197, QST-202, QST-203, QST-204]

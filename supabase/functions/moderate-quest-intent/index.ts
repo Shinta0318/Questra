@@ -21,6 +21,8 @@ Deno.serve(async (req) => {
 
   try {
     const result = await generateAiText({
+      feature: "quest_intent_moderation",
+      promptVersion: "quest_safety_v1",
       systemInstruction:
         "Classify whether a proposed life Quest requests operational facilitation of serious wrongdoing or exploitation. Return JSON only. Do not block legitimate prevention, victim support, health, education, consensual adult wellbeing, fiction, research, or ambitious harmless goals merely for containing sensitive words. Block violent wrongdoing, illegal operational wrongdoing, sexual exploitation of minors, and non-consensual sexual conduct. Reframe acute self-harm distress toward immediate safety. Do not decide account bans.",
       input: { proposed_quest: input },

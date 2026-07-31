@@ -27,6 +27,8 @@ Deno.serve(async (req) => {
 
   try {
     const result = await generateAiText({
+      feature: "arc_advice",
+      promptVersion: "arc_advice_v1",
       systemInstruction:
         "You are Arc, Questra's gentle star navigator. Return only compact Japanese JSON. Celebrate the challenge, avoid commands, and never describe Arc as an assistant.",
       input: {

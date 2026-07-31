@@ -21,6 +21,7 @@ import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
 import '../arc/arc_daily_greeting_service.dart';
 import '../arc/arc_motion_controller.dart';
+import '../arc/navigator_rank_service.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_state.dart';
 import '../horizon/horizon_next_challenge_service.dart';
@@ -32,6 +33,7 @@ import '../quest/quest_progress_service.dart';
 import '../signal/mission_signal_model.dart';
 import '../star_map/star_map_recommendation_service.dart';
 import '../trail/trail_model.dart';
+import '../trail/trail_controller.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -41,12 +43,22 @@ class HomeScreen extends ConsumerWidget {
     final profile = ref.watch(authControllerProvider).profile;
     final quests = ref.watch(questControllerProvider);
     final missions = ref.watch(missionControllerProvider);
+    final trails = ref.watch(trailControllerProvider);
+    final navigatorRank = ref
+        .watch(navigatorRankServiceProvider)
+        .resolve(
+          quests: quests,
+          missions: missions,
+          trails: trails,
+          bondScore: profile?.bondScore ?? 0,
+          stardustBalance: profile?.stardustBalance ?? 0,
+        );
     final greeting = ref
         .watch(arcDailyGreetingServiceProvider)
         .resolve(
           quests: quests,
           missions: missions,
-          trails: const [],
+          trails: trails,
           now: DateTime.now(),
           nickname: profile?.nickname,
           arcName: profile?.arcName,
@@ -77,6 +89,12 @@ class HomeScreen extends ConsumerWidget {
           ),
         )
         .toList(growable: false);
+    final horizon = const HorizonNextChallengeService().suggest(
+      rank: navigatorRank,
+      quests: quests,
+      missions: missions,
+      trails: trails,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
@@ -119,6 +137,17 @@ class HomeScreen extends ConsumerWidget {
                 items: questItems,
                 onOpen: (quest) => context.go('${AppRoutes.quest}/${quest.id}'),
               ),
+            const SizedBox(height: AppSpacing.xl),
+            const _SimpleSectionTitle(title: '最近のTrail'),
+            const SizedBox(height: AppSpacing.md),
+            _RecentTrailsCard(
+              trails: trails.take(3).toList(growable: false),
+              onOpenTrail: () => context.go(AppRoutes.trail),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            const _SimpleSectionTitle(title: '次の航路'),
+            const SizedBox(height: AppSpacing.md),
+            _HorizonChallengeCard(challenge: horizon),
           ],
         ),
       ),
@@ -126,8 +155,6 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-// Kept for the post-simplification Horizon phase.
-// ignore: unused_element
 class _HorizonChallengeCard extends StatelessWidget {
   const _HorizonChallengeCard({required this.challenge});
 
@@ -1120,8 +1147,6 @@ class _ActiveQuestCard extends StatelessWidget {
   }
 }
 
-// Kept for the post-simplification Trail phase.
-// ignore: unused_element
 class _RecentTrailsCard extends StatelessWidget {
   const _RecentTrailsCard({required this.trails, required this.onOpenTrail});
 
