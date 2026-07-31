@@ -74,145 +74,141 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget _buildStep(BuildContext context) {
     return switch (_step) {
       0 => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(
-              child: ArcWidget(
-                emotion: ArcEmotion.excited,
-                message: 'ぼくはArc。君の願いを、最初のQuestという星に変える案内役だよ。',
-              ),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Center(
+            child: ArcWidget(
+              emotion: ArcEmotion.excited,
+              message: 'ぼくはArc。君の願いを、最初のQuestという星に変える案内役だよ。',
             ),
-            const SizedBox(height: 20),
-            Text('Arcとの初対面', style: Theme.of(context).textTheme.headlineMedium),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          Text('Arcとの初対面', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 12),
+          const Text('願いを話すと、ArcがQuestと最初のMissionを一緒に整理します。'),
+        ],
+      ),
       1 => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('呼び名を決める', style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 12),
-            QuestraFieldLabel(
-              label: 'あなたの呼び名',
-              required: true,
-              child: TextFormField(
-                controller: _nicknameController,
-                decoration: const InputDecoration(hintText: '例: シンタ'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('呼び名を決める', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 12),
+          QuestraFieldLabel(
+            label: 'あなたの呼び名',
+            required: true,
+            child: TextFormField(
+              controller: _nicknameController,
+              decoration: const InputDecoration(hintText: '例: シンタ'),
+              maxLength: InputLimits.nickname,
+              validator: (value) => InputValidators.requiredText(
+                value,
+                fieldName: '呼び名',
                 maxLength: InputLimits.nickname,
-                validator: (value) => InputValidators.requiredText(
-                  value,
-                  fieldName: '呼び名',
-                  maxLength: InputLimits.nickname,
-                ),
               ),
             ),
-            const SizedBox(height: 12),
-            QuestraFieldLabel(
-              label: 'Arcの呼び方',
-              required: true,
-              child: TextFormField(
-                controller: _arcNameController,
-                decoration: const InputDecoration(hintText: '例: Arc'),
+          ),
+          const SizedBox(height: 12),
+          QuestraFieldLabel(
+            label: 'Arcの呼び方',
+            required: true,
+            child: TextFormField(
+              controller: _arcNameController,
+              decoration: const InputDecoration(hintText: '例: Arc'),
+              maxLength: InputLimits.arcName,
+              validator: (value) => InputValidators.requiredText(
+                value,
+                fieldName: 'Arcの呼び方',
                 maxLength: InputLimits.arcName,
-                validator: (value) => InputValidators.requiredText(
-                  value,
-                  fieldName: 'Arcの呼び方',
-                  maxLength: InputLimits.arcName,
-                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
       2 => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('旅の傾向', style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 12),
-            Text('今いちばん近いQuestの方向を選んでください。'),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: QuestInterest.values.map((interest) {
-                return ChoiceChip(
-                  label: Text(interest.label),
-                  selected: _questInterest == interest,
-                  onSelected: (_) => setState(() => _questInterest = interest),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 20),
-            Text('Signal頻度', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: SignalFrequency.values.map((frequency) {
-                return ChoiceChip(
-                  label: Text(frequency.label),
-                  selected: _signalFrequency == frequency,
-                  onSelected: (_) =>
-                      setState(() => _signalFrequency = frequency),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('旅の傾向', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 12),
+          Text('今いちばん近いQuestの方向を選んでください。'),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: QuestInterest.values.map((interest) {
+              return ChoiceChip(
+                label: Text(interest.label),
+                selected: _questInterest == interest,
+                onSelected: (_) => setState(() => _questInterest = interest),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+          Text('Signal頻度', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: SignalFrequency.values.map((frequency) {
+              return ChoiceChip(
+                label: Text(frequency.label),
+                selected: _signalFrequency == frequency,
+                onSelected: (_) => setState(() => _signalFrequency = frequency),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
       3 => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Questraの演出',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 12),
-            const Text('心地よい航海のテンポを選んでください。'),
-            const SizedBox(height: 16),
-            RadioGroup<ExperiencePreset>(
-              groupValue: _experiencePreset,
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _experiencePreset = value);
-                }
-              },
-              child: Column(
-                children: ExperiencePreset.values
-                    .map(
-                      (preset) => Material(
-                        type: MaterialType.transparency,
-                        child: RadioListTile<ExperiencePreset>(
-                          value: preset,
-                          title: Text(_experiencePresetLabel(preset)),
-                          secondary: Icon(_experiencePresetIcon(preset)),
-                        ),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Questraの演出', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 12),
+          const Text('心地よい航海のテンポを選んでください。'),
+          const SizedBox(height: 16),
+          RadioGroup<ExperiencePreset>(
+            groupValue: _experiencePreset,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => _experiencePreset = value);
+              }
+            },
+            child: Column(
+              children: ExperiencePreset.values
+                  .map(
+                    (preset) => Material(
+                      type: MaterialType.transparency,
+                      child: RadioListTile<ExperiencePreset>(
+                        value: preset,
+                        title: Text(_experiencePresetLabel(preset)),
+                        secondary: Icon(_experiencePresetIcon(preset)),
                       ),
-                    )
-                    .toList(growable: false),
-              ),
+                    ),
+                  )
+                  .toList(growable: false),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
       _ => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('最初のQuest', style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 12),
-            QuestraFieldLabel(
-              label: '最初に叶えたいことは？',
-              child: TextFormField(
-                controller: _questController,
-                decoration: const InputDecoration(
-                  hintText: 'まだ曖昧でも大丈夫です',
-                ),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('最初のQuest', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 12),
+          QuestraFieldLabel(
+            label: '最初に叶えたいことは？',
+            child: TextFormField(
+              controller: _questController,
+              decoration: const InputDecoration(hintText: 'まだ曖昧でも大丈夫です'),
+              maxLength: InputLimits.questTitle,
+              validator: (value) => InputValidators.optionalText(
+                value,
+                fieldName: '最初のQuest',
                 maxLength: InputLimits.questTitle,
-                validator: (value) => InputValidators.optionalText(
-                  value,
-                  fieldName: '最初のQuest',
-                  maxLength: InputLimits.questTitle,
-                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
     };
   }
 
@@ -221,12 +217,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         !(_formKey.currentState?.validate() ?? false)) {
       return;
     }
-    if (_step < 2) {
-      setState(() => _step += 1);
+    if (_step == 0) {
+      setState(() => _step = 1);
       return;
     }
-    if (_step < 4) {
-      setState(() => _step += 1);
+    if (_step == 1) {
+      setState(() => _step = 4);
       return;
     }
 
@@ -236,7 +232,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ? _defaultQuestTitle(_questInterest)
         : _questController.text.trim();
 
-    await ref.read(authControllerProvider.notifier).completeOnboarding(
+    await ref
+        .read(authControllerProvider.notifier)
+        .completeOnboarding(
           nickname: nickname,
           arcName: arcName,
           questInterest: _questInterest,
@@ -246,7 +244,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         .read(experienceSettingsControllerProvider.notifier)
         .applyPreset(_experiencePreset);
     unawaited(
-      ref.read(analyticsServiceProvider).onboardingCompleted(
+      ref
+          .read(analyticsServiceProvider)
+          .onboardingCompleted(
             userId: ref.read(authControllerProvider).profile?.id,
             questInterest: _questInterest.storageKey,
             signalFrequency: _signalFrequency.storageKey,

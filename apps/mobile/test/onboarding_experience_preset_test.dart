@@ -5,7 +5,9 @@ import 'package:questra/core/experience/experience_settings_repository.dart';
 import 'package:questra/features/onboarding/onboarding_screen.dart';
 
 void main() {
-  testWidgets('onboarding offers three experience presets', (tester) async {
+  testWidgets('first onboarding stays focused on the first Quest', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -17,14 +19,13 @@ void main() {
       ),
     );
 
-    for (var step = 0; step < 3; step++) {
+    for (var step = 0; step < 2; step++) {
       await tester.tap(find.text('次へ'));
       await tester.pump();
     }
 
-    expect(find.text('Questraの演出'), findsOneWidget);
-    expect(find.text('フル体験'), findsOneWidget);
-    expect(find.text('静かな体験'), findsOneWidget);
-    expect(find.text('シンプル'), findsOneWidget);
+    expect(find.text('最初のQuest'), findsOneWidget);
+    expect(find.text('Questraの演出'), findsNothing);
+    expect(find.text('旅の傾向'), findsNothing);
   });
 }
