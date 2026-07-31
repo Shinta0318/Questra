@@ -27,6 +27,7 @@ import '../auth/auth_state.dart';
 import '../horizon/horizon_next_challenge_service.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
+import '../mission/today_best_next_mission_service.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_model.dart';
 import '../quest/quest_progress_service.dart';
@@ -68,10 +69,10 @@ class HomeScreen extends ConsumerWidget {
     final activeQuests =
         quests.where((quest) => quest.status == QuestStatus.active).toList()
           ..sort((a, b) => b.progress.compareTo(a.progress));
-    final todayMissions = missions
-        .where((mission) => mission.status == MissionStatus.todo)
-        .take(3)
-        .toList(growable: false);
+    final todayRecommendation = TodayBestNextMissionService.recommend(missions);
+    final todayMissions = todayRecommendation == null
+        ? const <Mission>[]
+        : <Mission>[todayRecommendation.mission];
     final questItems = activeQuests
         .take(3)
         .map(
@@ -117,6 +118,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             _HomeMissionList(
               missions: todayMissions,
+              recommendationReason: todayRecommendation?.reason,
               onComplete: (mission) => ref
                   .read(missionControllerProvider.notifier)
                   .completeMission(mission.id),
@@ -439,11 +441,13 @@ class _SimpleSectionTitle extends StatelessWidget {
 class _HomeMissionList extends ConsumerWidget {
   const _HomeMissionList({
     required this.missions,
+    required this.recommendationReason,
     required this.onComplete,
     required this.onOpenArc,
   });
 
   final List<Mission> missions;
+  final String? recommendationReason;
   final ValueChanged<Mission> onComplete;
   final VoidCallback onOpenArc;
 
@@ -462,6 +466,19 @@ class _HomeMissionList extends ConsumerWidget {
     return _HomeGlassCard(
       child: Column(
         children: [
+          if (recommendationReason != null) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                recommendationReason!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.skyBlue,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
           for (var index = 0; index < missions.length; index++) ...[
             if (ref
                 .watch(experienceSettingsControllerProvider)

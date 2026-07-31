@@ -22,6 +22,9 @@ type MissionCandidate = {
   title: string;
   description: string;
   purpose: string;
+  done_condition: string;
+  expected_output: string;
+  verification_type: string;
   parent_plan_key?: string;
   dependency_plan_keys: string[];
   guide_type: string;
@@ -167,6 +170,7 @@ const questGuideSchema = {
     effort_estimate: effortEstimateSchema(),
     quest_evaluation: questEvaluationSchema(),
     quest_dna: questDnaSchema(),
+    quest_understanding: questUnderstandingSchema(),
     mission_candidates: {
       type: "array",
       minItems: 3,
@@ -201,8 +205,34 @@ const questGuideSchema = {
       },
     },
   },
-  required: ["summary", "path", "cautions", "encouragement", "effort_estimate", "quest_evaluation", "quest_dna", "mission_candidates"],
+  required: ["summary", "path", "cautions", "encouragement", "effort_estimate", "quest_evaluation", "quest_dna", "quest_understanding", "mission_candidates"],
 };
+
+function questUnderstandingSchema() {
+  const list = { type: "array", items: { type: "string" }, maxItems: 12 };
+  return {
+    type: "object",
+    properties: {
+      original_wish: { type: "string" },
+      quest_outcome: { type: "string" },
+      success_evidence: { type: "string" },
+      motivation: { type: "string" },
+      current_state: { type: "string" },
+      constraints: list,
+      known_resources: list,
+      unknowns: list,
+      planning_risks: list,
+      planning_mode: {
+        type: "string",
+        enum: ["project", "habit", "exploration", "preparation", "challenge"],
+      },
+      assumptions: list,
+      version: { type: "integer", minimum: 1, maximum: 100 },
+      evaluated_at: { type: "string" },
+    },
+    required: ["original_wish", "quest_outcome", "success_evidence", "motivation", "current_state", "constraints", "known_resources", "unknowns", "planning_risks", "planning_mode", "assumptions", "version", "evaluated_at"],
+  };
+}
 
 function questDnaSchema() {
   const attributes = [
@@ -305,6 +335,10 @@ function normalizeGuide(
         : fallbackCandidates.mission_candidates,
     ),
     quest_dna: normalizeQuestDna(data.quest_dna, quest),
+    quest_understanding: normalizeQuestUnderstanding(
+      data.quest_understanding,
+      quest,
+    ),
     source_type: sourceType,
   };
 }
@@ -314,7 +348,7 @@ function normalizeGuide(
 function reviewMissionCandidates(candidates: MissionCandidate[]) {
   const knownKeys = new Set(candidates.map((item) => item.plan_key));
   const titles = new Set<string>();
-  return candidates.filter((item) => {
+  let valid = candidates.filter((item) => {
     const title = item.title.replace(/\s+/g, "").toLowerCase();
     const abstractOnly = /^(調べる|準備する|検討する|頑張る)$/.test(item.title.trim());
     const doneCondition = /完了です[。]?$/.test(item.description);
@@ -327,6 +361,29 @@ function reviewMissionCandidates(candidates: MissionCandidate[]) {
     titles.add(title);
     return true;
   });
+  let changed = true;
+  while (changed) {
+    const validKeys = new Set(valid.map((item) => item.plan_key));
+    const next = valid.filter((item) =>
+      item.dependency_plan_keys.every((key) => validKeys.has(key))
+    );
+    changed = next.length !== valid.length;
+    valid = next;
+  }
+
+  const ordered: MissionCandidate[] = [];
+  const resolved = new Set<string>();
+  const remaining = [...valid];
+  while (remaining.length > 0) {
+    const index = remaining.findIndex((item) =>
+      item.dependency_plan_keys.every((key) => resolved.has(key))
+    );
+    if (index < 0) break;
+    const [next] = remaining.splice(index, 1);
+    ordered.push(next);
+    resolved.add(next.plan_key);
+  }
+  return ordered;
 }
 
 function fallbackGuideWithoutRecursion(quest: QuestPayload) {
@@ -347,6 +404,7 @@ function fallbackGuideWithoutRecursion(quest: QuestPayload) {
     encouragement: "このQuestに合う航路は確保できています。最初のMissionから一つずつ進めましょう。",
     effort_estimate: normalizeEffortEstimate(null, 720, 60),
     quest_dna: normalizeQuestDna(null, quest),
+    quest_understanding: normalizeQuestUnderstanding(null, quest),
     mission_candidates: steps.map(([missionTitle, done, category], index) => ({
       plan_key: `mission-${index + 1}`,
       title: missionTitle,
@@ -354,6 +412,15 @@ function fallbackGuideWithoutRecursion(quest: QuestPayload) {
       guide_type: "route",
       difficulty: "easy",
       purpose: `「${title}」を一歩進める`,
+      done_condition: done,
+      expected_output: index === 0
+        ? "Questの成功条件"
+        : index === 1
+        ? "確認済み条件と不明点の一覧"
+        : index === 2
+        ? "確認日付きの公式または専門家の参照先"
+        : "実行日時付きの最初のMission",
+      verification_type: index === 2 ? "official_source" : "artifact",
       dependency_plan_keys: index === 0 ? [] : [`mission-${index}`],
       priority: index < 2 ? "high" : "normal",
       category,
@@ -364,6 +431,39 @@ function fallbackGuideWithoutRecursion(quest: QuestPayload) {
       effort_estimate: normalizeEffortEstimate(null, 90, 5),
     })).slice(0, 30),
   };
+}
+
+function normalizeQuestUnderstanding(value: unknown, quest: QuestPayload) {
+  const data = value && typeof value === "object"
+    ? value as Record<string, unknown>
+    : {};
+  const title = quest.title?.trim() || "新しいQuest";
+  const description = quest.description?.trim() || "";
+  return {
+    original_wish: textOr(data.original_wish, title),
+    quest_outcome: textOr(data.quest_outcome, `${title}を実現する`),
+    success_evidence: textOr(
+      data.success_evidence,
+      `${title}を達成したと本人が確認し、Trailへ記録できる状態`,
+    ),
+    motivation: textOr(data.motivation, description),
+    current_state: textOr(data.current_state, "現在地は未確認"),
+    constraints: stringList(data.constraints, 12),
+    known_resources: stringList(data.known_resources, 12),
+    unknowns: stringList(data.unknowns, 12),
+    planning_risks: stringList(data.planning_risks, 12),
+    planning_mode: planningMode(data.planning_mode),
+    assumptions: stringList(data.assumptions, 12),
+    version: boundedInteger(data.version, 1, 100, 1),
+    evaluated_at: new Date().toISOString(),
+  };
+}
+
+function planningMode(value: unknown) {
+  const allowed = ["project", "habit", "exploration", "preparation", "challenge"];
+  return typeof value === "string" && allowed.includes(value)
+    ? value
+    : "project";
 }
 
 function normalizeQuestDna(value: unknown, quest: QuestPayload) {

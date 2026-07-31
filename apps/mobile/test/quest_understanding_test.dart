@@ -21,4 +21,27 @@ void main() {
     expect(understanding.toJson()['assumptions'], isNotEmpty);
     expect(understanding.toJson()['constraints'], isNotEmpty);
   });
+
+  test('Quest Understanding survives a persistence round trip', () {
+    final original = QuestUnderstanding(
+      originalWish: '本を出版したい',
+      questOutcome: '原稿を完成させて出版する',
+      successEvidence: '出版物を確認できる',
+      motivation: '知識を届けたい',
+      currentState: '構想段階',
+      constraints: const ['週末中心'],
+      knownResources: const ['構成メモ'],
+      unknowns: const ['出版方法'],
+      planningRisks: const ['執筆時間'],
+      planningMode: QuestPlanningMode.project,
+      assumptions: const ['商業出版と自主出版を比較する'],
+    );
+
+    final restored = QuestUnderstanding.fromJson(original.toJson());
+
+    expect(restored, isNotNull);
+    expect(restored!.successEvidence, original.successEvidence);
+    expect(restored.constraints, original.constraints);
+    expect(restored.planningMode, QuestPlanningMode.project);
+  });
 }

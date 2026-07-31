@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/estimation/effort_estimate.dart';
 import 'quest_dna.dart';
 import 'quest_evaluation.dart';
+import 'quest_understanding.dart';
 
 const _uuid = Uuid();
 
@@ -26,6 +27,7 @@ class Quest {
     this.effortEstimate,
     this.evaluation,
     this.dna,
+    this.understanding,
   }) : id = id ?? _uuid.v4();
 
   final String id;
@@ -40,6 +42,7 @@ class Quest {
   final EffortEstimate? effortEstimate;
   final QuestEvaluation? evaluation;
   final QuestDna? dna;
+  final QuestUnderstanding? understanding;
 
   Quest copyWith({
     String? title,
@@ -54,6 +57,7 @@ class Quest {
     EffortEstimate? effortEstimate,
     QuestEvaluation? evaluation,
     QuestDna? dna,
+    QuestUnderstanding? understanding,
   }) {
     return Quest(
       id: id,
@@ -68,6 +72,7 @@ class Quest {
       effortEstimate: effortEstimate ?? this.effortEstimate,
       evaluation: evaluation ?? this.evaluation,
       dna: dna ?? this.dna,
+      understanding: understanding ?? this.understanding,
     );
   }
 }

@@ -27,6 +27,7 @@ import '../mission/mission_controller.dart';
 import '../mission/mission_contract_service.dart';
 import '../mission/mission_model.dart';
 import '../mission/mission_plan_draft.dart';
+import '../mission/progressive_route_reveal_service.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
 import 'arc_quest_guide_controller.dart';
@@ -2023,6 +2024,9 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
             enterpriseSupportHints: candidate.enterpriseSupportHints,
             difficultyScore: candidate.difficultyScore,
             estimatedDurationDays: candidate.estimatedDurationDays,
+            doneCondition: candidate.doneCondition,
+            expectedOutput: candidate.expectedOutput,
+            verificationType: candidate.verificationType,
           );
     }
     final guide = _loadedGuide;
@@ -2034,6 +2038,7 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
               widget.quest.copyWith(
                 evaluation: guide.questEvaluation,
                 dna: guide.questDna,
+                understanding: guide.questUnderstanding,
               ),
             );
       }
@@ -2136,6 +2141,13 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
             ),
             const SizedBox(height: 14),
             _GuideTextBlock(title: 'Questの要約', body: guide.summary),
+            if (guide.questUnderstanding != null) ...[
+              const SizedBox(height: 10),
+              _GuideTextBlock(
+                title: '達成したと分かる状態',
+                body: guide.questUnderstanding!.successEvidence,
+              ),
+            ],
             const SizedBox(height: 10),
             _GuideTextBlock(title: '達成までの進め方', body: guide.path),
             const SizedBox(height: 10),
@@ -2161,6 +2173,12 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
               const SizedBox(height: 6),
               const Text('編集・並べ替えをしても、確定するまでは保存されません。'),
               const SizedBox(height: 10),
+              _ProgressiveRoutePreview(
+                reveal: ProgressiveRouteRevealService.organize(
+                  guide.missionCandidates,
+                ),
+              ),
+              const SizedBox(height: 12),
               ...List.generate(draft.candidates.length, (index) {
                 final candidate = draft.candidates[index];
                 return Padding(
@@ -2221,6 +2239,96 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
               ),
             ],
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressiveRoutePreview extends StatelessWidget {
+  const _ProgressiveRoutePreview({required this.reveal});
+
+  final ProgressiveRouteReveal reveal;
+
+  @override
+  Widget build(BuildContext context) {
+    final today = reveal.today;
+    if (today == null) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: QuestraColors.gold.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('最初に見る航路', style: TextStyle(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 8),
+          _RoutePreviewLine(
+            icon: Icons.today_outlined,
+            label: '今日',
+            title: today.title,
+          ),
+          for (final candidate in reveal.next)
+            _RoutePreviewLine(
+              icon: Icons.arrow_forward_rounded,
+              label: '次',
+              title: candidate.title,
+            ),
+          if (reveal.future.isNotEmpty)
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: EdgeInsets.zero,
+              title: Text('その先 ${reveal.future.length}件'),
+              children: [
+                for (final candidate in reveal.future)
+                  _RoutePreviewLine(
+                    icon: Icons.blur_on_outlined,
+                    label: '後で',
+                    title: candidate.title,
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoutePreviewLine extends StatelessWidget {
+  const _RoutePreviewLine({
+    required this.icon,
+    required this.label,
+    required this.title,
+  });
+
+  final IconData icon;
+  final String label;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: QuestraColors.cosmicBlue),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 38,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: QuestraColors.slate,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
+          ),
         ],
       ),
     );

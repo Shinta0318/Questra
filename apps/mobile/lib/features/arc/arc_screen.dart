@@ -34,6 +34,7 @@ import '../mission/mission_contract_service.dart';
 import '../mission/mission_model.dart';
 import '../quest/arc_quest_guide_controller.dart';
 import '../quest/arc_quest_guide_service.dart';
+import '../quest/flexible_quest_proposal_service.dart';
 import '../quest/quest_clarification_service.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_feasibility_service.dart';
@@ -1301,6 +1302,16 @@ class _ArcQuestCreationSheetState
       entry.key: entry.value.text.trim(),
   };
 
+  List<FlexibleQuestProposal> get _questProposals =>
+      FlexibleQuestProposalService.propose(_inputController.text);
+
+  void _applyQuestProposal(FlexibleQuestProposal proposal) {
+    _titleController.text = proposal.title;
+    _successConditionController.text = proposal.outcome;
+    _difficulty = proposal.difficulty;
+    _invalidateGuide();
+  }
+
   String get _planningDescription {
     final base = QuestClarificationService.appendAnsweredContext(
       description: _inputController.text,
@@ -1551,6 +1562,35 @@ class _ArcQuestCreationSheetState
                     onChanged: (_) => _invalidateGuide(),
                   ),
                 ),
+                if (_questProposals.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    '近いQuestの形',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: AppColors.parchment,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      for (final proposal in _questProposals)
+                        ActionChip(
+                          avatar: const Icon(
+                            Icons.auto_awesome_outlined,
+                            size: 18,
+                          ),
+                          label: Text(proposal.title),
+                          tooltip: proposal.fitReason,
+                          onPressed: _isGenerating
+                              ? null
+                              : () => _applyQuestProposal(proposal),
+                        ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.md),
                 QuestraFieldLabel(
                   label: 'Questの名前',

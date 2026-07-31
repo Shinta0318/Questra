@@ -14,8 +14,7 @@ class ProgressiveRouteReveal {
 
 abstract final class ProgressiveRouteRevealService {
   static ProgressiveRouteReveal organize(List<ArcMissionCandidate> route) {
-    final ordered = [...route]
-      ..sort((a, b) => _priority(b).compareTo(_priority(a)));
+    final ordered = _dependencyAwareOrder(route);
     final today = ordered.isEmpty ? null : ordered.first;
     final next = ordered.skip(1).take(3).toList(growable: false);
     final future = ordered.skip(4).toList(growable: false);
@@ -29,4 +28,33 @@ abstract final class ProgressiveRouteRevealService {
         'normal' => 2,
         _ => 1,
       };
+
+  static List<ArcMissionCandidate> _dependencyAwareOrder(
+    List<ArcMissionCandidate> route,
+  ) {
+    final remaining = [...route];
+    final resolved = <String>{};
+    final ordered = <ArcMissionCandidate>[];
+    while (remaining.isNotEmpty) {
+      final available =
+          remaining
+              .where(
+                (candidate) =>
+                    candidate.dependencyPlanKeys.every(resolved.contains),
+              )
+              .toList()
+            ..sort((a, b) => _priority(b).compareTo(_priority(a)));
+      if (available.isEmpty) {
+        // Invalid or cyclic provider output remains visible for review, but it
+        // is never promoted ahead of a feasible root Mission.
+        ordered.addAll(remaining);
+        break;
+      }
+      final selected = available.first;
+      ordered.add(selected);
+      remaining.remove(selected);
+      if (selected.planKey.isNotEmpty) resolved.add(selected.planKey);
+    }
+    return ordered;
+  }
 }

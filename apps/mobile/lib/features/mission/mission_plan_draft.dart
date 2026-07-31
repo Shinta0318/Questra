@@ -19,6 +19,9 @@ class MissionCandidateDraft {
     this.effortEstimate,
     String? planKey,
     this.purpose = '',
+    this.doneCondition = '',
+    this.expectedOutput = '',
+    this.verificationType = 'self_check',
     this.parentPlanKey,
     this.dependencyPlanKeys = const [],
     this.priority = MissionPriority.normal,
@@ -42,6 +45,9 @@ class MissionCandidateDraft {
       effortEstimate: candidate.effortEstimate,
       planKey: candidate.planKey,
       purpose: candidate.purpose,
+      doneCondition: candidate.doneCondition,
+      expectedOutput: candidate.expectedOutput,
+      verificationType: candidate.verificationType,
       parentPlanKey: candidate.parentPlanKey,
       dependencyPlanKeys: candidate.dependencyPlanKeys,
       priority: candidate.priority,
@@ -63,6 +69,9 @@ class MissionCandidateDraft {
   final EffortEstimate? effortEstimate;
   final String planKey;
   final String purpose;
+  final String doneCondition;
+  final String expectedOutput;
+  final String verificationType;
   final String? parentPlanKey;
   final List<String> dependencyPlanKeys;
   final MissionPriority priority;
@@ -82,6 +91,9 @@ class MissionCandidateDraft {
     bool? isToday,
     EffortEstimate? effortEstimate,
     String? purpose,
+    String? doneCondition,
+    String? expectedOutput,
+    String? verificationType,
     String? parentPlanKey,
     bool clearParentPlan = false,
     List<String>? dependencyPlanKeys,
@@ -103,6 +115,9 @@ class MissionCandidateDraft {
       effortEstimate: effortEstimate ?? this.effortEstimate,
       planKey: planKey ?? this.planKey,
       purpose: purpose ?? this.purpose,
+      doneCondition: doneCondition ?? this.doneCondition,
+      expectedOutput: expectedOutput ?? this.expectedOutput,
+      verificationType: verificationType ?? this.verificationType,
       parentPlanKey: clearParentPlan
           ? null
           : parentPlanKey ?? this.parentPlanKey,

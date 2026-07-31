@@ -36,8 +36,8 @@ final missionControllerProvider =
 
 final missionSyncControllerProvider =
     NotifierProvider<PersistenceSyncController, PersistenceSyncState>(
-  PersistenceSyncController.new,
-);
+      PersistenceSyncController.new,
+    );
 
 class MissionController extends Notifier<List<Mission>> {
   @override
@@ -66,8 +66,9 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   Mission? get todaysMission {
-    final openMissions =
-        state.where((mission) => mission.status == MissionStatus.todo).toList();
+    final openMissions = state
+        .where((mission) => mission.status == MissionStatus.todo)
+        .toList();
     if (openMissions.isEmpty) {
       return null;
     }
@@ -114,6 +115,9 @@ class MissionController extends Notifier<List<Mission>> {
     List<String> enterpriseSupportHints = const [],
     int? difficultyScore,
     int? estimatedDurationDays,
+    String doneCondition = '',
+    String expectedOutput = '',
+    String verificationType = 'self_check',
   }) {
     final titleError = const MissionContractService().validateTitle(
       questTitle: quest.title,
@@ -125,15 +129,16 @@ class MissionController extends Notifier<List<Mission>> {
     if (titleError != null) {
       throw ArgumentError.value(title, 'title', titleError);
     }
-    final nextSortOrder = sortOrder ??
+    final nextSortOrder =
+        sortOrder ??
         state.where((mission) => mission.questId == quest.id).length;
     final clearedToday = isToday
         ? state
-            .where(
-              (mission) => mission.questId == quest.id && mission.isToday,
-            )
-            .map((mission) => mission.copyWith(isToday: false))
-            .toList(growable: false)
+              .where(
+                (mission) => mission.questId == quest.id && mission.isToday,
+              )
+              .map((mission) => mission.copyWith(isToday: false))
+              .toList(growable: false)
         : const <Mission>[];
     final clearedById = {
       for (final mission in clearedToday) mission.id: mission,
@@ -159,6 +164,9 @@ class MissionController extends Notifier<List<Mission>> {
       enterpriseSupportHints: enterpriseSupportHints,
       difficultyScore: difficultyScore,
       estimatedDurationDays: estimatedDurationDays,
+      doneCondition: doneCondition,
+      expectedOutput: expectedOutput,
+      verificationType: verificationType,
     );
     state = [
       mission,
@@ -237,8 +245,10 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   void removeMission(String missionId) {
-    final questId =
-        state.where((mission) => mission.id == missionId).firstOrNull?.questId;
+    final questId = state
+        .where((mission) => mission.id == missionId)
+        .firstOrNull
+        ?.questId;
     state = state.where((mission) => mission.id != missionId).toList();
     if (questId != null) _syncQuestProgress(questId);
     unawaited(_deleteMission(missionId));
@@ -273,10 +283,9 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   void reorderForQuest(String questId, int oldIndex, int newIndex) {
-    final ordered = state
-        .where((mission) => mission.questId == questId)
-        .toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final ordered =
+        state.where((mission) => mission.questId == questId).toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     if (oldIndex < 0 || oldIndex >= ordered.length) return;
     if (newIndex < 0 || newIndex >= ordered.length) return;
     final moved = ordered.removeAt(oldIndex);
@@ -323,8 +332,9 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   Mission? completeMission(String missionId) {
-    final completedMission =
-        state.where((mission) => mission.id == missionId).firstOrNull;
+    final completedMission = state
+        .where((mission) => mission.id == missionId)
+        .firstOrNull;
     if (completedMission == null ||
         completedMission.status == MissionStatus.completed) {
       return null;
@@ -343,7 +353,9 @@ class MissionController extends Notifier<List<Mission>> {
       trigger: ArcActionTrigger.missionCompleted,
     );
     unawaited(
-      ref.read(analyticsServiceProvider).missionCompleted(
+      ref
+          .read(analyticsServiceProvider)
+          .missionCompleted(
             userId: ref.read(authControllerProvider).profile?.id,
             difficulty: updatedMission.difficulty.name,
             hasQuest: updatedMission.questId.isNotEmpty,
@@ -357,7 +369,9 @@ class MissionController extends Notifier<List<Mission>> {
       ),
     );
     unawaited(_recordRouteProgressEvent(updatedMission, 'completed'));
-    final trail = ref.read(trailControllerProvider.notifier).addQuestTrail(
+    final trail = ref
+        .read(trailControllerProvider.notifier)
+        .addQuestTrail(
           questId: completedMission.questId,
           missionId: completedMission.id,
           questTitle: completedMission.questTitle,
@@ -450,8 +464,9 @@ class MissionController extends Notifier<List<Mission>> {
     final sync = ref.read(missionSyncControllerProvider.notifier);
     sync.loading('Missionを保存しています...');
     try {
-      final savedMission =
-          await ref.read(missionRepositoryProvider).save(mission);
+      final savedMission = await ref
+          .read(missionRepositoryProvider)
+          .save(mission);
       if (ref.read(authControllerProvider).profile?.id != userId) return;
       state = [
         for (final current in state)
@@ -489,13 +504,17 @@ class MissionController extends Notifier<List<Mission>> {
     required ArcActionTrigger trigger,
     String? surface,
   }) {
-    final decision = ref.read(arcActionTriggerServiceProvider).resolve(
+    final decision = ref
+        .read(arcActionTriggerServiceProvider)
+        .resolve(
           trigger: trigger,
           missionTitle: mission.title,
           questTitle: mission.questTitle,
           surface: surface,
         );
-    ref.read(arcEmotionTimelineControllerProvider.notifier).record(
+    ref
+        .read(arcEmotionTimelineControllerProvider.notifier)
+        .record(
           emotion: decision.emotion,
           sourceType: decision.sourceType,
           reason: decision.message,
@@ -506,8 +525,9 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   void _growBond(ArcMemorySourceType sourceType) {
-    final growth =
-        ref.read(arcBondGrowthServiceProvider).forMission(sourceType);
+    final growth = ref
+        .read(arcBondGrowthServiceProvider)
+        .forMission(sourceType);
     final award = ref.read(stardustServiceProvider).forMission(sourceType);
     unawaited(
       ref
@@ -546,13 +566,15 @@ class MissionController extends Notifier<List<Mission>> {
     String eventType,
   ) async {
     try {
-      await ref.read(routeReplanningRepositoryProvider).recordProgressEvent(
-        questId: mission.questId,
-        missionId: mission.id,
-        eventType: eventType,
-        eventKey: '$eventType:${mission.id}',
-        metadata: {'progressPercent': mission.progressPercent},
-      );
+      await ref
+          .read(routeReplanningRepositoryProvider)
+          .recordProgressEvent(
+            questId: mission.questId,
+            missionId: mission.id,
+            eventType: eventType,
+            eventKey: '$eventType:${mission.id}',
+            metadata: {'progressPercent': mission.progressPercent},
+          );
     } catch (_) {
       // Route review telemetry must never block Mission completion.
     }
@@ -568,7 +590,9 @@ class MissionController extends Notifier<List<Mission>> {
     }
 
     try {
-      await ref.read(memoryExtractionServiceProvider).extractAndSave(
+      await ref
+          .read(memoryExtractionServiceProvider)
+          .extractAndSave(
             MemoryExtractionEvent(
               userId: userId,
               questId: mission.questId,

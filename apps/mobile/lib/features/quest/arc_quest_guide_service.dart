@@ -10,6 +10,7 @@ import 'quest_evaluation.dart';
 import 'quest_dna.dart';
 import 'quest_evaluation_service.dart';
 import 'quest_model.dart';
+import 'quest_understanding.dart';
 
 class ArcMissionCandidate {
   const ArcMissionCandidate({
@@ -118,6 +119,7 @@ class ArcQuestGuide {
     this.effortEstimate,
     this.questEvaluation,
     this.questDna,
+    this.questUnderstanding,
   });
 
   final String questId;
@@ -130,6 +132,7 @@ class ArcQuestGuide {
   final EffortEstimate? effortEstimate;
   final QuestEvaluation? questEvaluation;
   final QuestDna? questDna;
+  final QuestUnderstanding? questUnderstanding;
 }
 
 abstract interface class ArcQuestGuideService {
@@ -142,7 +145,7 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
   @override
   Future<ArcQuestGuide> generate({required Quest quest}) async {
     final candidates = MissionPlanGraphService.normalize(
-      _missionCandidates(quest),
+      _adaptiveFallbackCandidates(quest),
     );
     final evaluation = QuestEvaluationService.fallback(
       quest: quest,
@@ -170,6 +173,19 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
       ),
       questEvaluation: evaluation,
       questDna: QuestDna.fallback(quest),
+      questUnderstanding: QuestUnderstanding(
+        originalWish: quest.title,
+        questOutcome: '${quest.title}を実現する',
+        successEvidence: '${quest.title}を達成したと確認し、Trailへ記録できる状態',
+        motivation: quest.description,
+        currentState: '現在地は未確認',
+        constraints: const [],
+        knownResources: const [],
+        unknowns: const ['成功条件と利用できる時間を確認する'],
+        planningRisks: const ['未確認の条件を事実として扱わない'],
+        planningMode: QuestPlanningMode.project,
+        assumptions: const ['詳細が分かるまで最小の確認航路を使う'],
+      ),
     );
   }
 
@@ -180,6 +196,77 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
     return '背景には「${quest.description.trim()}」があります。';
   }
 
+  List<ArcMissionCandidate> _adaptiveFallbackCandidates(Quest quest) {
+    final title = quest.title.trim();
+    final target = quest.targetDate == null
+        ? '希望する時期'
+        : '${quest.targetDate!.year}年${quest.targetDate!.month}月';
+    return [
+      ArcMissionCandidate(
+        planKey: 'success-contract',
+        title: '達成したと分かる状態を決める',
+        purpose: 'Questの目的地を明確にする',
+        description: '「$title」で何ができれば達成かを一文で記録したら完了です。',
+        doneCondition: '達成判定を一文で記録する',
+        expectedOutput: 'Questの成功条件',
+        verificationType: 'self_check',
+        guideType: GuideType.route,
+        difficulty: MissionDifficulty.easy,
+        priority: MissionPriority.critical,
+        category: '設計',
+        estimatedDurationDays: 1,
+      ),
+      ArcMissionCandidate(
+        planKey: 'constraints',
+        title: '今の条件と不明点を分ける',
+        purpose: '推測と事実を分ける',
+        description: '使える時間、予算、場所、$target、不明点を分けて記録したら完了です。',
+        doneCondition: '条件と不明点を別々に記録する',
+        expectedOutput: '確認済み条件と質問の一覧',
+        verificationType: 'artifact',
+        dependencyPlanKeys: const ['success-contract'],
+        guideType: GuideType.knowledge,
+        difficulty: MissionDifficulty.easy,
+        priority: MissionPriority.high,
+        category: '確認',
+        estimatedDurationDays: 1,
+      ),
+      const ArcMissionCandidate(
+        planKey: 'source-check',
+        title: '最初に確認する情報源を決める',
+        purpose: '変わりやすい情報を安全に確かめる',
+        description: '公式または専門家の確認先と確認日を一つ記録したら完了です。',
+        doneCondition: '確認先と確認日を記録する',
+        expectedOutput: '確認可能な参照先',
+        verificationType: 'official_source',
+        dependencyPlanKeys: ['constraints'],
+        guideType: GuideType.knowledge,
+        difficulty: MissionDifficulty.easy,
+        priority: MissionPriority.high,
+        category: '確認',
+        estimatedDurationDays: 2,
+      ),
+      const ArcMissionCandidate(
+        planKey: 'first-action',
+        title: '今日の最小の一歩を予定する',
+        purpose: 'Questを実行へ移す',
+        description: '15分から始められる行動、実行日時、完了の印を決めたら完了です。',
+        doneCondition: '日時付きの最初の行動を決める',
+        expectedOutput: '今日のMission予定',
+        verificationType: 'artifact',
+        dependencyPlanKeys: ['constraints'],
+        guideType: GuideType.training,
+        difficulty: MissionDifficulty.easy,
+        priority: MissionPriority.normal,
+        category: '実行',
+        estimatedDurationDays: 1,
+      ),
+    ];
+  }
+
+  // Kept temporarily for migration comparison; production fallback no longer
+  // calls category-derived Mission content.
+  // ignore: unused_element
   List<ArcMissionCandidate> _missionCandidates(Quest quest) {
     if (RegExp(r'(片付|掃除|整理|一冊読む|一回作る)').hasMatch(quest.title)) {
       return [
@@ -349,6 +436,7 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
     ];
   }
 
+  // ignore: unused_element
   List<ArcMissionCandidate> _complexFallback(Quest quest) {
     const stages = [
       '達成条件を定義する',
@@ -417,9 +505,6 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
             'difficulty': quest.difficulty.storageKey,
             'category': quest.category,
             'target_date': quest.targetDate?.toIso8601String(),
-            'planning_context': _planningContextFromDescription(
-              quest.description,
-            ),
           },
           'planning_feedback': feedbackSignals,
         },
@@ -462,6 +547,9 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
             ),
         questDna:
             QuestDna.fromJson(data['quest_dna']) ?? QuestDna.fallback(quest),
+        questUnderstanding: QuestUnderstanding.fromJson(
+          data['quest_understanding'],
+        ),
       );
     } catch (_) {
       return fallback.generate(quest: quest);
@@ -575,12 +663,4 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
             .toList(growable: false) ??
         const [];
   }
-}
-
-String? _planningContextFromDescription(String description) {
-  const marker = '航路条件:';
-  final markerIndex = description.indexOf(marker);
-  if (markerIndex < 0) return null;
-  final context = description.substring(markerIndex + marker.length).trim();
-  return context.isEmpty ? null : context;
 }

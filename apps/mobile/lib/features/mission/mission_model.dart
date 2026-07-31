@@ -38,10 +38,13 @@ class Mission {
     this.difficultyScore,
     this.estimatedDurationDays,
     this.routeState = MissionRouteState.active,
-  })  : id = id ?? _uuid.v4(),
-        progressPercent =
-            progressPercent ?? (status == MissionStatus.completed ? 100 : 0),
-        createdAt = createdAt ?? DateTime.now();
+    this.doneCondition = '',
+    this.expectedOutput = '',
+    this.verificationType = 'self_check',
+  }) : id = id ?? _uuid.v4(),
+       progressPercent =
+           progressPercent ?? (status == MissionStatus.completed ? 100 : 0),
+       createdAt = createdAt ?? DateTime.now();
 
   final String id;
   final String questId;
@@ -66,6 +69,9 @@ class Mission {
   final int? difficultyScore;
   final int? estimatedDurationDays;
   final MissionRouteState routeState;
+  final String doneCondition;
+  final String expectedOutput;
+  final String verificationType;
 
   Mission copyWith({
     String? title,
@@ -88,6 +94,9 @@ class Mission {
     int? difficultyScore,
     int? estimatedDurationDays,
     MissionRouteState? routeState,
+    String? doneCondition,
+    String? expectedOutput,
+    String? verificationType,
   }) {
     return Mission(
       id: id,
@@ -103,8 +112,9 @@ class Mission {
       isToday: isToday ?? this.isToday,
       createdAt: createdAt,
       effortEstimate: effortEstimate ?? this.effortEstimate,
-      parentMissionId:
-          clearParentMission ? null : parentMissionId ?? this.parentMissionId,
+      parentMissionId: clearParentMission
+          ? null
+          : parentMissionId ?? this.parentMissionId,
       dependencyIds: dependencyIds ?? this.dependencyIds,
       priority: priority ?? this.priority,
       category: category ?? this.category,
@@ -116,6 +126,9 @@ class Mission {
       estimatedDurationDays:
           estimatedDurationDays ?? this.estimatedDurationDays,
       routeState: routeState ?? this.routeState,
+      doneCondition: doneCondition ?? this.doneCondition,
+      expectedOutput: expectedOutput ?? this.expectedOutput,
+      verificationType: verificationType ?? this.verificationType,
     );
   }
 }
@@ -137,11 +150,11 @@ extension MissionPriorityStorage on MissionPriority {
   String get storageKey => name;
 
   String get label => switch (this) {
-        MissionPriority.low => '低',
-        MissionPriority.normal => '標準',
-        MissionPriority.high => '高',
-        MissionPriority.critical => '最優先',
-      };
+    MissionPriority.low => '低',
+    MissionPriority.normal => '標準',
+    MissionPriority.high => '高',
+    MissionPriority.critical => '最優先',
+  };
 }
 
 extension GuideTypeStorage on GuideType {

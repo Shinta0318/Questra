@@ -30,6 +30,13 @@ import '../signal/signal_providers.dart';
 import 'mission_controller.dart';
 import 'mission_model.dart';
 
+String _verificationLabel(String value) => switch (value) {
+  'artifact' => '成果物で確認',
+  'official_source' => '公式情報で確認',
+  'professional_review' => '専門家へ確認',
+  _ => '自分で確認',
+};
+
 class MissionScreen extends ConsumerWidget {
   const MissionScreen({super.key});
 
@@ -55,10 +62,11 @@ class MissionScreen extends ConsumerWidget {
         child: QuestraResponsiveListView(
           onRefresh: profile == null
               ? null
-              : () =>
-                  ref.read(missionControllerProvider.notifier).loadForQuests(
-                        quests.map((quest) => quest.id).toList(growable: false),
-                      ),
+              : () => ref
+                    .read(missionControllerProvider.notifier)
+                    .loadForQuests(
+                      quests.map((quest) => quest.id).toList(growable: false),
+                    ),
           padding: const EdgeInsets.all(20),
           children: [
             PersistenceSyncBanner(
@@ -123,6 +131,25 @@ class _InteractiveMissionCard extends ConsumerWidget {
           Text(mission.title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(mission.description),
+          if (mission.doneCondition.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.flag_outlined, size: 18),
+                const SizedBox(width: 6),
+                Expanded(child: Text('完了の目印: ${mission.doneCondition}')),
+              ],
+            ),
+          ],
+          if (mission.expectedOutput.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text('残すもの: ${mission.expectedOutput}'),
+          ],
+          if (mission.verificationType != 'self_check') ...[
+            const SizedBox(height: 4),
+            Text('確認方法: ${_verificationLabel(mission.verificationType)}'),
+          ],
           const SizedBox(height: 10),
           TextButton.icon(
             onPressed: () =>
@@ -169,20 +196,21 @@ class _InteractiveMissionCard extends ConsumerWidget {
           QuestraActionButton(
             onPressed: canComplete
                 ? () => _completeMission(
-                      context,
-                      ref,
-                      mission,
-                      source: _MissionCompletionSource.button,
-                    )
+                    context,
+                    ref,
+                    mission,
+                    source: _MissionCompletionSource.button,
+                  )
                 : null,
             icon: Icon(
               canComplete ? Icons.check_circle_outline : Icons.check_circle,
               color: QuestraColors.gold,
             ),
             label: AnimatedSwitcher(
-              duration: settings.reduceScreenMotion(
-                osReduceMotion: MediaQuery.disableAnimationsOf(context),
-              )
+              duration:
+                  settings.reduceScreenMotion(
+                    osReduceMotion: MediaQuery.disableAnimationsOf(context),
+                  )
                   ? Duration.zero
                   : QuestraMotion.fast,
               switchInCurve: QuestraMotion.standard,
@@ -317,30 +345,28 @@ void _completeMission(
   Mission mission, {
   required _MissionCompletionSource source,
 }) {
-  final completedMission =
-      ref.read(missionControllerProvider.notifier).completeMission(mission.id);
+  final completedMission = ref
+      .read(missionControllerProvider.notifier)
+      .completeMission(mission.id);
   if (completedMission == null) {
     final settings = ref.read(experienceSettingsControllerProvider);
     unawaited(
-      ref.read(hapticFeedbackServiceProvider).trigger(
-            QuestraHapticCue.error,
-            settings: settings,
-          ),
+      ref
+          .read(hapticFeedbackServiceProvider)
+          .trigger(QuestraHapticCue.error, settings: settings),
     );
     return;
   }
   final settings = ref.read(experienceSettingsControllerProvider);
   unawaited(
-    ref.read(hapticFeedbackServiceProvider).trigger(
-          QuestraHapticCue.success,
-          settings: settings,
-        ),
+    ref
+        .read(hapticFeedbackServiceProvider)
+        .trigger(QuestraHapticCue.success, settings: settings),
   );
   unawaited(
-    ref.read(soundEffectServiceProvider).play(
-          QuestraSoundEffect.missionComplete,
-          settings: settings,
-        ),
+    ref
+        .read(soundEffectServiceProvider)
+        .play(QuestraSoundEffect.missionComplete, settings: settings),
   );
   unawaited(
     ref
@@ -348,7 +374,9 @@ void _completeMission(
         .react(ArcAnimationState.cheering),
   );
   unawaited(
-    ref.read(analyticsServiceProvider).track(
+    ref
+        .read(analyticsServiceProvider)
+        .track(
           AnalyticsEvent(
             name: source == _MissionCompletionSource.swipe
                 ? AnalyticsEventName.missionCompletedBySwipe
@@ -359,7 +387,9 @@ void _completeMission(
   );
   showArcCelebrationSnackBar(
     context,
-    ref.read(arcCelebrationServiceProvider).build(
+    ref
+        .read(arcCelebrationServiceProvider)
+        .build(
           event: ArcCelebrationEvent.missionCompleted,
           subject: completedMission.title,
         ),

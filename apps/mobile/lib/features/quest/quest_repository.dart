@@ -5,6 +5,7 @@ import '../../core/estimation/effort_estimate.dart';
 import 'quest_model.dart';
 import 'quest_dna.dart';
 import 'quest_evaluation.dart';
+import 'quest_understanding.dart';
 
 const _questColumns =
     'id,title,description,difficulty,status,visibility,target_date,'
@@ -12,7 +13,7 @@ const _questColumns =
     'difficulty_score,estimated_duration_days,estimated_cost,'
     'estimated_success_rate,estimated_mission_count,evaluation_version,'
     'evaluated_at,recommended_start_date,risk_summary,quest_dna,'
-    'quest_dna_version,quest_dna_evaluated_at,created_at';
+    'quest_dna_version,quest_dna_evaluated_at,quest_understanding,created_at';
 
 abstract interface class QuestRepository {
   Future<List<Quest>> findByUser(
@@ -125,6 +126,7 @@ class SupabaseQuestRepository implements QuestRepository {
       'quest_dna': quest.dna?.toJson(),
       'quest_dna_version': quest.dna?.version,
       'quest_dna_evaluated_at': quest.dna?.evaluatedAt.toIso8601String(),
+      'quest_understanding': quest.understanding?.toJson(),
       'difficulty_score': quest.evaluation?.difficultyScore,
       'estimated_duration_days': quest.evaluation?.estimatedDurationDays,
       'estimated_cost': quest.evaluation?.estimatedCostLabel,
@@ -157,6 +159,7 @@ class SupabaseQuestRepository implements QuestRepository {
       effortEstimate: effortEstimateFromJson(row['effort_estimate']),
       evaluation: QuestEvaluation.fromJson(row['quest_evaluation']),
       dna: QuestDna.fromJson(row['quest_dna']),
+      understanding: QuestUnderstanding.fromJson(row['quest_understanding']),
     );
   }
 }

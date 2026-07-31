@@ -31,6 +31,37 @@ class QuestUnderstanding {
   final int version;
   final DateTime evaluatedAt;
 
+  static QuestUnderstanding? fromJson(Object? value) {
+    if (value is! Map) return null;
+    final data = Map<String, dynamic>.from(value);
+    final originalWish = data['original_wish'] as String?;
+    final questOutcome = data['quest_outcome'] as String?;
+    final successEvidence = data['success_evidence'] as String?;
+    if (originalWish == null ||
+        questOutcome == null ||
+        successEvidence == null) {
+      return null;
+    }
+    return QuestUnderstanding(
+      originalWish: originalWish,
+      questOutcome: questOutcome,
+      successEvidence: successEvidence,
+      motivation: data['motivation'] as String? ?? '',
+      currentState: data['current_state'] as String? ?? '',
+      constraints: _strings(data['constraints']),
+      knownResources: _strings(data['known_resources']),
+      unknowns: _strings(data['unknowns']),
+      planningRisks: _strings(data['planning_risks']),
+      planningMode: QuestPlanningMode.values.firstWhere(
+        (mode) => mode.name == data['planning_mode'],
+        orElse: () => QuestPlanningMode.project,
+      ),
+      assumptions: _strings(data['assumptions']),
+      version: data['version'] as int? ?? 1,
+      evaluatedAt: DateTime.tryParse(data['evaluated_at'] as String? ?? ''),
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'original_wish': originalWish,
     'quest_outcome': questOutcome,
@@ -46,4 +77,7 @@ class QuestUnderstanding {
     'version': version,
     'evaluated_at': evaluatedAt.toIso8601String(),
   };
+
+  static List<String> _strings(Object? value) =>
+      (value as List?)?.whereType<String>().toList(growable: false) ?? const [];
 }

@@ -5,7 +5,7 @@ import '../../core/estimation/effort_estimate.dart';
 import 'mission_model.dart';
 
 const _missionColumns =
-    'id,quest_id,title,description,guide_type,difficulty,status,progress_percent,sort_order,is_today,effort_estimate,parent_mission_id,dependency_ids,priority,category,estimated_cost_label,reference_hints,enterprise_support_hints,difficulty_score,estimated_duration_days,route_state,created_at,quests!inner(title)';
+    'id,quest_id,title,description,guide_type,difficulty,status,progress_percent,sort_order,is_today,effort_estimate,parent_mission_id,dependency_ids,priority,category,estimated_cost_label,reference_hints,enterprise_support_hints,difficulty_score,estimated_duration_days,route_state,done_condition,expected_output,verification_type,created_at,quests!inner(title)';
 
 abstract interface class MissionRepository {
   Future<List<Mission>> findByQuest(
@@ -28,14 +28,15 @@ class InMemoryMissionRepository implements MissionRepository {
     String questId, {
     int limit = QuestraPerformanceLimits.missionListLimit,
   }) async {
-    final missions = _missions
-        .where(
-          (mission) =>
-              mission.questId == questId &&
-              mission.routeState != MissionRouteState.removed,
-        )
-        .toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final missions =
+        _missions
+            .where(
+              (mission) =>
+                  mission.questId == questId &&
+                  mission.routeState != MissionRouteState.removed,
+            )
+            .toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     return missions.take(limit).toList(growable: false);
   }
 
@@ -45,19 +46,20 @@ class InMemoryMissionRepository implements MissionRepository {
     int limit = QuestraPerformanceLimits.missionListLimit,
   }) async {
     final questIdSet = questIds.toSet();
-    final missions = _missions
-        .where(
-          (mission) =>
-              questIdSet.contains(mission.questId) &&
-              mission.routeState != MissionRouteState.removed,
-        )
-        .toList()
-      ..sort((a, b) {
-        final questOrder = a.questId.compareTo(b.questId);
-        return questOrder != 0
-            ? questOrder
-            : a.sortOrder.compareTo(b.sortOrder);
-      });
+    final missions =
+        _missions
+            .where(
+              (mission) =>
+                  questIdSet.contains(mission.questId) &&
+                  mission.routeState != MissionRouteState.removed,
+            )
+            .toList()
+          ..sort((a, b) {
+            final questOrder = a.questId.compareTo(b.questId);
+            return questOrder != 0
+                ? questOrder
+                : a.sortOrder.compareTo(b.sortOrder);
+          });
     return missions.take(limit).toList(growable: false);
   }
 
@@ -165,6 +167,9 @@ class SupabaseMissionRepository implements MissionRepository {
       'difficulty_score': mission.difficultyScore,
       'estimated_duration_days': mission.estimatedDurationDays,
       'route_state': mission.routeState.name,
+      'done_condition': mission.doneCondition,
+      'expected_output': mission.expectedOutput,
+      'verification_type': mission.verificationType,
       'completed_at': mission.status == MissionStatus.completed
           ? DateTime.now().toIso8601String()
           : null,
@@ -187,7 +192,8 @@ class SupabaseMissionRepository implements MissionRepository {
       guideType: guideTypeFromStorage(row['guide_type'] as String),
       difficulty: missionDifficultyFromStorage(row['difficulty'] as String),
       status: missionStatusFromStorage(row['status'] as String),
-      progressPercent: row['progress_percent'] as int? ??
+      progressPercent:
+          row['progress_percent'] as int? ??
           ((row['status'] as String) == 'completed' ? 100 : 0),
       sortOrder: row['sort_order'] as int? ?? 0,
       isToday: row['is_today'] as bool? ?? false,
@@ -207,6 +213,9 @@ class SupabaseMissionRepository implements MissionRepository {
       routeState: missionRouteStateFromStorage(
         row['route_state'] as String? ?? 'active',
       ),
+      doneCondition: row['done_condition'] as String? ?? '',
+      expectedOutput: row['expected_output'] as String? ?? '',
+      verificationType: row['verification_type'] as String? ?? 'self_check',
     );
   }
 

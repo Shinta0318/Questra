@@ -134,7 +134,7 @@ async function generateWithGemini(
         options.maxOutputTokens,
         DEFAULT_MAX_OUTPUT_TOKENS,
         128,
-        2_048,
+        8_192,
       ),
       temperature: boundedNumber(options.temperature, 0.7, 0, 1.5),
       thinking_level: "minimal",
@@ -181,7 +181,7 @@ async function generateWithOpenAi(
       options.maxOutputTokens,
       DEFAULT_MAX_OUTPUT_TOKENS,
       128,
-      2_048,
+      8_192,
     ),
   };
   if (options.responseSchema) {
