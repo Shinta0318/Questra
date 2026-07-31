@@ -1,0 +1,10 @@
+{
+  "@@locale": "en",
+  "appName": "Questra",
+  "home": "Home",
+  "quest": "Quest",
+  "trail": "Trail",
+  "guild": "Guild",
+  "profile": "Profile",
+  "arc": "Arc"
+}

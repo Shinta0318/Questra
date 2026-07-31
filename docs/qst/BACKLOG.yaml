@@ -2483,7 +2483,7 @@ items:
       - Deferred features do not leave dead shortcuts or explanatory clutter.
   - id: QST-208
     title: Questra Design Bible V2 and Golden Baseline
-    status: Planned
+    status: In Progress
     priority: P1
     epic: DESIGN-SYSTEM
     depends_on: [QST-197]
@@ -2511,7 +2511,7 @@ items:
       - File-level warning suppressions are reduced and ownership is clearer.
   - id: QST-210
     title: Integration Test and GitHub Actions Release Gate
-    status: Planned
+    status: In Progress
     priority: P2
     epic: RELEASE-ENGINEERING
     depends_on: [QST-196, QST-199]
@@ -2539,7 +2539,7 @@ items:
       - Audit logs identify tool, model, schema version, validation result, and user decision.
   - id: QST-212
     title: Web Security Headers and Threat Model
-    status: Planned
+    status: In Progress
     priority: P2
     epic: SECURITY
     depends_on: [QST-198, QST-199]
@@ -2553,7 +2553,7 @@ items:
       - Security checks run in the release gate without logging secrets.
   - id: QST-213
     title: Internationalization and Store Readiness
-    status: Planned
+    status: In Progress
     priority: P3
     epic: RELEASE-READINESS
     depends_on: [QST-208]

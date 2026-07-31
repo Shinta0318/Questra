@@ -10,6 +10,7 @@ import 'core/router/app_router.dart';
 import 'core/router/app_routes.dart';
 import 'core/theme/questra_theme.dart';
 import 'features/auth/auth_controller.dart';
+import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,8 +47,10 @@ class QuestraApp extends ConsumerWidget {
     );
 
     return MaterialApp.router(
-      title: 'Questra',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: QuestraTheme.light,
       scrollBehavior: const QuestraScrollBehavior(),
       routerConfig: router,
