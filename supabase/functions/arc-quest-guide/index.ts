@@ -178,6 +178,9 @@ const questGuideSchema = {
           title: { type: "string" },
           description: { type: "string" },
           purpose: { type: "string" },
+          done_condition: { type: "string" },
+          expected_output: { type: "string" },
+          verification_type: { type: "string", enum: ["self_check", "artifact", "official_source", "professional_review"] },
           parent_plan_key: { type: "string" },
           dependency_plan_keys: { type: "array", items: { type: "string" }, maxItems: 12 },
           guide_type: {
@@ -194,7 +197,7 @@ const questGuideSchema = {
           enterprise_support_hints: { type: "array", items: { type: "string" }, maxItems: 4 },
           effort_estimate: effortEstimateSchema(),
         },
-        required: ["plan_key", "title", "description", "purpose", "dependency_plan_keys", "guide_type", "difficulty", "priority", "category", "estimated_duration_days", "difficulty_score", "reference_hints", "enterprise_support_hints", "effort_estimate"],
+        required: ["plan_key", "title", "description", "purpose", "done_condition", "expected_output", "verification_type", "dependency_plan_keys", "guide_type", "difficulty", "priority", "category", "estimated_duration_days", "difficulty_score", "reference_hints", "enterprise_support_hints", "effort_estimate"],
       },
     },
   },
@@ -404,6 +407,9 @@ function normalizeCandidate(candidate: unknown): MissionCandidate | null {
     title: textOr(data.title, "最初の一歩を選ぶ"),
     description: textOr(data.description, "今日できる小さなMissionです。"),
     purpose: textOr(data.purpose, "Questを一歩進める"),
+    done_condition: textOr(data.done_condition, textOr(data.description, "完了条件を記録したら完了です。")),
+    expected_output: textOr(data.expected_output, "Questメモに残る確認可能な記録"),
+    verification_type: verificationType(data.verification_type),
     parent_plan_key: optionalText(data.parent_plan_key),
     dependency_plan_keys: stringList(data.dependency_plan_keys, 12),
     guide_type: guideType(data.guide_type),
@@ -485,6 +491,13 @@ function guideType(value: unknown) {
 
 function difficulty(value: unknown) {
   return value === "normal" ? "normal" : "easy";
+}
+
+function verificationType(value: unknown) {
+  const allowed = ["self_check", "artifact", "official_source", "professional_review"];
+  return typeof value === "string" && allowed.includes(value)
+    ? value
+    : "self_check";
 }
 
 function priority(value: unknown) {

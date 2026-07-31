@@ -21,6 +21,9 @@ class ArcMissionCandidate {
     this.questEvaluation,
     this.planKey = '',
     this.purpose = '',
+    this.doneCondition = '',
+    this.expectedOutput = '',
+    this.verificationType = 'self_check',
     this.parentPlanKey,
     this.dependencyPlanKeys = const [],
     this.priority = MissionPriority.normal,
@@ -40,6 +43,9 @@ class ArcMissionCandidate {
   final QuestEvaluation? questEvaluation;
   final String planKey;
   final String purpose;
+  final String doneCondition;
+  final String expectedOutput;
+  final String verificationType;
   final String? parentPlanKey;
   final List<String> dependencyPlanKeys;
   final MissionPriority priority;
@@ -55,6 +61,9 @@ class ArcMissionCandidate {
     String? title,
     String? description,
     String? purpose,
+    String? doneCondition,
+    String? expectedOutput,
+    String? verificationType,
     String? parentPlanKey,
     bool clearParentPlan = false,
     List<String>? dependencyPlanKeys,
@@ -74,6 +83,9 @@ class ArcMissionCandidate {
       title: title ?? this.title,
       description: description ?? this.description,
       purpose: purpose ?? this.purpose,
+      doneCondition: doneCondition ?? this.doneCondition,
+      expectedOutput: expectedOutput ?? this.expectedOutput,
+      verificationType: verificationType ?? this.verificationType,
       parentPlanKey: clearParentPlan
           ? null
           : parentPlanKey ?? this.parentPlanKey,
@@ -492,6 +504,9 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
       title: title,
       description: description,
       purpose: data['purpose'] as String? ?? '',
+      doneCondition: data['done_condition'] as String? ?? description,
+      expectedOutput: data['expected_output'] as String? ?? '',
+      verificationType: data['verification_type'] as String? ?? 'self_check',
       parentPlanKey: data['parent_plan_key'] as String?,
       dependencyPlanKeys: _stringList(data['dependency_plan_keys'], 12),
       guideType: _guideTypeFromValue(data['guide_type'] as String?),
