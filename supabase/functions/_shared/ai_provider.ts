@@ -153,6 +153,7 @@ async function generateWithGemini(
     headers: {
       "Content-Type": "application/json",
       "x-goog-api-key": apiKey,
+      "Api-Revision": "2026-05-20",
     },
     body: JSON.stringify(body),
   });

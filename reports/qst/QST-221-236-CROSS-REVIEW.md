@@ -40,4 +40,4 @@ Status: In Progress
 - All 330 Flutter tests passed and `flutter analyze` reported no issues.
 - Migrations `202608010001` through `202608010005` were applied to the hosted Supabase project.
 - `arc-quest-guide` was redeployed and its hosted fallback returned four Missions with Quest Understanding and complete Mission contracts.
-- The hosted response still reports `local_arc_quest_guide`; Gemini-provider success remains an active blocker rather than a completed acceptance item.
+- The hosted response still reports `local_arc_quest_guide`. The latest Edge log reports Gemini HTTP `429` after the API revision fix, so free-tier quota recovery is the remaining provider-side blocker.
