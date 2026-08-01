@@ -2898,6 +2898,106 @@ items:
     scope: Add whitelist definitions, k=10 snapshots, sensitivity exclusion, no client raw access, expiry, and access audit foundation.
     likely_files: [apps/mobile/lib/features/business_foundation, supabase/migrations, reports/qst/QST-242.md]
     acceptance: [Cohorts below 10 are suppressed, raw text and sensitive attributes are absent, snapshots expire, and Business access remains server-only.]
+  - id: QST-248
+    title: Gemini Interactions API Migration
+    status: ImplementedE2EPending
+    priority: P0
+    epic: GEMINI-QUEST-PLANNING-V2
+    depends_on: [QST-236]
+    goal: 新規Quest PlanningをProvider非依存契約とGemini Interactions APIへ移行する。
+    scope: Add provider request/response contracts, Interactions and Legacy adapters, trace/idempotency, timeout, retry, cancellation boundaries, and server-only secrets.
+    likely_files: [supabase/functions/_shared/quest_planning, supabase/functions/quest-planning-v2, docs/architecture/GEMINI_QUEST_PLANNING_V2.md, reports/qst/QST-248.md]
+    acceptance: [New planning uses Interactions v1, Flutter contains no Gemini secret, Legacy removal criteria are documented, and provider failure cannot persist an empty plan.]
+  - id: QST-249
+    title: Gemini Model Routing and Version Pinning
+    status: Completed
+    priority: P0
+    epic: GEMINI-QUEST-PLANNING-V2
+    depends_on: [QST-248]
+    goal: 処理別Stableモデルと安全なFallbackをRegistryで管理する。
+    scope: Pin Stable models, isolate Preview behind a disabled flag, reject latest/experimental production routing, and persist capability metadata.
+    likely_files: [supabase/functions/_shared/quest_planning/model_registry.ts, supabase/migrations/202608010021_gemini_quest_planning_v2.sql, reports/qst/QST-249.md]
+    acceptance: [Roles route independently, production avoids latest aliases, fallback is idempotent, and model changes need no domain migration.]
+  - id: QST-250
+    title: Gemini Structured Quest Output Contract
+    status: Completed
+    priority: P0
+    epic: GEMINI-QUEST-PLANNING-V2
+    depends_on: [QST-248, QST-249]
+    goal: Planning出力をversion付きJSON SchemaとDomain/Semantic Validationで保護する。
+    scope: Add schemas for understanding, success contract, strategy, Missions, critic and repair; validate IDs, counts, ranges, dependencies, cycles, relevance and verifiability.
+    likely_files: [supabase/functions/_shared/quest_planning/schemas.ts, supabase/functions/_shared/quest_planning/validators.ts, reports/qst/QST-250.md]
+    acceptance: [No regex JSON extraction, invalid schema is not persisted, cycles are rejected, and failed Mission IDs are available for targeted repair.]
+  - id: QST-251
+    title: Gemini Thinking Level Strategy
+    status: Completed
+    priority: P1
+    epic: GEMINI-QUEST-PLANNING-V2
+    depends_on: [QST-249]
+    goal: Passの複雑性とモデル能力に合わせてThinking Levelを安全に選ぶ。
+    scope: Add role defaults, complexity escalation, unsupported-level fallback, environment overrides, and version metadata.
+    likely_files: [supabase/functions/_shared/quest_planning/thinking_policy.ts, supabase/functions/_shared/quest_planning/model_registry.ts, reports/qst/QST-251.md]
+    acceptance: [Complex planning uses higher thinking, classifiers do not, unsupported values fall back safely, and raw thoughts are not persisted or shown.]
+  - id: QST-252
+    title: Multi-Pass Gemini Quest Planning Pipeline
+    status: ImplementedClientIntegrationPending
+    priority: P0
+    epic: GEMINI-QUEST-PLANNING-V2
+    depends_on: [QST-248, QST-250, QST-251]
+    goal: Quest理解から承認前Previewまでを独立Passとして実行する。
+    scope: Orchestrate understanding, clarification, success contract, strategy, variable Missions, validation, critic, one targeted repair, preview, and transactional approval.
+    likely_files: [supabase/functions/_shared/quest_planning/pipeline.ts, supabase/functions/quest-planning-v2/index.ts, supabase/migrations/202608010021_gemini_quest_planning_v2.sql, reports/qst/QST-252.md]
+    acceptance: [Success Contract precedes Missions, Mission count is variable, only failed items repair, preview cannot persist directly, and approval is transactional.]
+  - id: QST-253
+    title: Gemini Google Search Grounding for Quest Facts
+    status: Completed
+    priority: P0
+    epic: GEMINI-QUEST-PLANNING-V2
+    depends_on: [QST-248, QST-252]
+    goal: 最新情報が必要なQuestを自動判定し、検索根拠なしの断定を防ぐ。
+    scope: Add grounding decision, Google Search tool use, personal-data query sanitization, metadata requirement, and Grounded Fact storage.
+    likely_files: [supabase/functions/_shared/quest_planning/grounding.ts, supabase/functions/_shared/quest_planning/pipeline.ts, supabase/migrations/202608010021_gemini_quest_planning_v2.sql, reports/qst/QST-253.md]
+    acceptance: [Sensitive categories require grounding, missing grounding blocks preview, query PII is removed, and source/freshness metadata can persist.]
+  - id: QST-254
+    title: Gemini Function Calling and Questra Tool Layer
+    status: ImplementedModelToolLoopPending
+    priority: P1
+    epic: GEMINI-QUEST-PLANNING-V2
+    depends_on: [QST-248, QST-252]
+    goal: GeminiへDB権限を渡さず、許可済みToolを所有者境界内で実行する。
+    scope: Add tool schemas, read/write separation, owner authorization, bounded Memory, redaction, approval enforcement, idempotency boundary, and metadata-only audit.
+    likely_files: [supabase/functions/_shared/quest_planning/tool_registry.ts, supabase/functions/_shared/quest_planning/tool_server.ts, supabase/migrations/202608010021_gemini_quest_planning_v2.sql, reports/qst/QST-254.md]
+    acceptance: [Cross-owner IDs are denied, writes require approval, tool arguments are validated, personal fields are redacted, and calls are auditable.]
+  - id: QST-255
+    title: Gemini Error Recovery and Non-Template Fallback
+    status: Completed
+    priority: P0
+    epic: GEMINI-QUEST-PLANNING-V2
+    depends_on: [QST-248, QST-250, QST-252]
+    goal: AI障害時に入力と良いPassを保持し、固定Missionテンプレートへ退避しない。
+    scope: Add error taxonomy, bounded retry, Stable model fallback, partial pass result, retry/manual statuses, and idempotent preview persistence.
+    likely_files: [supabase/functions/_shared/quest_planning/errors.ts, supabase/functions/_shared/quest_planning/interactions_adapter.ts, supabase/functions/_shared/quest_planning/pipeline.ts, reports/qst/QST-255.md]
+    acceptance: [Retries are bounded, input remains client-owned, no duplicate preview or Mission is created, and manual creation remains available.]
+  - id: QST-256
+    title: Gemini Quest Planning Evaluation Suite
+    status: ImplementedReleaseGatePending
+    priority: P0
+    epic: GEMINI-QUEST-PLANNING-V2
+    depends_on: [QST-249, QST-250, QST-251, QST-252, QST-253, QST-254, QST-255]
+    goal: 200件固定コーパスで品質・安全・Schema・Gemini実応答を昇格条件にする。
+    scope: Reuse the 200-case corpus, aggregate critical metrics, provide a human review sheet, block below thresholds, and separate provider availability from local contracts.
+    likely_files: [tools/qst/quest_planning_eval_200.json, tools/qst/quest_planning_release_gate.ps1, tools/qst/quest_planning_human_review.csv, reports/qst/QST-256.md]
+    acceptance: [At least 200 cases are compared, safety violations are zero, provider-backed rate is measured, and failed gates block release promotion.]
+  - id: QST-257
+    title: Gemini Prompt and Schema Registry
+    status: ImplementedActivationWorkflowPending
+    priority: P1
+    epic: GEMINI-QUEST-PLANNING-V2
+    depends_on: [QST-248, QST-250]
+    goal: Prompt、Schema、Model Role、Thinkingを追跡可能なRegistryへ集約する。
+    scope: Add typed active registry, DB metadata registry, one-active constraint, version trace, admin-only tables, rollback and compatibility guidance.
+    likely_files: [supabase/functions/_shared/quest_planning/prompt_registry.ts, supabase/migrations/202608010021_gemini_quest_planning_v2.sql, docs/architecture/GEMINI_QUEST_PLANNING_V2.md, reports/qst/QST-257.md]
+    acceptance: [Every pass records versions, production uses active definitions, registries are not client writable, and rollback is documented.]
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

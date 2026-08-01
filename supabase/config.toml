@@ -71,6 +71,12 @@ verify_jwt = true
 [functions.arc-quest-guide]
 verify_jwt = true
 
+[functions.quest-planning-v2]
+verify_jwt = true
+
+[functions.quest-planning-tools]
+verify_jwt = true
+
 [functions.generate-arc-advice]
 verify_jwt = true
 
