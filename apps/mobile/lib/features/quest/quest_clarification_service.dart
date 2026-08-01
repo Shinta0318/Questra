@@ -1,10 +1,4 @@
-enum QuestClarificationType {
-  deadline,
-  budget,
-  location,
-  experience,
-  safety,
-}
+enum QuestClarificationType { deadline, budget, location, experience, safety }
 
 class QuestClarificationQuestion {
   const QuestClarificationQuestion({
@@ -21,32 +15,32 @@ class QuestClarificationQuestion {
 abstract final class QuestClarificationService {
   static const _questions =
       <QuestClarificationType, QuestClarificationQuestion>{
-    QuestClarificationType.deadline: QuestClarificationQuestion(
-      type: QuestClarificationType.deadline,
-      label: 'いつまでに叶えたい？',
-      hint: '未定でも、そのまま進められます。',
-    ),
-    QuestClarificationType.budget: QuestClarificationQuestion(
-      type: QuestClarificationType.budget,
-      label: '使える予算の目安は？',
-      hint: '例: 20万円まで、まずは無料で試したい',
-    ),
-    QuestClarificationType.location: QuestClarificationQuestion(
-      type: QuestClarificationType.location,
-      label: '場所や地域の希望は？',
-      hint: '例: シンガポール、市内から通える範囲',
-    ),
-    QuestClarificationType.experience: QuestClarificationQuestion(
-      type: QuestClarificationType.experience,
-      label: '今の経験や準備状況は？',
-      hint: '例: 初めて、基礎は学習済み、旅券は取得済み',
-    ),
-    QuestClarificationType.safety: QuestClarificationQuestion(
-      type: QuestClarificationType.safety,
-      label: '配慮したいことは？',
-      hint: '例: 体調、食事、移動、同行者について',
-    ),
-  };
+        QuestClarificationType.deadline: QuestClarificationQuestion(
+          type: QuestClarificationType.deadline,
+          label: 'いつまでに叶えたい？',
+          hint: '未定でも、そのまま進められます。',
+        ),
+        QuestClarificationType.budget: QuestClarificationQuestion(
+          type: QuestClarificationType.budget,
+          label: '使える予算の目安は？',
+          hint: '例: 20万円まで、まずは無料で試したい',
+        ),
+        QuestClarificationType.location: QuestClarificationQuestion(
+          type: QuestClarificationType.location,
+          label: '場所や地域の希望は？',
+          hint: '例: シンガポール、市内から通える範囲',
+        ),
+        QuestClarificationType.experience: QuestClarificationQuestion(
+          type: QuestClarificationType.experience,
+          label: '今の経験や準備状況は？',
+          hint: '例: 初めて、基礎は学習済み、旅券は取得済み',
+        ),
+        QuestClarificationType.safety: QuestClarificationQuestion(
+          type: QuestClarificationType.safety,
+          label: '配慮したいことは？',
+          hint: '例: 体調、食事、移動、同行者について',
+        ),
+      };
 
   static List<QuestClarificationQuestion> resolve({
     required String input,
@@ -68,22 +62,40 @@ abstract final class QuestClarificationService {
       if (!_hasSafetyContext(source)) {
         candidates.add(QuestClarificationType.safety);
       }
-    } else if (_containsAny(
-        source, const ['学習', '勉強', '資格', '語学', '英語', '習得'])) {
+    } else if (_containsAny(source, const [
+      '学習',
+      '勉強',
+      '資格',
+      '語学',
+      '英語',
+      '習得',
+    ])) {
       if (!_hasExperience(source)) {
         candidates.add(QuestClarificationType.experience);
       }
       if (!_hasBudget(source)) candidates.add(QuestClarificationType.budget);
-    } else if (_containsAny(
-        source, const ['健康', '運動', '減量', 'マラソン', '筋トレ', '治療'])) {
+    } else if (_containsAny(source, const [
+      '健康',
+      '運動',
+      '減量',
+      'マラソン',
+      '筋トレ',
+      '治療',
+    ])) {
       if (!_hasExperience(source)) {
         candidates.add(QuestClarificationType.experience);
       }
       if (!_hasSafetyContext(source)) {
         candidates.add(QuestClarificationType.safety);
       }
-    } else if (_containsAny(
-        source, const ['起業', '仕事', '転職', '副業', '開発', '制作'])) {
+    } else if (_containsAny(source, const [
+      '起業',
+      '仕事',
+      '転職',
+      '副業',
+      '開発',
+      '制作',
+    ])) {
       if (!_hasBudget(source)) candidates.add(QuestClarificationType.budget);
       if (!_hasExperience(source)) {
         candidates.add(QuestClarificationType.experience);
@@ -143,24 +155,35 @@ abstract final class QuestClarificationService {
       ).hasMatch(input) ||
       _containsAny(input, const ['場所', '地域', 'オンライン', '自宅', '近所']);
 
-  static bool _hasExperience(String source) => _containsAny(
-        source,
-        const ['初めて', '初心者', '経験', '未経験', '準備済み', '取得済み', '勉強中'],
-      );
+  static bool _hasExperience(String source) => _containsAny(source, const [
+    '初めて',
+    '初心者',
+    '経験',
+    '未経験',
+    '準備済み',
+    '取得済み',
+    '勉強中',
+  ]);
 
-  static bool _hasSafetyContext(String source) => _containsAny(
-        source,
-        const ['体調', '持病', 'アレルギー', '食事制限', '安全', '同行', '子ども', '介助'],
-      );
+  static bool _hasSafetyContext(String source) => _containsAny(source, const [
+    '体調',
+    '持病',
+    'アレルギー',
+    '食事制限',
+    '安全',
+    '同行',
+    '子ども',
+    '介助',
+  ]);
 
   static bool _containsAny(String source, List<String> values) =>
       values.any(source.contains);
 
   static String _answerLabel(QuestClarificationType type) => switch (type) {
-        QuestClarificationType.deadline => '期限',
-        QuestClarificationType.budget => '予算',
-        QuestClarificationType.location => '場所',
-        QuestClarificationType.experience => '現在地',
-        QuestClarificationType.safety => '配慮事項',
-      };
+    QuestClarificationType.deadline => '期限',
+    QuestClarificationType.budget => '予算',
+    QuestClarificationType.location => '場所',
+    QuestClarificationType.experience => '現在地',
+    QuestClarificationType.safety => '配慮事項',
+  };
 }

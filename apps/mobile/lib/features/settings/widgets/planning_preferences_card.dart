@@ -149,8 +149,15 @@ class PlanningPreferencesCard extends ConsumerWidget {
     final preferenceText = TextEditingController(
       text: preferences.context.preferences.join('、'),
     );
+    final setbacks = TextEditingController(
+      text: preferences.context.setbackReasons.join('、'),
+    );
+    final history = TextEditingController(
+      text: preferences.context.approvedMissionHistorySummary,
+    );
     var budget = preferences.context.budgetLabel ?? '未設定';
     var experience = preferences.context.experience ?? '未設定';
+    var companionType = preferences.context.companionType ?? 'ひとりで進める';
     final result = await showDialog<PlanningContext>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -189,6 +196,20 @@ class PlanningPreferencesCard extends ConsumerWidget {
                       setDialogState(() => experience = value ?? experience),
                 ),
                 const SizedBox(height: AppSpacing.md),
+                const _FieldLabel('一緒に進める相手'),
+                DropdownButtonFormField<String>(
+                  initialValue: companionType,
+                  items: const ['ひとりで進める', '家族・友人と進める', '仲間を探したい', '専門家と進めたい']
+                      .map(
+                        (value) =>
+                            DropdownMenuItem(value: value, child: Text(value)),
+                      )
+                      .toList(growable: false),
+                  onChanged: (value) => setDialogState(
+                    () => companionType = value ?? companionType,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
                 const _FieldLabel('場所・地域'),
                 TextField(
                   controller: location,
@@ -207,6 +228,24 @@ class PlanningPreferencesCard extends ConsumerWidget {
                   maxLength: 240,
                   decoration: const InputDecoration(hintText: '例：休日中心、費用を抑える'),
                 ),
+                const _FieldLabel('以前止まりやすかった理由'),
+                TextField(
+                  controller: setbacks,
+                  maxLength: 240,
+                  decoration: const InputDecoration(
+                    hintText: '例：時間不足、費用、手順が曖昧',
+                  ),
+                ),
+                const _FieldLabel('Arcに使ってよい過去のMission傾向'),
+                TextField(
+                  controller: history,
+                  maxLength: 500,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    hintText: '例：平日の短いMissionは続けやすかった',
+                  ),
+                ),
               ],
             ),
           ),
@@ -224,6 +263,9 @@ class PlanningPreferencesCard extends ConsumerWidget {
                   location: location.text.trim(),
                   availableResources: _splitValues(resources.text),
                   preferences: _splitValues(preferenceText.text),
+                  companionType: companionType,
+                  setbackReasons: _splitValues(setbacks.text),
+                  approvedMissionHistorySummary: history.text.trim(),
                 ),
               ),
               child: const Text('保存'),
@@ -235,6 +277,8 @@ class PlanningPreferencesCard extends ConsumerWidget {
     location.dispose();
     resources.dispose();
     preferenceText.dispose();
+    setbacks.dispose();
+    history.dispose();
     if (result != null) {
       await controller.apply(preferences.copyWith(context: result));
     }

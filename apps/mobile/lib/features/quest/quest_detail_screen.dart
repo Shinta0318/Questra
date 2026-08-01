@@ -27,12 +27,17 @@ import '../mission/mission_controller.dart';
 import '../mission/mission_contract_service.dart';
 import '../mission/mission_model.dart';
 import '../mission/mission_plan_draft.dart';
+import '../mission/mission_plan_feedback.dart';
+import '../mission/mission_plan_feedback_repository.dart';
+import '../mission/mission_regeneration_intent.dart';
+import '../mission/mission_regeneration_proposal_service.dart';
 import '../mission/progressive_route_reveal_service.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
 import 'arc_quest_guide_controller.dart';
 import 'arc_quest_guide_service.dart';
 import 'adaptive_route_service.dart';
+import 'gentle_recovery_service.dart';
 import 'quest_controller.dart';
 import 'quest_canvas_service.dart';
 import 'quest_guide_model.dart';
@@ -40,6 +45,7 @@ import 'quest_milestone_controller.dart';
 import 'quest_milestone_model.dart';
 import 'quest_dna_snapshot.dart';
 import 'quest_model.dart';
+import 'quest_understanding.dart';
 import 'quest_progress_service.dart';
 import 'quest_providers.dart';
 import 'quest_planning_feedback_repository.dart';
@@ -94,6 +100,8 @@ class QuestDetailScreen extends ConsumerWidget {
               onEdit: () => _showQuestEditDialog(context, ref, quest),
             ),
             const SizedBox(height: 16),
+            _SuccessContractCard(quest: quest),
+            const SizedBox(height: 16),
             _ProgressSection(quest: quest, missions: missions),
             const SizedBox(height: 16),
             _QuestCanvasCard(
@@ -119,6 +127,184 @@ class QuestDetailScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _SuccessContractCard extends ConsumerWidget {
+  const _SuccessContractCard({required this.quest});
+
+  final Quest quest;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final understanding = quest.understanding;
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.flag_circle_outlined, color: QuestraColors.gold),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Questの達成条件',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: understanding == null
+                    ? null
+                    : () => _showSuccessContractDialog(
+                        context,
+                        ref,
+                        quest,
+                        understanding,
+                      ),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('確認・編集'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (understanding == null)
+            const Text('Arcガイドを生成すると、達成したと判断できる状態をここで確認できます。')
+          else ...[
+            Text(
+              understanding.questOutcome,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 6),
+            Text(understanding.successEvidence),
+            if (understanding.assumptions.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                '仮定: ${understanding.assumptions.join('・')}',
+                style: const TextStyle(
+                  color: QuestraColors.slate,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+            const SizedBox(height: 6),
+            Text(
+              '確認版 v${understanding.version}',
+              style: const TextStyle(color: QuestraColors.slate, fontSize: 12),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _showSuccessContractDialog(
+  BuildContext context,
+  WidgetRef ref,
+  Quest quest,
+  QuestUnderstanding understanding,
+) async {
+  final outcome = TextEditingController(text: understanding.questOutcome);
+  final evidence = TextEditingController(text: understanding.successEvidence);
+  final assumptions = TextEditingController(
+    text: understanding.assumptions.join('\n'),
+  );
+  final formKey = GlobalKey<FormState>();
+  final save = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('達成条件を確認'),
+      content: Form(
+        key: formKey,
+        child: SizedBox(
+          width: 520,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                QuestraFieldLabel(
+                  label: '目指す状態',
+                  required: true,
+                  child: TextFormField(
+                    controller: outcome,
+                    maxLength: InputLimits.questDescription,
+                    validator: (value) => InputValidators.requiredText(
+                      value,
+                      fieldName: '目指す状態',
+                      maxLength: InputLimits.questDescription,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                QuestraFieldLabel(
+                  label: '達成したと分かる証拠',
+                  required: true,
+                  child: TextFormField(
+                    controller: evidence,
+                    minLines: 2,
+                    maxLines: 4,
+                    maxLength: InputLimits.questDescription,
+                    validator: (value) => InputValidators.requiredText(
+                      value,
+                      fieldName: '達成したと分かる証拠',
+                      maxLength: InputLimits.questDescription,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                QuestraFieldLabel(
+                  label: 'Arcが置いている仮定（1行に1件）',
+                  child: TextFormField(
+                    controller: assumptions,
+                    minLines: 2,
+                    maxLines: 5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('キャンセル'),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (formKey.currentState?.validate() ?? false) {
+              Navigator.of(dialogContext).pop(true);
+            }
+          },
+          child: const Text('この条件で確認'),
+        ),
+      ],
+    ),
+  );
+  if (save == true) {
+    ref
+        .read(questControllerProvider.notifier)
+        .update(
+          quest.copyWith(
+            understanding: understanding.copyWith(
+              questOutcome: outcome.text.trim(),
+              successEvidence: evidence.text.trim(),
+              assumptions: assumptions.text
+                  .split('\n')
+                  .map((value) => value.trim())
+                  .where((value) => value.isNotEmpty)
+                  .take(12)
+                  .toList(growable: false),
+              version: understanding.version + 1,
+              evaluatedAt: DateTime.now(),
+            ),
+          ),
+        );
+  }
+  outcome.dispose();
+  evidence.dispose();
+  assumptions.dispose();
 }
 
 class _QuestCanvasCard extends StatelessWidget {
@@ -2027,6 +2213,10 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
             doneCondition: candidate.doneCondition,
             expectedOutput: candidate.expectedOutput,
             verificationType: candidate.verificationType,
+            action: candidate.action,
+            isOptional: candidate.isOptional,
+            sourceRequirement: candidate.sourceRequirement,
+            confidence: candidate.confidence,
           );
     }
     final guide = _loadedGuide;
@@ -2278,20 +2468,32 @@ class _ProgressiveRoutePreview extends StatelessWidget {
               label: '次',
               title: candidate.title,
             ),
-          if (reveal.future.isNotEmpty)
-            ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              childrenPadding: EdgeInsets.zero,
-              title: Text('その先 ${reveal.future.length}件'),
-              children: [
-                for (final candidate in reveal.future)
-                  _RoutePreviewLine(
-                    icon: Icons.blur_on_outlined,
-                    label: '後で',
-                    title: candidate.title,
-                  ),
-              ],
+          if (reveal.milestones.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            const Text(
+              'その先のMilestone',
+              style: TextStyle(fontWeight: FontWeight.w800),
             ),
+            for (final milestone in reveal.milestones)
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.auto_graph_outlined),
+                title: Text(milestone.title),
+                subtitle: Text(
+                  '${milestone.items.length}件'
+                  '${milestone.estimatedDays > 0 ? " / 約${milestone.estimatedDays}日" : ""}',
+                ),
+                children: [
+                  for (final candidate in milestone.items)
+                    _RoutePreviewLine(
+                      icon: Icons.blur_on_outlined,
+                      label: '後で',
+                      title: candidate.title,
+                    ),
+                ],
+              ),
+          ],
         ],
       ),
     );
@@ -2612,6 +2814,17 @@ class _MissionsSection extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
+          if (_recoveryMission(missions) case final recovery?) ...[
+            _GentleRecoveryCard(
+              quest: quest,
+              mission: recovery,
+              missions: missions,
+              inactiveDays: DateTime.now()
+                  .difference(recovery.updatedAt)
+                  .inDays,
+            ),
+            const SizedBox(height: 12),
+          ],
           if (missions.isEmpty)
             const Text('Arcと最初のMissionをつくると、ここに今日の航路が並びます。')
           else
@@ -2725,6 +2938,21 @@ class _MissionsSection extends ConsumerWidget {
                                     label:
                                         '前提 ${mission.dependencyIds.length}件',
                                   ),
+                                if (mission.isOptional)
+                                  const _ActionChip(label: '任意'),
+                                if (mission.sourceRequirement != 'none')
+                                  _ActionChip(
+                                    label: switch (mission.sourceRequirement) {
+                                      'professional' => '専門家確認',
+                                      'official' => '公式情報',
+                                      'recent' => '最新情報',
+                                      _ => '情報確認',
+                                    },
+                                  ),
+                                _ActionChip(
+                                  label:
+                                      '確度 ${(mission.confidence * 100).round()}%',
+                                ),
                               ],
                             ),
                           ],
@@ -2760,6 +2988,29 @@ class _MissionsSection extends ConsumerWidget {
                                 _showMissionEditDialog(context, ref, mission),
                             icon: const Icon(Icons.edit_outlined),
                             tooltip: 'Missionを編集',
+                          ),
+                          IconButton(
+                            onPressed: mission.status == MissionStatus.completed
+                                ? null
+                                : () => _regenerateMission(
+                                    context,
+                                    ref,
+                                    quest,
+                                    mission,
+                                    missions,
+                                  ),
+                            icon: const Icon(Icons.auto_fix_high_outlined),
+                            tooltip: 'Arcと描き直す',
+                          ),
+                          IconButton(
+                            onPressed: () => _showMissionFeedback(
+                              context,
+                              ref,
+                              quest,
+                              mission,
+                            ),
+                            icon: const Icon(Icons.rate_review_outlined),
+                            tooltip: '提案を評価',
                           ),
                           PopupMenuButton<int>(
                             tooltip: '進捗を更新',
@@ -2853,6 +3104,247 @@ class _MissionsSection extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+Mission? _recoveryMission(List<Mission> missions) {
+  final pending =
+      missions
+          .where(
+            (mission) =>
+                mission.status == MissionStatus.todo &&
+                mission.routeState == MissionRouteState.active &&
+                DateTime.now().difference(mission.updatedAt).inDays >= 7,
+          )
+          .toList(growable: false)
+        ..sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
+  return pending.firstOrNull;
+}
+
+class _GentleRecoveryCard extends ConsumerWidget {
+  const _GentleRecoveryCard({
+    required this.quest,
+    required this.mission,
+    required this.missions,
+    required this.inactiveDays,
+  });
+
+  final Quest quest;
+  final Mission mission;
+  final List<Mission> missions;
+  final int inactiveDays;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final suggestion = GentleRecoveryService.suggest(
+      mission: mission,
+      inactiveDays: inactiveDays,
+    );
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: QuestraColors.gold.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: QuestraColors.gold.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Arcから、やさしい航路調整',
+            style: TextStyle(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 4),
+          Text(suggestion.question),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final action in suggestion.actions)
+                ActionChip(
+                  label: Text(switch (action) {
+                    GentleRecoveryAction.pause => 'いったん休む',
+                    GentleRecoveryAction.shrink => '小さくする',
+                    GentleRecoveryAction.reviewDeadline => '期限を見直す',
+                    GentleRecoveryAction.fiveMinuteStep => '5分だけ進める',
+                  }),
+                  onPressed: () => _applyRecoveryAction(
+                    context,
+                    ref,
+                    quest,
+                    mission,
+                    missions,
+                    action,
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _applyRecoveryAction(
+  BuildContext context,
+  WidgetRef ref,
+  Quest quest,
+  Mission mission,
+  List<Mission> missions,
+  GentleRecoveryAction action,
+) async {
+  if (action == GentleRecoveryAction.shrink ||
+      action == GentleRecoveryAction.fiveMinuteStep) {
+    await _regenerateMissionWithIntent(
+      context,
+      ref,
+      quest,
+      mission,
+      missions,
+      MissionRegenerationIntent.smaller,
+    );
+    return;
+  }
+  if (action == GentleRecoveryAction.reviewDeadline) {
+    await _reviewRoute(context, ref, quest, missions);
+    return;
+  }
+  final proposal = RouteChangeProposal(
+    questId: quest.id,
+    reason: RouteProposalReason.stalled,
+    summary: '今のペースを責めず、このMissionを一時停止します。',
+    confidence: 0.9,
+    items: [
+      RouteChangeItem(
+        action: RouteChangeAction.pause,
+        targetMissionId: mission.id,
+        title: '「${mission.title}」を一時停止',
+        reason: '再開できる時まで航路から外します。進捗や記録は失われません。',
+        beforeData: {'routeState': mission.routeState.name},
+        afterData: const {'routeState': 'paused'},
+      ),
+    ],
+  );
+  await ref
+      .read(routeReplanningControllerProvider.notifier)
+      .registerProposal(proposal);
+  if (!context.mounted) return;
+  await _reviewRoute(context, ref, quest, missions, existing: proposal);
+}
+
+Future<void> _regenerateMission(
+  BuildContext context,
+  WidgetRef ref,
+  Quest quest,
+  Mission mission,
+  List<Mission> missions,
+) async {
+  final intent = await showDialog<MissionRegenerationIntent>(
+    context: context,
+    builder: (dialogContext) => SimpleDialog(
+      title: const Text('どのように描き直す？'),
+      children: [
+        for (final value in MissionRegenerationIntent.values)
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(dialogContext).pop(value),
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(value.label),
+              subtitle: Text(
+                MissionRegenerationService.promptHint(
+                  MissionRegenerationRequest(mission: mission, intent: value),
+                ),
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
+  if (intent == null || !context.mounted) return;
+  await _regenerateMissionWithIntent(
+    context,
+    ref,
+    quest,
+    mission,
+    missions,
+    intent,
+  );
+}
+
+Future<void> _showMissionFeedback(
+  BuildContext context,
+  WidgetRef ref,
+  Quest quest,
+  Mission mission,
+) async {
+  final reason = await showDialog<MissionPlanFeedbackReason>(
+    context: context,
+    builder: (dialogContext) => SimpleDialog(
+      title: const Text('このMissionはどう？'),
+      children: [
+        for (final value in MissionPlanFeedbackReason.values)
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(dialogContext).pop(value),
+            child: Text(switch (value) {
+              MissionPlanFeedbackReason.useful => '役に立つ',
+              MissionPlanFeedbackReason.notForMe => '自分には合わない',
+              MissionPlanFeedbackReason.tooAbstract => '抽象的すぎる',
+              MissionPlanFeedbackReason.tooHard => '難しすぎる',
+              MissionPlanFeedbackReason.tooEasy => '簡単すぎる',
+              MissionPlanFeedbackReason.wrongOrder => '順番が違う',
+              MissionPlanFeedbackReason.alreadyDone => 'すでに完了済み',
+              MissionPlanFeedbackReason.unnecessary => '不要',
+              MissionPlanFeedbackReason.outdated => '情報が古い',
+              MissionPlanFeedbackReason.preferAnotherWay => '別の方法がよい',
+            }),
+          ),
+      ],
+    ),
+  );
+  if (reason == null) return;
+  await ref
+      .read(missionPlanFeedbackRepositoryProvider)
+      .save(
+        MissionPlanFeedback(
+          questId: quest.id,
+          missionId: mission.id,
+          reason: reason,
+          generationVersion:
+              quest.planQuality?.generationVersion ?? 'manual_or_legacy',
+        ),
+      );
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(const SnackBar(content: Text('次の航路づくりに活かします。')));
+}
+
+Future<void> _regenerateMissionWithIntent(
+  BuildContext context,
+  WidgetRef ref,
+  Quest quest,
+  Mission mission,
+  List<Mission> missions,
+  MissionRegenerationIntent intent,
+) async {
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(const SnackBar(content: Text('ArcがこのMissionの別の航路を描いています。')));
+  try {
+    final proposal = await ref
+        .read(missionRegenerationProposalServiceProvider)
+        .propose(quest: quest, mission: mission, intent: intent);
+    await ref
+        .read(routeReplanningControllerProvider.notifier)
+        .registerProposal(proposal);
+    if (!context.mounted) return;
+    await _reviewRoute(context, ref, quest, missions, existing: proposal);
+  } catch (error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Missionを描き直せませんでした: $error')));
   }
 }
 

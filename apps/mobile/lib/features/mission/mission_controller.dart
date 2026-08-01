@@ -16,6 +16,7 @@ import '../auth/auth_controller.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../quest/quest_model.dart';
+import '../quest/planning_preferences_controller.dart';
 import '../quest/quest_progress_service.dart';
 import '../quest/route_replanning_repository.dart';
 import '../tagging/tagging_providers.dart';
@@ -25,6 +26,7 @@ import '../trail/trail_providers.dart';
 import 'mission_generation_service.dart';
 import 'mission_contract_service.dart';
 import 'mission_model.dart';
+import 'mission_availability_recalculation_service.dart';
 import 'mission_providers.dart';
 
 final missionGenerationServiceProvider = Provider<MissionGenerationService>(
@@ -42,6 +44,17 @@ final missionSyncControllerProvider =
 class MissionController extends Notifier<List<Mission>> {
   @override
   List<Mission> build() {
+    ref.listen(planningPreferencesControllerProvider, (previous, next) {
+      if (previous == null ||
+          previous.availability.totalMinutes ==
+              next.availability.totalMinutes) {
+        return;
+      }
+      _recalculateForAvailability(
+        previous.availability.totalMinutes,
+        next.availability.totalMinutes,
+      );
+    });
     ref.listen(authControllerProvider.select((state) => state.profile?.id), (
       previous,
       next,
@@ -118,6 +131,10 @@ class MissionController extends Notifier<List<Mission>> {
     String doneCondition = '',
     String expectedOutput = '',
     String verificationType = 'self_check',
+    String action = '',
+    bool isOptional = false,
+    String sourceRequirement = 'none',
+    double confidence = 0.5,
   }) {
     final titleError = const MissionContractService().validateTitle(
       questTitle: quest.title,
@@ -167,6 +184,10 @@ class MissionController extends Notifier<List<Mission>> {
       doneCondition: doneCondition,
       expectedOutput: expectedOutput,
       verificationType: verificationType,
+      action: action,
+      isOptional: isOptional,
+      sourceRequirement: sourceRequirement,
+      confidence: confidence,
     );
     state = [
       mission,
@@ -215,6 +236,36 @@ class MissionController extends Notifier<List<Mission>> {
         recordJourney: false,
       ),
     );
+  }
+
+  void _recalculateForAvailability(
+    int previousWeeklyMinutes,
+    int nextWeeklyMinutes,
+  ) {
+    const service = MissionAvailabilityRecalculationService();
+    final updates = <Mission>[];
+    for (final mission in state) {
+      final updated = service.recalculate(
+        mission,
+        previousWeeklyMinutes: previousWeeklyMinutes,
+        nextWeeklyMinutes: nextWeeklyMinutes,
+      );
+      if (updated.estimatedDurationDays != mission.estimatedDurationDays) {
+        updates.add(updated);
+      }
+    }
+    if (updates.isEmpty) return;
+    final byId = {for (final mission in updates) mission.id: mission};
+    state = [for (final mission in state) byId[mission.id] ?? mission];
+    for (final mission in updates) {
+      unawaited(
+        _persistMission(
+          mission,
+          sourceType: ArcMemorySourceType.missionCreated,
+          recordJourney: false,
+        ),
+      );
+    }
   }
 
   void updateProgress(String missionId, int progressPercent) {

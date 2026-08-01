@@ -31,6 +31,37 @@ class QuestUnderstanding {
   final int version;
   final DateTime evaluatedAt;
 
+  QuestUnderstanding copyWith({
+    String? questOutcome,
+    String? successEvidence,
+    String? motivation,
+    String? currentState,
+    List<String>? constraints,
+    List<String>? knownResources,
+    List<String>? unknowns,
+    List<String>? planningRisks,
+    QuestPlanningMode? planningMode,
+    List<String>? assumptions,
+    int? version,
+    DateTime? evaluatedAt,
+  }) {
+    return QuestUnderstanding(
+      originalWish: originalWish,
+      questOutcome: questOutcome ?? this.questOutcome,
+      successEvidence: successEvidence ?? this.successEvidence,
+      motivation: motivation ?? this.motivation,
+      currentState: currentState ?? this.currentState,
+      constraints: constraints ?? this.constraints,
+      knownResources: knownResources ?? this.knownResources,
+      unknowns: unknowns ?? this.unknowns,
+      planningRisks: planningRisks ?? this.planningRisks,
+      planningMode: planningMode ?? this.planningMode,
+      assumptions: assumptions ?? this.assumptions,
+      version: version ?? this.version,
+      evaluatedAt: evaluatedAt ?? this.evaluatedAt,
+    );
+  }
+
   static QuestUnderstanding? fromJson(Object? value) {
     if (value is! Map) return null;
     final data = Map<String, dynamic>.from(value);

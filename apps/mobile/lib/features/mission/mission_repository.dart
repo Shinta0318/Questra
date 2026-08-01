@@ -5,7 +5,7 @@ import '../../core/estimation/effort_estimate.dart';
 import 'mission_model.dart';
 
 const _missionColumns =
-    'id,quest_id,title,description,guide_type,difficulty,status,progress_percent,sort_order,is_today,effort_estimate,parent_mission_id,dependency_ids,priority,category,estimated_cost_label,reference_hints,enterprise_support_hints,difficulty_score,estimated_duration_days,route_state,done_condition,expected_output,verification_type,created_at,quests!inner(title)';
+    'id,quest_id,title,description,guide_type,difficulty,status,progress_percent,sort_order,is_today,effort_estimate,parent_mission_id,dependency_ids,priority,category,estimated_cost_label,reference_hints,enterprise_support_hints,difficulty_score,estimated_duration_days,route_state,done_condition,expected_output,verification_type,action,is_optional,source_requirement,confidence,created_at,updated_at,quests!inner(title)';
 
 abstract interface class MissionRepository {
   Future<List<Mission>> findByQuest(
@@ -170,6 +170,10 @@ class SupabaseMissionRepository implements MissionRepository {
       'done_condition': mission.doneCondition,
       'expected_output': mission.expectedOutput,
       'verification_type': mission.verificationType,
+      'action': mission.action,
+      'is_optional': mission.isOptional,
+      'source_requirement': mission.sourceRequirement,
+      'confidence': mission.confidence.clamp(0, 1),
       'completed_at': mission.status == MissionStatus.completed
           ? DateTime.now().toIso8601String()
           : null,
@@ -198,6 +202,9 @@ class SupabaseMissionRepository implements MissionRepository {
       sortOrder: row['sort_order'] as int? ?? 0,
       isToday: row['is_today'] as bool? ?? false,
       createdAt: DateTime.parse(row['created_at'] as String),
+      updatedAt:
+          DateTime.tryParse(row['updated_at'] as String? ?? '') ??
+          DateTime.parse(row['created_at'] as String),
       effortEstimate: effortEstimateFromJson(row['effort_estimate']),
       parentMissionId: row['parent_mission_id'] as String?,
       dependencyIds: _stringList(row['dependency_ids']),
@@ -216,6 +223,10 @@ class SupabaseMissionRepository implements MissionRepository {
       doneCondition: row['done_condition'] as String? ?? '',
       expectedOutput: row['expected_output'] as String? ?? '',
       verificationType: row['verification_type'] as String? ?? 'self_check',
+      action: row['action'] as String? ?? '',
+      isOptional: row['is_optional'] as bool? ?? false,
+      sourceRequirement: row['source_requirement'] as String? ?? 'none',
+      confidence: (row['confidence'] as num?)?.toDouble().clamp(0, 1) ?? 0.5,
     );
   }
 

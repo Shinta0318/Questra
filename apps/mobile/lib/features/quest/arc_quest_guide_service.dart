@@ -27,6 +27,10 @@ class ArcMissionCandidate {
     this.doneCondition = '',
     this.expectedOutput = '',
     this.verificationType = 'self_check',
+    String? action,
+    this.isOptional = false,
+    this.sourceRequirement = 'none',
+    this.confidence = 0.5,
     this.parentPlanKey,
     this.dependencyPlanKeys = const [],
     this.priority = MissionPriority.normal,
@@ -36,7 +40,7 @@ class ArcMissionCandidate {
     this.enterpriseSupportHints = const [],
     this.difficultyScore,
     this.estimatedDurationDays,
-  });
+  }) : action = action ?? title;
 
   final String title;
   final String description;
@@ -49,6 +53,10 @@ class ArcMissionCandidate {
   final String doneCondition;
   final String expectedOutput;
   final String verificationType;
+  final String action;
+  final bool isOptional;
+  final String sourceRequirement;
+  final double confidence;
   final String? parentPlanKey;
   final List<String> dependencyPlanKeys;
   final MissionPriority priority;
@@ -67,6 +75,10 @@ class ArcMissionCandidate {
     String? doneCondition,
     String? expectedOutput,
     String? verificationType,
+    String? action,
+    bool? isOptional,
+    String? sourceRequirement,
+    double? confidence,
     String? parentPlanKey,
     bool clearParentPlan = false,
     List<String>? dependencyPlanKeys,
@@ -89,6 +101,10 @@ class ArcMissionCandidate {
       doneCondition: doneCondition ?? this.doneCondition,
       expectedOutput: expectedOutput ?? this.expectedOutput,
       verificationType: verificationType ?? this.verificationType,
+      action: action ?? this.action,
+      isOptional: isOptional ?? this.isOptional,
+      sourceRequirement: sourceRequirement ?? this.sourceRequirement,
+      confidence: confidence ?? this.confidence,
       parentPlanKey: clearParentPlan
           ? null
           : parentPlanKey ?? this.parentPlanKey,
@@ -620,9 +636,23 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
           .eq('category_key', category.trim().toLowerCase())
           .order('created_at', ascending: false)
           .limit(8);
-      return rows
+      final signals = rows
           .map<Map<String, Object?>>((row) => Map<String, Object?>.from(row))
-          .toList(growable: false);
+          .toList(growable: true);
+      final missionRows = await client
+          .from('mission_plan_feedback')
+          .select('reason,generation_version,created_at')
+          .order('created_at', ascending: false)
+          .limit(20);
+      signals.addAll(
+        missionRows.map<Map<String, Object?>>(
+          (row) => {
+            'mission_feedback_reason': row['reason'],
+            'generation_version': row['generation_version'],
+          },
+        ),
+      );
+      return signals;
     } catch (_) {
       return const [];
     }
@@ -646,6 +676,10 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
       doneCondition: data['done_condition'] as String? ?? description,
       expectedOutput: data['expected_output'] as String? ?? '',
       verificationType: data['verification_type'] as String? ?? 'self_check',
+      action: data['action'] as String? ?? title,
+      isOptional: data['optionality'] == 'optional',
+      sourceRequirement: data['source_requirement'] as String? ?? 'none',
+      confidence: (data['confidence'] as num?)?.toDouble().clamp(0, 1) ?? 0.5,
       parentPlanKey: data['parent_plan_key'] as String?,
       dependencyPlanKeys: _stringList(data['dependency_plan_keys'], 12),
       guideType: _guideTypeFromValue(data['guide_type'] as String?),

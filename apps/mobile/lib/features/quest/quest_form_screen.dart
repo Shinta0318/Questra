@@ -73,8 +73,9 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ArcWidget(
-                      emotion:
-                          _isEditing ? ArcEmotion.serious : ArcEmotion.excited,
+                      emotion: _isEditing
+                          ? ArcEmotion.serious
+                          : ArcEmotion.excited,
                       size: 72,
                       message: _isEditing
                           ? '航路を整えよう。Questは進みながら磨いていけるよ。'
@@ -237,8 +238,9 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
       return;
     }
     _didLoad = true;
-    final quest =
-        ref.read(questControllerProvider.notifier).findById(widget.questId!);
+    final quest = ref
+        .read(questControllerProvider.notifier)
+        .findById(widget.questId!);
     if (quest == null) {
       return;
     }
@@ -584,10 +586,8 @@ class _EnumDropdown<T extends Enum> extends StatelessWidget {
         decoration: const InputDecoration(),
         items: values
             .map(
-              (item) => DropdownMenuItem<T>(
-                value: item,
-                child: Text(item.label),
-              ),
+              (item) =>
+                  DropdownMenuItem<T>(value: item, child: Text(item.label)),
             )
             .toList(),
         onChanged: (value) {

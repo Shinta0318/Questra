@@ -260,6 +260,13 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
             enterpriseSupportHints: mission.enterpriseSupportHints,
             difficultyScore: mission.difficultyScore,
             estimatedDurationDays: mission.estimatedDurationDays,
+            doneCondition: mission.doneCondition,
+            expectedOutput: mission.expectedOutput,
+            verificationType: mission.verificationType,
+            action: mission.action,
+            isOptional: mission.isOptional,
+            sourceRequirement: mission.sourceRequirement,
+            confidence: mission.confidence,
           );
     }
     setState(() {
@@ -274,6 +281,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       );
     });
     _scrollToLatest();
+    if (mounted) {
+      context.go('${AppRoutes.quest}/${quest.id}');
+    }
   }
 
   Future<void> _send(
@@ -1261,6 +1271,10 @@ class _ArcQuestCreationSheetState
   ArcQuestGuide? _guide;
   QuestIntentDraft? _intentDraft;
   Set<int> _selectedMissionIndexes = const {};
+  int? _firstMissionIndex;
+  List<FlexibleQuestProposal>? _generatedQuestProposals;
+  Set<int> _selectedQuestProposalIndexes = const {};
+  bool _isGeneratingQuestProposals = false;
   bool _isGenerating = false;
   String? _error;
 
@@ -1304,12 +1318,45 @@ class _ArcQuestCreationSheetState
   };
 
   List<FlexibleQuestProposal> get _questProposals =>
+      _generatedQuestProposals ??
       FlexibleQuestProposalService.propose(_inputController.text);
 
   void _applyQuestProposal(FlexibleQuestProposal proposal) {
     _titleController.text = proposal.title;
     _successConditionController.text = proposal.outcome;
     _difficulty = proposal.difficulty;
+    _invalidateGuide();
+  }
+
+  Future<void> _generateQuestProposals() async {
+    final input = _inputController.text.trim();
+    if (input.isEmpty) return;
+    setState(() => _isGeneratingQuestProposals = true);
+    final proposals = await ref
+        .read(questProposalGeneratorProvider)
+        .generate(input);
+    if (!mounted) return;
+    setState(() {
+      _generatedQuestProposals = proposals;
+      _selectedQuestProposalIndexes = const {};
+      _isGeneratingQuestProposals = false;
+    });
+  }
+
+  void _combineQuestProposals() {
+    final selected = _selectedQuestProposalIndexes
+        .where((index) => index >= 0 && index < _questProposals.length)
+        .map((index) => _questProposals[index])
+        .toList(growable: false);
+    if (selected.length < 2) return;
+    _titleController.text = selected.map((item) => item.title).join(' / ');
+    _successConditionController.text = selected
+        .map((item) => item.outcome)
+        .join('。');
+    _difficulty =
+        selected.any((item) => item.difficulty == QuestDifficulty.hard)
+        ? QuestDifficulty.hard
+        : QuestDifficulty.normal;
     _invalidateGuide();
   }
 
@@ -1334,8 +1381,17 @@ class _ArcQuestCreationSheetState
       _guide = null;
       _intentDraft = null;
       _selectedMissionIndexes = const {};
+      _firstMissionIndex = null;
       _error = null;
     });
+  }
+
+  void _onWishChanged() {
+    setState(() {
+      _generatedQuestProposals = null;
+      _selectedQuestProposalIndexes = const {};
+    });
+    _invalidateGuide();
   }
 
   Future<void> _generate() async {
@@ -1441,6 +1497,7 @@ class _ArcQuestCreationSheetState
           for (var index = 0; index < guide.missionCandidates.length; index++)
             index,
         };
+        _firstMissionIndex = guide.missionCandidates.isEmpty ? null : 0;
       });
     } catch (_) {
       if (!mounted) return;
@@ -1459,8 +1516,13 @@ class _ArcQuestCreationSheetState
     const contract = MissionContractService();
     final usedTitles = <String>{};
     final missions = <ArcMissionCandidate>[];
-    for (var index = 0; index < guide.missionCandidates.length; index++) {
-      if (!_selectedMissionIndexes.contains(index)) continue;
+    final orderedIndexes = _selectedMissionIndexes.toList()
+      ..sort((a, b) {
+        if (a == _firstMissionIndex) return -1;
+        if (b == _firstMissionIndex) return 1;
+        return a.compareTo(b);
+      });
+    for (final index in orderedIndexes) {
       final candidate = guide.missionCandidates[index];
       final title = contract.distinctGeneratedTitle(
         questTitle: _titleController.text,
@@ -1565,7 +1627,22 @@ class _ArcQuestCreationSheetState
                     decoration: const InputDecoration(
                       hintText: '例: 来年シンガポールへ行きたい。予算や準備の順番が分からない。',
                     ),
-                    onChanged: (_) => _invalidateGuide(),
+                    onChanged: (_) => _onWishChanged(),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: _isGenerating || _isGeneratingQuestProposals
+                        ? null
+                        : _generateQuestProposals,
+                    icon: _isGeneratingQuestProposals
+                        ? const SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.auto_awesome_outlined),
+                    label: const Text('ArcにQuest案を比較してもらう'),
                   ),
                 ),
                 if (_questProposals.isNotEmpty) ...[
@@ -1582,20 +1659,45 @@ class _ArcQuestCreationSheetState
                     spacing: AppSpacing.sm,
                     runSpacing: AppSpacing.sm,
                     children: [
-                      for (final proposal in _questProposals)
-                        ActionChip(
+                      for (final (index, proposal) in _questProposals.indexed)
+                        FilterChip(
                           avatar: const Icon(
                             Icons.auto_awesome_outlined,
                             size: 18,
                           ),
                           label: Text(proposal.title),
                           tooltip: proposal.fitReason,
-                          onPressed: _isGenerating
+                          selected: _selectedQuestProposalIndexes.contains(
+                            index,
+                          ),
+                          onSelected: _isGenerating
                               ? null
-                              : () => _applyQuestProposal(proposal),
+                              : (selected) {
+                                  setState(() {
+                                    final next = {
+                                      ..._selectedQuestProposalIndexes,
+                                    };
+                                    if (selected) {
+                                      next.add(index);
+                                    } else {
+                                      next.remove(index);
+                                    }
+                                    _selectedQuestProposalIndexes = next;
+                                  });
+                                  if (selected) _applyQuestProposal(proposal);
+                                },
                         ),
                     ],
                   ),
+                  if (_selectedQuestProposalIndexes.length >= 2)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: _combineQuestProposals,
+                        icon: const Icon(Icons.call_merge_outlined),
+                        label: const Text('選んだ案を組み合わせる'),
+                      ),
+                    ),
                 ],
                 const SizedBox(height: AppSpacing.md),
                 QuestraFieldLabel(
@@ -1778,8 +1880,14 @@ class _ArcQuestCreationSheetState
                           final next = {..._selectedMissionIndexes};
                           if (selected == true) {
                             next.add(index);
+                            _firstMissionIndex ??= index;
                           } else {
                             next.remove(index);
+                            if (_firstMissionIndex == index) {
+                              _firstMissionIndex = next.isEmpty
+                                  ? null
+                                  : next.reduce((a, b) => a < b ? a : b);
+                            }
                           }
                           _selectedMissionIndexes = next;
                         });
@@ -1797,6 +1905,18 @@ class _ArcQuestCreationSheetState
                       subtitle: Text(
                         mission.description,
                         style: const TextStyle(color: AppColors.parchment),
+                      ),
+                      secondary: IconButton(
+                        onPressed: _selectedMissionIndexes.contains(index)
+                            ? () => setState(() => _firstMissionIndex = index)
+                            : null,
+                        icon: Icon(
+                          _firstMissionIndex == index
+                              ? Icons.star_rounded
+                              : Icons.star_outline_rounded,
+                        ),
+                        color: AppColors.gold,
+                        tooltip: '最初の一歩にする',
                       ),
                     );
                   }),

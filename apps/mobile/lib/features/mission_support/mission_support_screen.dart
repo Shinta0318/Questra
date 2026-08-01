@@ -7,6 +7,8 @@ import '../../core/theme/app_colors.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
+import '../mission/mission_source_reference.dart';
+import '../mission/mission_source_reference_repository.dart';
 import 'mission_support_model.dart';
 import 'mission_support_providers.dart';
 
@@ -31,6 +33,9 @@ class _MissionSupportScreenState extends ConsumerState<MissionSupportScreen> {
         .watch(missionControllerProvider)
         .where((item) => item.id == widget.missionId)
         .firstOrNull;
+    final savedSources = ref.watch(
+      missionSourceReferencesProvider(widget.missionId),
+    );
     return QuestraScreenSurface(
       child: ListView(
         padding: const EdgeInsets.all(20),
@@ -38,21 +43,65 @@ class _MissionSupportScreenState extends ConsumerState<MissionSupportScreen> {
           Row(
             children: [
               IconButton(
-                  onPressed: context.pop,
-                  icon: const Icon(Icons.arrow_back),
-                  tooltip: '戻る'),
+                onPressed: context.pop,
+                icon: const Icon(Icons.arrow_back),
+                tooltip: '戻る',
+              ),
               const SizedBox(width: 8),
               Expanded(
-                  child: Text('Missionの実行サポート',
-                      style: Theme.of(context).textTheme.headlineSmall)),
+                child: Text(
+                  'Missionの実行サポート',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
             ],
           ),
           if (mission == null)
             const _SupportSection(
-                title: 'Missionが見つかりません',
-                child: Text('QuestからMissionを選び直してください。'))
+              title: 'Missionが見つかりません',
+              child: Text('QuestからMissionを選び直してください。'),
+            )
           else ...[
             _MissionHeader(mission: mission),
+            const SizedBox(height: 16),
+            _SupportSection(
+              title: '確認した情報源',
+              child: savedSources.when(
+                loading: () => const LinearProgressIndicator(),
+                error: (_, _) => const Text('保存した情報源を読み込めませんでした。'),
+                data: (sources) => sources.isEmpty
+                    ? Text(
+                        mission.sourceRequirement == 'none'
+                            ? '必要な情報源はまだありません。'
+                            : 'このMissionは情報確認が必要です。Arcに調べてもらってください。',
+                      )
+                    : Column(
+                        children: [
+                          for (final source in sources)
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(
+                                source.isFreshAt(DateTime.now())
+                                    ? Icons.verified_outlined
+                                    : Icons.update_outlined,
+                              ),
+                              title: Text(source.title),
+                              subtitle: Text(
+                                '${source.publisher} / '
+                                '${source.isOfficial ? "公式" : "参考"} / '
+                                '${source.isFreshAt(DateTime.now()) ? "確認済み" : "再確認が必要"}',
+                              ),
+                              onTap: source.url.scheme == 'https'
+                                  ? () => launchUrl(
+                                      source.url,
+                                      mode: LaunchMode.externalApplication,
+                                    )
+                                  : null,
+                            ),
+                        ],
+                      ),
+              ),
+            ),
             const SizedBox(height: 16),
             _SupportSection(
               title: 'Arcが調べた情報',
@@ -70,15 +119,20 @@ class _MissionSupportScreenState extends ConsumerState<MissionSupportScreen> {
                   if (_result case final result?) ...[
                     Text(result.summary),
                     const SizedBox(height: 12),
-                    ...result.references.map((source) => ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.open_in_new),
-                          title: Text(source.title),
-                          subtitle: Text(
-                              '${source.publisher} / ${source.verified ? '検索結果で確認済み' : '要確認'}'),
-                          onTap: () => launchUrl(source.url,
-                              mode: LaunchMode.externalApplication),
-                        )),
+                    ...result.references.map(
+                      (source) => ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.open_in_new),
+                        title: Text(source.title),
+                        subtitle: Text(
+                          '${source.publisher} / ${source.verified ? '検索結果で確認済み' : '要確認'}',
+                        ),
+                        onTap: () => launchUrl(
+                          source.url,
+                          mode: LaunchMode.externalApplication,
+                        ),
+                      ),
+                    ),
                   ],
                   const SizedBox(height: 12),
                   FilledButton.icon(
@@ -92,10 +146,14 @@ class _MissionSupportScreenState extends ConsumerState<MissionSupportScreen> {
             if (_result case final result?) ...[
               const SizedBox(height: 16),
               _SupportSection(
-                  title: '実行のポイント', child: _BulletList(result.checkpoints)),
+                title: '実行のポイント',
+                child: _BulletList(result.checkpoints),
+              ),
               const SizedBox(height: 16),
               _SupportSection(
-                  title: '安全上の確認', child: _BulletList(result.cautions)),
+                title: '安全上の確認',
+                child: _BulletList(result.cautions),
+              ),
             ],
             const SizedBox(height: 16),
             const _SupportSection(
@@ -114,10 +172,26 @@ class _MissionSupportScreenState extends ConsumerState<MissionSupportScreen> {
       _error = null;
     });
     try {
-      final result = await ref.read(missionResearchServiceProvider).research(
-            mission,
-            forceRefresh: _result != null,
-          );
+      final result = await ref
+          .read(missionResearchServiceProvider)
+          .research(mission, forceRefresh: _result != null);
+      for (final source in result.references) {
+        if (source.url.scheme != 'https') continue;
+        await ref
+            .read(missionSourceReferenceRepositoryProvider)
+            .save(
+              mission.id,
+              MissionSourceReference(
+                title: source.title,
+                url: source.url,
+                publisher: source.publisher,
+                checkedAt: source.retrievedAt,
+                recheckAfter: source.retrievedAt.add(const Duration(days: 30)),
+                isOfficial: source.verified,
+              ),
+            );
+      }
+      ref.invalidate(missionSourceReferencesProvider(mission.id));
       if (mounted) setState(() => _result = result);
     } catch (_) {
       if (mounted) {
@@ -134,9 +208,9 @@ class _MissionHeader extends StatelessWidget {
   final Mission mission;
   @override
   Widget build(BuildContext context) => _SupportSection(
-        title: mission.title,
-        child: Text('Quest: ${mission.questTitle}'),
-      );
+    title: mission.title,
+    child: Text('Quest: ${mission.questTitle}'),
+  );
 }
 
 class _SupportSection extends StatelessWidget {
@@ -145,20 +219,25 @@ class _SupportSection extends StatelessWidget {
   final Widget child;
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(8)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 10),
-          child,
-        ]),
-      );
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: AppColors.white.withValues(alpha: 0.92),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 10),
+        child,
+      ],
+    ),
+  );
 }
 
 class _BulletList extends StatelessWidget {
@@ -166,11 +245,14 @@ class _BulletList extends StatelessWidget {
   final List<String> items;
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: items
-            .map((item) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text('・$item')))
-            .toList(),
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: items
+        .map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text('・$item'),
+          ),
+        )
+        .toList(),
+  );
 }

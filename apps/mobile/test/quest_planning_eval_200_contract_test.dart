@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/features/quest/arc_quest_guide_service.dart';
 import 'package:questra/features/quest/quest_model.dart';
+import 'package:questra/features/quest/planning_context.dart';
 
 void main() {
   test('evaluation builder defines four context variants per seed', () {
@@ -42,7 +43,12 @@ void main() {
           visibility: QuestVisibility.private,
           category: item['category'] as String,
         );
-        final guide = await service.generate(quest: quest);
+        final guide = await service.generate(
+          quest: quest,
+          planningContext: PlanningContext.fromJson(
+            Map<String, dynamic>.from(item['planning_context'] as Map),
+          ),
+        );
         final titles = guide.missionCandidates
             .map((mission) => mission.title.trim().toLowerCase())
             .toList(growable: false);
@@ -67,9 +73,17 @@ void main() {
             (mission) =>
                 mission.doneCondition.isNotEmpty &&
                 mission.expectedOutput.isNotEmpty &&
+                mission.action.isNotEmpty &&
+                mission.confidence >= 0 &&
+                mission.confidence <= 1 &&
                 mission.description.contains('完了です'),
           ),
           isTrue,
+          reason: item['id'] as String,
+        );
+        expect(
+          guide.planQuality?.score,
+          greaterThanOrEqualTo(0.70),
           reason: item['id'] as String,
         );
       }

@@ -30,10 +30,10 @@ abstract final class QuestFeasibilityService {
     final status = monthGap >= 2
         ? QuestFeasibility.comfortable
         : monthGap >= 0
-            ? QuestFeasibility.achievable
-            : monthGap == -1
-                ? QuestFeasibility.tight
-                : QuestFeasibility.unlikely;
+        ? QuestFeasibility.achievable
+        : monthGap == -1
+        ? QuestFeasibility.tight
+        : QuestFeasibility.unlikely;
     final message = switch (status) {
       QuestFeasibility.comfortable => '余白を持って進められそうです。',
       QuestFeasibility.achievable => '現在の航路なら、希望月を目指せる見込みです。',

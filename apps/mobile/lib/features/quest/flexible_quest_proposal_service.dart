@@ -1,3 +1,7 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../core/config/supabase_config.dart';
 import 'quest_model.dart';
 
 class FlexibleQuestProposal {
@@ -16,6 +20,77 @@ class FlexibleQuestProposal {
   final String firstStep;
   final QuestDifficulty difficulty;
   final String estimatedDurationLabel;
+}
+
+final questProposalGeneratorProvider = Provider<QuestProposalGenerator>((ref) {
+  if (SupabaseConfig.isConfigured) {
+    return SupabaseQuestProposalGenerator(Supabase.instance.client);
+  }
+  return const LocalQuestProposalGenerator();
+});
+
+abstract interface class QuestProposalGenerator {
+  Future<List<FlexibleQuestProposal>> generate(String wish);
+}
+
+class LocalQuestProposalGenerator implements QuestProposalGenerator {
+  const LocalQuestProposalGenerator();
+
+  @override
+  Future<List<FlexibleQuestProposal>> generate(String wish) async =>
+      FlexibleQuestProposalService.propose(wish);
+}
+
+class SupabaseQuestProposalGenerator implements QuestProposalGenerator {
+  const SupabaseQuestProposalGenerator(
+    this.client, {
+    this.fallback = const LocalQuestProposalGenerator(),
+  });
+
+  final SupabaseClient client;
+  final QuestProposalGenerator fallback;
+
+  @override
+  Future<List<FlexibleQuestProposal>> generate(String wish) async {
+    try {
+      final response = await client.functions.invoke(
+        'arc-quest-guide',
+        body: {'mode': 'quest_alternatives', 'wish': wish},
+      );
+      if (response.status < 200 ||
+          response.status >= 300 ||
+          response.data is! Map) {
+        return fallback.generate(wish);
+      }
+      final values = (response.data as Map)['alternatives'];
+      if (values is! List) return fallback.generate(wish);
+      final proposals = values
+          .whereType<Map>()
+          .map((value) {
+            final data = Map<String, dynamic>.from(value);
+            final title = data['title'] as String?;
+            final outcome = data['outcome'] as String?;
+            if (title == null || outcome == null) return null;
+            return FlexibleQuestProposal(
+              title: title,
+              outcome: outcome,
+              fitReason: data['fit_reason'] as String? ?? '別の角度から具体化した案',
+              firstStep: data['first_step'] as String? ?? '達成条件を確認する',
+              difficulty: questDifficultyFromStorage(
+                data['difficulty'] as String? ?? 'normal',
+              ),
+              estimatedDurationLabel:
+                  data['estimated_duration_label'] as String? ?? '要確認',
+            );
+          })
+          .whereType<FlexibleQuestProposal>()
+          .take(5)
+          .toList(growable: false);
+      return proposals.length >= 2 ? proposals : fallback.generate(wish);
+    } catch (_) {
+      return fallback.generate(wish);
+    }
+  }
 }
 
 abstract final class FlexibleQuestProposalService {

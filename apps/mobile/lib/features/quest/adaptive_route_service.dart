@@ -34,8 +34,9 @@ abstract final class AdaptiveRouteService {
     final pending = missions
         .where((mission) => mission.status != MissionStatus.completed)
         .toList(growable: false);
-    final preserved =
-        completed.map((mission) => mission.id).toList(growable: false);
+    final preserved = completed
+        .map((mission) => mission.id)
+        .toList(growable: false);
     final remainingDays = pending.fold<int>(
       0,
       (sum, mission) => sum + (mission.estimatedDurationDays ?? 3),
@@ -55,8 +56,8 @@ abstract final class AdaptiveRouteService {
     final oldestPending = pending.isEmpty
         ? null
         : pending
-            .map((mission) => mission.createdAt)
-            .reduce((left, right) => left.isBefore(right) ? left : right);
+              .map((mission) => mission.createdAt)
+              .reduce((left, right) => left.isBefore(right) ? left : right);
     if (oldestPending != null && today.difference(oldestPending).inDays >= 14) {
       return RouteReplanProposal(
         reason: RouteReplanReason.stalled,
@@ -83,72 +84,68 @@ abstract final class AdaptiveRouteService {
     DateTime? now,
   }) {
     final evaluated = evaluate(quest: quest, missions: missions, now: now);
-    final pending = missions
-        .where((mission) => mission.status != MissionStatus.completed)
-        .toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final pending =
+        missions
+            .where((mission) => mission.status != MissionStatus.completed)
+            .toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     if (evaluated == null || pending.isEmpty) {
       return null;
     }
 
     final items = switch (evaluated.reason) {
       RouteReplanReason.deadlineRisk => [
-          RouteChangeItem(
-            action: RouteChangeAction.reschedule,
-            title: 'Questの達成予測を見直す',
-            reason: '残りMissionの推定日数が希望期限を超えています。',
-            beforeData: {
-              'targetDate': quest.targetDate?.toIso8601String(),
-            },
-            afterData: {
-              'targetDate': evaluated.recommendedTargetDate?.toIso8601String(),
-            },
-          ),
-        ],
+        RouteChangeItem(
+          action: RouteChangeAction.reschedule,
+          title: 'Questの達成予測を見直す',
+          reason: '残りMissionの推定日数が希望期限を超えています。',
+          beforeData: {'targetDate': quest.targetDate?.toIso8601String()},
+          afterData: {
+            'targetDate': evaluated.recommendedTargetDate?.toIso8601String(),
+          },
+        ),
+      ],
       RouteReplanReason.stalled => [
-          RouteChangeItem(
-            action: RouteChangeAction.split,
-            targetMissionId: pending.first.id,
-            title: '「${pending.first.title}」を小さく分ける',
-            reason: '未着手期間が長いため、始めやすい2つのMissionに分割します。',
-            beforeData: {
-              'title': pending.first.title,
-              'estimatedDays': pending.first.estimatedDurationDays,
-            },
-            afterData: {
-              'missions': [
-                {
-                  'title': '${pending.first.title}の準備をする',
-                  'estimatedDays': 2,
-                },
-                {
-                  'title': '${pending.first.title}を実行する',
-                  'estimatedDays': pending.first.estimatedDurationDays ?? 3,
-                },
-              ],
-            },
-          ),
-        ],
+        RouteChangeItem(
+          action: RouteChangeAction.split,
+          targetMissionId: pending.first.id,
+          title: '「${pending.first.title}」を小さく分ける',
+          reason: '未着手期間が長いため、始めやすい2つのMissionに分割します。',
+          beforeData: {
+            'title': pending.first.title,
+            'estimatedDays': pending.first.estimatedDurationDays,
+          },
+          afterData: {
+            'missions': [
+              {'title': '${pending.first.title}の準備をする', 'estimatedDays': 2},
+              {
+                'title': '${pending.first.title}を実行する',
+                'estimatedDays': pending.first.estimatedDurationDays ?? 3,
+              },
+            ],
+          },
+        ),
+      ],
       RouteReplanReason.ahead => [
-          RouteChangeItem(
-            action: RouteChangeAction.reorder,
-            targetMissionId: pending.first.id,
-            title: '次のMissionを今日の一歩にする',
-            reason: '予定より良いペースなので、次のMissionを前倒しできます。',
-            beforeData: {'isToday': pending.first.isToday},
-            afterData: {'isToday': true},
-            safetyLevel: 1,
-          ),
-        ],
+        RouteChangeItem(
+          action: RouteChangeAction.reorder,
+          targetMissionId: pending.first.id,
+          title: '次のMissionを今日の一歩にする',
+          reason: '予定より良いペースなので、次のMissionを前倒しできます。',
+          beforeData: {'isToday': pending.first.isToday},
+          afterData: {'isToday': true},
+          safetyLevel: 1,
+        ),
+      ],
       RouteReplanReason.contextChanged => [
-          RouteChangeItem(
-            action: RouteChangeAction.reestimate,
-            title: '明示された状況をもとに再評価する',
-            reason: '利用を許可された状況変化だけを航路評価へ反映します。',
-            beforeData: const {},
-            afterData: const {'requiresAiReevaluation': true},
-          ),
-        ],
+        RouteChangeItem(
+          action: RouteChangeAction.reestimate,
+          title: '明示された状況をもとに再評価する',
+          reason: '利用を許可された状況変化だけを航路評価へ反映します。',
+          beforeData: const {},
+          afterData: const {'requiresAiReevaluation': true},
+        ),
+      ],
     };
     return const RouteProposalValidator().validate(
       RouteChangeProposal(
@@ -161,8 +158,9 @@ abstract final class AdaptiveRouteService {
             RouteProposalReason.contextChanged,
         },
         summary: evaluated.message,
-        confidence:
-            evaluated.reason == RouteReplanReason.deadlineRisk ? 0.88 : 0.76,
+        confidence: evaluated.reason == RouteReplanReason.deadlineRisk
+            ? 0.88
+            : 0.76,
         items: items,
         routeSnapshot: {
           'quest': {

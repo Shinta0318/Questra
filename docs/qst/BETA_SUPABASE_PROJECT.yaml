@@ -1,6 +1,6 @@
 version: 1
 status: verified
-updated_at_utc: "2026-07-31T07:08:00Z"
+updated_at_utc: "2026-08-01T00:00:00Z"
 candidate_source_commit: "aa6a2791a15693f5aa79c6ddc314e74d5f8d7f5c"
 working_tree_clean_at_deploy: false
 project:
@@ -13,10 +13,10 @@ project:
   cli_version: "2.109.1"
 migrations:
   status: applied
-  latest_local: "202607250004_route_transaction_hardening.sql"
-  remote_head: "202607250004_route_transaction_hardening.sql"
+  latest_local: "202608010011_planning_context_v2.sql"
+  remote_head: "202608010011_planning_context_v2.sql"
   command: "supabase migration list --linked"
-  applied_at_utc: "2026-07-25T05:02:00Z"
+  applied_at_utc: "2026-08-01T00:00:00Z"
   first_attempt:
     status: stopped_on_error
     migration: "202607240001_mission_progress_and_planning_feedback.sql"

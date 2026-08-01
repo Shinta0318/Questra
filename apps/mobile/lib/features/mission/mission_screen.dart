@@ -142,6 +142,23 @@ class _InteractiveMissionCard extends ConsumerWidget {
               ],
             ),
           ],
+          if (mission.action.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('行動: ${mission.action}'),
+          ],
+          if (mission.isOptional) ...[
+            const SizedBox(height: 8),
+            const Text('このMissionは任意です。航路に合わなければ見送れます。'),
+          ],
+          if (mission.sourceRequirement != 'none') ...[
+            const SizedBox(height: 8),
+            Text(switch (mission.sourceRequirement) {
+              'professional' => '専門家による確認が必要です。',
+              'official' => '公式情報で確認してください。',
+              'recent' => '更新日の新しい情報を確認してください。',
+              _ => '情報源を確認してください。',
+            }),
+          ],
           if (mission.expectedOutput.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text('残すもの: ${mission.expectedOutput}'),

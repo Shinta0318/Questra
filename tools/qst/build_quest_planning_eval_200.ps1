@@ -5,10 +5,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 $personas = @(
-  @{ id = "beginner"; context = "beginner; 2 hours per week" },
-  @{ id = "busy"; context = "15 minutes weekdays; 1 hour weekend" },
-  @{ id = "low_budget"; context = "minimal budget" },
-  @{ id = "experienced"; context = "experienced; efficiency focused" }
+  @{ id = "beginner"; weekly_minutes = 120; experience = "beginner"; budget = $null; preferences = @("guided steps") },
+  @{ id = "busy"; weekly_minutes = 135; experience = "some experience"; budget = $null; preferences = @("15 minute weekdays", "weekend focus") },
+  @{ id = "low_budget"; weekly_minutes = 180; experience = "beginner"; budget = "minimal budget"; preferences = @("lower cost") },
+  @{ id = "experienced"; weekly_minutes = 300; experience = "experienced"; budget = $null; preferences = @("efficiency focused") }
 )
 $seeds = Get-Content -Raw -Encoding UTF8 $SeedPath | ConvertFrom-Json
 $corpus = foreach ($seed in $seeds) {
@@ -16,11 +16,17 @@ $corpus = foreach ($seed in $seeds) {
     [ordered]@{
       id = [string]($seed.id + "-" + $persona.id)
       title = $seed.title
-      description = [string]($seed.description + " Planning context: " + $persona.context)
+      description = [string]$seed.description
       category = $seed.category
       expected_keywords = @($seed.expected_keywords)
       persona = $persona.id
-      planning_context = $persona.context
+      planning_context = [ordered]@{
+        consent_granted = $true
+        weekly_minutes = $persona.weekly_minutes
+        budget_label = $persona.budget
+        experience = $persona.experience
+        preferences = @($persona.preferences)
+      }
     }
   }
 }

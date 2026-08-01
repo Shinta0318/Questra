@@ -1,10 +1,10 @@
 ﻿param(
   [Parameter(Mandatory = $true)] [string] $Url,
   [string] $PublishableKey = $env:SUPABASE_ANON_KEY,
-  [string] $CasesPath = "tools/qst/arc_quest_guide_eval_cases.json",
+  [string] $CasesPath = "tools/qst/quest_planning_eval_200.json",
   [string] $OutputPath = "reports/qst/evaluations/arc_quest_guide_results.json",
   [int] $Start = 0,
-  [int] $Count = 50,
+  [int] $Count = 200,
   [int] $DelayMilliseconds = 4500
 )
 
@@ -20,7 +20,10 @@ $results = [System.Collections.Generic.List[object]]::new()
 foreach ($case in $selected) {
   $started = Get-Date
   try {
-    $headers = @{ apikey = $PublishableKey }
+    $headers = @{
+      apikey = $PublishableKey
+      Authorization = "Bearer $PublishableKey"
+    }
     $body = @{
       quest = @{
         id = "eval-$($case.id)"
@@ -28,6 +31,7 @@ foreach ($case in $selected) {
         description = $case.description
         difficulty = "normal"
         category = $case.category
+        planning_context = $case.planning_context
       }
     } | ConvertTo-Json -Depth 6 -Compress
     $webResponse = Invoke-WebRequest -UseBasicParsing -Method Post -Uri $Url -Headers $headers `
@@ -55,7 +59,19 @@ foreach ($case in $selected) {
     $domainPass = $domainHits.Count -ge 2
     $uniquePass = $uniqueTitleCount -eq $missions.Count
     $sourcePass = [string]$response.source_type -like "gemini*"
-    $contentPass = $countPass -and $donePass -and $domainPass -and $uniquePass
+    $qualityScore = if ($null -ne $response.plan_quality -and
+      $null -ne $response.plan_quality.score) {
+      [double]$response.plan_quality.score
+    } else {
+      0
+    }
+    $qualityPass = $qualityScore -ge 0.70
+    $contractPass = @($missions | Where-Object {
+      [string]::IsNullOrWhiteSpace([string]$_.action) -or
+      [string]::IsNullOrWhiteSpace([string]$_.done_condition) -or
+      $null -eq $_.confidence
+    }).Count -eq 0
+    $contentPass = $countPass -and $donePass -and $domainPass -and $uniquePass -and $qualityPass -and $contractPass
     $results.Add([pscustomobject]@{
       id = $case.id
       category = $case.category
@@ -67,6 +83,9 @@ foreach ($case in $selected) {
       domain_keyword_hits = @($domainHits)
       unique_title_count = $uniqueTitleCount
       duration_ms = [int]((Get-Date) - $started).TotalMilliseconds
+      quality_score = $qualityScore
+      estimated_output_tokens = [math]::Ceiling($responseText.Length / 4)
+      estimated_cost_usd = 0
       content_passed = $contentPass
       passed = $contentPass -and $sourcePass
       checks = [ordered]@{
@@ -75,6 +94,8 @@ foreach ($case in $selected) {
         domain_specificity = $domainPass
         unique_titles = $uniquePass
         gemini_source = $sourcePass
+        plan_quality = $qualityPass
+        mission_contract = $contractPass
       }
       missions = @($missions | ForEach-Object {
         [ordered]@{ title = $_.title; description = $_.description }
@@ -109,10 +130,19 @@ $merged | ConvertTo-Json -Depth 10 | Set-Content -Encoding UTF8 $OutputPath
 
 $passed = @($results | Where-Object passed).Count
 $errors = @($results | Where-Object status -eq "error").Count
+$gemini = @($results | Where-Object { [string]$_.source_type -like "gemini*" }).Count
+$passRate = if ($results.Count -eq 0) { 0 } else { $passed / $results.Count }
+$geminiRate = if ($results.Count -eq 0) { 0 } else { $gemini / $results.Count }
 [pscustomobject]@{
   start = $Start
   evaluated = $results.Count
   passed = $passed
   errors = $errors
+  pass_rate = [math]::Round($passRate, 4)
+  gemini_rate = [math]::Round($geminiRate, 4)
   output = $OutputPath
 } | ConvertTo-Json -Compress
+
+if ($results.Count -gt 0 -and ($passRate -lt 0.90 -or $geminiRate -lt 0.90)) {
+  throw "Quest planning quality gate failed: pass=$([math]::Round($passRate * 100, 1))% gemini=$([math]::Round($geminiRate * 100, 1))%"
+}

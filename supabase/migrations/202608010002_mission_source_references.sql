@@ -20,3 +20,6 @@ create policy "Owners manage Mission sources"
 
 create index if not exists mission_source_references_mission_idx
   on public.mission_source_references (mission_id, checked_at desc);
+
+create unique index if not exists mission_source_references_owner_url_idx
+  on public.mission_source_references (owner_id, mission_id, source_url);

@@ -64,4 +64,23 @@ void main() {
       isNull,
     );
   });
+
+  test('choose another excludes the current recommendation', () {
+    final recommendation = TodayBestNextMissionService.recommend(
+      [mission('first'), mission('second')],
+      excludedMissionIds: const {'first'},
+    );
+    expect(recommendation!.mission.id, 'second');
+  });
+
+  test(
+    'five minute mode keeps the selected mission and softens the wording',
+    () {
+      final recommendation = TodayBestNextMissionService.recommend([
+        mission('small-step', effortMinutes: 60),
+      ], fiveMinuteMissionId: 'small-step');
+      expect(recommendation!.mission.id, 'small-step');
+      expect(recommendation.reason, contains('5分だけ'));
+    },
+  );
 }

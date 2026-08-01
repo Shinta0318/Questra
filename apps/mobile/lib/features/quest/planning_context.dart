@@ -6,6 +6,9 @@ class PlanningContext {
     this.experience,
     this.availableResources = const [],
     this.preferences = const [],
+    this.companionType,
+    this.setbackReasons = const [],
+    this.approvedMissionHistorySummary,
     this.consentGranted = false,
   });
 
@@ -15,6 +18,9 @@ class PlanningContext {
   final String? experience;
   final List<String> availableResources;
   final List<String> preferences;
+  final String? companionType;
+  final List<String> setbackReasons;
+  final String? approvedMissionHistorySummary;
   final bool consentGranted;
 
   PlanningContext copyWith({
@@ -24,6 +30,9 @@ class PlanningContext {
     String? experience,
     List<String>? availableResources,
     List<String>? preferences,
+    String? companionType,
+    List<String>? setbackReasons,
+    String? approvedMissionHistorySummary,
     bool? consentGranted,
   }) {
     return PlanningContext(
@@ -33,6 +42,10 @@ class PlanningContext {
       experience: experience ?? this.experience,
       availableResources: availableResources ?? this.availableResources,
       preferences: preferences ?? this.preferences,
+      companionType: companionType ?? this.companionType,
+      setbackReasons: setbackReasons ?? this.setbackReasons,
+      approvedMissionHistorySummary:
+          approvedMissionHistorySummary ?? this.approvedMissionHistorySummary,
       consentGranted: consentGranted ?? this.consentGranted,
     );
   }
@@ -53,6 +66,10 @@ class PlanningContext {
       experience: json['experience'] as String?,
       availableResources: strings(json['available_resources']),
       preferences: strings(json['preferences']),
+      companionType: json['companion_type'] as String?,
+      setbackReasons: strings(json['setback_reasons']),
+      approvedMissionHistorySummary:
+          json['approved_mission_history_summary'] as String?,
       consentGranted:
           json['planning_consent_granted'] as bool? ??
           json['consent_granted'] as bool? ??
@@ -70,6 +87,9 @@ class PlanningContext {
       'experience': experience,
       'available_resources': availableResources,
       'preferences': preferences,
+      'companion_type': companionType,
+      'setback_reasons': setbackReasons,
+      'approved_mission_history_summary': approvedMissionHistorySummary,
     };
   }
 }

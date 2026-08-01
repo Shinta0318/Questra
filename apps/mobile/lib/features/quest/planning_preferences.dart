@@ -47,6 +47,9 @@ class PlanningPreferences {
       'experience': context.experience,
       'available_resources': context.availableResources,
       'preferences': context.preferences,
+      'companion_type': context.companionType,
+      'setback_reasons': context.setbackReasons,
+      'approved_mission_history_summary': context.approvedMissionHistorySummary,
     },
   };
 

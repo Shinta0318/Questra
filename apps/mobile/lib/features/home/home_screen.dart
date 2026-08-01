@@ -28,6 +28,7 @@ import '../horizon/horizon_next_challenge_service.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../mission/today_best_next_mission_service.dart';
+import '../mission/today_mission_preference_controller.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_model.dart';
 import '../quest/planning_preferences_controller.dart';
@@ -50,6 +51,7 @@ class HomeScreen extends ConsumerWidget {
     final planningPreferences = ref.watch(
       planningPreferencesControllerProvider,
     );
+    final todayPreference = ref.watch(todayMissionPreferenceControllerProvider);
     final trails = ref.watch(trailControllerProvider);
     final navigatorRank = ref
         .watch(navigatorRankServiceProvider)
@@ -78,10 +80,18 @@ class HomeScreen extends ConsumerWidget {
     final todayMinutes = planningPreferences.context.consentGranted
         ? planningPreferences.availability.minutesFor(today)
         : null;
-    final todayRecommendation = TodayBestNextMissionService.recommend(
-      missions,
-      availableMinutes: todayMinutes,
-    );
+    final now = DateTime.now();
+    final activeTodayPreference = todayPreference.isFor(now)
+        ? todayPreference
+        : const TodayMissionPreference();
+    final todayRecommendation = activeTodayPreference.isResting
+        ? null
+        : TodayBestNextMissionService.recommend(
+            missions,
+            availableMinutes: todayMinutes,
+            excludedMissionIds: activeTodayPreference.excludedMissionIds,
+            fiveMinuteMissionId: activeTodayPreference.fiveMinuteMissionId,
+          );
     final todayMissions = todayRecommendation == null
         ? const <Mission>[]
         : <Mission>[todayRecommendation.mission];
@@ -135,6 +145,23 @@ class HomeScreen extends ConsumerWidget {
                   .read(missionControllerProvider.notifier)
                   .completeMission(mission.id),
               onOpenArc: () => context.go(AppRoutes.arc),
+              isResting: activeTodayPreference.isResting,
+              onChooseAnother: todayRecommendation == null
+                  ? null
+                  : () => ref
+                        .read(todayMissionPreferenceControllerProvider.notifier)
+                        .chooseAnother(todayRecommendation.mission.id),
+              onFiveMinutes: todayRecommendation == null
+                  ? null
+                  : () => ref
+                        .read(todayMissionPreferenceControllerProvider.notifier)
+                        .useFiveMinutes(todayRecommendation.mission.id),
+              onRest: () => ref
+                  .read(todayMissionPreferenceControllerProvider.notifier)
+                  .restToday(),
+              onResume: () => ref
+                  .read(todayMissionPreferenceControllerProvider.notifier)
+                  .resumeToday(),
             ),
             const SizedBox(height: AppSpacing.xl),
             const _SimpleSectionTitle(title: '進行中のQuest'),
@@ -456,22 +483,34 @@ class _HomeMissionList extends ConsumerWidget {
     required this.recommendationReason,
     required this.onComplete,
     required this.onOpenArc,
+    required this.isResting,
+    required this.onChooseAnother,
+    required this.onFiveMinutes,
+    required this.onRest,
+    required this.onResume,
   });
 
   final List<Mission> missions;
   final String? recommendationReason;
   final ValueChanged<Mission> onComplete;
   final VoidCallback onOpenArc;
+  final bool isResting;
+  final VoidCallback? onChooseAnother;
+  final VoidCallback? onFiveMinutes;
+  final VoidCallback onRest;
+  final VoidCallback onResume;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (missions.isEmpty) {
       return _HomeEmptyActionCard(
         icon: Icons.task_alt_outlined,
-        title: '今日はまだ自由です',
-        message: '話したいことがあれば、Arcと次の一歩を見つけられます。',
-        actionLabel: 'Arcを開く',
-        onAction: onOpenArc,
+        title: isResting ? '今日は休む日' : '今日はまだ自由です',
+        message: isResting
+            ? '休むことも航路の一部です。記録や評価にペナルティはありません。'
+            : '話したいことがあれば、Arcと次の一歩を見つけられます。',
+        actionLabel: isResting ? 'やっぱり進める' : 'Arcを開く',
+        onAction: isResting ? onResume : onOpenArc,
       );
     }
 
@@ -530,6 +569,28 @@ class _HomeMissionList extends ConsumerWidget {
             if (index != missions.length - 1)
               Divider(color: AppColors.skyBlue.withValues(alpha: 0.18)),
           ],
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              TextButton.icon(
+                onPressed: onChooseAnother,
+                icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                label: const Text('別のMission'),
+              ),
+              TextButton.icon(
+                onPressed: onFiveMinutes,
+                icon: const Icon(Icons.timer_outlined, size: 18),
+                label: const Text('5分だけ'),
+              ),
+              TextButton.icon(
+                onPressed: onRest,
+                icon: const Icon(Icons.bedtime_outlined, size: 18),
+                label: const Text('今日は休む'),
+              ),
+            ],
+          ),
         ],
       ),
     );

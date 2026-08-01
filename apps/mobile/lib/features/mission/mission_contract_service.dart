@@ -37,8 +37,8 @@ class MissionContractService {
   bool isEquivalent(String left, String right) =>
       normalize(left) == normalize(right);
 
-  String normalize(String value) => value
-      .trim()
-      .toLowerCase()
-      .replaceAll(RegExp(r'[\s　\p{P}\p{S}]', unicode: true), '');
+  String normalize(String value) => value.trim().toLowerCase().replaceAll(
+    RegExp(r'[\s　\p{P}\p{S}]', unicode: true),
+    '',
+  );
 }

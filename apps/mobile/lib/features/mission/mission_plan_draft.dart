@@ -22,6 +22,10 @@ class MissionCandidateDraft {
     this.doneCondition = '',
     this.expectedOutput = '',
     this.verificationType = 'self_check',
+    this.action = '',
+    this.isOptional = false,
+    this.sourceRequirement = 'none',
+    this.confidence = 0.5,
     this.parentPlanKey,
     this.dependencyPlanKeys = const [],
     this.priority = MissionPriority.normal,
@@ -48,6 +52,10 @@ class MissionCandidateDraft {
       doneCondition: candidate.doneCondition,
       expectedOutput: candidate.expectedOutput,
       verificationType: candidate.verificationType,
+      action: candidate.action,
+      isOptional: candidate.isOptional,
+      sourceRequirement: candidate.sourceRequirement,
+      confidence: candidate.confidence,
       parentPlanKey: candidate.parentPlanKey,
       dependencyPlanKeys: candidate.dependencyPlanKeys,
       priority: candidate.priority,
@@ -72,6 +80,10 @@ class MissionCandidateDraft {
   final String doneCondition;
   final String expectedOutput;
   final String verificationType;
+  final String action;
+  final bool isOptional;
+  final String sourceRequirement;
+  final double confidence;
   final String? parentPlanKey;
   final List<String> dependencyPlanKeys;
   final MissionPriority priority;
@@ -94,6 +106,10 @@ class MissionCandidateDraft {
     String? doneCondition,
     String? expectedOutput,
     String? verificationType,
+    String? action,
+    bool? isOptional,
+    String? sourceRequirement,
+    double? confidence,
     String? parentPlanKey,
     bool clearParentPlan = false,
     List<String>? dependencyPlanKeys,
@@ -118,6 +134,10 @@ class MissionCandidateDraft {
       doneCondition: doneCondition ?? this.doneCondition,
       expectedOutput: expectedOutput ?? this.expectedOutput,
       verificationType: verificationType ?? this.verificationType,
+      action: action ?? this.action,
+      isOptional: isOptional ?? this.isOptional,
+      sourceRequirement: sourceRequirement ?? this.sourceRequirement,
+      confidence: confidence ?? this.confidence,
       parentPlanKey: clearParentPlan
           ? null
           : parentPlanKey ?? this.parentPlanKey,

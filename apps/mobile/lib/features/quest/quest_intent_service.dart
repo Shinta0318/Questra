@@ -31,8 +31,9 @@ abstract final class QuestIntentService {
       outcome: normalized,
       motivation: motivation.trim(),
       successCondition: successCondition.trim(),
-      realityFrame:
-          ambitious ? QuestRealityFrame.ambitious : QuestRealityFrame.uncertain,
+      realityFrame: ambitious
+          ? QuestRealityFrame.ambitious
+          : QuestRealityFrame.uncertain,
     );
   }
 }

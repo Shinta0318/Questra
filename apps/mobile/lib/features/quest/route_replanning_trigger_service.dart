@@ -38,7 +38,8 @@ class RouteReplanningTriggerService {
     final current = now ?? DateTime.now();
     final isManual = trigger == RouteReplanningTrigger.manual;
     final isUrgent = trigger == RouteReplanningTrigger.missionDeadlineMissed;
-    final coolingDown = lastEvaluatedAt != null &&
+    final coolingDown =
+        lastEvaluatedAt != null &&
         current.difference(lastEvaluatedAt) < cooldown;
     final shouldEvaluate = isManual || isUrgent || !coolingDown;
     final period = '${current.year}-${current.month}-${current.day}';

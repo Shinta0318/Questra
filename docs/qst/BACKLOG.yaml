@@ -2670,7 +2670,7 @@ items:
       - Guild replaces Coming Soon only after Release Manager records zero critical blockers.
   - id: QST-221
     title: Adaptive Quest Planning Engine V3
-    status: In Progress
+    status: Completed
     priority: P0
     epic: QUEST-INTELLIGENCE-V3
     depends_on: [QST-177, QST-178, QST-180, QST-182, QST-205]
@@ -2680,7 +2680,7 @@ items:
     acceptance: [Mission counts vary from 3 to 20, fixed 8-10 constraints are removed, user constraints alter plans, and Gemini/fallback paths pass quality checks.]
   - id: QST-222
     title: Quest Understanding and Success Contract
-    status: In Progress
+    status: Completed
     priority: P0
     epic: QUEST-INTELLIGENCE-V3
     depends_on: [QST-180, QST-221]
@@ -2690,7 +2690,7 @@ items:
     acceptance: [Success contracts precede Mission generation, assumptions are distinct from facts, and Quest edits can re-check the contract.]
   - id: QST-223
     title: Multi-Pass Mission Generation and Critic
-    status: In Progress
+    status: Completed
     priority: P0
     epic: QUEST-INTELLIGENCE-V3
     depends_on: [QST-221, QST-222]
@@ -2710,7 +2710,7 @@ items:
     acceptance: [Abstract-only verbs are repaired or rejected, research has target/source/recording method, and purchases remain user-approved.]
   - id: QST-225
     title: Flexible Quest Proposal Generator
-    status: In Progress
+    status: Completed
     priority: P0
     epic: QUEST-INTELLIGENCE-V3
     depends_on: [QST-222]
@@ -2720,7 +2720,7 @@ items:
     acceptance: [No forced choice for concrete wishes, no assumed user intent, and selection flows to Mission generation.]
   - id: QST-226
     title: Personal Context-Aware Planning
-    status: In Progress
+    status: Completed
     priority: P0
     epic: QUEST-INTELLIGENCE-V3
     depends_on: [QST-222, QST-225]
@@ -2730,7 +2730,7 @@ items:
     acceptance: [Plans differ for availability and experience, budget alternatives are offered, and Memory use remains visible and consented.]
   - id: QST-227
     title: Dynamic Mission Count and Progressive Route Reveal
-    status: In Progress
+    status: Completed
     priority: P0
     epic: QUEST-INTELLIGENCE-V3
     depends_on: [QST-221, QST-224]
@@ -2740,7 +2740,7 @@ items:
     acceptance: [Home emphasizes one next Mission and users can expand the full route without mistaking hidden items for deletion.]
   - id: QST-228
     title: Mission Regeneration by Intent
-    status: In Progress
+    status: Completed
     priority: P1
     epic: QUEST-INTELLIGENCE-V3
     depends_on: [QST-223, QST-224]
@@ -2750,7 +2750,7 @@ items:
     acceptance: [Completed Missions stay immutable, diffs require approval, and versioned feedback prevents repeated low-quality output.]
   - id: QST-229
     title: Today's Best Next Mission
-    status: In Progress
+    status: Completed
     priority: P0
     epic: DAILY-EXPERIENCE
     depends_on: [QST-227]
@@ -2760,7 +2760,7 @@ items:
     acceptance: [One explainable feasible recommendation is shown and users can choose an alternative or rest.]
   - id: QST-230
     title: Gentle Recovery and Route Replanning
-    status: In Progress
+    status: Completed
     priority: P1
     epic: DAILY-EXPERIENCE
     depends_on: [QST-194, QST-229]
@@ -2770,7 +2770,7 @@ items:
     acceptance: [Arc asks at most one recovery question and all structural changes remain previewed and approved.]
   - id: QST-231
     title: Quest Planning Quality Evaluation 200
-    status: In Progress
+    status: Completed
     priority: P0
     epic: QUEST-INTELLIGENCE-V3
     depends_on: [QST-221, QST-222, QST-223, QST-224, QST-225, QST-226, QST-227, QST-228]
@@ -2780,7 +2780,7 @@ items:
     acceptance: [Gemini/fallback are measured separately and threshold failures block release promotion.]
   - id: QST-232
     title: Quest Plan User Feedback Loop
-    status: In Progress
+    status: Completed
     priority: P1
     epic: QUEST-INTELLIGENCE-V3
     depends_on: [QST-228, QST-231]
@@ -2790,7 +2790,7 @@ items:
     acceptance: [Feedback is private by default, versioned, and does not transmit raw chat history.]
   - id: QST-233
     title: First 10 Minutes Quest Success Flow
-    status: In Progress
+    status: Completed
     priority: P1
     epic: ONBOARDING
     depends_on: [QST-225, QST-227]
@@ -2800,7 +2800,7 @@ items:
     acceptance: [First-time users can reach a chosen first step without jargon or unrelated feature tours.]
   - id: QST-234
     title: Arc Intent Action Chips
-    status: In Progress
+    status: Completed
     priority: P1
     epic: ARC-EXPERIENCE
     depends_on: [QST-225]
@@ -2810,7 +2810,7 @@ items:
     acceptance: [Chips are concise, accessible, contextual, and never force a Quest.]
   - id: QST-235
     title: Quest Plan Source and Freshness Verification
-    status: In Progress
+    status: Completed
     priority: P1
     epic: QUEST-INTELLIGENCE-V3
     depends_on: [QST-224]
@@ -2820,7 +2820,7 @@ items:
     acceptance: [Freshness-sensitive Missions disclose source requirements and never execute purchases or bookings.]
   - id: QST-236
     title: Calendar and Availability Planning Foundation
-    status: In Progress
+    status: Completed
     priority: P1
     epic: QUEST-INTELLIGENCE-V3
     depends_on: [QST-226]

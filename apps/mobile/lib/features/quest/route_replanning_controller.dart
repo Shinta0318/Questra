@@ -51,6 +51,54 @@ class RouteReplanningController
         }
       }
     });
+    ref.listen(missionControllerProvider, (previous, next) {
+      if (next.isEmpty) return;
+      final quests = ref.read(questControllerProvider);
+      for (final quest in quests) {
+        final pending = next
+            .where(
+              (mission) =>
+                  mission.questId == quest.id &&
+                  mission.status == MissionStatus.todo &&
+                  mission.routeState == MissionRouteState.active,
+            )
+            .toList(growable: false);
+        if (pending.isEmpty) continue;
+        final oldest = pending.reduce(
+          (a, b) => a.updatedAt.isBefore(b.updatedAt) ? a : b,
+        );
+        if (DateTime.now().difference(oldest.updatedAt).inDays >= 7) {
+          unawaited(
+            reviewForTrigger(
+              quest,
+              pending,
+              RouteReplanningTrigger.inactive,
+              eventId: 'inactive:${oldest.id}',
+            ),
+          );
+        }
+      }
+    });
+    ref.listen(questControllerProvider, (previous, next) {
+      for (final quest in next) {
+        final targetDate = quest.targetDate;
+        if (quest.status == QuestStatus.active &&
+            targetDate != null &&
+            targetDate.isBefore(DateTime.now())) {
+          unawaited(
+            reviewForTrigger(
+              quest,
+              ref
+                  .read(missionControllerProvider)
+                  .where((mission) => mission.questId == quest.id)
+                  .toList(growable: false),
+              RouteReplanningTrigger.missionDeadlineMissed,
+              eventId: 'deadline:${targetDate.toIso8601String()}',
+            ),
+          );
+        }
+      }
+    });
     return const {};
   }
 
@@ -59,6 +107,24 @@ class RouteReplanningController
     List<Mission> missions,
   ) async {
     return _reviewWithTrigger(quest, missions, RouteReplanningTrigger.manual);
+  }
+
+  Future<RouteChangeProposal?> reviewForTrigger(
+    Quest quest,
+    List<Mission> missions,
+    RouteReplanningTrigger trigger, {
+    String? eventId,
+  }) {
+    return _reviewWithTrigger(quest, missions, trigger, eventId: eventId);
+  }
+
+  Future<RouteChangeProposal> registerProposal(
+    RouteChangeProposal proposal,
+  ) async {
+    final validated = const RouteProposalValidator().validate(proposal);
+    await ref.read(routeReplanningRepositoryProvider).saveProposal(validated);
+    state = {...state, validated.questId: validated};
+    return validated;
   }
 
   Future<RouteChangeProposal?> _reviewWithTrigger(
@@ -168,10 +234,30 @@ class RouteReplanningController
         if (mission != null) missionController.restoreForRoute(mission);
         break;
       case RouteChangeAction.add:
-      case RouteChangeAction.replace:
       case RouteChangeAction.merge:
       case RouteChangeAction.reestimate:
         // These actions require a richer AI payload or a fresh evaluation pass.
+        break;
+      case RouteChangeAction.replace:
+        final original = missions
+            .where((mission) => mission.id == item.targetMissionId)
+            .firstOrNull;
+        if (original == null || original.status == MissionStatus.completed) {
+          return;
+        }
+        missionController.updateMission(
+          original.copyWith(
+            title: item.afterData['title'] as String?,
+            description: item.afterData['description'] as String?,
+            doneCondition: item.afterData['doneCondition'] as String?,
+            expectedOutput: item.afterData['expectedOutput'] as String?,
+            estimatedDurationDays:
+                item.afterData['estimatedDurationDays'] as int?,
+            difficultyScore: item.afterData['difficultyScore'] as int?,
+            sourceRequirement: item.afterData['sourceRequirement'] as String?,
+            confidence: (item.afterData['confidence'] as num?)?.toDouble(),
+          ),
+        );
         break;
     }
   }

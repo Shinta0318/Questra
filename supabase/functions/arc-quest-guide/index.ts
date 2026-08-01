@@ -22,6 +22,9 @@ type QuestPayload = {
     experience?: string | null;
     available_resources?: string[];
     preferences?: string[];
+    companion_type?: string | null;
+    setback_reasons?: string[];
+    approved_mission_history_summary?: string | null;
   } | null;
 };
 
@@ -33,6 +36,10 @@ type MissionCandidate = {
   done_condition: string;
   expected_output: string;
   verification_type: string;
+  action: string;
+  optionality: string;
+  source_requirement: string;
+  confidence: number;
   parent_plan_key?: string;
   dependency_plan_keys: string[];
   guide_type: string;
@@ -62,6 +69,7 @@ type PlanningFeedback = {
   accepted_count?: number;
   edited_count?: number;
   target_window?: string;
+  mission_feedback_reason?: string;
 };
 
 type QuestUnderstanding = {
@@ -86,12 +94,46 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Method not allowed" }, { status: 405 });
   }
   const payload = await readJson<{
+    mode?: string;
+    wish?: string;
     quest?: QuestPayload;
+    mission?: Record<string, unknown>;
+    regeneration_intent?: string;
     planning_feedback?: PlanningFeedback[];
     quest_understanding?: QuestUnderstanding;
   }>(req);
   if (!payload) {
     return jsonResponse({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  if (payload.mode === "quest_alternatives") {
+    const wish = typeof payload.wish === "string"
+      ? payload.wish.trim().slice(0, 1200)
+      : "";
+    if (!wish) {
+      return jsonResponse({ error: "wish_required" }, { status: 400 });
+    }
+    const safety = deterministicSafetyAssessment(wish);
+    if (safety) {
+      return jsonResponse({ error: "unsafe_intent", safety }, { status: 422 });
+    }
+    return jsonResponse(await buildQuestAlternatives(wish));
+  }
+  if (payload.mode === "regenerate_mission") {
+    const quest = payload.quest ?? {};
+    const mission = payload.mission ?? {};
+    const safety = deterministicSafetyAssessment(
+      `${quest.title ?? ""}\n${quest.description ?? ""}\n${mission.title ?? ""}`,
+    );
+    if (safety) {
+      return jsonResponse({ error: "unsafe_intent", safety }, { status: 422 });
+    }
+    return jsonResponse(
+      await buildMissionRegeneration(
+        quest,
+        mission,
+        payload.regeneration_intent ?? "moreSpecific",
+      ),
+    );
   }
   const { quest, planning_feedback: planningFeedback } = payload;
   const sanitizedQuest: QuestPayload = {
@@ -114,6 +156,178 @@ Deno.serve(async (req) => {
   );
   return jsonResponse(guide);
 });
+
+function questAlternativesSchema() {
+  return {
+    type: "object",
+    properties: {
+      alternatives: {
+        type: "array",
+        minItems: 2,
+        maxItems: 5,
+        items: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            outcome: { type: "string" },
+            fit_reason: { type: "string" },
+            first_step: { type: "string" },
+            difficulty: {
+              type: "string",
+              enum: ["easy", "normal", "hard", "legendary"],
+            },
+            estimated_duration_label: { type: "string" },
+          },
+          required: [
+            "title",
+            "outcome",
+            "fit_reason",
+            "first_step",
+            "difficulty",
+            "estimated_duration_label",
+          ],
+        },
+      },
+    },
+    required: ["alternatives"],
+  };
+}
+
+async function buildQuestAlternatives(wish: string) {
+  try {
+    const result = await generateAiText({
+      feature: "quest_alternatives",
+      promptVersion: "quest_alternatives_v1",
+      systemInstruction:
+        "You are Arc's private Quest framing planner. Turn one ambiguous wish into 2-5 genuinely different, achievable Quest outcomes in natural Japanese. Vary scope, success evidence, duration, and first step. Do not merely paraphrase. Do not invent current facts or commercial offers. Return schema JSON only.",
+      input: {
+        task: "Generate selectable Quest framings. The user will edit or combine them before saving.",
+        wish,
+      },
+      responseSchema: questAlternativesSchema(),
+      maxOutputTokens: 1_500,
+      temperature: 0.65,
+    });
+    if (!result) return fallbackQuestAlternatives(wish);
+    const parsed = JSON.parse(stripJsonFence(result.text));
+    const alternatives = Array.isArray(parsed.alternatives)
+      ? parsed.alternatives.slice(0, 5)
+      : [];
+    return alternatives.length >= 2
+      ? {
+        alternatives,
+        source_type: `${result.provider}_quest_alternatives`,
+      }
+      : fallbackQuestAlternatives(wish);
+  } catch (_error) {
+    return fallbackQuestAlternatives(wish);
+  }
+}
+
+function fallbackQuestAlternatives(wish: string) {
+  return {
+    alternatives: [
+      {
+        title: `${wish}を小さく試す`,
+        outcome: "自分に合う挑戦の形を確認できる",
+        fit_reason: "条件が曖昧でも始められる",
+        first_step: "叶った状態を一文で書く",
+        difficulty: "easy",
+        estimated_duration_label: "約2週間",
+      },
+      {
+        title: `${wish}を続けられる形にする`,
+        outcome: "無理なく続く頻度と環境を整える",
+        fit_reason: "日常へ定着させたい場合に向く",
+        first_step: "週に使える時間を確認する",
+        difficulty: "normal",
+        estimated_duration_label: "約3か月",
+      },
+    ],
+    source_type: "local_quest_alternatives",
+  };
+}
+
+function missionRegenerationSchema() {
+  return {
+    type: "object",
+    properties: {
+      reason: { type: "string" },
+      mission_candidate: questGuideSchema.properties.mission_candidates.items,
+    },
+    required: ["reason", "mission_candidate"],
+  };
+}
+
+async function buildMissionRegeneration(
+  quest: QuestPayload,
+  mission: Record<string, unknown>,
+  intent: string,
+) {
+  try {
+    const result = await generateAiText({
+      feature: "mission_regeneration",
+      promptVersion: "mission_regeneration_v1",
+      systemInstruction:
+        "You are Arc's private route planner. Rewrite exactly one incomplete Mission according to the requested intent. Preserve the Quest outcome and dependencies. Return one concrete action with observable completion evidence. Never rewrite a completed Mission, invent current facts, or mutate data. For travel, policy, qualification, health, finance, prices, schedules, or applications, require recent official or professional verification. Return only schema JSON.",
+      input: {
+        task: "Create one replacement candidate for explicit user approval.",
+        quest,
+        current_mission: mission,
+        intent,
+      },
+      responseSchema: missionRegenerationSchema(),
+      maxOutputTokens: 1_500,
+      temperature: 0.35,
+    });
+    if (!result) return fallbackMissionRegeneration(mission, intent);
+    const parsed = JSON.parse(stripJsonFence(result.text));
+    const candidate = normalizeCandidate(parsed.mission_candidate);
+    if (!candidate) return fallbackMissionRegeneration(mission, intent);
+    return {
+      reason: textOr(parsed.reason, "選んだ方針に合わせて、実行可能な一歩へ描き直しました。"),
+      mission_candidate: candidate,
+      source_type: `${result.provider}_mission_regeneration`,
+    };
+  } catch (_error) {
+    return fallbackMissionRegeneration(mission, intent);
+  }
+}
+
+function fallbackMissionRegeneration(
+  mission: Record<string, unknown>,
+  intent: string,
+) {
+  const title = textOr(mission.title, "次の一歩");
+  const smaller = intent === "smaller";
+  const done = smaller
+    ? "15分取り組み、次に続ける点を1つ記録する"
+    : textOr(mission.done_condition, "実行結果を確認できる形で記録する");
+  return {
+    reason: "現在のMissionを保ちながら、選んだ方針で始めやすくしました。",
+    mission_candidate: normalizeCandidate({
+      ...mission,
+      plan_key: textOr(mission.id, `mission-${crypto.randomUUID()}`),
+      title: smaller ? `${title}を15分だけ始める` : title,
+      description: `${done}したら完了です。`,
+      done_condition: done,
+      expected_output: textOr(mission.expected_output, "確認できる実行記録"),
+      action: smaller ? "15分だけ着手する" : title,
+      optionality: "required",
+      confidence: 0.58,
+      dependency_plan_keys: [],
+      guide_type: "route",
+      difficulty: "easy",
+      priority: "normal",
+      category: "実行",
+      estimated_duration_days: smaller ? 1 : mission.estimated_duration_days,
+      difficulty_score: mission.difficulty_score,
+      reference_hints: [],
+      enterprise_support_hints: [],
+    }),
+    source_type: "local_mission_regeneration",
+  };
+}
 
 function sanitizePlanningContext(
   context: QuestPayload["planning_context"],
@@ -139,6 +353,12 @@ function sanitizePlanningContext(
     experience: boundedText(context.experience, 240),
     available_resources: boundedList(context.available_resources),
     preferences: boundedList(context.preferences),
+    companion_type: boundedText(context.companion_type, 120),
+    setback_reasons: boundedList(context.setback_reasons),
+    approved_mission_history_summary: boundedText(
+      context.approved_mission_history_summary,
+      500,
+    ),
   };
 }
 
@@ -242,13 +462,19 @@ async function critiqueAndRepairGuide(
 }
 
 function summarizePlanningFeedback(feedback: PlanningFeedback[]) {
+  const reasons = feedback
+    .map((item) => item.mission_feedback_reason)
+    .filter((item): item is string => typeof item === "string")
+    .slice(0, 12);
   const valid = feedback.filter((item) =>
     Number.isFinite(item.generated_count) &&
     Number.isFinite(item.accepted_count) &&
     Number.isFinite(item.edited_count)
   ).slice(0, 8);
   if (valid.length === 0) {
-    return "There is no prior owner feedback for this type of Quest. Prefer a broadly useful discovery-first plan.";
+    return reasons.length === 0
+      ? "There is no prior owner feedback for this type of Quest. Prefer a broadly useful discovery-first plan."
+      : `Owner feedback to respect without exposing it: ${reasons.join(", ")}. Avoid repeating rejected plan qualities.`;
   }
   const generated = valid.reduce(
     (sum, item) => sum + Number(item.generated_count ?? 0),
@@ -266,7 +492,7 @@ function summarizePlanningFeedback(feedback: PlanningFeedback[]) {
     ? 0
     : Math.round((accepted / generated) * 100);
   const editRate = accepted === 0 ? 0 : Math.round((edited / accepted) * 100);
-  return `Owner-specific prior plan outcomes: ${acceptanceRate}% of candidates were adopted and ${editRate}% of adopted candidates were edited. Use only these aggregate signals; do not infer sensitive traits or repeat prior raw text.`;
+  return `Owner-specific prior plan outcomes: ${acceptanceRate}% of candidates were adopted and ${editRate}% of adopted candidates were edited. Mission feedback: ${reasons.join(", ") || "none"}. Use only these aggregate signals; do not infer sensitive traits or repeat prior raw text.`;
 }
 
 const questGuideSchema = {
@@ -294,6 +520,10 @@ const questGuideSchema = {
           done_condition: { type: "string" },
           expected_output: { type: "string" },
           verification_type: { type: "string", enum: ["self_check", "artifact", "official_source", "professional_review"] },
+          action: { type: "string" },
+          optionality: { type: "string", enum: ["required", "optional"] },
+          source_requirement: { type: "string", enum: ["none", "recent", "official", "professional"] },
+          confidence: { type: "number", minimum: 0, maximum: 1 },
           parent_plan_key: { type: "string" },
           dependency_plan_keys: { type: "array", items: { type: "string" }, maxItems: 12 },
           guide_type: {
@@ -310,7 +540,7 @@ const questGuideSchema = {
           enterprise_support_hints: { type: "array", items: { type: "string" }, maxItems: 4 },
           effort_estimate: effortEstimateSchema(),
         },
-        required: ["plan_key", "title", "description", "purpose", "done_condition", "expected_output", "verification_type", "dependency_plan_keys", "guide_type", "difficulty", "priority", "category", "estimated_duration_days", "difficulty_score", "reference_hints", "enterprise_support_hints", "effort_estimate"],
+        required: ["plan_key", "title", "description", "purpose", "done_condition", "expected_output", "verification_type", "action", "optionality", "source_requirement", "confidence", "dependency_plan_keys", "guide_type", "difficulty", "priority", "category", "estimated_duration_days", "difficulty_score", "reference_hints", "enterprise_support_hints", "effort_estimate"],
       },
     },
   },
@@ -572,6 +802,10 @@ function fallbackGuideWithoutRecursion(quest: QuestPayload) {
         ? "確認日付きの公式または専門家の参照先"
         : "実行日時付きの最初のMission",
       verification_type: index === 2 ? "official_source" : "artifact",
+      action: missionTitle,
+      optionality: "required",
+      source_requirement: index === 2 ? "official" : "none",
+      confidence: 0.72,
       dependency_plan_keys: index === 0 ? [] : [`mission-${index}`],
       priority: index < 2 ? "high" : "normal",
       category,
@@ -661,6 +895,14 @@ function normalizeCandidate(candidate: unknown): MissionCandidate | null {
     done_condition: textOr(data.done_condition, textOr(data.description, "完了条件を記録したら完了です。")),
     expected_output: textOr(data.expected_output, "Questメモに残る確認可能な記録"),
     verification_type: verificationType(data.verification_type),
+    action: textOr(data.action, textOr(data.title, "最初の一歩を進める")),
+    optionality: data.optionality === "optional" ? "optional" : "required",
+    source_requirement: sourceRequirement(
+      data.source_requirement,
+      textOr(data.category, "実行"),
+      textOr(data.title, ""),
+    ),
+    confidence: boundedNumber(data.confidence, 0, 1, 0.6),
     parent_plan_key: optionalText(data.parent_plan_key),
     dependency_plan_keys: stringList(data.dependency_plan_keys, 12),
     guide_type: guideType(data.guide_type),
@@ -749,6 +991,20 @@ function verificationType(value: unknown) {
   return typeof value === "string" && allowed.includes(value)
     ? value
     : "self_check";
+}
+
+function sourceRequirement(
+  value: unknown,
+  category: string,
+  title: string,
+) {
+  const allowed = ["none", "recent", "official", "professional"];
+  if (typeof value === "string" && allowed.includes(value)) return value;
+  const source = `${category} ${title}`;
+  if (/健康|医療|治療|法律|税|投資|金融/.test(source)) return "professional";
+  if (/旅行|ビザ|資格|制度|申請|規約|料金/.test(source)) return "official";
+  if (/価格|日程|営業時間|募集|予約/.test(source)) return "recent";
+  return "none";
 }
 
 function priority(value: unknown) {

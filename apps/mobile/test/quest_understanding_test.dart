@@ -22,6 +22,32 @@ void main() {
     expect(understanding.toJson()['constraints'], isNotEmpty);
   });
 
+  test(
+    'confirmed Success Contract increments without changing original wish',
+    () {
+      final original = QuestUnderstanding(
+        originalWish: '本を書きたい',
+        questOutcome: '原稿を完成させる',
+        successEvidence: '原稿が保存されている',
+        motivation: '',
+        currentState: '',
+        constraints: const [],
+        knownResources: const [],
+        unknowns: const [],
+        planningRisks: const [],
+        planningMode: QuestPlanningMode.project,
+        assumptions: const ['形式は未定'],
+      );
+      final confirmed = original.copyWith(
+        successEvidence: '全10章の原稿が保存されている',
+        version: original.version + 1,
+      );
+      expect(confirmed.originalWish, original.originalWish);
+      expect(confirmed.version, 2);
+      expect(confirmed.successEvidence, contains('10章'));
+    },
+  );
+
   test('Quest Understanding survives a persistence round trip', () {
     final original = QuestUnderstanding(
       originalWish: '本を出版したい',

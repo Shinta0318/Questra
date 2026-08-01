@@ -189,6 +189,21 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
     required RouteChangeProposal proposal,
     required List<String> acceptedItemIds,
   }) async {
+    final selected = proposal.items
+        .where((item) => acceptedItemIds.contains(item.id))
+        .toList(growable: false);
+    if (selected.length == 1 &&
+        selected.single.action == RouteChangeAction.replace) {
+      final value = await client.rpc(
+        'apply_mission_regeneration_proposal',
+        params: {
+          'p_proposal_id': proposal.id,
+          'p_item_id': selected.single.id,
+          'p_expected_route_version_id': proposal.routeVersionId,
+        },
+      );
+      return _mutationFromValue(value, persistedAtomically: true);
+    }
     final value = await client.rpc(
       'apply_route_change_proposal',
       params: {
@@ -203,7 +218,7 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
   @override
   Future<RouteMutationResult> rollbackProposal(String proposalId) async {
     final value = await client.rpc(
-      'rollback_route_change_proposal',
+      'rollback_route_change_proposal_v2',
       params: {'p_proposal_id': proposalId},
     );
     return _mutationFromValue(value, persistedAtomically: true);

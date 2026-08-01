@@ -14,6 +14,8 @@ abstract final class TodayBestNextMissionService {
   static TodayMissionRecommendation? recommend(
     List<Mission> missions, {
     int? availableMinutes,
+    Set<String> excludedMissionIds = const {},
+    String? fiveMinuteMissionId,
   }) {
     if (availableMinutes != null && availableMinutes <= 0) return null;
     final completed = missions
@@ -25,6 +27,7 @@ abstract final class TodayBestNextMissionService {
           (mission) =>
               mission.status == MissionStatus.todo &&
               mission.routeState == MissionRouteState.active &&
+              !excludedMissionIds.contains(mission.id) &&
               mission.dependencyIds.every(completed.contains),
         )
         .toList();
@@ -41,7 +44,9 @@ abstract final class TodayBestNextMissionService {
         effortMinutes <= availableMinutes;
     return TodayMissionRecommendation(
       mission: mission,
-      reason: fitsAvailability
+      reason: mission.id == fiveMinuteMissionId
+          ? '今日は5分だけ。途中でやめても大丈夫です。'
+          : fitsAvailability
           ? '今日の$availableMinutes分に収まる、次の一歩です。'
           : mission.isToday
           ? '今日選んだ一歩です。'

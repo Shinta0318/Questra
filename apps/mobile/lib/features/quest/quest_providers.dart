@@ -42,8 +42,10 @@ final questTemplateLibraryProvider = Provider<QuestTemplateLibrary>((ref) {
 
 final questPlanningFeedbackRepositoryProvider =
     Provider<QuestPlanningFeedbackRepository>((ref) {
-  if (SupabaseConfig.isConfigured) {
-    return SupabaseQuestPlanningFeedbackRepository(Supabase.instance.client);
-  }
-  return InMemoryQuestPlanningFeedbackRepository();
-});
+      if (SupabaseConfig.isConfigured) {
+        return SupabaseQuestPlanningFeedbackRepository(
+          Supabase.instance.client,
+        );
+      }
+      return InMemoryQuestPlanningFeedbackRepository();
+    });

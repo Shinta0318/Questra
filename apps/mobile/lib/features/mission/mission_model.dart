@@ -27,6 +27,7 @@ class Mission {
     this.sortOrder = 0,
     this.isToday = false,
     DateTime? createdAt,
+    DateTime? updatedAt,
     this.effortEstimate,
     this.parentMissionId,
     this.dependencyIds = const [],
@@ -41,10 +42,15 @@ class Mission {
     this.doneCondition = '',
     this.expectedOutput = '',
     this.verificationType = 'self_check',
+    this.action = '',
+    this.isOptional = false,
+    this.sourceRequirement = 'none',
+    this.confidence = 0.5,
   }) : id = id ?? _uuid.v4(),
        progressPercent =
            progressPercent ?? (status == MissionStatus.completed ? 100 : 0),
-       createdAt = createdAt ?? DateTime.now();
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? createdAt ?? DateTime.now();
 
   final String id;
   final String questId;
@@ -58,6 +64,7 @@ class Mission {
   final int sortOrder;
   final bool isToday;
   final DateTime createdAt;
+  final DateTime updatedAt;
   final EffortEstimate? effortEstimate;
   final String? parentMissionId;
   final List<String> dependencyIds;
@@ -72,6 +79,10 @@ class Mission {
   final String doneCondition;
   final String expectedOutput;
   final String verificationType;
+  final String action;
+  final bool isOptional;
+  final String sourceRequirement;
+  final double confidence;
 
   Mission copyWith({
     String? title,
@@ -97,6 +108,10 @@ class Mission {
     String? doneCondition,
     String? expectedOutput,
     String? verificationType,
+    String? action,
+    bool? isOptional,
+    String? sourceRequirement,
+    double? confidence,
   }) {
     return Mission(
       id: id,
@@ -111,6 +126,7 @@ class Mission {
       sortOrder: sortOrder ?? this.sortOrder,
       isToday: isToday ?? this.isToday,
       createdAt: createdAt,
+      updatedAt: DateTime.now(),
       effortEstimate: effortEstimate ?? this.effortEstimate,
       parentMissionId: clearParentMission
           ? null
@@ -129,6 +145,10 @@ class Mission {
       doneCondition: doneCondition ?? this.doneCondition,
       expectedOutput: expectedOutput ?? this.expectedOutput,
       verificationType: verificationType ?? this.verificationType,
+      action: action ?? this.action,
+      isOptional: isOptional ?? this.isOptional,
+      sourceRequirement: sourceRequirement ?? this.sourceRequirement,
+      confidence: confidence ?? this.confidence,
     );
   }
 }
