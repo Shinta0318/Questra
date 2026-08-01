@@ -12,6 +12,7 @@ import 'quest_evaluation_service.dart';
 import 'quest_model.dart';
 import 'planning_context.dart';
 import 'quest_understanding.dart';
+import 'mission_plan_quality.dart';
 
 class ArcMissionCandidate {
   const ArcMissionCandidate({
@@ -121,6 +122,7 @@ class ArcQuestGuide {
     this.questEvaluation,
     this.questDna,
     this.questUnderstanding,
+    this.planQuality,
   });
 
   final String questId;
@@ -134,6 +136,7 @@ class ArcQuestGuide {
   final QuestEvaluation? questEvaluation;
   final QuestDna? questDna;
   final QuestUnderstanding? questUnderstanding;
+  final MissionPlanQuality? planQuality;
 }
 
 abstract interface class ArcQuestGuideService {
@@ -191,6 +194,13 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
         planningRisks: const ['未確認の条件を事実として扱わない'],
         planningMode: QuestPlanningMode.project,
         assumptions: const ['詳細が分かるまで最小の確認航路を使う'],
+      ),
+      planQuality: MissionPlanQuality(
+        score: 0.72,
+        generationVersion: 'local_quest_guide_v3',
+        criticPasses: 0,
+        repairedMissionCount: 0,
+        generatedAt: DateTime.now().toUtc(),
       ),
     );
   }
@@ -590,6 +600,7 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
         questUnderstanding: QuestUnderstanding.fromJson(
           data['quest_understanding'],
         ),
+        planQuality: MissionPlanQuality.fromJson(data['plan_quality']),
       );
     } catch (_) {
       return fallback.generate(quest: quest, planningContext: planningContext);

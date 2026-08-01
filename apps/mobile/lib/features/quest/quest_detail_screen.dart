@@ -2039,6 +2039,7 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
                 evaluation: guide.questEvaluation,
                 dna: guide.questDna,
                 understanding: guide.questUnderstanding,
+                planQuality: guide.planQuality,
               ),
             );
       }

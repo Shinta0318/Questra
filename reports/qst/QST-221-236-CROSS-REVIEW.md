@@ -22,11 +22,13 @@ Status: In Progress
 11. QST-226: 明示同意、計画条件、週間可用時間をSettings、端末内保存、Supabase、Arc航路生成まで接続した。
 12. QST-226: Edge Functionで同意フラグと入力サイズを再検証し、未同意Contextを破棄するようにした。
 13. QST-236: 今日の可用時間をHomeのMission推薦へ反映し、時間内に収まる一歩を優先するようにした。
+14. QST-223: Planner/Generator出力とは別のGemini Critic/Repairを追加し、最大1回の部分修復後に決定論的Validatorを通す構造へ変更した。
+15. QST-223: 品質スコア、生成版、Critic回数、修復Mission数をQuestへ保存し、内部採点理由は保存・表示しないようにした。
 
 ## Remaining work
 
 - QST-222: Success Contractの編集・再確認UI。
-- QST-223: GeminiによるPlanner、Generator、Critic、Repairerの段階実行と品質スコア保存。
+- QST-223: Gemini無料枠回復後のCritic成功応答と修復前後の品質差分証跡。
 - QST-225: Gemini生成の選択肢、案の統合、自由編集。
 - QST-226: 明示的な同伴形態、過去の停滞理由、承認済みMission履歴の反映。
 - QST-236: 可用時間変更後の既存Mission所要時間再計算。
@@ -43,6 +45,6 @@ Status: In Progress
 - QST-226/236 focused contract tests: 12 passed.
 - Responsive Settings regression tests: 20 passed after correcting compact-width layout and Material boundaries.
 - The most recent full `flutter analyze --no-pub` invocation timed out without diagnostics in this environment; an earlier full run after the main patch reported no issues.
-- Migrations `202608010001` through `202608010006` were applied to the hosted Supabase project.
+- Migrations `202608010001` through `202608010007` were applied to the hosted Supabase project.
 - `arc-quest-guide` was redeployed and its hosted fallback returned four Missions with Quest Understanding and complete Mission contracts.
 - The hosted response still reports `local_arc_quest_guide`. The latest Edge log reports Gemini HTTP `429` after the API revision fix, so free-tier quota recovery is the remaining provider-side blocker.

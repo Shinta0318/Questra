@@ -169,9 +169,75 @@ async function buildArcQuestGuide(
     if (!result) return fallbackGuide(quest);
 
     const parsed = JSON.parse(stripJsonFence(result.text));
-    return normalizeGuide(quest, parsed, `${result.provider}_arc_quest_guide`);
+    const initialGuide = normalizeGuide(
+      quest,
+      parsed,
+      `${result.provider}_arc_quest_guide`,
+    );
+    return await critiqueAndRepairGuide(quest, initialGuide, understanding);
   } catch (_error) {
     return fallbackGuide(quest);
+  }
+}
+
+async function critiqueAndRepairGuide(
+  quest: QuestPayload,
+  initialGuide: ReturnType<typeof normalizeGuide>,
+  understanding?: QuestUnderstanding,
+) {
+  try {
+    const result = await generateAiText({
+      feature: "arc_quest_guide_critic",
+      promptVersion: "quest_guide_critic_v1",
+      systemInstruction:
+        "You are the private quality critic for a Questra Quest route. Evaluate relevance, user specificity, concreteness, feasibility, done-condition verifiability, ordering, coverage, duplication, granularity, duration realism, and source freshness. Return the complete Mission list, preserving every good Mission exactly and repairing only failing Missions. Never expose critic reasoning to the user. Keep the graph acyclic and retain stable plan_key values where possible. Do not add commercial promotion. Perform at most this one repair pass.",
+      input: {
+        task:
+          "Critique the proposed Mission graph and return one bounded repaired graph plus an aggregate quality score.",
+        quest,
+        quest_understanding: understanding ?? initialGuide.quest_understanding,
+        mission_candidates: initialGuide.mission_candidates,
+      },
+      responseSchema: missionCriticSchema,
+      maxOutputTokens: 5_000,
+      temperature: 0.2,
+    });
+    if (!result) return initialGuide;
+    const parsed = JSON.parse(stripJsonFence(result.text));
+    const rawCandidates = Array.isArray(parsed.mission_candidates)
+      ? parsed.mission_candidates
+      : [];
+    const repaired = reviewMissionCandidates(
+      rawCandidates
+        .map(normalizeCandidate)
+        .filter((item): item is MissionCandidate => item !== null),
+    ).slice(0, 20);
+    if (repaired.length < 3) return initialGuide;
+    const deterministicScore = scoreMissionCandidates(repaired);
+    const providerScore = Number(parsed.overall_score);
+    const score = Number.isFinite(providerScore)
+      ? Math.min(deterministicScore, Math.max(0, Math.min(1, providerScore)))
+      : deterministicScore;
+    const previousByKey = new Map(
+      initialGuide.mission_candidates.map((item) => [item.plan_key, item]),
+    );
+    const repairedCount = repaired.filter((item) =>
+      JSON.stringify(previousByKey.get(item.plan_key)) !== JSON.stringify(item)
+    ).length;
+    return {
+      ...initialGuide,
+      mission_candidates: repaired,
+      plan_quality: {
+        score,
+        generation_version: "quest_guide_v3",
+        critic_passes: 1,
+        repaired_mission_count: repairedCount,
+        generated_at: new Date().toISOString(),
+      },
+      source_type: `${result.provider}_critic_repaired`,
+    };
+  } catch (_error) {
+    return initialGuide;
   }
 }
 
@@ -249,6 +315,15 @@ const questGuideSchema = {
     },
   },
   required: ["summary", "path", "cautions", "encouragement", "effort_estimate", "quest_evaluation", "quest_dna", "quest_understanding", "mission_candidates"],
+};
+
+const missionCriticSchema = {
+  type: "object",
+  properties: {
+    overall_score: { type: "number", minimum: 0, maximum: 1 },
+    mission_candidates: questGuideSchema.properties.mission_candidates,
+  },
+  required: ["overall_score", "mission_candidates"],
 };
 
 function questUnderstandingSchema() {
@@ -341,6 +416,13 @@ function stripJsonFence(value: string) {
 function fallbackGuide(quest: QuestPayload) {
   return {
     ...fallbackGuideWithoutRecursion(quest),
+    plan_quality: {
+      score: 0.72,
+      generation_version: "local_quest_guide_v3",
+      critic_passes: 0,
+      repaired_mission_count: 0,
+      generated_at: new Date().toISOString(),
+    },
     source_type: "local_arc_quest_guide",
   };
 }
@@ -382,8 +464,34 @@ function normalizeGuide(
       data.quest_understanding,
       quest,
     ),
+    plan_quality: {
+      score: scoreMissionCandidates(
+        reviewedCandidates.length >= 3
+          ? reviewedCandidates
+          : fallbackCandidates.mission_candidates,
+      ),
+      generation_version: "quest_guide_v3",
+      critic_passes: 0,
+      repaired_mission_count: 0,
+      generated_at: new Date().toISOString(),
+    },
     source_type: sourceType,
   };
+}
+
+function scoreMissionCandidates(candidates: MissionCandidate[]) {
+  if (candidates.length === 0) return 0;
+  const total = candidates.reduce((sum, item) => {
+    let score = 0.35;
+    if (item.purpose.trim().length >= 4) score += 0.1;
+    if (item.done_condition.trim().length >= 6) score += 0.15;
+    if (item.expected_output.trim().length >= 2) score += 0.1;
+    if (/完了です[。]?$/.test(item.description)) score += 0.1;
+    if (item.effort_estimate.active_effort_minutes > 0) score += 0.1;
+    if (item.estimated_duration_days > 0) score += 0.1;
+    return sum + Math.min(1, score);
+  }, 0);
+  return Math.round((total / candidates.length) * 100) / 100;
 }
 
 // The deterministic critic is deliberately conservative. It never mutates

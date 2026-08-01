@@ -14,5 +14,8 @@ void main() {
     expect(guide, isNot(contains('template.steps.map((item, index)')));
     expect(guide, contains('reviewMissionCandidates'));
     expect(guide, contains('abstractOnly'));
+    expect(guide, contains('critiqueAndRepairGuide'));
+    expect(guide, contains('quest_guide_critic_v1'));
+    expect(guide, contains('critic_passes: 1'));
   });
 }

@@ -25,6 +25,8 @@ void main() {
       expect(guide.path, isNotEmpty);
       expect(guide.cautions, isNotEmpty);
       expect(guide.encouragement, contains('Arc'));
+      expect(guide.planQuality, isNotNull);
+      expect(guide.planQuality!.generationVersion, contains('quest_guide_v3'));
       expect(guide.missionCandidates, hasLength(4));
       expect(
         guide.missionCandidates.map((candidate) => candidate.guideType),
