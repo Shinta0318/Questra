@@ -14,7 +14,7 @@ const _questColumns =
     'difficulty_score,estimated_duration_days,estimated_cost,'
     'estimated_success_rate,estimated_mission_count,evaluation_version,'
     'evaluated_at,recommended_start_date,risk_summary,quest_dna,'
-    'quest_dna_version,quest_dna_evaluated_at,quest_understanding,plan_quality,created_at';
+    'quest_dna_version,quest_dna_evaluated_at,quest_understanding,plan_quality,progress,created_at';
 
 abstract interface class QuestRepository {
   Future<List<Quest>> findByUser(
@@ -141,6 +141,7 @@ class SupabaseQuestRepository implements QuestRepository {
           .split('T')
           .first,
       'risk_summary': quest.evaluation?.riskSummary,
+      'progress': quest.progress.clamp(0, 1),
       'updated_at': DateTime.now().toIso8601String(),
     };
   }
@@ -163,6 +164,7 @@ class SupabaseQuestRepository implements QuestRepository {
       dna: QuestDna.fromJson(row['quest_dna']),
       understanding: QuestUnderstanding.fromJson(row['quest_understanding']),
       planQuality: MissionPlanQuality.fromJson(row['plan_quality']),
+      progress: (row['progress'] as num?)?.toDouble() ?? 0,
     );
   }
 }

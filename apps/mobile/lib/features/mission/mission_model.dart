@@ -46,6 +46,18 @@ class Mission {
     this.isOptional = false,
     this.sourceRequirement = 'none',
     this.confidence = 0.5,
+    this.routeId,
+    this.objective = '',
+    this.successCondition = '',
+    this.expectedOutcome = '',
+    this.required = true,
+    this.orderIndex = 0,
+    this.weight = 1,
+    this.targetDate,
+    this.generatedBy = 'user',
+    this.generationVersion,
+    this.successConfirmedAt,
+    this.hierarchyRole = 'legacy_unclassified',
   }) : id = id ?? _uuid.v4(),
        progressPercent =
            progressPercent ?? (status == MissionStatus.completed ? 100 : 0),
@@ -83,6 +95,20 @@ class Mission {
   final bool isOptional;
   final String sourceRequirement;
   final double confidence;
+  final String? routeId;
+  final String objective;
+  final String successCondition;
+  final String expectedOutcome;
+  final bool required;
+  final int orderIndex;
+  final double weight;
+  final DateTime? targetDate;
+  final String generatedBy;
+  final String? generationVersion;
+  final DateTime? successConfirmedAt;
+  final String hierarchyRole;
+
+  bool get isOutcomeMission => hierarchyRole == 'outcome';
 
   Mission copyWith({
     String? title,
@@ -112,6 +138,18 @@ class Mission {
     bool? isOptional,
     String? sourceRequirement,
     double? confidence,
+    String? routeId,
+    String? objective,
+    String? successCondition,
+    String? expectedOutcome,
+    bool? required,
+    int? orderIndex,
+    double? weight,
+    DateTime? targetDate,
+    String? generatedBy,
+    String? generationVersion,
+    DateTime? successConfirmedAt,
+    String? hierarchyRole,
   }) {
     return Mission(
       id: id,
@@ -149,6 +187,18 @@ class Mission {
       isOptional: isOptional ?? this.isOptional,
       sourceRequirement: sourceRequirement ?? this.sourceRequirement,
       confidence: confidence ?? this.confidence,
+      routeId: routeId ?? this.routeId,
+      objective: objective ?? this.objective,
+      successCondition: successCondition ?? this.successCondition,
+      expectedOutcome: expectedOutcome ?? this.expectedOutcome,
+      required: required ?? this.required,
+      orderIndex: orderIndex ?? this.orderIndex,
+      weight: weight ?? this.weight,
+      targetDate: targetDate ?? this.targetDate,
+      generatedBy: generatedBy ?? this.generatedBy,
+      generationVersion: generationVersion ?? this.generationVersion,
+      successConfirmedAt: successConfirmedAt ?? this.successConfirmedAt,
+      hierarchyRole: hierarchyRole ?? this.hierarchyRole,
     );
   }
 }

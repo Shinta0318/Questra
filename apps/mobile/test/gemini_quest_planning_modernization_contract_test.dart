@@ -36,14 +36,19 @@ void main() {
       final understanding = pipeline.indexOf('"quest_understanding"');
       final contract = pipeline.indexOf('"success_contract"');
       final strategy = pipeline.indexOf('"strategic_plan"');
-      final generation = pipeline.indexOf('"mission_generation"');
+      final generation = pipeline.indexOf('"route_mission_generation"');
       final critic = pipeline.indexOf('"mission_critic"');
-      final repair = pipeline.indexOf('"targeted_repair"');
+      final repair = pipeline.indexOf('"route_mission_repair"');
       expect(understanding, lessThan(contract));
       expect(contract, lessThan(strategy));
       expect(strategy, lessThan(generation));
       expect(generation, lessThan(critic));
       expect(critic, lessThan(repair));
+      expect(pipeline.indexOf('"task_generation"'), greaterThan(repair));
+      expect(
+        pipeline.indexOf('"task_critic"'),
+        greaterThan(pipeline.indexOf('"task_generation"')),
+      );
       expect(pipeline, contains('persistenceAllowed: false'));
     },
   );
@@ -69,7 +74,7 @@ void main() {
 
   test('approval is transactional and owner scoped', () {
     final migration = read(
-      'supabase/migrations/202608010021_gemini_quest_planning_v2.sql',
+      'supabase/migrations/202608010022_quest_mission_task_hierarchy.sql',
     );
     expect(migration, contains('approve_quest_plan_preview'));
     expect(migration, contains('for update'));

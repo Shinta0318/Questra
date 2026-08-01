@@ -19,7 +19,7 @@ void main() {
     );
   }
 
-  test('Quest progress includes partial Mission progress', () {
+  test('Quest progress uses completed required Mission outcomes', () {
     final snapshot = const QuestProgressService().calculate([
       mission('1', MissionStatus.completed),
       mission('2', MissionStatus.todo, 50),
@@ -28,7 +28,7 @@ void main() {
 
     expect(snapshot.completed, 1);
     expect(snapshot.total, 3);
-    expect(snapshot.percent, 50);
+    expect(snapshot.percent, 33);
   });
 
   test('completed Mission defaults to 100 percent', () {
@@ -55,10 +55,7 @@ void main() {
 
   test('target date becomes a reusable non-identifying window', () {
     final now = DateTime(2026, 7, 24);
-    expect(
-      questTargetWindow(DateTime(2026, 10, 1), now),
-      'within_90_days',
-    );
+    expect(questTargetWindow(DateTime(2026, 10, 1), now), 'within_90_days');
     expect(questTargetWindow(null, now), 'unspecified');
   });
 }

@@ -48,6 +48,7 @@ $$;
 \set owner_public_quest_id '00000000-0000-4000-8000-000000004102'
 \set other_private_quest_id '00000000-0000-4000-8000-000000004201'
 \set owner_private_mission_id '00000000-0000-4000-8000-000000014101'
+\set owner_private_task_id '00000000-0000-4000-8000-000000154101'
 \set owner_public_mission_id '00000000-0000-4000-8000-000000014102'
 \set other_private_mission_id '00000000-0000-4000-8000-000000014201'
 \set owner_private_trail_id '00000000-0000-4000-8000-000000024101'
@@ -93,6 +94,9 @@ values
   (:'owner_private_mission_id', :'owner_private_quest_id', 'Owner private Mission', 'Private Mission.', 'route', 'easy', 'todo'),
   (:'owner_public_mission_id', :'owner_public_quest_id', 'Owner public Mission', 'Public Mission.', 'route', 'easy', 'todo'),
   (:'other_private_mission_id', :'other_private_quest_id', 'Other private Mission', 'Other private Mission.', 'route', 'easy', 'todo');
+
+insert into public.tasks (id, owner_id, quest_id, mission_id, title, action, done_condition)
+values (:'owner_private_task_id', :'owner_id', :'owner_private_quest_id', :'owner_private_mission_id', 'Owner private Task', 'Ownerだけが実行できる具体行動', '結果を確認できる状態になる');
 
 insert into public.trails (id, owner_id, quest_id, mission_id, title, summary, content, visibility, trail_type)
 values
@@ -224,6 +228,7 @@ select pg_temp.qst_assert_eq((select count(*) from public.route_change_items whe
 select pg_temp.qst_assert_eq((select count(*) from public.quest_progress_events where event_id = :'owner_progress_event_id'), 1, 'owner can read own progress event');
 select pg_temp.qst_assert_eq((select count(*) from public.quest_dna_versions where id = :'owner_dna_version_id'), 1, 'owner can read own Quest DNA version');
 select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id = :'owner_consent_id'), 1, 'owner can read own consent');
+select pg_temp.qst_assert_eq((select count(*) from public.tasks where id = :'owner_private_task_id'), 1, 'owner can read own private Task');
 select pg_temp.qst_assert_raises(
   format('select count(*) from public.business_quest_signals where signal_id = %L', :'owner_business_signal_id'),
   'Business signal is not client-readable'
@@ -251,6 +256,16 @@ select pg_temp.qst_assert_eq((select count(*) from public.route_change_items whe
 select pg_temp.qst_assert_eq((select count(*) from public.quest_progress_events where event_id = :'owner_progress_event_id'), 0, 'other cannot read owner progress event');
 select pg_temp.qst_assert_eq((select count(*) from public.quest_dna_versions where id = :'owner_dna_version_id'), 0, 'other cannot read owner Quest DNA version');
 select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id = :'owner_consent_id'), 0, 'other cannot read owner consent');
+select pg_temp.qst_assert_eq((select count(*) from public.tasks where id = :'owner_private_task_id'), 0, 'other cannot read owner private Task');
+
+select pg_temp.qst_assert_raises(
+  format(
+    'insert into public.tasks (owner_id, quest_id, mission_id, title, action, done_condition) values (%L, %L, %L, %L, %L, %L)',
+    :'owner_id', :'owner_private_quest_id', :'owner_private_mission_id',
+    'Invalid Task', '他人のMissionへ追加する', '追加結果が存在する'
+  ),
+  'other cannot create a Task for owner'
+);
 
 select pg_temp.qst_assert_raises(
   format(

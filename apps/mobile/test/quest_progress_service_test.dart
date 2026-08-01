@@ -28,6 +28,30 @@ void main() {
     expect(snapshot.percent, 50);
     expect(snapshot.missionCountLabel, '2/4');
   });
+
+  test(
+    'optional and partially progressed Missions do not complete Quest outcomes',
+    () {
+      final required = _mission(
+        '1',
+        MissionStatus.todo,
+      ).copyWith(progressPercent: 100);
+      final optional = Mission(
+        id: '2',
+        questId: 'quest-1',
+        questTitle: 'Quest',
+        title: 'Optional',
+        description: '',
+        guideType: GuideType.route,
+        difficulty: MissionDifficulty.easy,
+        status: MissionStatus.completed,
+        required: false,
+      );
+      final snapshot = service.calculate([required, optional]);
+      expect(snapshot.percent, 0);
+      expect(snapshot.missionCountLabel, '0/1');
+    },
+  );
 }
 
 Mission _mission(String id, MissionStatus status) {

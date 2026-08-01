@@ -5,7 +5,7 @@ import '../../core/estimation/effort_estimate.dart';
 import 'mission_model.dart';
 
 const _missionColumns =
-    'id,quest_id,title,description,guide_type,difficulty,status,progress_percent,sort_order,is_today,effort_estimate,parent_mission_id,dependency_ids,priority,category,estimated_cost_label,reference_hints,enterprise_support_hints,difficulty_score,estimated_duration_days,route_state,done_condition,expected_output,verification_type,action,is_optional,source_requirement,confidence,created_at,updated_at,quests!inner(title)';
+    'id,quest_id,title,description,guide_type,difficulty,status,progress_percent,sort_order,is_today,effort_estimate,parent_mission_id,dependency_ids,priority,category,estimated_cost_label,reference_hints,enterprise_support_hints,difficulty_score,estimated_duration_days,route_state,done_condition,expected_output,verification_type,action,is_optional,source_requirement,confidence,route_id,objective,success_condition,expected_outcome,required,order_index,weight,target_date,generated_by,generation_version,success_confirmed_at,hierarchy_role,created_at,updated_at,quests!inner(title)';
 
 abstract interface class MissionRepository {
   Future<List<Mission>> findByQuest(
@@ -174,6 +174,18 @@ class SupabaseMissionRepository implements MissionRepository {
       'is_optional': mission.isOptional,
       'source_requirement': mission.sourceRequirement,
       'confidence': mission.confidence.clamp(0, 1),
+      'route_id': mission.routeId,
+      'objective': mission.objective,
+      'success_condition': mission.successCondition,
+      'expected_outcome': mission.expectedOutcome,
+      'required': mission.required,
+      'order_index': mission.orderIndex,
+      'weight': mission.weight,
+      'target_date': mission.targetDate?.toIso8601String().split('T').first,
+      'generated_by': mission.generatedBy,
+      'generation_version': mission.generationVersion,
+      'success_confirmed_at': mission.successConfirmedAt?.toIso8601String(),
+      'hierarchy_role': mission.hierarchyRole,
       'completed_at': mission.status == MissionStatus.completed
           ? DateTime.now().toIso8601String()
           : null,
@@ -227,9 +239,24 @@ class SupabaseMissionRepository implements MissionRepository {
       isOptional: row['is_optional'] as bool? ?? false,
       sourceRequirement: row['source_requirement'] as String? ?? 'none',
       confidence: (row['confidence'] as num?)?.toDouble().clamp(0, 1) ?? 0.5,
+      routeId: row['route_id'] as String?,
+      objective: row['objective'] as String? ?? '',
+      successCondition: row['success_condition'] as String? ?? '',
+      expectedOutcome: row['expected_outcome'] as String? ?? '',
+      required: row['required'] as bool? ?? true,
+      orderIndex: row['order_index'] as int? ?? row['sort_order'] as int? ?? 0,
+      weight: (row['weight'] as num?)?.toDouble() ?? 1,
+      targetDate: _parseDate(row['target_date']),
+      generatedBy: row['generated_by'] as String? ?? 'user',
+      generationVersion: row['generation_version'] as String?,
+      successConfirmedAt: _parseDate(row['success_confirmed_at']),
+      hierarchyRole: row['hierarchy_role'] as String? ?? 'legacy_unclassified',
     );
   }
 
   List<String> _stringList(Object? value) =>
       (value as List?)?.whereType<String>().toList(growable: false) ?? const [];
+
+  DateTime? _parseDate(Object? value) =>
+      value is String ? DateTime.tryParse(value) : null;
 }

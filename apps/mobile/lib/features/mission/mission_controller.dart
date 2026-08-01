@@ -323,6 +323,49 @@ class MissionController extends Notifier<List<Mission>> {
     }
   }
 
+  /// Task is the unit of action. Mission progress is derived from required Tasks.
+  void applyTaskProgress(
+    String missionId, {
+    required int progressPercent,
+    required bool allRequiredTasksCompleted,
+  }) {
+    final mission = state.where((item) => item.id == missionId).firstOrNull;
+    if (mission == null) return;
+    final normalized = progressPercent.clamp(0, 100);
+    final completed =
+        allRequiredTasksCompleted && mission.successConfirmedAt != null;
+    final updated = mission.copyWith(
+      progressPercent: normalized,
+      status: completed ? MissionStatus.completed : MissionStatus.todo,
+    );
+    state = [
+      for (final item in state)
+        if (item.id == missionId) updated else item,
+    ];
+    _syncQuestProgress(updated.questId);
+  }
+
+  bool confirmMissionSuccess(String missionId) {
+    final mission = state.where((item) => item.id == missionId).firstOrNull;
+    if (mission == null || mission.progressPercent < 100) return false;
+    final confirmed = mission.copyWith(
+      status: MissionStatus.completed,
+      successConfirmedAt: DateTime.now(),
+    );
+    state = [
+      for (final item in state)
+        if (item.id == missionId) confirmed else item,
+    ];
+    _syncQuestProgress(confirmed.questId);
+    unawaited(
+      _persistMission(
+        confirmed,
+        sourceType: ArcMemorySourceType.missionCompleted,
+      ),
+    );
+    return true;
+  }
+
   void removeMission(String missionId) {
     final mission = state.where((item) => item.id == missionId).firstOrNull;
     final questId = mission?.questId;

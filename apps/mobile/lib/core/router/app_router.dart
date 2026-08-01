@@ -8,6 +8,7 @@ import '../../features/auth/reset_password_screen.dart';
 import '../../features/auth/signup_screen.dart';
 import '../../features/feedback/beta_feedback_screen.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/mission/mission_detail_screen.dart';
 import '../../features/mission/mission_screen.dart';
 import '../../features/mission_support/mission_support_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
@@ -15,9 +16,11 @@ import '../../features/quest/quest_detail_screen.dart';
 import '../../features/quest/quest_form_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/quest/quest_screen.dart';
+import '../../features/quest/quest_route_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/trail/trail_screen.dart';
+import '../../features/task/task_detail_screen.dart';
 import '../../widgets/layout/questra_coming_soon_screen.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
@@ -94,10 +97,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     ),
                     routes: [
                       GoRoute(
+                        path: 'route',
+                        builder: (context, state) => QuestRouteScreen(
+                          questId: state.pathParameters['questId']!,
+                        ),
+                      ),
+                      GoRoute(
                         path: 'edit',
                         builder: (context, state) => QuestFormScreen(
                           questId: state.pathParameters['questId']!,
                         ),
+                      ),
+                      GoRoute(
+                        path: 'mission/:missionId',
+                        builder: (context, state) => MissionDetailScreen(
+                          missionId: state.pathParameters['missionId']!,
+                        ),
+                        routes: [
+                          GoRoute(
+                            path: 'task/:taskId',
+                            builder: (context, state) => TaskDetailScreen(
+                              taskId: state.pathParameters['taskId']!,
+                            ),
+                          ),
+                        ],
                       ),
                       GoRoute(
                         path: 'mission/:missionId/support',

@@ -27,6 +27,8 @@ import '../quest/quest_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../signal/mission_signal_model.dart';
 import '../signal/signal_providers.dart';
+import '../task/task_controller.dart';
+import '../task/task_screen.dart';
 import 'mission_controller.dart';
 import 'mission_model.dart';
 
@@ -42,6 +44,8 @@ class MissionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tasks = ref.watch(taskControllerProvider);
+    if (tasks.isNotEmpty) return const TaskScreen();
     final missions = ref.watch(missionControllerProvider);
     final quests = ref.watch(questControllerProvider);
     final profile = ref.watch(authControllerProvider).profile;

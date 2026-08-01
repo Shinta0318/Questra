@@ -2354,7 +2354,7 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
 
     return _SectionCard(
       number: 2,
-      title: 'ArcのMissionプラン',
+      title: 'Arcが描いた航路',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2873,7 +2873,7 @@ class _MissionsSection extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Quest「${quest.title}」を進める具体的な一歩',
+                  'Quest「${quest.title}」を達成する中間成果',
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
@@ -2891,6 +2891,15 @@ class _MissionsSection extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
           ],
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () => context.push(AppRoutes.questRoute(quest.id)),
+              icon: const Icon(Icons.route_outlined),
+              label: const Text('Quest Routeを俯瞰'),
+            ),
+          ),
+          const SizedBox(height: 10),
           if (missions.isEmpty)
             const Text('Arcと最初のMissionをつくると、ここに今日の航路が並びます。')
           else
@@ -2912,13 +2921,16 @@ class _MissionsSection extends ConsumerWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Checkbox(
-                        value: mission.status == MissionStatus.completed,
-                        onChanged: mission.status == MissionStatus.completed
-                            ? null
-                            : (_) => ref
-                                  .read(missionControllerProvider.notifier)
-                                  .completeMission(mission.id),
+                      IconButton(
+                        tooltip: 'MissionとTaskを開く',
+                        onPressed: () => context.push(
+                          AppRoutes.missionDetail(quest.id, mission.id),
+                        ),
+                        icon: Icon(
+                          mission.status == MissionStatus.completed
+                              ? Icons.verified
+                              : Icons.account_tree_outlined,
+                        ),
                       ),
                       Expanded(
                         child: Column(
@@ -3078,19 +3090,12 @@ class _MissionsSection extends ConsumerWidget {
                             icon: const Icon(Icons.rate_review_outlined),
                             tooltip: '提案を評価',
                           ),
-                          PopupMenuButton<int>(
-                            tooltip: '進捗を更新',
-                            icon: const Icon(Icons.tune_outlined),
-                            onSelected: (value) => ref
-                                .read(missionControllerProvider.notifier)
-                                .updateProgress(mission.id, value),
-                            itemBuilder: (context) => [
-                              for (final value in const [0, 25, 50, 75, 100])
-                                PopupMenuItem(
-                                  value: value,
-                                  child: Text('進捗 $value%'),
-                                ),
-                            ],
+                          IconButton(
+                            tooltip: 'Taskを確認',
+                            onPressed: () => context.push(
+                              AppRoutes.missionDetail(quest.id, mission.id),
+                            ),
+                            icon: const Icon(Icons.checklist_outlined),
                           ),
                           IconButton(
                             onPressed: () =>

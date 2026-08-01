@@ -81,6 +81,43 @@ export function validateMissionSemantics(value: unknown, questText: string): Val
   return { valid: issues.length === 0, issues };
 }
 
+export function validateRouteMissionPlan(value: unknown, expectedQuestId: string): ValidationResult {
+  const issues: ValidationIssue[] = [];
+  if (!isRecord(value) || !Array.isArray(value.missions)) return invalid("$.missions", "type", "Route Missions are required");
+  if (value.questId !== expectedQuestId) issues.push(issue("$.questId", "quest_mismatch", "Quest ID does not match"));
+  const ids = new Set<string>();
+  const missions = value.missions as unknown[];
+  for (const [index, raw] of missions.entries()) {
+    if (!isRecord(raw)) { issues.push(issue(`$.missions[${index}]`, "type", "Mission must be an object")); continue; }
+    const id = text(raw.clientId);
+    if (!id || ids.has(id)) issues.push(issue(`$.missions[${index}].clientId`, "duplicate", "Mission clientId is missing or duplicated", id ?? undefined));
+    if (id) ids.add(id);
+    for (const key of ["title", "objective", "successCondition", "expectedOutcome"] as const) if (!text(raw[key])) issues.push(issue(`$.missions[${index}].${key}`, "required", `${key} is required`, id ?? undefined));
+    if (!Array.isArray(raw.dependencies)) issues.push(issue(`$.missions[${index}].dependencies`, "type", "Dependencies must be an array", id ?? undefined));
+  }
+  const typed = missions.filter(isRouteMission);
+  for (const mission of typed) for (const dependency of mission.dependencies) if (!ids.has(dependency) || dependency === mission.clientId) issues.push(issue("$.missions.dependencies", "invalid_dependency", "Mission dependency is invalid", mission.clientId));
+  if (hasCycle(typed as Mission[])) issues.push(issue("$.missions", "dependency_cycle", "Mission dependency graph contains a cycle"));
+  return { valid: issues.length === 0, issues };
+}
+
+export function validateTaskPlan(value: unknown, expectedQuestId: string, missionClientId: string): ValidationResult {
+  if (!isRecord(value) || !Array.isArray(value.tasks)) return invalid("$.tasks", "type", "Tasks are required");
+  const issues: ValidationIssue[] = [];
+  if (value.questId !== expectedQuestId) issues.push(issue("$.questId", "quest_mismatch", "Quest ID does not match"));
+  if (value.missionClientId !== missionClientId) issues.push(issue("$.missionClientId", "mission_mismatch", "Mission ID does not match"));
+  const ids = new Set<string>();
+  for (const [index, raw] of (value.tasks as unknown[]).entries()) {
+    if (!isRecord(raw)) { issues.push(issue(`$.tasks[${index}]`, "type", "Task must be an object")); continue; }
+    const id = text(raw.clientId);
+    if (!id || ids.has(id)) issues.push(issue(`$.tasks[${index}].clientId`, "duplicate", "Task clientId is missing or duplicated", id ?? undefined));
+    if (id) ids.add(id);
+    for (const key of ["title", "action", "purpose", "doneCondition", "expectedOutput"] as const) if (!text(raw[key])) issues.push(issue(`$.tasks[${index}].${key}`, "required", `${key} is required`, id ?? undefined));
+    if (!integerBetween(raw.estimatedEffortMinutes, 1, 1440)) issues.push(issue(`$.tasks[${index}].estimatedEffortMinutes`, "range", "Task effort is invalid", id ?? undefined));
+  }
+  return { valid: issues.length === 0, issues };
+}
+
 function hasCycle(missions: Mission[]) {
   const graph = new Map(missions.map((mission) => [mission.clientId, mission.dependencies]));
   const visiting = new Set<string>();
@@ -98,6 +135,9 @@ function hasCycle(missions: Mission[]) {
 }
 
 function isMission(value: unknown): value is Mission {
+  return isRecord(value) && typeof value.clientId === "string" && Array.isArray(value.dependencies) && value.dependencies.every((item) => typeof item === "string");
+}
+function isRouteMission(value: unknown): value is Mission {
   return isRecord(value) && typeof value.clientId === "string" && Array.isArray(value.dependencies) && value.dependencies.every((item) => typeof item === "string");
 }
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null; }

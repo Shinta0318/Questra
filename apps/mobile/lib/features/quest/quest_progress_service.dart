@@ -24,9 +24,15 @@ class QuestProgressService {
     var completed = 0;
     var progressTotal = 0;
     for (final mission in missions) {
+      if (!mission.required ||
+          mission.routeState == MissionRouteState.removed) {
+        continue;
+      }
       total++;
-      if (mission.status == MissionStatus.completed) completed++;
-      progressTotal += mission.progressPercent.clamp(0, 100);
+      if (mission.status == MissionStatus.completed) {
+        completed++;
+        progressTotal += 100;
+      }
     }
     return QuestProgressSnapshot(
       completed: completed,

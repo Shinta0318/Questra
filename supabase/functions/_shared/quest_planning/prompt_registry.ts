@@ -39,6 +39,26 @@ export const PROMPTS: Record<string, PromptDefinition> = {
     key: "targeted_repair", version: 2, status: "active", modelRole: "targeted_repair", thinkingLevel: "medium", schemaKey: "MissionRepairResult", temperature: 0.2,
     systemInstruction: `Repair only Mission clientIds explicitly marked as failed. Preserve every passing Mission byte-for-byte, preserve completed Missions, retain stable clientIds, and keep dependencies acyclic. ${common}`,
   },
+  route_mission_generation: {
+    key: "route_mission_generation", version: 1, status: "active", modelRole: "mission_generator", thinkingLevel: "high", schemaKey: "RouteMissionPlan", temperature: 0.25,
+    systemInstruction: `Generate Mission outcomes for the Quest Route. A Mission is a meaningful intermediate result, not a daily action. Define objective, observable success condition, expected outcome, duration, dependencies and weight. Use the minimum sufficient variable count. Do not write Tasks here. ${common}`,
+  },
+  route_mission_repair: {
+    key: "route_mission_repair", version: 1, status: "active", modelRole: "targeted_repair", thinkingLevel: "medium", schemaKey: "RouteMissionRepairResult", temperature: 0.2,
+    systemInstruction: `Repair only failed outcome Missions. Preserve all passing Missions byte-for-byte and keep client IDs and dependencies stable. Never add daily actions. ${common}`,
+  },
+  task_generation: {
+    key: "task_generation", version: 1, status: "active", modelRole: "mission_generator", thinkingLevel: "medium", schemaKey: "TaskPlan", temperature: 0.25,
+    systemInstruction: `Generate concrete executable Tasks only for the supplied current Mission. Each Task must be small enough to act on, have an objective done condition, and contribute directly to the Mission success condition. Use a variable minimum sufficient count. Do not regenerate the Route or other Missions. ${common}`,
+  },
+  task_repair: {
+    key: "task_repair", version: 1, status: "active", modelRole: "targeted_repair", thinkingLevel: "medium", schemaKey: "TaskRepairResult", temperature: 0.15,
+    systemInstruction: `Repair only failed Task client IDs. Preserve passing Tasks byte-for-byte. Keep actions concrete, verifiable and small. ${common}`,
+  },
+  task_critic: {
+    key: "task_critic", version: 1, status: "active", modelRole: "mission_critic", thinkingLevel: "high", schemaKey: "TaskCriticResult", temperature: 0.1,
+    systemInstruction: `Independently evaluate every Task for Mission relevance, specificity, executability, objective completion criteria, duplication, sequencing, size and user-constraint alignment. Return failed Task client IDs only and do not rewrite. ${common}`,
+  },
 };
 
 export function activePrompt(key: keyof typeof PROMPTS) {

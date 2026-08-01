@@ -2998,6 +2998,16 @@ items:
     scope: Add typed active registry, DB metadata registry, one-active constraint, version trace, admin-only tables, rollback and compatibility guidance.
     likely_files: [supabase/functions/_shared/quest_planning/prompt_registry.ts, supabase/migrations/202608010021_gemini_quest_planning_v2.sql, docs/architecture/GEMINI_QUEST_PLANNING_V2.md, reports/qst/QST-257.md]
     acceptance: [Every pass records versions, production uses active definitions, registries are not client writable, and rollback is documented.]
+  - id: QST-258
+    title: Quest Mission Task Responsibility Separation
+    status: ImplementedE2EPolishPending
+    priority: P0
+    epic: QUEST-HIERARCHY-V2
+    depends_on: [QST-252, QST-257]
+    goal: Questを最終目的、Missionを中間成果、Taskを具体行動、RouteをMission構造の正本として分離する。
+    scope: Add owner-private Tasks and dependency tables, derived progress, migration preview/RPC, separate Gemini Mission and Task passes, transactional approval, Home Task focus, Mission/Task/Route screens, and RLS proof.
+    likely_files: [supabase/migrations/202608010022_quest_mission_task_hierarchy.sql, supabase/migrations/202608010023_quest_hierarchy_progress_storage.sql, apps/mobile/lib/features/task, apps/mobile/lib/features/mission/mission_detail_screen.dart, apps/mobile/lib/features/quest/quest_route_screen.dart, reports/qst/QST-258.md]
+    acceptance: [Mission and Task have separate sources of truth, progress is derived, planning passes are separated, cloud RLS passes, and remaining Android/Web E2E and progressive generation polish are explicitly gated.]
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

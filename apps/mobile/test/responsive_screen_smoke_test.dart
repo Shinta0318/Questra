@@ -102,7 +102,7 @@ void main() {
     expect(find.text('Arc'), findsOneWidget);
     expect(find.text('タップして話す'), findsOneWidget);
     expect(find.byIcon(Icons.chevron_right_rounded), findsWidgets);
-    expect(find.text('今日のMission'), findsOneWidget);
+    expect(find.text('今日のTask'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('進行中のQuest'),
       180,
@@ -174,7 +174,7 @@ void main() {
 
     expect(find.byTooltip('Questを編集'), findsOneWidget);
     expect(find.text('1 進捗'), findsOneWidget);
-    expect(find.text('2 ArcのMissionプラン'), findsOneWidget);
+    expect(find.text('2 Arcが描いた航路'), findsOneWidget);
     expect(find.text('Arcガイドを生成'), findsOneWidget);
     expect(find.text('3 このQuestのMission'), findsOneWidget);
     expect(find.text('完了したMission 0/0'), findsOneWidget);

@@ -36,6 +36,11 @@ const requiredRlsTables = [
   'segment_definitions',
   'segment_snapshots',
   'segment_access_audit',
+  'tasks',
+  'mission_dependencies',
+  'task_dependencies',
+  'hierarchy_migration_previews',
+  'task_progress_events',
 ];
 
 const requiredPolicies = [
@@ -106,6 +111,11 @@ const requiredSnippets = [
   'revoke insert, update, delete on public.quest_progress_events',
   'No client policy exists for Business signals',
   'Client access is intentionally absent',
+  'create policy tasks_owner_all',
+  'create policy mission_dependencies_owner_all',
+  'create policy task_dependencies_owner_all',
+  'create policy hierarchy_migration_previews_owner',
+  'create policy task_progress_events_owner',
 ];
 
 const requiredBehaviorSnippets = [
@@ -128,6 +138,9 @@ const requiredBehaviorSnippets = [
   'other cannot read owner Quest DNA version',
   'other cannot read owner consent',
   'Business signal is not client-readable',
+  'owner can read own private Task',
+  'other cannot read owner private Task',
+  'other cannot create a Task for owner',
   'rollback;',
 ];
 
