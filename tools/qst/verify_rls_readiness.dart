@@ -23,6 +23,19 @@ const requiredRlsTables = [
   'route_change_proposals',
   'route_change_items',
   'mission_progress_events',
+  'quest_progress_events',
+  'quest_stage_state',
+  'quest_stage_history',
+  'quest_dna_versions',
+  'business_quest_signals',
+  'mission_support_profiles',
+  'consent_purposes',
+  'user_consents',
+  'support_interactions',
+  'contribution_outcomes',
+  'segment_definitions',
+  'segment_snapshots',
+  'segment_access_audit',
 ];
 
 const requiredPolicies = [
@@ -68,6 +81,15 @@ const requiredPolicies = [
   'Guild Mission Discovery follows approved publication',
   'Guild Mission ownership is owner private',
   'Guild copy events are copier private',
+  'Users read their own progress events',
+  'Owners manage Quest stage',
+  'Owners read Quest stage history',
+  'Owners manage Quest DNA versions',
+  'Owners manage Mission support profiles',
+  'Anyone reads active consent purposes',
+  'Users read own consents',
+  'Users manage own support interactions',
+  'Users read own contribution outcomes',
 ];
 
 const requiredSnippets = [
@@ -81,6 +103,9 @@ const requiredSnippets = [
   'create policy route_proposals_owner_all',
   'create policy route_items_owner_all',
   'create policy mission_progress_events_owner_all',
+  'revoke insert, update, delete on public.quest_progress_events',
+  'No client policy exists for Business signals',
+  'Client access is intentionally absent',
 ];
 
 const requiredBehaviorSnippets = [
@@ -99,6 +124,10 @@ const requiredBehaviorSnippets = [
   'owner can read own private Route version',
   'other cannot read owner private Route proposal',
   'other cannot create a Route version for owner',
+  'other cannot read owner progress event',
+  'other cannot read owner Quest DNA version',
+  'other cannot read owner consent',
+  'Business signal is not client-readable',
   'rollback;',
 ];
 

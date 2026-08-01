@@ -7,8 +7,8 @@ void main() {
   test('builds purpose-specific consent registry', () {
     final registry = service.buildRegistry();
 
-    expect(registry.heading, '目的別の同意');
-    expect(registry.summary, contains('包括同意だけ'));
+    expect(registry.heading, 'データ利用の設定');
+    expect(registry.summary, contains('基本機能は利用できます'));
     expect(
       registry.purposes.map((purpose) => purpose.purpose),
       containsAll(ConsentPurpose.values),
@@ -16,10 +16,11 @@ void main() {
     expect(
       registry.purposes
           .firstWhere(
-            (purpose) => purpose.purpose == ConsentPurpose.questSupport,
+            (purpose) =>
+                purpose.purpose == ConsentPurpose.businessRecommendations,
           )
           .dataScope,
-      contains('Quest DNA'),
+      contains('Mission支援分類'),
     );
     expect(registry.purposes.every((purpose) => purpose.canWithdraw), isTrue);
     expect(registry.guardrails, contains('採用、保険、信用評価へ無断転用しない'));

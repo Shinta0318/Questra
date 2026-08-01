@@ -2828,6 +2828,76 @@ items:
     scope: Add simple local and persisted availability settings before external calendar integration.
     likely_files: [apps/mobile/lib/features/profile, apps/mobile/lib/features/quest, supabase/migrations, reports/qst/QST-236.md]
     acceptance: [Availability changes plan volume without claiming calendar access or storing inferred schedules.]
+  - id: QST-237
+    title: Quest Progress Intelligence Event Foundation
+    status: Completed
+    priority: P0
+    epic: BUSINESS-FOUNDATION
+    depends_on: [QST-236]
+    goal: Quest、Mission、Routeの進行を本文を複製しない統一append-onlyイベントとして記録する。
+    scope: Add versioned events, RPC-only writes, metadata whitelist, idempotency, owner RLS, environment separation, and non-blocking Flutter recording.
+    likely_files: [apps/mobile/lib/core/analytics, supabase/migrations, docs/product/BUSINESS_FOUNDATION_SPEC.md, reports/qst/QST-237.md]
+    acceptance: [Major progress operations emit owner-scoped events, duplicates are rejected, raw Arc content is excluded, and telemetry failures never block Quest actions.]
+  - id: QST-238
+    title: Quest Lifecycle Stage Engine
+    status: Completed
+    priority: P0
+    epic: BUSINESS-FOUNDATION
+    depends_on: [QST-237]
+    goal: Questを標準Stageと履歴で管理し、Arc推定とユーザー確定を分離する。
+    scope: Add stage state/history, safe backfill, deterministic inference, user correction UI, and stage change events.
+    likely_files: [apps/mobile/lib/features/business_foundation, apps/mobile/lib/features/quest, supabase/migrations, reports/qst/QST-238.md]
+    acceptance: [Every Quest can hold one Stage, history persists, users can correct inference, and inactivity never means abandonment.]
+  - id: QST-239
+    title: Quest DNA Business-Ready Schema
+    status: Completed
+    priority: P0
+    epic: BUSINESS-FOUNDATION
+    depends_on: [QST-237, QST-238]
+    goal: 個人向けQuest DNA原本と、同意・センシティブ除外済みBusiness派生Signalを分離する。
+    scope: Add versioned value/confidence/source attributes, sensitivity policy, derived whitelist, expiry, and inaccessible Business signal storage.
+    likely_files: [apps/mobile/lib/features/business_foundation, supabase/migrations, reports/qst/QST-239.md]
+    acceptance: [Sources remain distinct, sensitive Quest creates no signal, raw text is excluded, and Business clients cannot read Quest DNA originals.]
+  - id: QST-240
+    title: Mission Support Need Classification
+    status: Completed
+    priority: P0
+    epic: BUSINESS-FOUNDATION
+    depends_on: [QST-239]
+    goal: Mission単位で必要な外部支援を分類し、企業提案を既定OFFにする。
+    scope: Add versioned profiles, sensitivity rules, user correction, per-Mission opt-out, and global consent enforcement.
+    likely_files: [apps/mobile/lib/features/business_foundation, apps/mobile/lib/features/mission_support, supabase/migrations, reports/qst/QST-240.md]
+    acceptance: [Sponsorable defaults false, sensitive Missions are prohibited, users can correct classification, and normal Mission progress works without offers.]
+  - id: QST-241
+    title: Consent and Data Purpose Control Center
+    status: Completed
+    priority: P0
+    epic: BUSINESS-FOUNDATION
+    depends_on: [QST-237, QST-239, QST-240]
+    goal: Arc品質、匿名分析、企業提案、個人共有を目的別に許可・撤回できるようにする。
+    scope: Add purpose catalog, versioned consent history, Settings controls, contextual-only personal sharing, RLS, and withdrawal cleanup.
+    likely_files: [apps/mobile/lib/features/trust, apps/mobile/lib/features/settings, supabase/migrations, reports/qst/QST-241.md]
+    acceptance: [Consent is purpose-specific and withdrawable, personal sharing needs contextual confirmation, and denial never disables core features.]
+  - id: QST-243
+    title: Quest Contribution Measurement Foundation
+    status: Completed
+    priority: P1
+    epic: BUSINESS-FOUNDATION
+    depends_on: [QST-237, QST-238, QST-240, QST-241]
+    goal: 支援とMission/Quest進行の関連を、売上や閲覧だけに偏らず測定できるようにする。
+    scope: Add interaction/outcome schemas, consent linkage, baseline-compatible metrics, refunds, helpfulness, and non-causal attribution labels.
+    likely_files: [apps/mobile/lib/features/business_foundation, supabase/migrations, reports/qst/QST-243.md]
+    acceptance: [Views alone are not contribution, Mission and Quest outcomes differ, consent and sensitivity are enforced, and sales stay separate from progress.]
+  - id: QST-242
+    title: Privacy-Safe Segment Builder Foundation
+    status: Completed
+    priority: P1
+    epic: BUSINESS-FOUNDATION
+    depends_on: [QST-239, QST-241, QST-243]
+    goal: 個人データを公開せず、許可属性だけの期限付き匿名Segmentを生成する。
+    scope: Add whitelist definitions, k=10 snapshots, sensitivity exclusion, no client raw access, expiry, and access audit foundation.
+    likely_files: [apps/mobile/lib/features/business_foundation, supabase/migrations, reports/qst/QST-242.md]
+    acceptance: [Cohorts below 10 are suppressed, raw text and sensitive attributes are absent, snapshots expire, and Business access remains server-only.]
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

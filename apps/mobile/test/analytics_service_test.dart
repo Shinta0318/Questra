@@ -63,4 +63,30 @@ void main() {
       'visibility': 'private',
     });
   });
+
+  test('event identity is stable and raw Arc content is removed', () {
+    final event = AnalyticsEvent(
+      name: AnalyticsEventName.routeReplanned,
+      questId: 'quest-id',
+      idempotencyKey: 'route-replanned-once',
+      properties: {'stage': 'planning', 'chat': 'private conversation'},
+    );
+    expect(event.idempotencyKey, 'route-replanned-once');
+    expect(AnalyticsPayloadRules.sanitize(event.properties), {
+      'stage': 'planning',
+    });
+  });
+
+  test('analytics failure never blocks the primary action', () async {
+    final service = AnalyticsService(_FailingAnalyticsRepository());
+    await expectLater(
+      service.progress(name: AnalyticsEventName.questUpdated, questId: 'q'),
+      completes,
+    );
+  });
+}
+
+class _FailingAnalyticsRepository implements AnalyticsRepository {
+  @override
+  Future<void> record(AnalyticsEvent event) => throw StateError('offline');
 }

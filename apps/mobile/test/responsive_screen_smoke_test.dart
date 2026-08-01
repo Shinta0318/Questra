@@ -234,13 +234,13 @@ void main() {
     expect(find.text('データエクスポート'), findsOneWidget);
     expect(find.text('データ削除リクエスト'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('目的別の同意'),
+      find.text('データ利用の設定'),
       180,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('目的別の同意'), findsOneWidget);
-    expect(find.text('Quest支援'), findsOneWidget);
-    expect(find.text('プロダクト改善分析'), findsOneWidget);
+    expect(find.text('データ利用の設定'), findsOneWidget);
+    expect(find.text('支援情報'), findsOneWidget);
+    expect(find.text('品質改善'), findsOneWidget);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (

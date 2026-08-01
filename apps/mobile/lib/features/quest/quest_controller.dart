@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics/analytics_service.dart';
+import '../../core/analytics/analytics_event.dart';
 import '../../core/persistence/persistence_sync_state.dart';
 import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_bond_growth_service.dart';
@@ -77,6 +78,7 @@ class QuestController extends Notifier<List<Quest>> {
           .read(analyticsServiceProvider)
           .questCreated(
             userId: ref.read(authControllerProvider).profile?.id,
+            questId: quest.id,
             category: quest.category,
             difficulty: quest.difficulty.storageKey,
             visibility: quest.visibility.storageKey,
@@ -93,6 +95,19 @@ class QuestController extends Notifier<List<Quest>> {
         if (quest.id == updatedQuest.id) updatedQuest else quest,
     ];
     _recordQuestAction(ArcActionTrigger.questUpdated, updatedQuest);
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .progress(
+            name: AnalyticsEventName.questUpdated,
+            userId: ref.read(authControllerProvider).profile?.id,
+            questId: updatedQuest.id,
+            properties: {
+              'status': updatedQuest.status.storageKey,
+              'progress_band': _progressBand(updatedQuest.progress),
+            },
+          ),
+    );
     unawaited(
       _persistQuest(updatedQuest, sourceType: ArcMemorySourceType.questUpdated),
     );
@@ -120,7 +135,25 @@ class QuestController extends Notifier<List<Quest>> {
   void remove(String id) {
     final removedQuest = findById(id);
     state = state.where((quest) => quest.id != id).toList();
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .progress(
+            name: AnalyticsEventName.questDeleted,
+            userId: ref.read(authControllerProvider).profile?.id,
+            questId: id,
+            properties: {'source': 'quest_controller'},
+          ),
+    );
     unawaited(_deleteQuest(id, removedQuest));
+  }
+
+  String _progressBand(double progress) {
+    if (progress <= 0) return 'not_started';
+    if (progress < 0.5) return 'early';
+    if (progress < 0.8) return 'middle';
+    if (progress < 1) return 'near_completion';
+    return 'completed';
   }
 
   Future<void> _persistQuest(

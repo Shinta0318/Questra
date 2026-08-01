@@ -65,6 +65,10 @@ $$;
 \set owner_route_version_id '00000000-0000-4000-8000-000000084101'
 \set owner_route_proposal_id '00000000-0000-4000-8000-000000094101'
 \set owner_route_item_id '00000000-0000-4000-8000-000000104101'
+\set owner_progress_event_id '00000000-0000-4000-8000-000000114101'
+\set owner_dna_version_id '00000000-0000-4000-8000-000000124101'
+\set owner_business_signal_id '00000000-0000-4000-8000-000000134101'
+\set owner_consent_id '00000000-0000-4000-8000-000000144101'
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 values
@@ -164,6 +168,38 @@ insert into public.route_change_items (
   'QST-199 RLS behavior proof', 2
 );
 
+insert into public.quest_progress_events (
+  event_id,event_name,event_version,user_id,quest_id,source,occurred_at,idempotency_key
+) values (
+  :'owner_progress_event_id','quest_created',1,:'owner_id',:'owner_private_quest_id','user',now(),'qst-business-owner-event-001'
+);
+
+insert into public.quest_stage_state (
+  quest_id,current_stage,stage_source,confidence,reason_code
+) values (
+  :'owner_private_quest_id','planning','system',0.8,'rls_test'
+);
+
+insert into public.quest_dna_versions (
+  id,quest_id,owner_id,version,attributes,sensitivity_level
+) values (
+  :'owner_dna_version_id',:'owner_private_quest_id',:'owner_id',1,'{"category":{"value":"test","confidence":1,"source":"user"}}','normal'
+);
+
+insert into public.business_quest_signals (
+  signal_id,owner_id,quest_id,anonymous_subject_id,quest_category,quest_stage,
+  commercial_relevance,expires_at,consent_version
+) values (
+  :'owner_business_signal_id',:'owner_id',:'owner_private_quest_id',gen_random_uuid(),
+  'test','planning','none',now()+interval '30 days',1
+);
+
+insert into public.user_consents (
+  id,user_id,purpose_code,purpose_version,status,granted_at,source
+) values (
+  :'owner_consent_id',:'owner_id','anonymous_analytics',1,'granted',now(),'settings'
+);
+
 set local role authenticated;
 
 select set_config('request.jwt.claim.sub', :'owner_id', true);
@@ -185,6 +221,13 @@ select pg_temp.qst_assert_eq((select count(*) from public.guild_quest_copy_event
 select pg_temp.qst_assert_eq((select count(*) from public.route_versions where id = :'owner_route_version_id'), 1, 'owner can read own private Route version');
 select pg_temp.qst_assert_eq((select count(*) from public.route_change_proposals where id = :'owner_route_proposal_id'), 1, 'owner can read own private Route proposal');
 select pg_temp.qst_assert_eq((select count(*) from public.route_change_items where id = :'owner_route_item_id'), 1, 'owner can read own private Route item');
+select pg_temp.qst_assert_eq((select count(*) from public.quest_progress_events where event_id = :'owner_progress_event_id'), 1, 'owner can read own progress event');
+select pg_temp.qst_assert_eq((select count(*) from public.quest_dna_versions where id = :'owner_dna_version_id'), 1, 'owner can read own Quest DNA version');
+select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id = :'owner_consent_id'), 1, 'owner can read own consent');
+select pg_temp.qst_assert_raises(
+  format('select count(*) from public.business_quest_signals where signal_id = %L', :'owner_business_signal_id'),
+  'Business signal is not client-readable'
+);
 
 select set_config('request.jwt.claim.sub', :'other_id', true);
 
@@ -205,6 +248,9 @@ select pg_temp.qst_assert_eq((select count(*) from public.guild_quest_copy_event
 select pg_temp.qst_assert_eq((select count(*) from public.route_versions where id = :'owner_route_version_id'), 0, 'other cannot read owner private Route version');
 select pg_temp.qst_assert_eq((select count(*) from public.route_change_proposals where id = :'owner_route_proposal_id'), 0, 'other cannot read owner private Route proposal');
 select pg_temp.qst_assert_eq((select count(*) from public.route_change_items where id = :'owner_route_item_id'), 0, 'other cannot read owner private Route item');
+select pg_temp.qst_assert_eq((select count(*) from public.quest_progress_events where event_id = :'owner_progress_event_id'), 0, 'other cannot read owner progress event');
+select pg_temp.qst_assert_eq((select count(*) from public.quest_dna_versions where id = :'owner_dna_version_id'), 0, 'other cannot read owner Quest DNA version');
+select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id = :'owner_consent_id'), 0, 'other cannot read owner consent');
 
 select pg_temp.qst_assert_raises(
   format(

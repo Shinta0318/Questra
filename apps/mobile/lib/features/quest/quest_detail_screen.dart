@@ -19,6 +19,8 @@ import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../business_foundation/quest_lifecycle_stage.dart';
+import '../business_foundation/quest_stage_repository.dart';
 import '../challenge_graph/challenge_graph_preview_service.dart';
 import '../dream_board/dream_board_controller.dart';
 import '../dream_board/dream_board_model.dart';
@@ -99,6 +101,8 @@ class QuestDetailScreen extends ConsumerWidget {
               quest: quest,
               onEdit: () => _showQuestEditDialog(context, ref, quest),
             ),
+            const SizedBox(height: 12),
+            _QuestStageCard(quest: quest, missions: missions),
             const SizedBox(height: 16),
             _SuccessContractCard(quest: quest),
             const SizedBox(height: 16),
@@ -124,6 +128,68 @@ class QuestDetailScreen extends ConsumerWidget {
             _MissionsSection(quest: quest, missions: missions),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _QuestStageCard extends ConsumerWidget {
+  const _QuestStageCard({required this.quest, required this.missions});
+  final Quest quest;
+  final List<Mission> missions;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final inferred = const QuestLifecycleStageService().infer(quest, missions);
+    final saved = ref.watch(questStageProvider(quest.id)).value;
+    final stage = saved ?? inferred.stage;
+    return QuestraCard(
+      child: Row(
+        children: [
+          const Icon(Icons.explore_outlined, color: QuestraColors.gold),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '現在の航海ステージ',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  stage.label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          PopupMenuButton<QuestLifecycleStage>(
+            tooltip: 'ステージを修正',
+            icon: const Icon(Icons.tune, color: QuestraColors.skyBlue),
+            onSelected: (next) async {
+              await ref
+                  .read(questStageRepositoryProvider)
+                  .setStage(
+                    quest.id,
+                    QuestStageDecision(
+                      stage: next,
+                      source: QuestStageSource.user,
+                      confidence: 1,
+                      reasonCode: 'user_corrected',
+                    ),
+                  );
+              ref.invalidate(questStageProvider(quest.id));
+            },
+            itemBuilder: (context) => [
+              for (final value in QuestLifecycleStage.values)
+                PopupMenuItem(value: value, child: Text(value.label)),
+            ],
+          ),
+        ],
       ),
     );
   }

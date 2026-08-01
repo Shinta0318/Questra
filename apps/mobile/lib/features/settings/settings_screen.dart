@@ -10,6 +10,7 @@ import '../../core/theme/app_spacing.dart';
 import '../arc_memory/arc_memory_management_preview_service.dart';
 import '../onboarding/onboarding_tour_controller.dart';
 import '../trust/consent_purpose_registry_service.dart';
+import '../trust/consent_controller.dart';
 import '../trust/data_request_copy_service.dart';
 import '../trust/trust_privacy_review_service.dart';
 import 'settings_information_architecture_service.dart';
@@ -26,13 +27,13 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trustReview = const TrustPrivacyReviewService().buildReview();
-    final memoryPreview =
-        const ArcMemoryManagementPreviewService().buildPreview();
+    final memoryPreview = const ArcMemoryManagementPreviewService()
+        .buildPreview();
     final dataRequests = const DataRequestCopyService().buildReview();
-    final consentRegistry =
-        const ConsentPurposeRegistryService().buildRegistry();
-    final settingsMap =
-        const SettingsInformationArchitectureService().buildOverview();
+    final consentRegistry = const ConsentPurposeRegistryService()
+        .buildRegistry();
+    final settingsMap = const SettingsInformationArchitectureService()
+        .buildOverview();
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
@@ -45,9 +46,9 @@ class SettingsScreen extends ConsumerWidget {
               Text(
                 '設定',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w900,
-                    ),
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               _SettingsMapCard(map: settingsMap),
@@ -126,18 +127,18 @@ class _SettingsMapCard extends StatelessWidget {
                     Text(
                       map.heading,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w900,
-                          ),
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       map.summary,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.parchment,
-                            height: 1.55,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: AppColors.parchment,
+                        height: 1.55,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -192,10 +193,10 @@ class _SettingsMapTile extends StatelessWidget {
                 Text(
                   section.summary,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.parchment,
-                        height: 1.35,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: AppColors.parchment,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -221,13 +222,14 @@ class _SettingsMapTile extends StatelessWidget {
   }
 }
 
-class _ConsentPurposeRegistryCard extends StatelessWidget {
+class _ConsentPurposeRegistryCard extends ConsumerWidget {
   const _ConsentPurposeRegistryCard({required this.registry});
 
   final ConsentPurposeRegistry registry;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final decisions = ref.watch(consentControllerProvider).value ?? const {};
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -265,18 +267,18 @@ class _ConsentPurposeRegistryCard extends StatelessWidget {
                     Text(
                       registry.heading,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w900,
-                          ),
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       registry.summary,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.parchment,
-                            height: 1.55,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: AppColors.parchment,
+                        height: 1.55,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -287,7 +289,15 @@ class _ConsentPurposeRegistryCard extends StatelessWidget {
           ...registry.purposes.map(
             (purpose) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _ConsentPurposeTile(purpose: purpose),
+              child: _ConsentPurposeTile(
+                purpose: purpose,
+                decision: decisions[purpose.purpose],
+                onChanged: purpose.requiresContextualConfirmation
+                    ? null
+                    : (value) => ref
+                          .read(consentControllerProvider.notifier)
+                          .setConsent(purpose.purpose, value),
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -319,9 +329,15 @@ class _ConsentPurposeRegistryCard extends StatelessWidget {
 }
 
 class _ConsentPurposeTile extends StatelessWidget {
-  const _ConsentPurposeTile({required this.purpose});
+  const _ConsentPurposeTile({
+    required this.purpose,
+    required this.decision,
+    required this.onChanged,
+  });
 
   final ConsentPurposeDefinition purpose;
+  final ConsentDecision? decision;
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -351,31 +367,36 @@ class _ConsentPurposeTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 92),
-                child: Text(
-                  purpose.defaultStateLabel,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    color: AppColors.skyBlue,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                  ),
+              if (purpose.requiresContextualConfirmation)
+                const Icon(Icons.lock_outline, color: AppColors.skyBlue)
+              else
+                Switch.adaptive(
+                  value: decision?.isGranted ?? false,
+                  onChanged: onChanged,
+                  activeTrackColor: AppColors.gold,
                 ),
-              ),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             purpose.summary,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.parchment,
-                  height: 1.4,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: AppColors.parchment,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+            ),
           ),
+          if (purpose.requiresContextualConfirmation) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              purpose.defaultStateLabel,
+              style: const TextStyle(
+                color: AppColors.skyBlue,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: AppSpacing.xs,
@@ -448,18 +469,18 @@ class _DataRequestCopyCard extends StatelessWidget {
                     Text(
                       review.heading,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w900,
-                          ),
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       review.summary,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.parchment,
-                            height: 1.55,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: AppColors.parchment,
+                        height: 1.55,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -534,10 +555,10 @@ class _DataRequestTile extends StatelessWidget {
           Text(
             request.summary,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.parchment,
-                  height: 1.4,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: AppColors.parchment,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
@@ -609,10 +630,10 @@ class _SafetyNoteBlock extends StatelessWidget {
               child: Text(
                 note,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.parchment,
-                      height: 1.35,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: AppColors.parchment,
+                  height: 1.35,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -633,10 +654,12 @@ IconData _dataRequestIcon(DataRequestType type) {
 
 IconData _consentPurposeIcon(ConsentPurpose purpose) {
   return switch (purpose) {
-    ConsentPurpose.questSupport => Icons.volunteer_activism_outlined,
-    ConsentPurpose.productAnalytics => Icons.query_stats_outlined,
-    ConsentPurpose.aiQualityReview => Icons.auto_fix_high_outlined,
-    ConsentPurpose.externalConnection => Icons.link_outlined,
+    ConsentPurpose.arcPersonalization => Icons.auto_fix_high_outlined,
+    ConsentPurpose.productImprovement => Icons.build_outlined,
+    ConsentPurpose.anonymousAnalytics => Icons.query_stats_outlined,
+    ConsentPurpose.businessRecommendations => Icons.volunteer_activism_outlined,
+    ConsentPurpose.businessSegmentAnalysis => Icons.groups_outlined,
+    ConsentPurpose.personalDataSharing => Icons.lock_person_outlined,
   };
 }
 

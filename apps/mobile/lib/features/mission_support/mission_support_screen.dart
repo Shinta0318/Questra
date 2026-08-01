@@ -5,10 +5,14 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
+import '../business_foundation/mission_support_profile.dart';
+import '../business_foundation/mission_support_profile_repository.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../mission/mission_source_reference.dart';
 import '../mission/mission_source_reference_repository.dart';
+import '../trust/consent_controller.dart';
+import '../trust/consent_purpose_registry_service.dart';
 import 'mission_support_model.dart';
 import 'mission_support_providers.dart';
 
@@ -36,6 +40,21 @@ class _MissionSupportScreenState extends ConsumerState<MissionSupportScreen> {
     final savedSources = ref.watch(
       missionSourceReferencesProvider(widget.missionId),
     );
+    final savedProfile = ref
+        .watch(missionSupportProfileProvider(widget.missionId))
+        .value;
+    final inferredProfile = mission == null
+        ? null
+        : const MissionSupportClassifier().classify(
+            '${mission.title} ${mission.description}',
+          );
+    final supportProfile = savedProfile ?? inferredProfile;
+    final globalBusinessConsent =
+        ref
+            .watch(consentControllerProvider)
+            .value?[ConsentPurpose.businessRecommendations]
+            ?.isGranted ??
+        false;
     return QuestraScreenSurface(
       child: ListView(
         padding: const EdgeInsets.all(20),
@@ -64,6 +83,60 @@ class _MissionSupportScreenState extends ConsumerState<MissionSupportScreen> {
           else ...[
             _MissionHeader(mission: mission),
             const SizedBox(height: 16),
+            if (supportProfile case final profile?) ...[
+              _SupportSection(
+                title: '必要な支援',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.externalServiceNeeded
+                          ? '外部の情報やサービスが役立つ可能性があります。'
+                          : 'このMissionはQuestra内だけで進められます。',
+                    ),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('外部支援が必要'),
+                      subtitle: const Text('分類が違う場合はここで修正できます。'),
+                      value: profile.externalServiceNeeded,
+                      onChanged: (value) => _saveSupportProfile(
+                        profile.copyWith(
+                          externalServiceNeeded: value,
+                          supportTypes: value
+                              ? profile.supportTypes
+                              : {MissionSupportType.none},
+                          source: 'user',
+                        ),
+                      ),
+                    ),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('企業・団体の支援情報を表示'),
+                      subtitle: Text(
+                        globalBusinessConsent
+                            ? 'Mission単位でいつでもOFFにできます。'
+                            : '設定で「支援情報」を許可すると選べます。',
+                      ),
+                      value:
+                          profile.businessRecommendationsEnabled &&
+                          globalBusinessConsent,
+                      onChanged:
+                          globalBusinessConsent &&
+                              profile.sensitivity ==
+                                  MissionSupportSensitivity.normal
+                          ? (value) => _saveSupportProfile(
+                              profile.copyWith(
+                                businessRecommendationsEnabled: value,
+                                source: 'user',
+                              ),
+                            )
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             _SupportSection(
               title: '確認した情報源',
               child: savedSources.when(
@@ -200,6 +273,13 @@ class _MissionSupportScreenState extends ConsumerState<MissionSupportScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _saveSupportProfile(MissionSupportProfile profile) async {
+    await ref
+        .read(missionSupportProfileRepositoryProvider)
+        .save(widget.missionId, profile);
+    ref.invalidate(missionSupportProfileProvider(widget.missionId));
   }
 }
 

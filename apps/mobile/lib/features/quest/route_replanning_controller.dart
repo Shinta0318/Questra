@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/analytics/analytics_event.dart';
+import '../../core/analytics/analytics_service.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../auth/auth_controller.dart';
@@ -22,6 +24,7 @@ class RouteReplanningController
     extends Notifier<Map<String, RouteChangeProposal>> {
   final Map<String, List<Mission>> _undoMissions = {};
   final Map<String, Quest> _undoQuests = {};
+  final Map<String, RouteChangeProposal> _undoProposals = {};
   final Map<String, DateTime> _lastEvaluatedAt = {};
 
   @override
@@ -146,6 +149,23 @@ class RouteReplanningController
     );
     if (proposal == null) return null;
     await ref.read(routeReplanningRepositoryProvider).saveProposal(proposal);
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .progress(
+            name: AnalyticsEventName.routeReplanned,
+            userId: ref.read(authControllerProvider).profile?.id,
+            questId: quest.id,
+            routeId: proposal.routeVersionId,
+            source: AnalyticsEventSource.arc,
+            properties: {
+              'reason_code': trigger.name,
+              'proposal_type': proposal.items.length == 1
+                  ? 'single'
+                  : 'multiple',
+            },
+          ),
+    );
     _lastEvaluatedAt[quest.id] = DateTime.now();
     state = {...state, quest.id: proposal};
     return proposal;
@@ -155,6 +175,16 @@ class RouteReplanningController
     await ref
         .read(routeReplanningRepositoryProvider)
         .resolveProposal(proposal.id, RouteProposalStatus.rejected);
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .progress(
+            name: AnalyticsEventName.routeRejected,
+            userId: ref.read(authControllerProvider).profile?.id,
+            questId: proposal.questId,
+            routeId: proposal.routeVersionId,
+          ),
+    );
     state = Map.of(state)..remove(proposal.questId);
   }
 
@@ -183,6 +213,18 @@ class RouteReplanningController
         _applyItem(quest, missions, item);
       }
     }
+    _undoProposals[proposal.id] = proposal;
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .progress(
+            name: AnalyticsEventName.routeApproved,
+            userId: ref.read(authControllerProvider).profile?.id,
+            questId: proposal.questId,
+            routeId: proposal.routeVersionId,
+            properties: {'interaction': 'approved'},
+          ),
+    );
     state = Map.of(state)..remove(proposal.questId);
   }
 
@@ -263,9 +305,22 @@ class RouteReplanningController
   }
 
   Future<void> undo(String proposalId) async {
+    final proposal = _undoProposals.remove(proposalId);
     final result = await ref
         .read(routeReplanningRepositoryProvider)
         .rollbackProposal(proposalId);
+    if (proposal != null) {
+      unawaited(
+        ref
+            .read(analyticsServiceProvider)
+            .progress(
+              name: AnalyticsEventName.routeRolledBack,
+              userId: ref.read(authControllerProvider).profile?.id,
+              questId: proposal.questId,
+              routeId: proposal.routeVersionId,
+            ),
+      );
+    }
     if (result.persistedAtomically) {
       await _reloadOwnedRoute();
       return;

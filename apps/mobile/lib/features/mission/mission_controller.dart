@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/analytics/analytics_service.dart';
+import '../../core/analytics/analytics_event.dart';
 import '../../core/estimation/effort_estimate.dart';
 import '../../core/persistence/persistence_sync_state.dart';
 import '../arc/arc_action_trigger_service.dart';
@@ -13,6 +14,8 @@ import '../arc/stardust_service.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
+import '../business_foundation/mission_support_profile.dart';
+import '../business_foundation/mission_support_profile_repository.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../quest/quest_model.dart';
@@ -103,6 +106,20 @@ class MissionController extends Notifier<List<Mission>> {
     state = [mission, ...state];
     _syncQuestProgress(quest.id);
     _recordMissionEmotion(mission, trigger: ArcActionTrigger.missionCreated);
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .progress(
+            name: AnalyticsEventName.missionCreated,
+            userId: ref.read(authControllerProvider).profile?.id,
+            questId: quest.id,
+            missionId: mission.id,
+            properties: {
+              'difficulty_band': mission.difficulty.name,
+              'status': mission.status.name,
+            },
+          ),
+    );
     unawaited(
       _persistMission(mission, sourceType: ArcMemorySourceType.missionCreated),
     );
@@ -230,6 +247,17 @@ class MissionController extends Notifier<List<Mission>> {
         if (mission.id == updatedMission.id) updatedMission else mission,
     ];
     unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .progress(
+            name: AnalyticsEventName.missionUpdated,
+            userId: ref.read(authControllerProvider).profile?.id,
+            questId: updatedMission.questId,
+            missionId: updatedMission.id,
+            properties: {'status': updatedMission.status.name},
+          ),
+    );
+    unawaited(
       _persistMission(
         updatedMission,
         sourceType: ArcMemorySourceType.missionCreated,
@@ -296,11 +324,21 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   void removeMission(String missionId) {
-    final questId = state
-        .where((mission) => mission.id == missionId)
-        .firstOrNull
-        ?.questId;
+    final mission = state.where((item) => item.id == missionId).firstOrNull;
+    final questId = mission?.questId;
     state = state.where((mission) => mission.id != missionId).toList();
+    if (mission != null) {
+      unawaited(
+        ref
+            .read(analyticsServiceProvider)
+            .progress(
+              name: AnalyticsEventName.missionDeleted,
+              userId: ref.read(authControllerProvider).profile?.id,
+              questId: mission.questId,
+              missionId: mission.id,
+            ),
+      );
+    }
     if (questId != null) _syncQuestProgress(questId);
     unawaited(_deleteMission(missionId));
   }
@@ -356,6 +394,16 @@ class MissionController extends Notifier<List<Mission>> {
         ),
       );
     }
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .progress(
+            name: AnalyticsEventName.missionReordered,
+            userId: ref.read(authControllerProvider).profile?.id,
+            questId: questId,
+            properties: {'source': 'user'},
+          ),
+    );
   }
 
   void setToday(String questId, String missionId) {
@@ -410,6 +458,19 @@ class MissionController extends Notifier<List<Mission>> {
             userId: ref.read(authControllerProvider).profile?.id,
             difficulty: updatedMission.difficulty.name,
             hasQuest: updatedMission.questId.isNotEmpty,
+          ),
+    );
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .progress(
+            name: AnalyticsEventName.missionCompleted,
+            userId: ref.read(authControllerProvider).profile?.id,
+            questId: updatedMission.questId,
+            missionId: updatedMission.id,
+            properties: {'status': 'completed'},
+            idempotencyKey:
+                'mission_completed:${updatedMission.id}:${updatedMission.updatedAt.microsecondsSinceEpoch}',
           ),
     );
 
@@ -524,6 +585,7 @@ class MissionController extends Notifier<List<Mission>> {
           if (current.id == savedMission.id) savedMission else current,
       ];
       if (recordJourney) {
+        unawaited(_saveSupportProfile(savedMission));
         unawaited(_tagMission(userId, savedMission));
         _growBond(sourceType);
         await _rememberMission(savedMission, sourceType);
@@ -547,6 +609,21 @@ class MissionController extends Notifier<List<Mission>> {
       sync.saved('Missionを削除しました。');
     } catch (error) {
       sync.failed('Mission delete', error);
+    }
+  }
+
+  Future<void> _saveSupportProfile(Mission mission) async {
+    try {
+      await ref
+          .read(missionSupportProfileRepositoryProvider)
+          .save(
+            mission.id,
+            const MissionSupportClassifier().classify(
+              '${mission.title} ${mission.description}',
+            ),
+          );
+    } catch (_) {
+      // Support classification is optional and never blocks Mission creation.
     }
   }
 
