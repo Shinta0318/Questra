@@ -41,6 +41,9 @@ const requiredRlsTables = [
   'task_dependencies',
   'hierarchy_migration_previews',
   'task_progress_events',
+  'mission_plan_drafts',
+  'mission_candidates',
+  'mission_plan_feedback_events',
 ];
 
 const requiredPolicies = [
@@ -116,6 +119,9 @@ const requiredSnippets = [
   'create policy task_dependencies_owner_all',
   'create policy hierarchy_migration_previews_owner',
   'create policy task_progress_events_owner',
+  'create policy mission_plan_drafts_owner_select',
+  'create policy mission_candidates_owner_select',
+  'create policy mission_feedback_owner_select',
 ];
 
 const requiredBehaviorSnippets = [
@@ -141,6 +147,9 @@ const requiredBehaviorSnippets = [
   'owner can read own private Task',
   'other cannot read owner private Task',
   'other cannot create a Task for owner',
+  'owner can read own Mission plan draft',
+  'other cannot read owner Mission plan draft',
+  'other cannot read owner Mission candidate',
   'rollback;',
 ];
 

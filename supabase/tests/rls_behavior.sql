@@ -70,6 +70,10 @@ $$;
 \set owner_dna_version_id '00000000-0000-4000-8000-000000124101'
 \set owner_business_signal_id '00000000-0000-4000-8000-000000134101'
 \set owner_consent_id '00000000-0000-4000-8000-000000144101'
+\set owner_planning_run_id '00000000-0000-4000-8000-000000164101'
+\set owner_plan_preview_id '00000000-0000-4000-8000-000000174101'
+\set owner_mission_draft_id '00000000-0000-4000-8000-000000184101'
+\set owner_mission_candidate_id '00000000-0000-4000-8000-000000194101'
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 values
@@ -204,6 +208,32 @@ insert into public.user_consents (
   :'owner_consent_id',:'owner_id','anonymous_analytics',1,'granted',now(),'settings'
 );
 
+insert into public.quest_planning_runs (
+  id,owner_id,quest_id,trace_id,idempotency_key,status,pipeline_version,schema_version
+) values (
+  :'owner_planning_run_id',:'owner_id',:'owner_private_quest_id',gen_random_uuid(),
+  'qst259-rls-owner','preview_ready','4.0','mission-architecture-4.0'
+);
+insert into public.quest_plan_previews (
+  id,owner_id,quest_id,planning_run_id,plan_payload
+) values (
+  :'owner_plan_preview_id',:'owner_id',:'owner_private_quest_id',:'owner_planning_run_id','{}'::jsonb
+);
+insert into public.mission_plan_drafts (
+  id,owner_id,quest_id,planning_run_id,preview_id,schema_version,model_name,thinking_level
+) values (
+  :'owner_mission_draft_id',:'owner_id',:'owner_private_quest_id',:'owner_planning_run_id',
+  :'owner_plan_preview_id','mission-architecture-4.0','gemini-test','high'
+);
+insert into public.mission_candidates (
+  id,owner_id,draft_id,client_id,title,objective,success_condition,expected_outcome,
+  reason_required,child_task_estimate,confidence,verdict,order_index,original_payload
+) values (
+  :'owner_mission_candidate_id',:'owner_id',:'owner_mission_draft_id','mission-1',
+  'Owner outcome Mission','複数Taskで中間成果を完成する','成果が確認できれば完了',
+  '確認可能な成果','Quest成功条件を前進させる',2,0.95,'pass',0,'{}'::jsonb
+);
+
 set local role authenticated;
 
 select set_config('request.jwt.claim.sub', :'owner_id', true);
@@ -229,6 +259,8 @@ select pg_temp.qst_assert_eq((select count(*) from public.quest_progress_events 
 select pg_temp.qst_assert_eq((select count(*) from public.quest_dna_versions where id = :'owner_dna_version_id'), 1, 'owner can read own Quest DNA version');
 select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id = :'owner_consent_id'), 1, 'owner can read own consent');
 select pg_temp.qst_assert_eq((select count(*) from public.tasks where id = :'owner_private_task_id'), 1, 'owner can read own private Task');
+select pg_temp.qst_assert_eq((select count(*) from public.mission_plan_drafts where id = :'owner_mission_draft_id'), 1, 'owner can read own Mission plan draft');
+select pg_temp.qst_assert_eq((select count(*) from public.mission_candidates where id = :'owner_mission_candidate_id'), 1, 'owner can read own Mission candidate');
 select pg_temp.qst_assert_raises(
   format('select count(*) from public.business_quest_signals where signal_id = %L', :'owner_business_signal_id'),
   'Business signal is not client-readable'
@@ -257,6 +289,8 @@ select pg_temp.qst_assert_eq((select count(*) from public.quest_progress_events 
 select pg_temp.qst_assert_eq((select count(*) from public.quest_dna_versions where id = :'owner_dna_version_id'), 0, 'other cannot read owner Quest DNA version');
 select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id = :'owner_consent_id'), 0, 'other cannot read owner consent');
 select pg_temp.qst_assert_eq((select count(*) from public.tasks where id = :'owner_private_task_id'), 0, 'other cannot read owner private Task');
+select pg_temp.qst_assert_eq((select count(*) from public.mission_plan_drafts where id = :'owner_mission_draft_id'), 0, 'other cannot read owner Mission plan draft');
+select pg_temp.qst_assert_eq((select count(*) from public.mission_candidates where id = :'owner_mission_candidate_id'), 0, 'other cannot read owner Mission candidate');
 
 select pg_temp.qst_assert_raises(
   format(

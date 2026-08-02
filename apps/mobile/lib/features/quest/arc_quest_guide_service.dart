@@ -40,6 +40,12 @@ class ArcMissionCandidate {
     this.enterpriseSupportHints = const [],
     this.difficultyScore,
     this.estimatedDurationDays,
+    this.reasonRequired = '',
+    this.coveredSuccessConditions = const [],
+    this.parallelizable = false,
+    this.childTaskEstimate = 2,
+    this.criticScores = const {},
+    this.criticVerdict = 'pass',
   }) : action = action ?? title;
 
   final String title;
@@ -66,6 +72,12 @@ class ArcMissionCandidate {
   final List<String> enterpriseSupportHints;
   final int? difficultyScore;
   final int? estimatedDurationDays;
+  final String reasonRequired;
+  final List<String> coveredSuccessConditions;
+  final bool parallelizable;
+  final int childTaskEstimate;
+  final Map<String, int> criticScores;
+  final String criticVerdict;
 
   ArcMissionCandidate copyWith({
     String? planKey,
@@ -92,6 +104,12 @@ class ArcMissionCandidate {
     List<String>? enterpriseSupportHints,
     int? difficultyScore,
     int? estimatedDurationDays,
+    String? reasonRequired,
+    List<String>? coveredSuccessConditions,
+    bool? parallelizable,
+    int? childTaskEstimate,
+    Map<String, int>? criticScores,
+    String? criticVerdict,
   }) {
     return ArcMissionCandidate(
       planKey: planKey ?? this.planKey,
@@ -121,6 +139,13 @@ class ArcMissionCandidate {
       difficultyScore: difficultyScore ?? this.difficultyScore,
       estimatedDurationDays:
           estimatedDurationDays ?? this.estimatedDurationDays,
+      reasonRequired: reasonRequired ?? this.reasonRequired,
+      coveredSuccessConditions:
+          coveredSuccessConditions ?? this.coveredSuccessConditions,
+      parallelizable: parallelizable ?? this.parallelizable,
+      childTaskEstimate: childTaskEstimate ?? this.childTaskEstimate,
+      criticScores: criticScores ?? this.criticScores,
+      criticVerdict: criticVerdict ?? this.criticVerdict,
     );
   }
 }
@@ -139,6 +164,10 @@ class ArcQuestGuide {
     this.questDna,
     this.questUnderstanding,
     this.planQuality,
+    this.previewId,
+    this.approvalToken,
+    this.draftId,
+    this.currentMissionClientId,
   });
 
   final String questId;
@@ -153,12 +182,21 @@ class ArcQuestGuide {
   final QuestDna? questDna;
   final QuestUnderstanding? questUnderstanding;
   final MissionPlanQuality? planQuality;
+  final String? previewId;
+  final String? approvalToken;
+  final String? draftId;
+  final String? currentMissionClientId;
 }
 
 abstract interface class ArcQuestGuideService {
   Future<ArcQuestGuide> generate({
     required Quest quest,
     PlanningContext? planningContext,
+  });
+
+  Future<void> approve({
+    required ArcQuestGuide guide,
+    required List<ArcMissionCandidate> candidates,
   });
 }
 
@@ -220,6 +258,12 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
       ),
     );
   }
+
+  @override
+  Future<void> approve({
+    required ArcQuestGuide guide,
+    required List<ArcMissionCandidate> candidates,
+  }) async {}
 
   String _descriptionHint(Quest quest) {
     if (quest.description.trim().isEmpty) {
@@ -536,13 +580,9 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
 }
 
 class SupabaseArcQuestGuideService implements ArcQuestGuideService {
-  const SupabaseArcQuestGuideService({
-    required this.client,
-    this.fallback = const LocalArcQuestGuideService(),
-  });
+  const SupabaseArcQuestGuideService({required this.client});
 
   final SupabaseClient client;
-  final ArcQuestGuideService fallback;
 
   @override
   Future<ArcQuestGuide> generate({
@@ -550,194 +590,264 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
     PlanningContext? planningContext,
   }) async {
     if (!SupabaseConfig.isConfigured) {
-      return fallback.generate(quest: quest, planningContext: planningContext);
+      throw StateError('Gemini Planning APIを利用できません。接続設定を確認してください。');
     }
 
     try {
-      final feedbackSignals = await _loadPlanningSignals(quest.category);
       final response = await client.functions.invoke(
-        'arc-quest-guide',
+        'quest-planning-v2',
         body: {
-          'quest': {
-            'id': quest.id,
-            'title': quest.title,
-            'description': quest.description,
-            'difficulty': quest.difficulty.storageKey,
-            'category': quest.category,
-            'target_date': quest.targetDate?.toIso8601String(),
-            'planning_context': planningContext?.consentGranted == true
-                ? planningContext!.toPlanningJson()
-                : null,
-          },
-          'planning_feedback': feedbackSignals,
+          'mode': 'plan',
+          'quest_id': quest.id,
+          'wish': [
+            quest.title,
+            quest.description,
+          ].where((value) => value.trim().isNotEmpty).join('\n'),
+          'target_date': quest.targetDate?.toIso8601String(),
+          'budget': planningContext?.budgetLabel,
+          'available_time': planningContext?.weeklyMinutes == null
+              ? null
+              : {'weekly_minutes': planningContext!.weeklyMinutes},
+          'experience': planningContext?.experience,
+          'location': planningContext?.location,
+          'constraints': [
+            ...?planningContext?.preferences,
+            ...?planningContext?.setbackReasons,
+          ],
+          'approved_context': planningContext?.consentGranted == true
+              ? planningContext!.toPlanningJson()
+              : null,
+          'idempotency_key':
+              'flutter-${quest.id}-${DateTime.now().toUtc().millisecondsSinceEpoch}',
         },
       );
       final data = Map<String, dynamic>.from(response.data as Map);
-      final parsedCandidates =
-          (data['mission_candidates'] as List?)
-              ?.map((item) => _candidateFromData(item))
-              .whereType<ArcMissionCandidate>()
-              .take(MissionPlanGraphService.maxMissionCount)
-              .toList(growable: false) ??
-          const [];
-      final candidates = MissionPlanGraphService.normalize(parsedCandidates);
-      if (candidates.length < MissionPlanGraphService.minMissionCount) {
-        return fallback.generate(
-          quest: quest,
-          planningContext: planningContext,
+      if (data['status'] == 'needs_clarification') {
+        final questions = _clarificationQuestions(data);
+        throw StateError(
+          questions.isEmpty
+              ? 'Arcが航路を描くために、Questの条件をもう少し確認したがっています。'
+              : questions.join('\n'),
         );
       }
-      return ArcQuestGuide(
-        questId: quest.id,
-        summary: data['summary'] as String? ?? 'Questの輪郭を整理しました。',
-        path: data['path'] as String? ?? '小さなMissionから航路を作りましょう。',
-        cautions: data['cautions'] as String? ?? '無理なく小さく進めましょう。',
-        encouragement: data['encouragement'] as String? ?? 'この一歩は、ちゃんと星図に残ります。',
-        missionCandidates: candidates,
-        sourceType: data['source_type'] as String? ?? 'arc_quest_guide',
-        effortEstimate:
-            _estimateFromData(data['effort_estimate']) ??
-            EffortEstimationService.forQuest(
-              title: quest.title,
-              category: quest.category,
-              missionCount: candidates.length,
-            ),
-        questEvaluation:
-            QuestEvaluation.fromJson(data['quest_evaluation']) ??
-            QuestEvaluationService.fallback(
-              quest: quest,
-              missionCount: candidates.length,
-              missionDurationDays: candidates.map(
-                (candidate) => candidate.estimatedDurationDays,
-              ),
-            ),
-        questDna:
-            QuestDna.fromJson(data['quest_dna']) ?? QuestDna.fallback(quest),
-        questUnderstanding: QuestUnderstanding.fromJson(
-          data['quest_understanding'],
-        ),
-        planQuality: MissionPlanQuality.fromJson(data['plan_quality']),
-      );
-    } catch (_) {
-      return fallback.generate(quest: quest, planningContext: planningContext);
+      if (data['status'] != 'preview_ready' || data['preview'] is! Map) {
+        throw StateError('Mission候補の品質確認を完了できませんでした。入力を保ったまま再試行できます。');
+      }
+      return _guideFromPlanningPreview(quest, data);
+    } catch (error) {
+      if (error is StateError) rethrow;
+      throw StateError('ArcがMission構造を確認できませんでした。固定候補には置き換えず、もう一度試せます。');
     }
   }
 
-  Future<List<Map<String, Object?>>> _loadPlanningSignals(
-    String category,
+  @override
+  Future<void> approve({
+    required ArcQuestGuide guide,
+    required List<ArcMissionCandidate> candidates,
+  }) async {
+    if (guide.previewId == null || guide.approvalToken == null) {
+      throw StateError('承認できるMission draftがありません。');
+    }
+    await _recordApprovalFeedback(guide, candidates);
+    final response = await client.functions.invoke(
+      'quest-planning-v2',
+      body: {
+        'mode': 'approve',
+        'preview_id': guide.previewId,
+        'approval_token': guide.approvalToken,
+        'approved_missions': [
+          for (final candidate in candidates) _candidateToApproval(candidate),
+        ],
+      },
+    );
+    final data = Map<String, dynamic>.from(response.data as Map);
+    if (data['status'] != 'approved') {
+      throw StateError('Missionを確定できませんでした。候補は失われていません。');
+    }
+  }
+
+  Future<void> _recordApprovalFeedback(
+    ArcQuestGuide guide,
+    List<ArcMissionCandidate> candidates,
   ) async {
-    if (client.auth.currentUser == null) return const [];
-    try {
-      final rows = await client
-          .from('quest_planning_feedback')
-          .select(
-            'category_key,generated_count,accepted_count,edited_count,target_window',
-          )
-          .eq('category_key', category.trim().toLowerCase())
-          .order('created_at', ascending: false)
-          .limit(8);
-      final signals = rows
-          .map<Map<String, Object?>>((row) => Map<String, Object?>.from(row))
-          .toList(growable: true);
-      final missionRows = await client
-          .from('mission_plan_feedback')
-          .select('reason,generation_version,created_at')
-          .order('created_at', ascending: false)
-          .limit(20);
-      signals.addAll(
-        missionRows.map<Map<String, Object?>>(
-          (row) => {
-            'mission_feedback_reason': row['reason'],
-            'generation_version': row['generation_version'],
+    final draftId = guide.draftId;
+    if (draftId == null) return;
+    final approved = {for (final item in candidates) item.planKey: item};
+    for (final original in guide.missionCandidates) {
+      final current = approved[original.planKey];
+      final event = current == null
+          ? 'deleted'
+          : current.title.trim() != original.title.trim() ||
+                current.purpose.trim() != original.purpose.trim() ||
+                current.doneCondition.trim() != original.doneCondition.trim()
+          ? 'edited'
+          : 'accepted';
+      try {
+        await client.rpc(
+          'record_mission_candidate_feedback',
+          params: {
+            'p_draft_id': draftId,
+            'p_client_id': original.planKey,
+            'p_event_type': event,
+            'p_metadata': {'source': 'mission_proposal_review'},
           },
-        ),
-      );
-      return signals;
-    } catch (_) {
-      return const [];
+        );
+      } catch (_) {
+        // Feedback must never block an explicitly approved plan.
+      }
     }
   }
 
-  ArcMissionCandidate? _candidateFromData(Object? item) {
-    if (item is! Map) {
-      return null;
-    }
-    final data = Map<String, dynamic>.from(item);
-    final title = data['title'] as String?;
-    final description = data['description'] as String?;
-    if (title == null || description == null) {
-      return null;
-    }
-    return ArcMissionCandidate(
-      planKey: data['plan_key'] as String? ?? '',
-      title: title,
-      description: description,
-      purpose: data['purpose'] as String? ?? '',
-      doneCondition: data['done_condition'] as String? ?? description,
-      expectedOutput: data['expected_output'] as String? ?? '',
-      verificationType: data['verification_type'] as String? ?? 'self_check',
-      action: data['action'] as String? ?? title,
-      isOptional: data['optionality'] == 'optional',
-      sourceRequirement: data['source_requirement'] as String? ?? 'none',
-      confidence: (data['confidence'] as num?)?.toDouble().clamp(0, 1) ?? 0.5,
-      parentPlanKey: data['parent_plan_key'] as String?,
-      dependencyPlanKeys: _stringList(data['dependency_plan_keys'], 12),
-      guideType: _guideTypeFromValue(data['guide_type'] as String?),
-      difficulty: _difficultyFromValue(data['difficulty'] as String?),
-      priority: _priorityFromValue(data['priority'] as String?),
-      category: data['category'] as String? ?? '実行',
-      estimatedCostLabel: data['estimated_cost'] as String?,
-      referenceHints: _stringList(data['reference_hints'], 6),
-      enterpriseSupportHints: _stringList(data['enterprise_support_hints'], 4),
-      difficultyScore: (data['difficulty_score'] as num?)?.round().clamp(1, 5),
-      estimatedDurationDays: (data['estimated_duration_days'] as num?)
-          ?.round()
-          .clamp(1, 3650),
-      effortEstimate:
-          _estimateFromData(data['effort_estimate']) ??
-          EffortEstimationService.forMission(
-            title: title,
-            description: description,
+  ArcQuestGuide _guideFromPlanningPreview(
+    Quest quest,
+    Map<String, dynamic> data,
+  ) {
+    final preview = Map<String, dynamic>.from(data['preview'] as Map);
+    final understanding = Map<String, dynamic>.from(
+      preview['questUnderstanding'] as Map? ?? const {},
+    );
+    final contract = Map<String, dynamic>.from(
+      preview['successContract'] as Map? ?? const {},
+    );
+    final strategy = Map<String, dynamic>.from(
+      preview['strategicPlan'] as Map? ?? const {},
+    );
+    final plan = Map<String, dynamic>.from(
+      preview['routeMissionPlan'] as Map? ?? const {},
+    );
+    final critic = Map<String, dynamic>.from(
+      preview['missionCritic'] as Map? ?? const {},
+    );
+    final criticById = <String, Map<String, dynamic>>{
+      for (final raw in (critic['missionResults'] as List? ?? const []))
+        if (raw is Map && raw['clientId'] is String)
+          raw['clientId'] as String: Map<String, dynamic>.from(raw),
+    };
+    final candidates = <ArcMissionCandidate>[
+      for (final raw in (plan['missions'] as List? ?? const []))
+        if (raw is Map)
+          _candidateFromPlanningData(
+            Map<String, dynamic>.from(raw),
+            criticById[(raw['clientId'] ?? '').toString()],
           ),
+    ];
+    if (candidates.isEmpty) {
+      throw StateError('合格したMission候補がありません。Questの条件を追加して再試行してください。');
+    }
+    final evidence = _stringList(contract['successEvidence'], 8);
+    final phases = _stringList(strategy['phases'], 10);
+    final risks = _stringList(strategy['risks'], 8);
+    return ArcQuestGuide(
+      questId: quest.id,
+      summary: (understanding['desiredOutcome'] as String?) ?? quest.title,
+      path: phases.isEmpty ? 'Missionごとの中間成果を順に達成します。' : phases.join(' → '),
+      cautions: risks.isEmpty ? '状況が変わったらArcと航路を見直せます。' : risks.join('\n'),
+      encouragement: 'Questの成功条件から、意味のある中間成果だけを選びました。',
+      missionCandidates: candidates,
+      sourceType: 'gemini_mission_architecture_v1',
+      questUnderstanding: QuestUnderstanding(
+        originalWish: (understanding['originalWish'] as String?) ?? quest.title,
+        questOutcome: (contract['questOutcome'] as String?) ?? quest.title,
+        successEvidence: evidence.join('\n'),
+        motivation: (understanding['motivation'] as String?) ?? '',
+        currentState: (understanding['currentState'] as String?) ?? '',
+        constraints: _stringList(understanding['constraints'], 12),
+        knownResources: const [],
+        unknowns: _stringList(understanding['unknowns'], 8),
+        planningRisks: _stringList(understanding['risks'], 8),
+        planningMode: QuestPlanningMode.project,
+        assumptions: _stringList(understanding['assumptions'], 8),
+      ),
+      planQuality: MissionPlanQuality(
+        score: ((critic['overallScore'] as num?)?.toDouble() ?? 0) / 100,
+        generationVersion: 'qst-259-v1',
+        criticPasses: 1,
+        repairedMissionCount: _repairCount(data['passes']),
+        generatedAt: DateTime.now().toUtc(),
+      ),
+      previewId: data['preview_id'] as String?,
+      approvalToken: data['approval_token'] as String?,
+      draftId: data['draft_id'] as String?,
+      currentMissionClientId:
+          (preview['currentTaskPlan'] as Map?)?['missionClientId'] as String?,
     );
   }
 
-  EffortEstimate? _estimateFromData(Object? value) {
-    if (value is! Map) return null;
-    final data = Map<String, dynamic>.from(value);
-    final activeMinutes = (data['active_effort_minutes'] as num?)?.round();
-    final calendarDays = (data['calendar_days'] as num?)?.round();
-    if (activeMinutes == null || calendarDays == null) return null;
-    return EffortEstimate(
-      difficultyBand: data['difficulty_band'] as String? ?? '標準',
-      activeEffortMinutes: activeMinutes.clamp(15, 100000),
-      calendarDays: calendarDays.clamp(1, 3650),
-      confidence: (data['confidence'] as num?)?.toDouble().clamp(0, 1) ?? 0.4,
-      rationale: data['rationale'] as String? ?? 'Arcによる推定です。',
-      version: data['version'] as String? ?? 'effort-v1',
+  ArcMissionCandidate _candidateFromPlanningData(
+    Map<String, dynamic> data,
+    Map<String, dynamic>? review,
+  ) {
+    final scores = <String, int>{
+      for (final entry in Map<String, dynamic>.from(
+        review?['scores'] as Map? ?? const {},
+      ).entries)
+        if (entry.value is num) entry.key: (entry.value as num).round(),
+    };
+    return ArcMissionCandidate(
+      planKey: data['clientId'] as String? ?? '',
+      title: data['title'] as String? ?? '',
+      description: data['objective'] as String? ?? '',
+      purpose: data['objective'] as String? ?? '',
+      doneCondition: data['successCondition'] as String? ?? '',
+      expectedOutput: data['expectedOutcome'] as String? ?? '',
+      action: data['objective'] as String? ?? '',
+      dependencyPlanKeys: _stringList(data['dependencies'], 20),
+      guideType: GuideType.route,
+      difficulty: MissionDifficulty.normal,
+      priority: data['required'] == true
+          ? MissionPriority.high
+          : MissionPriority.normal,
+      isOptional: data['required'] != true,
+      confidence: (data['confidence'] as num?)?.toDouble() ?? 0.5,
+      estimatedDurationDays: (data['calendarDurationDays'] as num?)?.round(),
+      reasonRequired: data['reasonRequired'] as String? ?? '',
+      coveredSuccessConditions: _stringList(
+        data['coveredSuccessConditions'],
+        8,
+      ),
+      parallelizable: data['parallelizable'] == true,
+      childTaskEstimate:
+          (data['childTaskEstimate'] as num?)?.round().clamp(1, 30) ?? 2,
+      criticScores: scores,
+      criticVerdict: review?['verdict'] as String? ?? 'pass',
     );
   }
 
-  GuideType _guideTypeFromValue(String? value) {
-    return GuideType.values.firstWhere(
-      (guideType) => guideType.name == value,
-      orElse: () => GuideType.route,
-    );
+  Map<String, Object?> _candidateToApproval(ArcMissionCandidate candidate) => {
+    'clientId': candidate.planKey,
+    'title': candidate.title.trim(),
+    'objective': candidate.purpose.trim().isEmpty
+        ? candidate.description.trim()
+        : candidate.purpose.trim(),
+    'successCondition': candidate.doneCondition.trim(),
+    'expectedOutcome': candidate.expectedOutput.trim(),
+    'reasonRequired': candidate.reasonRequired.trim(),
+    'coveredSuccessConditions': candidate.coveredSuccessConditions,
+    'calendarDurationDays': candidate.estimatedDurationDays ?? 0,
+    'dependencies': candidate.dependencyPlanKeys,
+    'required': !candidate.isOptional,
+    'parallelizable': candidate.parallelizable,
+    'childTaskEstimate': candidate.childTaskEstimate,
+    'weight': 1,
+    'confidence': candidate.confidence,
+  };
+
+  List<String> _clarificationQuestions(Map<String, dynamic> data) {
+    final passes = data['passes'] as List? ?? const [];
+    for (final pass in passes.reversed) {
+      if (pass is! Map || pass['name'] != 'quest_understanding') continue;
+      final output = pass['output'];
+      if (output is Map) {
+        return _stringList(output['clarificationQuestions'], 3);
+      }
+    }
+    return const [];
   }
 
-  MissionDifficulty _difficultyFromValue(String? value) {
-    return MissionDifficulty.values.firstWhere(
-      (difficulty) => difficulty.name == value,
-      orElse: () => MissionDifficulty.easy,
-    );
-  }
-
-  MissionPriority _priorityFromValue(String? value) {
-    return MissionPriority.values.firstWhere(
-      (priority) => priority.name == value,
-      orElse: () => MissionPriority.normal,
-    );
-  }
+  int _repairCount(Object? passes) => (passes as List? ?? const [])
+      .whereType<Map>()
+      .where((pass) => pass['name'] == 'route_mission_repair')
+      .length;
 
   List<String> _stringList(Object? value, int limit) {
     return (value as List?)

@@ -37,13 +37,14 @@ void main() {
       final contract = pipeline.indexOf('"success_contract"');
       final strategy = pipeline.indexOf('"strategic_plan"');
       final generation = pipeline.indexOf('"route_mission_generation"');
-      final critic = pipeline.indexOf('"mission_critic"');
+      final quality = pipeline.indexOf('evaluateMissionPlan(plan');
       final repair = pipeline.indexOf('"route_mission_repair"');
       expect(understanding, lessThan(contract));
       expect(contract, lessThan(strategy));
       expect(strategy, lessThan(generation));
-      expect(generation, lessThan(critic));
-      expect(critic, lessThan(repair));
+      expect(generation, lessThan(quality));
+      expect(quality, lessThan(repair));
+      expect(pipeline, contains('"mission_critic"'));
       expect(pipeline.indexOf('"task_generation"'), greaterThan(repair));
       expect(
         pipeline.indexOf('"task_critic"'),

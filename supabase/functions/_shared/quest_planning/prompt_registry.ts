@@ -27,25 +27,37 @@ export const PROMPTS: Record<string, PromptDefinition> = {
     key: "strategic_plan", version: 1, status: "active", modelRole: "strategic_planner", thinkingLevel: "high", schemaKey: "StrategicPlan", temperature: 0.25,
     systemInstruction: `Design phases, milestones, dependencies, critical path, risks, optional paths and review points. Do not write Mission bodies yet. For long Quests keep distant work as milestones. ${common}`,
   },
+  achievement_domain_analysis: {
+    key: "achievement_domain_analysis", version: 1, status: "active", modelRole: "strategic_planner", thinkingLevel: "high", schemaKey: "AchievementDomainAnalysis", temperature: 0.2,
+    systemInstruction: `Derive Quest-specific achievement domains from the understanding and success contract. Never select from a category template. Each domain describes a required outcome, why it matters, importance, and dependencies. Do not write Missions or Tasks. ${common}`,
+  },
   mission_generation: {
     key: "mission_generation", version: 2, status: "active", modelRole: "mission_generator", thinkingLevel: "high", schemaKey: "MissionPlan", temperature: 0.3,
     systemInstruction: `Generate the minimum sufficient set of Quest-specific Missions from the approved success contract and strategic plan. Mission count is variable, normally 3-20 and never padded to a target. Detail near-term work; keep distant work broad. Every Mission must be actionable, verifiable, constrained, and have an acyclic dependency graph. ${common}`,
   },
   mission_critic: {
-    key: "mission_critic", version: 2, status: "active", modelRole: "mission_critic", thinkingLevel: "high", schemaKey: "MissionCriticResult", temperature: 0.1,
-    systemInstruction: `Independently score each Mission for relevance, personalization, specificity, actionability, done-condition quality, sequencing, duplication, granularity, constraint alignment and template likeness. Identify only failing Mission clientIds. Do not rewrite Missions. ${common}`,
+    key: "mission_critic", version: 3, status: "active", modelRole: "mission_critic", thinkingLevel: "high", schemaKey: "MissionCriticResult", temperature: 0.1,
+    systemInstruction: `Independently score every Mission for Quest relevance, outcome quality, Mission granularity, success-condition quality, personalization, non-template quality, uniqueness, sequencing, completeness contribution, and Task separation. A standalone action cannot pass as a Mission. Return a verdict and repair instruction for each candidate. Do not rewrite Missions. ${common}`,
   },
   targeted_repair: {
     key: "targeted_repair", version: 2, status: "active", modelRole: "targeted_repair", thinkingLevel: "medium", schemaKey: "MissionRepairResult", temperature: 0.2,
     systemInstruction: `Repair only Mission clientIds explicitly marked as failed. Preserve every passing Mission byte-for-byte, preserve completed Missions, retain stable clientIds, and keep dependencies acyclic. ${common}`,
   },
   route_mission_generation: {
-    key: "route_mission_generation", version: 1, status: "active", modelRole: "mission_generator", thinkingLevel: "high", schemaKey: "RouteMissionPlan", temperature: 0.25,
-    systemInstruction: `Generate Mission outcomes for the Quest Route. A Mission is a meaningful intermediate result, not a daily action. Define objective, observable success condition, expected outcome, duration, dependencies and weight. Use the minimum sufficient variable count. Do not write Tasks here. ${common}`,
+    key: "route_mission_generation", version: 2, status: "active", modelRole: "mission_generator", thinkingLevel: "high", schemaKey: "RouteMissionPlan", temperature: 0.25,
+    systemInstruction: `You are Questra's Mission Architect. A Mission is not a concrete action. It is a meaningful intermediate outcome produced by multiple Tasks and must advance the Quest state. Use the supplied achievement domains to design non-overlapping outcome groups. Never return standalone actions such as research, call, book, compare, write, practice, check, buy, or apply as Missions. Every candidate needs an independent success condition, expected outcome, reason required, covered success conditions, dependencies, and normally at least two child Tasks. Use the minimum sufficient variable count, normally 3-12, without padding. Do not use category templates and do not write Tasks here. ${common}`,
+  },
+  mission_granularity_classifier: {
+    key: "mission_granularity_classifier", version: 1, status: "active", modelRole: "lightweight_classifier", thinkingLevel: "medium", schemaKey: "GranularityClassification", temperature: 0.1,
+    systemInstruction: `Classify every candidate as quest, mission, task, too_abstract, or duplicate. A one-step operation, a 30-120 minute action, or an item with fewer than two plausible child Tasks is normally a Task. Preserve Task-level ideas as taskCandidates instead of approving them as Missions. ${common}`,
+  },
+  mission_coverage_analysis: {
+    key: "mission_coverage_analysis", version: 1, status: "active", modelRole: "mission_critic", thinkingLevel: "high", schemaKey: "CoverageAnalysis", temperature: 0.1,
+    systemInstruction: `Check that the Mission set covers every required Success Contract condition, has no overlapping ownership, missing outcomes, unnecessary generic items, or invalid dependencies. Do not rewrite candidates. Mark passed only when required-condition coverage is complete. ${common}`,
   },
   route_mission_repair: {
-    key: "route_mission_repair", version: 1, status: "active", modelRole: "targeted_repair", thinkingLevel: "medium", schemaKey: "RouteMissionRepairResult", temperature: 0.2,
-    systemInstruction: `Repair only failed outcome Missions. Preserve all passing Missions byte-for-byte and keep client IDs and dependencies stable. Never add daily actions. ${common}`,
+    key: "route_mission_repair", version: 2, status: "active", modelRole: "targeted_repair", thinkingLevel: "medium", schemaKey: "RouteMissionRepairResult", temperature: 0.2,
+    systemInstruction: `Repair only failed outcome Mission client IDs and coverage gaps. Preserve every passing Mission byte-for-byte, retain stable IDs where possible, and keep dependencies acyclic. Convert action-level ideas to Task candidates rather than Missions. Do not regenerate the full plan or add generic padding. ${common}`,
   },
   task_generation: {
     key: "task_generation", version: 1, status: "active", modelRole: "mission_generator", thinkingLevel: "medium", schemaKey: "TaskPlan", temperature: 0.25,

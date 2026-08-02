@@ -1,5 +1,6 @@
 import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
 import { runQuestPlanningPipeline } from "../_shared/quest_planning/pipeline.ts";
+import { validateRouteMissionPlan } from "../_shared/quest_planning/validators.ts";
 
 type RequestBody = {
   mode?: "plan" | "approve";
@@ -15,6 +16,7 @@ type RequestBody = {
   idempotency_key?: string;
   preview_id?: string;
   approval_token?: string;
+  approved_missions?: unknown[];
 };
 
 Deno.serve(async (req) => {
@@ -26,7 +28,7 @@ Deno.serve(async (req) => {
   if (!auth || !userId) return jsonResponse({ error: "authentication_required" }, { status: 401 });
   const payload = await readJson<RequestBody>(req);
   if (!payload) return jsonResponse({ error: "invalid_json" }, { status: 400 });
-  if (payload.mode === "approve") return approvePreview(auth, payload);
+  if (payload.mode === "approve") return approvePreview(auth, userId, payload);
 
   const questId = uuid(payload.quest_id);
   const wish = text(payload.wish, 1_200);
@@ -54,7 +56,7 @@ Deno.serve(async (req) => {
   }
   const stored = await recordRun(userId, questId, idempotencyKey, pipeline, pipeline.preview);
   if (!stored) return jsonResponse({ ...pipeline, status: "retryable_error", preview: null, error: "preview_store_failed" }, { status: 503 });
-  return jsonResponse({ ...pipeline, preview_id: stored.id, approval_token: stored.approvalToken });
+  return jsonResponse({ ...pipeline, preview_id: stored.id, approval_token: stored.approvalToken, draft_id: stored.draftId });
 });
 
 async function authenticatedUserId(auth: string | null) {
@@ -101,15 +103,58 @@ async function recordRun(userId: string, questId: string, idempotencyKey: string
   });
   if (!previewResponse?.ok) return null;
   const previews = await previewResponse.json() as Array<Record<string, unknown>>;
-  return previews[0]?.id && previews[0]?.approval_token
-    ? { id: previews[0].id, approvalToken: previews[0].approval_token }
-    : null;
+  if (!previews[0]?.id || !previews[0]?.approval_token) return null;
+  const draftStored = await recordMissionDraft(userId, questId, runs[0].id as string, previews[0], pipeline, preview);
+  if (!draftStored) return null;
+  return { id: previews[0].id, approvalToken: previews[0].approval_token, draftId: draftStored };
 }
 
-async function approvePreview(auth: string, payload: RequestBody) {
+async function recordMissionDraft(userId: string, questId: string, runId: string, previewRow: Record<string, unknown>, pipeline: Awaited<ReturnType<typeof runQuestPlanningPipeline>>, preview: unknown) {
+  if (!preview || typeof preview !== "object") return null;
+  const payload = preview as Record<string, unknown>;
+  const plan = payload.routeMissionPlan as Record<string, unknown> | undefined;
+  if (!plan || !Array.isArray(plan.missions)) return null;
+  const critic = payload.missionCritic && typeof payload.missionCritic === "object" ? payload.missionCritic as Record<string, unknown> : {};
+  const results = Array.isArray(critic.missionResults) ? critic.missionResults as Array<Record<string, unknown>> : [];
+  const resultById = new Map(results.map((item) => [String(item.clientId ?? ""), item]));
+  const providerPass = [...pipeline.passes].reverse().find((item) => item.name === "mission_critic" && item.provider)?.provider;
+  const draftResponse = await serviceFetch("/rest/v1/mission_plan_drafts", {
+    method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({
+      owner_id: userId, quest_id: questId, planning_run_id: runId, preview_id: previewRow.id,
+      status: "reviewing", prompt_versions: pipeline.versions.prompts, schema_version: pipeline.versions.schema,
+      model_name: providerPass?.model ?? "gemini", model_version: providerPass?.modelVersion ?? "",
+      thinking_level: "high", overall_confidence: Math.max(0, Math.min(1, Number(critic.overallScore ?? 0) / 100)),
+      achievement_domains: payload.achievementDomains ?? {}, coverage_analysis: payload.coverageAnalysis ?? {}, expires_at: previewRow.expires_at,
+    }),
+  });
+  if (!draftResponse?.ok) return null;
+  const rows = await draftResponse.json() as Array<Record<string, unknown>>;
+  const draftId = rows[0]?.id;
+  if (typeof draftId !== "string") return null;
+  const candidates = plan.missions.map((raw, index) => {
+    const mission = raw as Record<string, unknown>;
+    const clientId = String(mission.clientId ?? "");
+    const review = resultById.get(clientId) ?? {};
+    return {
+      owner_id: userId, draft_id: draftId, client_id: clientId, title: mission.title, objective: mission.objective,
+      success_condition: mission.successCondition, expected_outcome: mission.expectedOutcome, reason_required: mission.reasonRequired,
+      covered_success_conditions: mission.coveredSuccessConditions ?? [], dependency_client_ids: mission.dependencies ?? [],
+      required: mission.required, parallelizable: mission.parallelizable, child_task_estimate: mission.childTaskEstimate,
+      confidence: mission.confidence, critic_scores: review.scores ?? {}, verdict: review.verdict ?? "pass", order_index: index, original_payload: mission,
+    };
+  });
+  const candidateResponse = await serviceFetch("/rest/v1/mission_candidates", { method: "POST", body: JSON.stringify(candidates) });
+  return candidateResponse?.ok ? draftId : null;
+}
+
+async function approvePreview(auth: string, userId: string, payload: RequestBody) {
   const previewId = uuid(payload.preview_id);
   const approvalToken = uuid(payload.approval_token);
   if (!previewId || !approvalToken) return jsonResponse({ error: "preview_and_approval_required" }, { status: 400 });
+  if (Array.isArray(payload.approved_missions)) {
+    const prepared = await prepareApprovedPreview(userId, previewId, approvalToken, payload.approved_missions);
+    if (!prepared.ok) return jsonResponse({ error: prepared.error }, { status: 409 });
+  }
   const url = Deno.env.get("SUPABASE_URL");
   const anon = Deno.env.get("SUPABASE_ANON_KEY");
   if (!url || !anon) return jsonResponse({ error: "service_unavailable" }, { status: 503 });
@@ -120,6 +165,26 @@ async function approvePreview(auth: string, payload: RequestBody) {
   });
   if (!response.ok) return jsonResponse({ error: "approval_failed" }, { status: response.status === 400 ? 409 : 503 });
   return jsonResponse(await response.json());
+}
+
+async function prepareApprovedPreview(userId: string, previewId: string, approvalToken: string, missions: unknown[]) {
+  const response = await serviceFetch(`/rest/v1/quest_plan_previews?id=eq.${previewId}&owner_id=eq.${userId}&approval_token=eq.${approvalToken}&status=eq.pending&select=id,quest_id,plan_payload&limit=1`);
+  if (!response?.ok) return { ok: false, error: "preview_load_failed" };
+  const rows = await response.json() as Array<Record<string, unknown>>;
+  const row = rows[0];
+  if (!row || typeof row.quest_id !== "string" || !row.plan_payload || typeof row.plan_payload !== "object") return { ok: false, error: "preview_not_approvable" };
+  const payload = row.plan_payload as Record<string, unknown>;
+  const originalPlan = payload.routeMissionPlan && typeof payload.routeMissionPlan === "object" ? payload.routeMissionPlan as Record<string, unknown> : null;
+  if (!originalPlan) return { ok: false, error: "route_plan_missing" };
+  const routeMissionPlan = { ...originalPlan, missions };
+  const validation = validateRouteMissionPlan(routeMissionPlan, row.quest_id);
+  if (!validation.valid) return { ok: false, error: validation.issues[0]?.code ?? "approved_plan_invalid" };
+  const currentMissionId = payload.currentTaskPlan && typeof payload.currentTaskPlan === "object" ? (payload.currentTaskPlan as Record<string, unknown>).missionClientId : null;
+  if (typeof currentMissionId !== "string" || !missions.some((mission) => mission && typeof mission === "object" && (mission as Record<string, unknown>).clientId === currentMissionId)) return { ok: false, error: "current_mission_cannot_be_removed" };
+  const update = await serviceFetch(`/rest/v1/quest_plan_previews?id=eq.${previewId}&owner_id=eq.${userId}&status=eq.pending`, {
+    method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ plan_payload: { ...payload, routeMissionPlan } }),
+  });
+  return update?.ok ? { ok: true } : { ok: false, error: "preview_update_failed" };
 }
 
 async function serviceFetch(path: string, init: RequestInit = {}) {

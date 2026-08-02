@@ -10,6 +10,7 @@ import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
 import 'arc_quest_guide_service.dart';
+import '../mission/mission_controller.dart';
 import 'planning_preferences_controller.dart';
 import 'quest_model.dart';
 
@@ -103,6 +104,21 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
         errorsByQuest: {...state.errorsByQuest, quest.id: error.toString()},
       );
     }
+  }
+
+  Future<void> approveForQuest(
+    Quest quest,
+    ArcQuestGuide guide,
+    List<ArcMissionCandidate> candidates,
+  ) async {
+    if (candidates.isEmpty) throw StateError('確定できるMission候補がありません。');
+    await ref
+        .read(arcQuestGuideServiceProvider)
+        .approve(guide: guide, candidates: candidates);
+    await ref.read(missionControllerProvider.notifier).loadForQuests([
+      quest.id,
+    ]);
+    unawaited(_rememberGuide(quest, guide));
   }
 
   void acceptGeneratedGuide(Quest quest, ArcQuestGuide guide) {

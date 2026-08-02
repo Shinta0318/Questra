@@ -92,12 +92,50 @@ export function validateRouteMissionPlan(value: unknown, expectedQuestId: string
     const id = text(raw.clientId);
     if (!id || ids.has(id)) issues.push(issue(`$.missions[${index}].clientId`, "duplicate", "Mission clientId is missing or duplicated", id ?? undefined));
     if (id) ids.add(id);
-    for (const key of ["title", "objective", "successCondition", "expectedOutcome"] as const) if (!text(raw[key])) issues.push(issue(`$.missions[${index}].${key}`, "required", `${key} is required`, id ?? undefined));
+    for (const key of ["title", "objective", "successCondition", "expectedOutcome", "reasonRequired"] as const) if (!text(raw[key])) issues.push(issue(`$.missions[${index}].${key}`, "required", `${key} is required`, id ?? undefined));
+    if (!Array.isArray(raw.coveredSuccessConditions) || raw.coveredSuccessConditions.length < 1) issues.push(issue(`$.missions[${index}].coveredSuccessConditions`, "required", "A Mission must cover a success condition", id ?? undefined));
+    if (!integerBetween(raw.childTaskEstimate, 1, 30)) issues.push(issue(`$.missions[${index}].childTaskEstimate`, "range", "childTaskEstimate is invalid", id ?? undefined));
     if (!Array.isArray(raw.dependencies)) issues.push(issue(`$.missions[${index}].dependencies`, "type", "Dependencies must be an array", id ?? undefined));
   }
   const typed = missions.filter(isRouteMission);
   for (const mission of typed) for (const dependency of mission.dependencies) if (!ids.has(dependency) || dependency === mission.clientId) issues.push(issue("$.missions.dependencies", "invalid_dependency", "Mission dependency is invalid", mission.clientId));
   if (hasCycle(typed as Mission[])) issues.push(issue("$.missions", "dependency_cycle", "Mission dependency graph contains a cycle"));
+  return { valid: issues.length === 0, issues };
+}
+
+export function validateMissionArchitectureSemantics(value: unknown, questText: string, successContract: unknown, granularity: unknown, coverage: unknown): ValidationResult {
+  if (!isRecord(value) || !Array.isArray(value.missions)) return invalid("$.missions", "type", "Missions are required");
+  const issues: ValidationIssue[] = [];
+  const normalizedQuest = normalize(questText);
+  const actionOnly = /^(調べる|確認する|予約する|比較する|書く|練習する|購入する|申し込む|電話する)(こと)?$/;
+  const titles = new Map<string, string>();
+  for (const raw of value.missions) {
+    if (!isRecord(raw)) continue;
+    const id = text(raw.clientId);
+    const title = text(raw.title) ?? "";
+    const normalizedTitle = normalize(title);
+    if (actionOnly.test(title.trim())) issues.push(issue("$.missions.title", "task_granularity", "Standalone actions must be Tasks", id ?? undefined));
+    if (Number(raw.childTaskEstimate) < 2 && raw.required !== false) issues.push(issue("$.missions.childTaskEstimate", "task_granularity", "A Mission should normally contain multiple Tasks", id ?? undefined));
+    if (normalizedTitle === normalizedQuest || normalizedQuest.includes(normalizedTitle) && normalizedTitle.length >= normalizedQuest.length * 0.8) issues.push(issue("$.missions.title", "quest_paraphrase", "Mission title is only a Quest paraphrase", id ?? undefined));
+    const fingerprint = normalizedTitle.replace(/(を|の|に|へ|と|が|する|完了|確定)/g, "");
+    if (fingerprint.length >= 3 && titles.has(fingerprint)) issues.push(issue("$.missions.title", "semantic_duplicate", "Mission outcomes overlap", id ?? undefined));
+    if (fingerprint.length >= 3 && id) titles.set(fingerprint, id);
+  }
+  if (isRecord(granularity) && Array.isArray(granularity.classifications)) {
+    for (const raw of granularity.classifications) {
+      if (!isRecord(raw) || raw.classification === "mission") continue;
+      if (typeof raw.candidateId === "string") issues.push(issue("$.granularity", `classified_${String(raw.classification)}`, "Candidate is not Mission-granularity", raw.candidateId));
+    }
+  }
+  if (isRecord(coverage)) {
+    if (coverage.passed !== true) issues.push(issue("$.coverage", "coverage_failed", "Success Contract coverage is incomplete"));
+    if (Array.isArray(coverage.successConditionCoverage) && coverage.successConditionCoverage.some((raw) => isRecord(raw) && raw.coverageStatus !== "covered")) issues.push(issue("$.coverage.successConditionCoverage", "missing_success_condition", "Every required success condition must be covered"));
+  }
+  if (isRecord(successContract) && Array.isArray(successContract.requiredConditions) && successContract.requiredConditions.length > 0) {
+    const covered = new Set<string>();
+    for (const raw of value.missions) if (isRecord(raw) && Array.isArray(raw.coveredSuccessConditions)) for (const condition of raw.coveredSuccessConditions) if (typeof condition === "string") covered.add(normalize(condition));
+    for (const condition of successContract.requiredConditions) if (typeof condition === "string" && ![...covered].some((item) => item === normalize(condition))) issues.push(issue("$.missions.coveredSuccessConditions", "required_condition_unmapped", "A required Success Contract condition is not mapped to a Mission"));
+  }
   return { valid: issues.length === 0, issues };
 }
 
@@ -142,6 +180,7 @@ function isRouteMission(value: unknown): value is Mission {
 }
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null; }
 function text(value: unknown) { return typeof value === "string" && value.trim() ? value.trim() : null; }
+function normalize(value: string) { return value.toLowerCase().replace(/[\s、。,.!！?？「」『』()（）]/g, ""); }
 function integerBetween(value: unknown, min: number, max: number) { return Number.isInteger(value) && Number(value) >= min && Number(value) <= max; }
 function issue(path: string, code: string, message: string, missionClientId?: string): ValidationIssue { return { path, code, message, missionClientId }; }
 function invalid(path: string, code: string, message: string): ValidationResult { return { valid: false, issues: [issue(path, code, message)] }; }

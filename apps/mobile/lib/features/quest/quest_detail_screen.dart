@@ -2239,9 +2239,42 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
     }
   }
 
-  void _confirmPlan() {
+  Future<void> _confirmPlan() async {
     final draft = _draft;
     if (draft == null || draft.validCandidates.isEmpty) return;
+    final guide = _loadedGuide;
+    if (guide?.previewId != null) {
+      try {
+        await ref
+            .read(arcQuestGuideControllerProvider.notifier)
+            .approveForQuest(
+              widget.quest,
+              guide!,
+              draft.validCandidates
+                  .map((candidate) => candidate.toArcCandidate())
+                  .toList(growable: false),
+            );
+        if (!mounted) return;
+        setState(() => _draft = null);
+        showArcCelebrationSnackBar(
+          context,
+          ref
+              .read(arcCelebrationServiceProvider)
+              .build(
+                event: ArcCelebrationEvent.missionStarted,
+                subject: widget.quest.title,
+              ),
+        );
+      } catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.toString().replaceFirst('Bad state: ', '')),
+          ),
+        );
+      }
+      return;
+    }
     final existingCount = ref
         .read(missionControllerProvider)
         .where((mission) => mission.questId == widget.quest.id)
@@ -2285,7 +2318,6 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
             confidence: candidate.confidence,
           );
     }
-    final guide = _loadedGuide;
     if (guide != null) {
       if (guide.questEvaluation != null) {
         ref
@@ -2457,7 +2489,11 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
                         : () => setState(
                             () => _draft = _draft?.move(index, index + 1),
                           ),
-                    onRemove: draft.candidates.length <= 1
+                    onRemove:
+                        draft.candidates.length <= 1 ||
+                            (guide.previewId != null &&
+                                candidate.planKey ==
+                                    guide.currentMissionClientId)
                         ? null
                         : () => setState(
                             () => _draft = _draft?.remove(candidate.id),
@@ -2473,7 +2509,7 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
                 runSpacing: 8,
                 children: [
                   TextButton.icon(
-                    onPressed: draft.candidates.length >= 10
+                    onPressed: draft.candidates.length >= 30
                         ? null
                         : () => setState(() => _draft = _draft?.add()),
                     icon: const Icon(Icons.add),
@@ -2484,7 +2520,7 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
                         .read(arcQuestGuideControllerProvider.notifier)
                         .generateForQuest(widget.quest),
                     icon: const Icon(Icons.refresh_outlined),
-                    label: const Text('再生成'),
+                    label: const Text('全体構成を見直す'),
                   ),
                 ],
               ),
@@ -2676,7 +2712,7 @@ class _MissionCandidateEditor extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           QuestraFieldLabel(
-            label: '完了が分かる具体的な一歩',
+            label: 'このMissionで達成すること',
             child: TextFormField(
               initialValue: candidate.description,
               keyboardType: TextInputType.multiline,
@@ -2684,11 +2720,39 @@ class _MissionCandidateEditor extends StatelessWidget {
               minLines: 2,
               maxLines: 4,
               decoration: const InputDecoration(),
-              onChanged: (value) =>
-                  onChanged(candidate.copyWith(description: value)),
+              onChanged: (value) => onChanged(
+                candidate.copyWith(description: value, purpose: value),
+              ),
               maxLength: InputLimits.missionDescription,
             ),
           ),
+          const SizedBox(height: 8),
+          QuestraFieldLabel(
+            label: '完了条件',
+            required: true,
+            child: TextFormField(
+              initialValue: candidate.doneCondition,
+              keyboardType: TextInputType.multiline,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(),
+              onChanged: (value) =>
+                  onChanged(candidate.copyWith(doneCondition: value)),
+              maxLength: InputLimits.missionDescription,
+            ),
+          ),
+          if (candidate.reasonRequired.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Questに必要な理由',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: QuestraColors.cosmicBlue,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(candidate.reasonRequired),
+          ],
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -2697,6 +2761,14 @@ class _MissionCandidateEditor extends StatelessWidget {
             children: [
               _ActionChip(label: candidate.guideType.japaneseLabel),
               _ActionChip(label: candidate.difficulty.japaneseLabel),
+              _ActionChip(label: candidate.isOptional ? '任意' : '必須'),
+              _ActionChip(label: '想定Task ${candidate.childTaskEstimate}件'),
+              if (candidate.parallelizable)
+                const _ActionChip(label: '並行して進行可能'),
+              if (candidate.dependencyPlanKeys.isNotEmpty)
+                _ActionChip(
+                  label: '前提 ${candidate.dependencyPlanKeys.length}件',
+                ),
               IconButton(
                 onPressed: onToday,
                 icon: Icon(

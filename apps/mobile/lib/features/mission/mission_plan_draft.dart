@@ -35,6 +35,12 @@ class MissionCandidateDraft {
     this.enterpriseSupportHints = const [],
     this.difficultyScore,
     this.estimatedDurationDays,
+    this.reasonRequired = '',
+    this.coveredSuccessConditions = const [],
+    this.parallelizable = false,
+    this.childTaskEstimate = 2,
+    this.criticScores = const {},
+    this.criticVerdict = 'pass',
   }) : id = id ?? _uuid.v4(),
        planKey = planKey ?? id ?? _uuid.v4();
 
@@ -65,6 +71,12 @@ class MissionCandidateDraft {
       enterpriseSupportHints: candidate.enterpriseSupportHints,
       difficultyScore: candidate.difficultyScore,
       estimatedDurationDays: candidate.estimatedDurationDays,
+      reasonRequired: candidate.reasonRequired,
+      coveredSuccessConditions: candidate.coveredSuccessConditions,
+      parallelizable: candidate.parallelizable,
+      childTaskEstimate: candidate.childTaskEstimate,
+      criticScores: candidate.criticScores,
+      criticVerdict: candidate.criticVerdict,
     );
   }
 
@@ -93,6 +105,12 @@ class MissionCandidateDraft {
   final List<String> enterpriseSupportHints;
   final int? difficultyScore;
   final int? estimatedDurationDays;
+  final String reasonRequired;
+  final List<String> coveredSuccessConditions;
+  final bool parallelizable;
+  final int childTaskEstimate;
+  final Map<String, int> criticScores;
+  final String criticVerdict;
 
   MissionCandidateDraft copyWith({
     String? planKey,
@@ -120,6 +138,12 @@ class MissionCandidateDraft {
     List<String>? enterpriseSupportHints,
     int? difficultyScore,
     int? estimatedDurationDays,
+    String? reasonRequired,
+    List<String>? coveredSuccessConditions,
+    bool? parallelizable,
+    int? childTaskEstimate,
+    Map<String, int>? criticScores,
+    String? criticVerdict,
   }) {
     return MissionCandidateDraft(
       id: id,
@@ -151,8 +175,47 @@ class MissionCandidateDraft {
       difficultyScore: difficultyScore ?? this.difficultyScore,
       estimatedDurationDays:
           estimatedDurationDays ?? this.estimatedDurationDays,
+      reasonRequired: reasonRequired ?? this.reasonRequired,
+      coveredSuccessConditions:
+          coveredSuccessConditions ?? this.coveredSuccessConditions,
+      parallelizable: parallelizable ?? this.parallelizable,
+      childTaskEstimate: childTaskEstimate ?? this.childTaskEstimate,
+      criticScores: criticScores ?? this.criticScores,
+      criticVerdict: criticVerdict ?? this.criticVerdict,
     );
   }
+
+  ArcMissionCandidate toArcCandidate() => ArcMissionCandidate(
+    planKey: planKey,
+    title: title,
+    description: description,
+    purpose: purpose,
+    doneCondition: doneCondition,
+    expectedOutput: expectedOutput,
+    verificationType: verificationType,
+    action: action,
+    isOptional: isOptional,
+    sourceRequirement: sourceRequirement,
+    confidence: confidence,
+    parentPlanKey: parentPlanKey,
+    dependencyPlanKeys: dependencyPlanKeys,
+    guideType: guideType,
+    difficulty: difficulty,
+    effortEstimate: effortEstimate,
+    priority: priority,
+    category: category,
+    estimatedCostLabel: estimatedCostLabel,
+    referenceHints: referenceHints,
+    enterpriseSupportHints: enterpriseSupportHints,
+    difficultyScore: difficultyScore,
+    estimatedDurationDays: estimatedDurationDays,
+    reasonRequired: reasonRequired,
+    coveredSuccessConditions: coveredSuccessConditions,
+    parallelizable: parallelizable,
+    childTaskEstimate: childTaskEstimate,
+    criticScores: criticScores,
+    criticVerdict: criticVerdict,
+  );
 }
 
 class MissionPlanDraft {
@@ -199,7 +262,12 @@ class MissionPlanDraft {
         ...candidates,
         MissionCandidateDraft(
           title: '新しいMission',
-          description: '今日できる小さな一歩に整えます。',
+          description: 'このMissionで実現する中間成果を入力してください。',
+          purpose: 'Quest達成に必要な中間成果を追加する',
+          doneCondition: '複数のTaskを終え、中間成果を確認できたら完了です。',
+          expectedOutput: '確認できる中間成果',
+          reasonRequired: '既存のMissionでは扱えない成功条件を補います。',
+          coveredSuccessConditions: const ['ユーザーが追加した成功条件'],
           guideType: GuideType.route,
           difficulty: MissionDifficulty.easy,
         ),
