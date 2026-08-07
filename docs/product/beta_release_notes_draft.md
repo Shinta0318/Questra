@@ -30,6 +30,11 @@
 - 外部生成が未設定または失敗した場合も、端末内の応答へ切り替わります。
 - Arc Memory、Bond、Stardust、Navigator RankはBeta品質の体験として確認できます。
 
+### Trail
+
+- 完了したMissionやQuestの進捗をTrailとして残し、Timelineで振り返れます。
+- 画像の追加、差し替え、削除はQST-204の実機・Storage検証が完了するまで試験中です。
+
 ### ProfileとSettings
 
 - Profileで旅路の状態と所有者情報を確認できます。
@@ -44,12 +49,12 @@
   Release Managerが確認する必要があります。
 - Arcの外部生成はSupabase Edge Functionとserver側provider設定に依存します。
 - 小画面、tablet、web向けresponsive testは自動化済みですが、実機QAは継続中です。
+- TrailのMedia永続化は接続済みBeta環境とAndroid/Webで証跡を取得している段階です。
 
 ## 現在利用できない機能
 
-- TrailとGuildは主なナビゲーションではComing Soonです。既存実装とデータモデルは保持して
-  いますが、このBetaの主要導線には含めません。
-- Trail画像のアップロード、差し替え、削除は主な導線から利用できません。
+- Guildは主なナビゲーションではComing Soonです。Discovery、参加、投稿、Moderationの
+  実環境検証が完了するまで、このBetaの主要導線には含めません。
 - 全データのエクスポート、アカウント全体の削除、目的別同意の保存・撤回は未提供です。
 - Push通知、Signalの実通知、課金、Marketplace、企業支援は有効化していません。
 - 外部クラッシュレポートは無効です。
@@ -62,7 +67,7 @@
 3. アプリアイコンと起動画面には最終デザインが未反映です。
 4. 利用規約、Privacy Policy、Betaデータ利用説明は草案で、外部配布前の法務確認が未完了です。
 5. 実機のカメラ、Media、キーボード、tablet、iOS検証は完了証跡が不足しています。
-6. Trail / Guildを含む旧チェックリストは、今回の主なBeta導線と一致しない場合があります。
+6. Guildを含む旧チェックリストは、今回の主なBeta導線と一致しない場合があります。
 
 ## Betaで確認してほしい航路
 
@@ -70,9 +75,10 @@
 2. Onboardingを完了し、最初のQuestを作る。
 3. Arc GuideからMissionを1件採用する。
 4. Missionを編集し、今日のMissionとして完了する。
-5. Arcへ次の一歩を相談する。
-6. アプリを再起動し、同じアカウントでQuestとMissionが残っていることを確認する。
-7. 別アカウントから非公開のQuestが見えないことを運営担当者と確認する。
+5. 完了した一歩をTrailとして残し、Timelineへ反映されることを確認する。
+6. Arcへ次の一歩を相談する。
+7. アプリを再起動し、同じアカウントでQuest、Mission、Trailが残っていることを確認する。
+8. 別アカウントから非公開のQuestが見えないことを運営担当者と確認する。
 
 ## Feedback
 
@@ -83,7 +89,7 @@ Arcとの会話全文はレポートへ含めないでください。
 
 ## テストを止める条件
 
-- アプリが起動しない、またはHome / Quest / Mission / Arcでクラッシュする。
+- アプリが起動しない、またはHome / Quest / Mission / Trail / Arcでクラッシュする。
 - 保存成功表示の後にQuestやMissionが失われる。
 - 別アカウントの非公開データが表示される。
 - Arcへの入力や非公開の旅路データが意図しない場所へ表示される。

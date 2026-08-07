@@ -1,7 +1,9 @@
 # Questra Master Spec v2.0
 
-> Status: Constitution Draft
+> Status: Ratified / Active
 > Version: 2.0
+> Effective date: 2026-07-25
+> Last reviewed: 2026-07-25
 > Scope: Product, experience, data, AI, technology, business, and operations
 > Authority: Highest-level product constitution
 
@@ -46,6 +48,36 @@ Guildでつながる。蓄積された挑戦は、本人の意思と同意を前
 7. 事業として持続可能か。
 
 上位の条件を満たさない場合、下位の利益を理由に採用してはならない。
+
+### 規範の強さ
+
+本書の「しなければならない」「禁止する」「含めない」は必須要件である。
+「推奨する」は、採用しない理由をDecision Recordへ残すべき要件である。
+「できる」「将来」は選択肢であり、現在Phaseでの実装を約束しない。
+
+### 仕様の優先順位
+
+判断が衝突するときは、次の順で優先する。
+
+1. 法令、安全、ユーザーの権利
+2. 本書のNon-Negotiable Principles
+3. 本書の各System ConstitutionとPhase境界
+4. 承認済みの下位仕様とDecision Record
+5. QST BacklogとAcceptance
+6. 実装、テスト、モック、会話メモ
+
+下位資料または既存実装が上位原則と矛盾する場合、黙って追認しない。
+差分、ユーザー影響、移行案を記録し、上位原則へ合わせる。
+
+### 準拠と変更管理
+
+- すべての下位仕様は、対象Phase、対象外、データ利用、安全性、Acceptance、
+  検証方法、本書の参照章を明記する。
+- QSTは、変更するユーザー価値とNon-Negotiable Principlesへの影響を示す。
+- 本書の改定は、理由、影響範囲、移行、承認日をDecision Recordへ残す。
+- 原則の緩和、データ利用目的の拡大、Arc人格の変更、企業権限の拡大は、
+  通常の機能変更として扱わず、Product、Trust/Safety、Technologyのレビューを要する。
+- 少なくとも各Phase Gate前と重大インシデント後に本書を再確認する。
 
 ## 2. Why Questra Exists
 
@@ -245,7 +277,19 @@ Questはユーザーの意味ある挑戦を表す最上位の実行単位であ
 
 完了だけを正常終了としない。休止、再定義、統合、撤回も正当な状態である。
 
-### 10.3 MVP境界
+### 10.3 Quest Intelligence
+
+ArcはQuestの内容、理由、希望期限、Quest DNA、ユーザーが提供した制約をもとに、
+難易度、必要期間、費用帯、リスク、Mission規模、推奨開始時期を推定できる。
+これらは事実や保証ではなく、根拠、信頼度、評価版、評価日時を持つ助言である。
+
+- ユーザー入力、AI推定、システム計算をデータ上・表示上で区別する。
+- 希望期限はユーザーの意思として保持し、AI推定で上書きしない。
+- 間に合わない見込みは隠さず、範囲、ペース、期限の選択肢を提案する。
+- 難易度や成功見込みを人間の能力・価値の評価として扱わない。
+- 再評価は可能にするが、変更理由と履歴を監査可能にする。
+
+### 10.4 MVP境界
 
 MVPではQuest作成、編集、一覧、詳細、進捗、Mission・Trailとの関連、
 Supabase永続化を扱う。Marketplace、Passport、Scoreは含めない。
@@ -269,7 +313,23 @@ ArcはQuestの目的、Quest DNA、既存Trail、ユーザー設定を参照し�
 複数のMission候補を生成できる。生成理由と想定負荷を示し、実行不可能な
 場合はより小さなMissionへ再分解する。
 
-### 11.3 MVP境界
+Mission数を製品都合の固定数へ合わせて水増ししてはならない。AIはQuestの
+複雑さに応じて必要最小限の完全な航路を設計し、実装上の安全な上下限内で
+件数を決める。Missionは親子関係、依存関係、優先度、期間、完了条件を持てる。
+グラフは循環せず、すべて同一Questと正しい所有者境界に属さなければならない。
+
+### 11.3 Adaptive Route
+
+航路は一度生成して終わりではない。進捗、期限、停滞、予算や生活条件の変化を
+もとに、Arcは再計画を提案できる。ただし、次を守る。
+
+- 完了済みMissionと関連Trailを自動削除しない。
+- 希望期限、Missionの追加・削除・並べ替えを黙って変更しない。
+- 変更理由と前後差分を提示し、ユーザーの明示的な承認後だけ反映する。
+- ユーザーは提案を拒否し、既存航路を続けられる。
+- 緊急性や不安を誇張して行動を迫らない。
+
+### 11.4 MVP境界
 
 MVPではMission生成、手動作成、採用、完了、Questとの関連、
 Supabase永続化を提供する。高度な自動スケジューリングはFutureとする。
@@ -323,6 +383,12 @@ Guildは、共通するQuest、関心、経験を持つユーザーが助け合�
 - フォロワー数や反応数を中心価値にしない。
 - 人気順だけで情報を支配させない。
 - 通報、ブロック、モデレーション、公開範囲を設計する。
+- 犯罪、搾取、性的虐待、自傷他害、差別、詐欺などの重大リスクは、
+  生成前後の安全境界で検知し、危険な具体化を支援しない。
+- 違反回数だけで永久停止を自動決定しない。重大性、文脈、誤検知、
+  再発性を考慮し、警告、機能制限、一時停止、停止を段階的に扱う。
+- 重大なアカウント措置には記録、適切な人間レビュー、異議申立てを持つ。
+- 安全目的の記録は目的と保存期間を限定し、人格評価や広告へ転用しない。
 
 ### 13.3 MVP境界
 
@@ -581,6 +647,27 @@ Quest ScoreはPhase 5以降であり、十分な倫理・法務・公平性検�
 
 これらをBeta開始前の必須条件として段階的に検証する。
 
+### 22.5 データ分類と保持
+
+データを少なくともPublic、Internal、Confidential、Sensitiveに分類する。
+認証情報、秘密鍵、個別のQuest、Arc Memory、安全シグナルは必要最小限の
+権限で扱い、ログ、分析、プロンプトへ無制限に複製しない。
+
+- 保存期間は目的ごとに定義し、不要になったデータを削除または匿名化する。
+- Backup、Cache、Analytics、AI Providerへの送信を含めて削除影響を設計する。
+- 集計データは再識別リスクを評価し、少人数の集計を外部提供しない。
+- 開発・検証環境で本番個人データを既定利用しない。
+
+### 22.6 認証と不正利用対策
+
+- Mobileの継続セッションとWebの再認証は、リスクに応じて分離設計できる。
+- Password reset、Token失効、端末紛失、退会、アカウント復旧を設計する。
+- Login試行制限は固定回数だけに依存せず、Rate limit、段階的待機、通知、
+  安全な復旧を組み合わせ、正当なユーザーを永久に締め出さない。
+- 認証・認可エラーは情報を過剰開示せず、列挙攻撃とSession fixationを防ぐ。
+- XSS、CSRF、Injection、SSRF、悪意あるUpload、Dependency攻撃をThreat Modelと
+  Security Testの対象にする。Flutter Webもブラウザ境界を免除されない。
+
 ## 23. Revenue Engine
 
 Questraの収益は、挑戦を支援した価値の対価として得る。
@@ -694,6 +781,8 @@ Mission、Trail、Arcの単一ユーザー価値を成立させ、その後Guild
 - データ削除・公開範囲変更の成功率
 - 不快、圧力、誤誘導の報告数
 - Guildの安全性と有用性
+- AI提案の不正確さ、過剰拒否、危険な見逃し
+- 重大なアカウント措置の異議申立て率と覆り率
 
 ### 26.3 長期指標
 
@@ -706,6 +795,9 @@ Mission、Trail、Arcの単一ユーザー価値を成立させ、その後Guild
 - 企業支援の透明性評価
 
 利用時間や通知開封率は補助指標であり、成功そのものとみなさない。
+指標は年齢、言語、端末、アクセシビリティ条件などで不当な格差がないか、
+収集可能かつ適法な範囲で分解して確認する。改善指標がTrust指標を悪化させる
+場合、成長施策を停止して原因をレビューする。
 
 ## 27. Roadmap
 
@@ -788,6 +880,18 @@ Mission、Trail、Arcの単一ユーザー価値を成立させ、その後Guild
 
 各Phaseは、前Phaseの価値、安全、運用、信頼が検証されるまで開始しない。
 
+### Phase Gate共通条件
+
+次Phaseへ進む判断は、機能数やQST番号だけで行わない。少なくとも次を満たす。
+
+- 対象Phaseの主要ユーザーフローが実環境で再現可能である。
+- CriticalなSecurity、Privacy、Data loss、Safety blockerが0件である。
+- 未解決HighリスクにOwner、期限、回避策がある。
+- AI失敗、通信断、空状態、保存失敗でユーザーの操作が破綻しない。
+- RLS、認証、Backup、Rollback、監視、問い合わせ導線の証跡がある。
+- Legal、Store、Accessibility、Performanceの対象Gateを通過している。
+- Go / No-Goの根拠と残余リスクをRelease Reportへ残す。
+
 ## 28. Anti-Goals
 
 Questraは次のものを目指さない。
@@ -837,6 +941,9 @@ Questraは次のものを目指さない。
 - 保存失敗、ネットワーク断、AI失敗、空状態を検証する。
 - `dart analyze`、`flutter test`、Migration検証をRelease Gateにする。
 - 性能Budget、画像容量、取得件数、ページングを定義する。
+- AIが返す親子・依存グラフ、列挙値、件数、文字数を信頼せず検証する。
+- UIの成功だけでなく、DB保存後の再取得と所有者分離を検証する。
+- Test、Mock、In-memory成功をクラウド配備完了の証拠として扱わない。
 
 ### 29.4 Supabase
 
@@ -878,6 +985,11 @@ AIはユーザーの最終意思決定者ではない。
 - Structured outputにはSchema validationを使う。
 - 高リスク出力には安全ガードと適切な案内を持つ。
 - ユーザーが生成結果を編集、拒否、再生成できる。
+- Prompt injection、Data exfiltration、Unsafe completionをThreat Modelへ含める。
+- 外部検索結果やユーザー生成文をSystem instructionと同じ権限で扱わない。
+- Mission、評価、推薦は構造検証とDomain rule検証の双方を通す。
+- AIだけで永久BAN、信用スコア、採用・保険・融資などの重大判断を確定しない。
+- Provider障害時はArc人格を保った安全なFallbackまたは手動導線を提供する。
 
 ### 30.4 AI評価
 
@@ -921,6 +1033,32 @@ Codexは本書、下位仕様、Backlog、現在のコードを順に参照す�
 - Release GateとRollback条件を定める。
 - 法務、プライバシー、セキュリティレビューを適切なPhaseで実施する。
 - 小さなチームでも監査証跡と権限分離を可能な範囲で維持する。
+
+### 31.5 Constitution Governance
+
+本書のOwnerはQuestraのProduct責任者であり、TechnologyとTrust/Safetyの
+共同レビューを受ける。改定はGit履歴だけに依存せず、次を記録する。
+
+- 変更理由と解決する問題
+- 影響する原則、Phase、データ、ユーザー
+- 既存仕様と実装への移行方法
+- 反対意見、代替案、残余リスク
+- 承認者、発効日、次回確認時期
+
+緊急の安全対応は先行できるが、事後レビューと恒久仕様への反映を省略しない。
+本書を完成済みとして固定化せず、中心思想を守りながら証拠に基づき改定する。
+
+### 31.6 Product Definition of Done
+
+機能またはQSTは、コードが動くだけでは完了しない。対象に応じて次を満たす。
+
+- ユーザー価値、対象外、失敗時の挙動が定義されている。
+- Domain、UI、Data、AIの境界が既存原則と整合する。
+- Security、Privacy、Safety、Accessibilityへの影響がレビューされている。
+- Unit、Widget、Integration、RLS、実機の必要な検証が通る。
+- Migration、Rollback、Feature Flag、運用手順が必要に応じて用意される。
+- 表示文言がQuestra用語とArc Constitutionに従う。
+- QST Report、Backlog、下位仕様、実装状態が一致する。
 
 ## 32. Future Ideas
 
@@ -973,5 +1111,11 @@ Arcはその旅路の中心でユーザーの味方であり続ける。企業�
 
 各下位仕様は、対象Phase、非対象範囲、データ利用、リスク、Acceptance、
 監査方法を明記し、本書へのリンクを持たなければならない。
+
+### Ratification Record
+
+- 2026-07-25: v2.0をQuestraの正式な最上位Product Constitutionとして発効。
+- 適用範囲: MVP、Beta、v1、Enterprise、Marketplace、Global Platform。
+- 次回必須レビュー: Beta Go / No-Go判定前、または重大な原則変更・インシデント時。
 
 This document is the highest-level product constitution of Questra.

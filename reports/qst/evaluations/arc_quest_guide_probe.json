@@ -1,0 +1,46 @@
+﻿{
+    "id":  "travel-01-beginner",
+    "category":  "旅行",
+    "title":  "シンガポールへ行く",
+    "status":  "ok",
+    "source_type":  "local_arc_quest_guide",
+    "mission_count":  4,
+    "done_condition_count":  4,
+    "domain_keyword_hits":  [
+                                "入国"
+                            ],
+    "unique_title_count":  4,
+    "duration_ms":  7121,
+    "quality_score":  0.72,
+    "estimated_output_tokens":  1130,
+    "estimated_cost_usd":  0,
+    "content_passed":  false,
+    "passed":  false,
+    "checks":  {
+                   "mission_count":  true,
+                   "done_conditions":  true,
+                   "domain_specificity":  false,
+                   "unique_titles":  true,
+                   "gemini_source":  false,
+                   "plan_quality":  true,
+                   "mission_contract":  true
+               },
+    "missions":  [
+                     {
+                         "title":  "達成した状態を言葉にする",
+                         "description":  "「シンガポールへ行く」で何ができれば達成かを一文で記録したら完了です。"
+                     },
+                     {
+                         "title":  "今の条件と不明点を分ける",
+                         "description":  "「現地の文化と食を楽しみながら安全に旅したい」を前提に、使える時間、予算、場所、不明点をQuestメモへ分けて記録したら完了です。"
+                     },
+                     {
+                         "title":  "最初に確認する情報源を決める",
+                         "description":  "入国条件、運航、価格、治安など変わり得る情報は、断定せず公式情報の確認Missionにする。 公式または専門家の確認先と確認日をQuestメモに残したら完了です。"
+                     },
+                     {
+                         "title":  "今日の最小の一歩を予定する",
+                         "description":  "15分から始められる具体的な行動、実行日時、完了の印を決めたら完了です。"
+                     }
+                 ]
+}

@@ -34,7 +34,7 @@ void main() {
     );
   });
 
-  test('Arc visual asset descriptor keeps PNG default future-ready', () {
+  test('Arc visual asset descriptor stays accessible and future-ready', () {
     final asset = ArcAssetPaths.assetForEmotion(ArcEmotion.normal);
     const futureGlb = ArcVisualAsset(
       type: ArcVisualAssetType.glb,
@@ -44,7 +44,7 @@ void main() {
 
     expect(asset.type, ArcVisualAssetType.png);
     expect(asset.path, ArcAssetPaths.normal);
-    expect(asset.semanticLabel, contains('PNG'));
+    expect(asset.semanticLabel, '星のナビゲーター Arc');
     expect(futureGlb.isPng, isFalse);
   });
 

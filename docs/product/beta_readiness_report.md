@@ -63,8 +63,8 @@ Scoreは実装量ではなく、現在のcandidateを安全に配布できる証
 | Arc | Ready with fallback | remote生成とlocal fallback。provider設定の実証は未完了 |
 | Profile | Ready | account ownerと旅路statusを表示 |
 | Settings | Ready | Feedback、data processing、Arc Memory、planned controlsを説明 |
-| Trail | Deferred | Primary surfaceはComing Soon。既存code/dataは保持 |
-| Guild | Deferred | Primary surfaceはComing Soon。既存code/dataは保持 |
+| Trail | Included, verification pending | Quest -> Mission -> Trailの中核ループとしてPrimary Navigationへ復帰。Media実機証跡はQST-204で取得 |
+| Guild | Deferred | Discovery、Moderation、RLSの実環境検証が完了するまでPrimary Navigationから除外 |
 
 ## Open P0 Blockers
 
@@ -76,13 +76,14 @@ Scoreは実装量ではなく、現在のcandidateを安全に配布できる証
 - QST-160でlocal config、guarded bootstrap、sanitized evidence contract、cloud verifierは準備済み。
 - `--require-cloud`は実project証跡が揃うまで意図的に失敗し、未確認を合格へ変換しない。
 
-### BLK-002 Persistence and Cross-Account RLS
+### BLK-002 Persistence and Cross-Account RLS (Resolved 2026-07-25)
 
-- Tester AでProfile、Quest、Missionを保存し、再login後に残る実証がない。
-- Tester BからAのPrivate Quest、Mission、Arc Memoryが見えない実証がない。
-- SQL behavior harnessはあるが、実databaseで未実行。
-- QST-161でpassword-safe runner、migration/RLS evidence capture、strict cloud gateは準備済み。
-- hosted project未認証のため実行証跡はなく、QST-160完了後もNO-GOを維持する。
+- Questra Betaで31件のdatabase-backed RLS assertionを実行し、transaction rollbackを確認した。
+- 一時Tester A/Bで再login後のProfile、Quest、Mission、Trail、Arc Memory、Media、Route永続化を確認した。
+- Tester Bと匿名ユーザーからPrivate Quest、Mission、Trail、Arc Memory、Media row、Storage object、Routeを遮断した。
+- Pending Guild publicationとowner mappingがTester Bおよび匿名ユーザーへ露出しないことを確認した。
+- sanitized evidence: `docs/qst/BETA_RLS_EVIDENCE.yaml`、`docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml`。
+- Candidate SHA固定後、同じverifierを再実行して配布candidateへ結び付ける。
 
 ### BLK-003 Candidate Artifact and Device Evidence
 
@@ -105,7 +106,15 @@ Scoreは実装量ではなく、現在のcandidateを安全に配布できる証
 - App iconとsplashの最終design。
 - Tabletとlarge textの実機evidence。
 - External crash collectorを導入しない期間のmanual incident運用演習。
-- Trail / GuildをいつBeta scopeへ戻すかのrelease decision。
+- TrailのMedia実機証跡と、GuildをBeta scopeへ戻すためのDiscovery / Moderation / RLS完了判定。
+
+## QST-197 Beta Scope Decision
+
+- `Trail`: Initial Betaへ含める。QuestとMissionの進捗を旅の記録として残す中核体験であり、空状態、入力、Timeline、Mediaの実装が存在する。QST-204で実Supabase StorageとAndroid/WebのMedia証跡を取得するまでは、配布判定を`verification pending`とする。
+- `Guild`: Initial Betaでは延期する。Discovery UIと永続化基盤は保持するが、参加、投稿、削除、Moderation、公開境界の実環境証跡が揃うまで利用可能とは表示しない。
+- Product owner: Product / Release Manager
+- Decision date: 2026-07-25
+- Re-entry gate for Guild: QST-199、QST-203、QST-214〜220の必要範囲を完了し、公開データとPrivate Questの境界を実証すること。
 
 ## Terminology and Product Constitution
 

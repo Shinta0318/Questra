@@ -1,9 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
+import '../config/supabase_config.dart';
 import 'analytics_event.dart';
 import 'analytics_repository.dart';
 
 final analyticsRepositoryProvider = Provider<AnalyticsRepository>((ref) {
+  if (SupabaseConfig.isConfigured) {
+    return SupabaseAnalyticsRepository(Supabase.instance.client);
+  }
   return LocalSafeAnalyticsRepository();
 });
 
@@ -16,12 +21,17 @@ class AnalyticsService {
 
   final AnalyticsRepository _repository;
 
-  Future<void> track(AnalyticsEvent event) {
-    return _repository.record(event);
+  Future<void> track(AnalyticsEvent event) async {
+    try {
+      await _repository.record(event);
+    } catch (_) {
+      // Progress intelligence is best-effort and never blocks a Quest action.
+    }
   }
 
   Future<void> questCreated({
     String? userId,
+    String? questId,
     required String category,
     required String difficulty,
     required String visibility,
@@ -30,11 +40,36 @@ class AnalyticsService {
       AnalyticsEvent(
         name: AnalyticsEventName.questCreated,
         userId: userId,
+        questId: questId,
         properties: {
           'category': category,
           'difficulty': difficulty,
           'visibility': visibility,
         },
+      ),
+    );
+  }
+
+  Future<void> progress({
+    required AnalyticsEventName name,
+    String? userId,
+    String? questId,
+    String? missionId,
+    String? routeId,
+    AnalyticsEventSource source = AnalyticsEventSource.user,
+    Map<String, Object?> properties = const {},
+    String? idempotencyKey,
+  }) {
+    return track(
+      AnalyticsEvent(
+        name: name,
+        userId: userId,
+        questId: questId,
+        missionId: missionId,
+        routeId: routeId,
+        source: source,
+        properties: properties,
+        idempotencyKey: idempotencyKey,
       ),
     );
   }

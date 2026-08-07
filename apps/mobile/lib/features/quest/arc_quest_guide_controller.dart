@@ -4,10 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 import '../../core/config/supabase_config.dart';
+import '../../core/safety/quest_safety_service.dart';
+import '../../core/safety/safety_providers.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
 import 'arc_quest_guide_service.dart';
+import '../mission/mission_controller.dart';
+import 'planning_preferences_controller.dart';
 import 'quest_model.dart';
 
 final arcQuestGuideServiceProvider = Provider<ArcQuestGuideService>((ref) {
@@ -67,9 +71,28 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
     );
 
     try {
+      final safety = await ref
+          .read(questSafetyServiceProvider)
+          .assess('${quest.title}\n${quest.description}');
+      if (safety.action != QuestSafetyAction.allow) {
+        unawaited(
+          ref
+              .read(safetySignalRecorderProvider)
+              .record(
+                userId: ref.read(authControllerProvider).profile?.id,
+                assessment: safety,
+              ),
+        );
+        state = state.copyWith(
+          loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
+          errorsByQuest: {...state.errorsByQuest, quest.id: safety.userMessage},
+        );
+        return;
+      }
+      final planning = ref.read(planningPreferencesControllerProvider);
       final guide = await ref
           .read(arcQuestGuideServiceProvider)
-          .generate(quest: quest);
+          .generate(quest: quest, planningContext: planning.contextForPlanning);
       state = state.copyWith(
         guidesByQuest: {...state.guidesByQuest, quest.id: guide},
         loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
@@ -81,6 +104,30 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
         errorsByQuest: {...state.errorsByQuest, quest.id: error.toString()},
       );
     }
+  }
+
+  Future<void> approveForQuest(
+    Quest quest,
+    ArcQuestGuide guide,
+    List<ArcMissionCandidate> candidates,
+  ) async {
+    if (candidates.isEmpty) throw StateError('確定できるMission候補がありません。');
+    await ref
+        .read(arcQuestGuideServiceProvider)
+        .approve(guide: guide, candidates: candidates);
+    await ref.read(missionControllerProvider.notifier).loadForQuests([
+      quest.id,
+    ]);
+    unawaited(_rememberGuide(quest, guide));
+  }
+
+  void acceptGeneratedGuide(Quest quest, ArcQuestGuide guide) {
+    state = state.copyWith(
+      guidesByQuest: {...state.guidesByQuest, quest.id: guide},
+      loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
+      errorsByQuest: {...state.errorsByQuest}..remove(quest.id),
+    );
+    unawaited(_rememberGuide(quest, guide));
   }
 
   Future<void> _rememberGuide(Quest quest, ArcQuestGuide guide) async {

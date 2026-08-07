@@ -6,8 +6,12 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../core/estimation/effort_estimation_service.dart';
+import '../../core/validation/input_validators.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/forms/questra_field_label.dart';
+import '../../widgets/forms/year_month_picker.dart';
 import '../../widgets/questra_card.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/questra_primary_button.dart';
@@ -28,11 +32,12 @@ class QuestFormScreen extends ConsumerStatefulWidget {
 }
 
 class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _categoryController = TextEditingController();
   QuestDifficulty _difficulty = QuestDifficulty.normal;
-  QuestStatus _status = QuestStatus.draft;
+  QuestStatus _status = QuestStatus.active;
   QuestVisibility _visibility = QuestVisibility.private;
   DateTime? _targetDate;
   QuestTemplate? _selectedTemplate;
@@ -60,97 +65,166 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
           maxContentWidth: 720,
           padding: const EdgeInsets.all(20),
           children: [
-            QuestraCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ArcWidget(
-                    emotion: _isEditing
-                        ? ArcEmotion.serious
-                        : ArcEmotion.excited,
-                    size: 72,
-                    message: _isEditing
-                        ? '航路を整えよう。Questは進みながら磨いていけるよ。'
-                        : '叶えたい景色を一文で置けば、Arcが最初のMission候補まで一緒に探します。',
-                  ),
-                  const SizedBox(height: 16),
-                  if (!_isEditing) ...[
-                    const _FirstQuestGuideCard(),
-                    const SizedBox(height: 16),
-                  ],
-                  if (!_isEditing) ...[
-                    _TemplatePicker(
-                      templates: templates,
-                      selectedTemplate: _selectedTemplate,
-                      onSelected: _applyTemplate,
+            Form(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: QuestraCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ArcWidget(
+                      emotion: _isEditing
+                          ? ArcEmotion.serious
+                          : ArcEmotion.excited,
+                      size: 72,
+                      message: _isEditing
+                          ? '航路を整えよう。Questは進みながら磨いていけるよ。'
+                          : '叶えたい景色を一文で置けば、Arcが最初のMission候補まで一緒に探します。',
                     ),
                     const SizedBox(height: 16),
-                  ],
-                  TextField(
-                    controller: _titleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Quest名',
-                      hintText: '例: 富士山に登る / 英語で自己紹介できるようになる',
-                      helperText: 'まずは一文で大丈夫です。',
+                    if (!_isEditing) ...[
+                      _ArcPlanningShortcut(
+                        onTap: () => context.go(AppRoutes.arc),
+                      ),
+                      const SizedBox(height: 16),
+                      const _FirstQuestGuideCard(),
+                      const SizedBox(height: 16),
+                    ],
+                    if (!_isEditing) ...[
+                      _TemplatePicker(
+                        templates: templates,
+                        selectedTemplate: _selectedTemplate,
+                        onSelected: _applyTemplate,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    QuestraFieldLabel(
+                      label: 'Questの名前',
+                      helper: '叶えたい状態を一文にします。あとから変更できます。',
+                      required: true,
+                      child: TextFormField(
+                        controller: _titleController,
+                        decoration: const InputDecoration(
+                          hintText: '例: 富士山に登る',
+                        ),
+                        textInputAction: TextInputAction.next,
+                        maxLength: InputLimits.questTitle,
+                        validator: (value) => InputValidators.requiredText(
+                          value,
+                          fieldName: 'Quest名',
+                          maxLength: InputLimits.questTitle,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _descriptionController,
-                    decoration: const InputDecoration(
-                      labelText: '叶えたい理由・背景',
-                      hintText: 'なぜ大切なのか、今の気持ちを短く残しましょう。',
+                    const SizedBox(height: 12),
+                    QuestraFieldLabel(
+                      label: '叶えたい理由・相談内容',
+                      child: TextFormField(
+                        controller: _descriptionController,
+                        decoration: const InputDecoration(
+                          hintText: 'なぜ大切なのか、今の状況や迷いを自由に書けます',
+                        ),
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        minLines: 3,
+                        maxLines: 5,
+                        maxLength: InputLimits.questDescription,
+                        validator: (value) => InputValidators.optionalText(
+                          value,
+                          fieldName: '叶えたい理由・相談内容',
+                          maxLength: InputLimits.questDescription,
+                        ),
+                      ),
                     ),
-                    minLines: 3,
-                    maxLines: 5,
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _categoryController,
-                    decoration: const InputDecoration(labelText: 'カテゴリ'),
-                  ),
-                  const SizedBox(height: 12),
-                  _EnumDropdown<QuestDifficulty>(
-                    label: '難しさ',
-                    value: _difficulty,
-                    values: QuestDifficulty.values,
-                    onChanged: (value) => setState(() => _difficulty = value),
-                  ),
-                  const SizedBox(height: 12),
-                  _EnumDropdown<QuestStatus>(
-                    label: '状態',
-                    value: _status,
-                    values: QuestStatus.values,
-                    onChanged: (value) => setState(() => _status = value),
-                  ),
-                  const SizedBox(height: 12),
-                  _EnumDropdown<QuestVisibility>(
-                    label: '公開範囲',
-                    value: _visibility,
-                    values: QuestVisibility.values,
-                    onChanged: (value) => setState(() => _visibility = value),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: _pickTargetDate,
-                    icon: const Icon(Icons.event_outlined),
-                    label: Text(
-                      _targetDate == null
-                          ? '目標日'
-                          : DateFormat.yMMMd().format(_targetDate!),
+                    const SizedBox(height: 12),
+                    QuestraFieldLabel(
+                      label: 'テーマ',
+                      child: TextFormField(
+                        controller: _categoryController,
+                        decoration: const InputDecoration(
+                          hintText: '例: 旅行、学習、健康',
+                        ),
+                        textInputAction: TextInputAction.done,
+                        maxLength: InputLimits.category,
+                        validator: (value) => InputValidators.optionalText(
+                          value,
+                          fieldName: 'テーマ',
+                          maxLength: InputLimits.category,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  if (_selectedTemplate != null) ...[
-                    _TemplateSuggestionPreview(template: _selectedTemplate!),
-                    const SizedBox(height: 20),
-                  ],
-                  QuestraPrimaryButton(label: 'Questを保存', onPressed: _save),
-                  if (!_isEditing) ...[
                     const SizedBox(height: 8),
-                    const Text('保存後にArcガイドとMission候補を生成します。候補はあとで採用・編集できます。'),
+                    _CategoryPicker(
+                      value: _categoryController.text,
+                      onSelected: (value) =>
+                          setState(() => _categoryController.text = value),
+                    ),
+                    const SizedBox(height: 12),
+                    QuestraFieldLabel(
+                      label: '難しさ',
+                      helper: 'ArcがQuestとMissionの内容から見積もります。',
+                      child: const ListTile(
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                        leading: Icon(Icons.auto_awesome_outlined),
+                        title: Text('保存後にArcが表示します'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: const EdgeInsets.only(bottom: 8),
+                      title: const Text('保存・公開設定'),
+                      subtitle: Text('${_status.label}・${_visibility.label}'),
+                      children: [
+                        _EnumDropdown<QuestStatus>(
+                          label: '状態',
+                          value: _status,
+                          values: QuestStatus.values,
+                          onChanged: (value) => setState(() => _status = value),
+                        ),
+                        const SizedBox(height: 12),
+                        _EnumDropdown<QuestVisibility>(
+                          label: '公開範囲',
+                          value: _visibility,
+                          values: QuestVisibility.values,
+                          onChanged: (value) =>
+                              setState(() => _visibility = value),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    QuestraFieldLabel(
+                      label: 'いつまでに叶えたい？',
+                      helper: '未定でも保存できます。',
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _pickTargetDate,
+                          icon: const Icon(Icons.event_outlined),
+                          label: Text(
+                            _targetDate == null
+                                ? '期限を選ぶ'
+                                : DateFormat('yyyy年M月d日').format(_targetDate!),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    if (_selectedTemplate != null) ...[
+                      _TemplateSuggestionPreview(template: _selectedTemplate!),
+                      const SizedBox(height: 20),
+                    ],
+                    QuestraPrimaryButton(
+                      label: _isEditing ? '変更を保存' : '保存して航路を描く',
+                      onPressed: _save,
+                    ),
+                    if (!_isEditing) ...[
+                      const SizedBox(height: 8),
+                      const Text('保存後、Arcが道筋と最初のMission候補を描きます。'),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ],
@@ -186,18 +260,16 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
       _descriptionController.text = template.description;
       _categoryController.text = template.category;
       _difficulty = template.difficulty;
-      _status = QuestStatus.draft;
+      _status = QuestStatus.active;
       _visibility = QuestVisibility.private;
     });
   }
 
   Future<void> _pickTargetDate() async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showYearMonthPicker(
       context: context,
-      firstDate: DateTime(now.year - 1),
-      lastDate: DateTime(now.year + 5),
-      initialDate: _targetDate ?? now,
+      initialValue: _targetDate ?? now,
     );
     if (picked != null) {
       setState(() => _targetDate = picked);
@@ -205,13 +277,18 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
   }
 
   void _save() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
     final title = _titleController.text.trim();
-    if (title.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Quest名を一文で入力してください。')));
-      return;
-    }
+    final category = _categoryController.text.trim().isEmpty
+        ? _selectedTemplate?.category ?? '冒険'
+        : _categoryController.text.trim();
+    final estimate = EffortEstimationService.forQuest(
+      title: title,
+      category: category,
+    );
+    _difficulty = estimate.difficultyBand == '挑戦的'
+        ? QuestDifficulty.hard
+        : QuestDifficulty.normal;
 
     final controller = ref.read(questControllerProvider.notifier);
     if (_isEditing) {
@@ -231,6 +308,7 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
               ? current.category
               : _categoryController.text.trim(),
           targetDate: _targetDate,
+          effortEstimate: estimate,
           clearTargetDate: _targetDate == null,
         ),
       );
@@ -244,10 +322,9 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
       difficulty: _difficulty,
       status: _status,
       visibility: _visibility,
-      category: _categoryController.text.trim().isEmpty
-          ? _selectedTemplate?.category ?? '冒険'
-          : _categoryController.text.trim(),
+      category: category,
       targetDate: _targetDate,
+      effortEstimate: estimate,
     );
     controller.add(quest);
     ref.read(questGuideControllerProvider.notifier).generateForQuest(quest);
@@ -279,16 +356,81 @@ class _FirstQuestGuideCard extends StatelessWidget {
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '最初のQuestは小さく始めましょう',
-            style: TextStyle(fontWeight: FontWeight.w900),
-          ),
+          Text('迷ったら、今見たい景色から', style: TextStyle(fontWeight: FontWeight.w900)),
           SizedBox(height: 8),
-          Text('1. 叶えたい景色を一文で置く'),
-          Text('2. 理由や背景を短く残す'),
-          Text('3. 保存後、Arcガイドから最初のMissionを選ぶ'),
+          Text('Quest名だけでも始められます。理由や期限は、進みながら整えられます。'),
         ],
       ),
+    );
+  }
+}
+
+class _ArcPlanningShortcut extends StatelessWidget {
+  const _ArcPlanningShortcut({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Ink(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.22),
+          ),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.auto_awesome_outlined),
+            SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Arcと話しながら決める',
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  Text('まだ言葉になっていなくても、会話から航路を描けます。'),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryPicker extends StatelessWidget {
+  const _CategoryPicker({required this.value, required this.onSelected});
+
+  static const values = ['旅行', '学習', '健康', '仕事', '家族', '挑戦'];
+
+  final String value;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final category in values)
+          ChoiceChip(
+            label: Text(category),
+            selected: value == category,
+            onSelected: (_) => onSelected(category),
+          ),
+      ],
     );
   }
 }
@@ -437,19 +579,21 @@ class _EnumDropdown<T extends Enum> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<T>(
-      initialValue: value,
-      decoration: InputDecoration(labelText: label),
-      items: values
-          .map(
-            (item) => DropdownMenuItem<T>(value: item, child: Text(item.label)),
-          )
-          .toList(),
-      onChanged: (value) {
-        if (value != null) {
-          onChanged(value);
-        }
-      },
+    return QuestraFieldLabel(
+      label: label,
+      child: DropdownButtonFormField<T>(
+        initialValue: value,
+        decoration: const InputDecoration(),
+        items: values
+            .map(
+              (item) =>
+                  DropdownMenuItem<T>(value: item, child: Text(item.label)),
+            )
+            .toList(),
+        onChanged: (value) {
+          if (value != null) onChanged(value);
+        },
+      ),
     );
   }
 }

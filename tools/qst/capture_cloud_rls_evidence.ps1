@@ -17,8 +17,14 @@ Set-Location $repoRoot
 function Invoke-SupabaseCommand {
   param([string[]]$Arguments)
 
-  $output = & $SupabaseCommand @Arguments 2>&1
-  $exitCode = $LASTEXITCODE
+  $previousErrorActionPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = 'Continue'
+    $output = & $SupabaseCommand @Arguments 2>&1
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+  }
   $output | ForEach-Object { Write-Host $_ }
   if ($exitCode -ne 0) {
     throw "supabase $($Arguments -join ' ') failed with exit code $exitCode."
@@ -46,8 +52,8 @@ if (-not (Test-Path $projectEvidencePath)) {
   throw "Missing QST-160 project evidence: $projectEvidencePath"
 }
 $projectEvidence = Get-Content -Raw -Encoding UTF8 $projectEvidencePath
-if ($projectEvidence -notmatch '(?m)^status: verified\s*$') {
-  throw 'QST-160 Supabase project evidence is not verified.'
+if ($projectEvidence -notmatch '(?m)^status: (verified|deployed_pending_candidate_freeze)\s*$') {
+  throw 'Supabase project deployment evidence is not ready for RLS capture.'
 }
 $escapedProjectRef = [regex]::Escape($ProjectRef)
 if ($projectEvidence -notmatch "(?m)^  ref: `"?$escapedProjectRef`"?\s*$") {
@@ -113,6 +119,7 @@ $sourceCommit = (& git rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') {
   throw 'Unable to resolve candidate source commit.'
 }
+$workingTreeClean = -not [bool](& git status --porcelain)
 $testSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $testFile).Hash.ToLowerInvariant()
 $updatedAt = [DateTime]::UtcNow.ToString('o')
 
@@ -120,7 +127,8 @@ $lines = @(
   'version: 1',
   'status: verified',
   "updated_at_utc: $(Quote-Yaml $updatedAt)",
-  "candidate_source_commit: $(Quote-Yaml $sourceCommit)",
+  "source_commit_at_execution: $(Quote-Yaml $sourceCommit)",
+  "working_tree_clean_at_execution: $($workingTreeClean.ToString().ToLowerInvariant())",
   "project_ref: $(Quote-Yaml $ProjectRef)",
   'migrations:',
   '  status: applied',

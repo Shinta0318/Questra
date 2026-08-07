@@ -1,24 +1,25 @@
-version: 1
-status: evidence_partial
-updated_at_utc: "2026-07-17T12:46:34.6751457Z"
-candidate_source_commit: "e45f4430ee6147d999a0a83b7c758f4f922b1de2"
+﻿version: 1
+status: verified
+updated_at_utc: "2026-08-01T05:49:37.1115118Z"
+source_commit_at_execution: "a977238274bfc73032918824e2252625f28ebd48"
+working_tree_clean_at_execution: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
 migrations:
   status: applied
-  latest_local: "202607170002_data_api_privileges.sql"
-  remote_head: "202607170002_data_api_privileges.sql"
+  latest_local: "202608010020_progress_event_rpc_hardening.sql"
+  remote_head: "202608010020_progress_event_rpc_hardening.sql"
   command: "supabase migration list --linked"
 rls_behavior:
   status: passed
   test_file: "supabase/tests/rls_behavior.sql"
-  test_sha256: "a937cf118fdd7b8a2457263f5dc0c7d1ecadd638f89d40fbbda575954ab3b4fb"
-  assertion_count: 23
+  test_sha256: "a2f4175c37362d51a5a57ed77e201ca38c8feb303154ed02ba6362109c0b2062"
+  assertion_count: 46
   owner_checks: passed
   cross_account_checks: passed
   write_denial_checks: passed
   transaction_rolled_back: true
-  executed_at_utc: "2026-07-17T12:34:26.9329285Z"
-  psql_version: "supabase-cli 2.109.1 (db query --linked)"
+  executed_at_utc: "2026-08-01T05:49:37.1115118Z"
+  psql_version: "supabase-cli 2.110.0 (db query --linked)"
 guardrails:
   database_url_recorded: false
   database_password_recorded: false

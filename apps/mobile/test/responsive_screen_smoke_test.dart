@@ -6,9 +6,12 @@ import 'package:questra/features/arc/arc_screen.dart';
 import 'package:questra/features/guild/guild_screen.dart';
 import 'package:questra/features/home/home_screen.dart';
 import 'package:questra/features/mission/mission_screen.dart';
+import 'package:questra/features/mission/mission_controller.dart';
+import 'package:questra/features/mission/mission_model.dart';
 import 'package:questra/features/onboarding/onboarding_screen.dart';
 import 'package:questra/features/quest/quest_controller.dart';
 import 'package:questra/features/quest/quest_detail_screen.dart';
+import 'package:questra/features/quest/quest_guide_model.dart';
 import 'package:questra/features/profile/profile_screen.dart';
 import 'package:questra/features/quest/quest_screen.dart';
 import 'package:questra/features/settings/settings_screen.dart';
@@ -57,9 +60,30 @@ void main() {
     });
   }
 
-  testWidgets('Home exposes only Arc, Mission, and active Quest sections', (
+  testWidgets('Arc Chat keeps Japanese IME confirmation separate from send', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: ArcScreen())),
+    );
+    await tester.pump();
+
+    final input = tester.widget<TextField>(
+      find.byKey(const ValueKey('arc-chat-input')),
+    );
+    expect(input.keyboardType, TextInputType.multiline);
+    expect(input.textInputAction, TextInputAction.newline);
+    expect(input.onSubmitted, isNull);
+    expect(input.maxLines, 4);
+    expect(find.byTooltip('メッセージを送信'), findsOneWidget);
+  });
+
+  testWidgets('Home keeps Arc and journey sections coherent', (tester) async {
     tester.view.physicalSize = const Size(390, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -75,9 +99,10 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('今日は何を叶えたい？'), findsOneWidget);
-    expect(find.text('Arcに話す'), findsWidgets);
-    expect(find.text('今日やるMission'), findsOneWidget);
+    expect(find.text('Arc'), findsOneWidget);
+    expect(find.text('タップして話す'), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_right_rounded), findsWidgets);
+    expect(find.text('今日のTask'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('進行中のQuest'),
       180,
@@ -85,10 +110,37 @@ void main() {
     );
     expect(find.text('進行中のQuest'), findsOneWidget);
     expect(find.text('Mission 0/0'), findsWidgets);
-    expect(find.text('最近のTrail'), findsNothing);
+    expect(find.byType(PageView), findsOneWidget);
+    expect(find.text('最近のTrail'), findsOneWidget);
     expect(find.text('Guildの動き'), findsNothing);
     expect(find.text('Star Map'), findsNothing);
-    expect(find.text('Horizon'), findsNothing);
+    expect(find.text('次の航路'), findsOneWidget);
+  });
+
+  testWidgets('Home exposes a right-swipe Mission completion gesture', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          missionControllerProvider.overrideWith(
+            _HomeMissionFixtureController.new,
+          ),
+        ],
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.pump();
+
+    final dismissible = tester.widget<Dismissible>(find.byType(Dismissible));
+    expect(dismissible.direction, DismissDirection.startToEnd);
+    expect(dismissible.dismissThresholds[DismissDirection.startToEnd], 0.55);
+    expect(find.text('航路をひとつ確認する'), findsOneWidget);
   });
 
   testWidgets('Quest Detail focuses on progress and editable Missions', (
@@ -122,11 +174,13 @@ void main() {
 
     expect(find.byTooltip('Questを編集'), findsOneWidget);
     expect(find.text('1 進捗'), findsOneWidget);
-    expect(find.text('2 ArcのMissionプラン'), findsOneWidget);
+    expect(find.text('2 Arcが描いた航路'), findsOneWidget);
     expect(find.text('Arcガイドを生成'), findsOneWidget);
-    expect(find.text('3 Mission'), findsOneWidget);
+    expect(find.text('3 このQuestのMission'), findsOneWidget);
     expect(find.text('完了したMission 0/0'), findsOneWidget);
     expect(find.textContaining('最初のMissionをつくる'), findsOneWidget);
+    expect(find.text('Missionを追加'), findsOneWidget);
+    expect(find.text('ArcにMissionを提案してもらう'), findsOneWidget);
     expect(find.text('Quest DNA Snapshot'), findsNothing);
     expect(find.text('Challenge Graph Preview'), findsNothing);
     expect(find.text('Quest支援の透明性'), findsNothing);
@@ -180,13 +234,13 @@ void main() {
     expect(find.text('データエクスポート'), findsOneWidget);
     expect(find.text('データ削除リクエスト'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('目的別の同意'),
+      find.text('データ利用の設定'),
       180,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('目的別の同意'), findsOneWidget);
-    expect(find.text('Quest支援'), findsOneWidget);
-    expect(find.text('プロダクト改善分析'), findsOneWidget);
+    expect(find.text('データ利用の設定'), findsOneWidget);
+    expect(find.text('支援情報'), findsOneWidget);
+    expect(find.text('品質改善'), findsOneWidget);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (
@@ -329,4 +383,23 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(SingleChildScrollView), findsOneWidget);
   });
+}
+
+class _HomeMissionFixtureController extends MissionController {
+  @override
+  List<Mission> build() {
+    return [
+      Mission(
+        questId: 'quest-home',
+        questTitle: 'Questraを整える',
+        title: '航路をひとつ確認する',
+        description: 'スマホ操作を確かめる',
+        guideType: GuideType.route,
+        difficulty: MissionDifficulty.easy,
+        status: MissionStatus.todo,
+        sortOrder: 0,
+        isToday: true,
+      ),
+    ];
+  }
 }

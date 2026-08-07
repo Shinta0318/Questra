@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import '../../core/performance/performance_limits.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
+import '../../core/validation/input_validators.dart';
+import '../../widgets/forms/questra_field_label.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_presence.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
@@ -56,9 +58,8 @@ class TrailScreen extends ConsumerWidget {
       body: SafeArea(
         child: QuestraResponsiveListView(
           showScrollbar: true,
-          onRefresh: profile == null
-              ? null
-              : () => controller.loadForUser(profile.id),
+          onRefresh:
+              profile == null ? null : () => controller.loadForUser(profile.id),
           padding: const EdgeInsets.all(20),
           children: [
             ArcPresence(
@@ -130,19 +131,19 @@ class TrailScreen extends ConsumerWidget {
                   onReplaceImage: trailMedia[trail.id] == null
                       ? null
                       : () => _replaceTrailImage(
-                          context,
-                          controller,
-                          trail,
-                          trailMedia[trail.id]!,
-                        ),
+                            context,
+                            controller,
+                            trail,
+                            trailMedia[trail.id]!,
+                          ),
                   onRemoveImage: trailMedia[trail.id] == null
                       ? null
                       : () => _confirmRemoveTrailImage(
-                          context,
-                          controller,
-                          trail,
-                          trailMedia[trail.id]!,
-                        ),
+                            context,
+                            controller,
+                            trail,
+                            trailMedia[trail.id]!,
+                          ),
                   onDelete: () =>
                       _confirmDeleteTrail(context, controller, trail),
                 ),
@@ -277,9 +278,7 @@ class TrailScreen extends ConsumerWidget {
           controller.updateTrail(updatedTrail);
           showArcCelebrationSnackBar(
             context,
-            ref
-                .read(arcCelebrationServiceProvider)
-                .build(
+            ref.read(arcCelebrationServiceProvider).build(
                   event: ArcCelebrationEvent.trailReflection,
                   subject: updatedTrail.title,
                 ),
@@ -398,39 +397,68 @@ class _CreateTrailSheetState extends State<_CreateTrailSheet> {
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                    border: OutlineInputBorder(),
+                QuestraFieldLabel(
+                  label: 'Trailの名前',
+                  required: true,
+                  child: TextFormField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(
+                      hintText: '例: 最初の一歩を終えた日',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLength: InputLimits.trailTitle,
+                    validator: (value) => InputValidators.requiredText(
+                      value,
+                      fieldName: 'Trail名',
+                      maxLength: InputLimits.trailTitle,
+                    ),
                   ),
-                  validator: _required,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _summaryController,
-                  decoration: const InputDecoration(
-                    labelText: 'Summary',
-                    border: OutlineInputBorder(),
+                QuestraFieldLabel(
+                  label: 'ひとことで振り返る',
+                  required: true,
+                  child: TextFormField(
+                    controller: _summaryController,
+                    decoration: const InputDecoration(
+                      hintText: '今日進んだことを短く',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLength: InputLimits.trailSummary,
+                    validator: (value) => InputValidators.requiredText(
+                      value,
+                      fieldName: '要約',
+                      maxLength: InputLimits.trailSummary,
+                    ),
                   ),
-                  validator: _required,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _contentController,
-                  minLines: 3,
-                  maxLines: 5,
-                  decoration: const InputDecoration(
-                    labelText: 'Content',
-                    border: OutlineInputBorder(),
+                QuestraFieldLabel(
+                  label: '詳しい記録',
+                  required: true,
+                  child: TextFormField(
+                    controller: _contentController,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    minLines: 3,
+                    maxLines: 5,
+                    decoration: const InputDecoration(
+                      hintText: 'できたこと、迷ったこと、次に試したいこと',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLength: InputLimits.trailContent,
+                    validator: (value) => InputValidators.requiredText(
+                      value,
+                      fieldName: '記録',
+                      maxLength: InputLimits.trailContent,
+                    ),
                   ),
-                  validator: _required,
                 ),
                 const SizedBox(height: 16),
                 FilledButton.icon(
                   onPressed: _submit,
                   icon: const Icon(Icons.add),
-                  label: const Text('Save Trail'),
+                  label: const Text('Trailを保存'),
                 ),
               ],
             ),
@@ -455,13 +483,6 @@ class _CreateTrailSheetState extends State<_CreateTrailSheet> {
   }
 }
 
-String? _required(String? value) {
-  if (value == null || value.trim().isEmpty) {
-    return 'Required';
-  }
-  return null;
-}
-
 class _TrailOverview extends StatelessWidget {
   const _TrailOverview({required this.trails});
 
@@ -470,13 +491,12 @@ class _TrailOverview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final questTrails = trails.where((trail) => trail.questId != null).length;
-    final missionTrails = trails
-        .where((trail) => trail.missionId != null)
-        .length;
+    final missionTrails =
+        trails.where((trail) => trail.missionId != null).length;
     final latestTrail = trails.isEmpty
         ? null
         : (trails.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
-              .first;
+            .first;
 
     return QuestraCard(
       padding: const EdgeInsets.all(16),
@@ -526,9 +546,9 @@ class _TrailMetric extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: QuestraColors.deepNavy,
-              fontWeight: FontWeight.w800,
-            ),
+                  color: QuestraColors.deepNavy,
+                  fontWeight: FontWeight.w800,
+                ),
           ),
           const SizedBox(height: 2),
           Text(label, style: const TextStyle(color: QuestraColors.slate)),
@@ -770,26 +790,46 @@ class _ReflectTrailSheetState extends State<_ReflectTrailSheet> {
                   message: widget.coach.message,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _learningController,
-                  minLines: 2,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    labelText: widget.coach.learningPrompt,
-                    border: OutlineInputBorder(),
+                QuestraFieldLabel(
+                  label: widget.coach.learningPrompt,
+                  required: true,
+                  child: TextFormField(
+                    controller: _learningController,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLength: InputLimits.reflection,
+                    validator: (value) => InputValidators.requiredText(
+                      value,
+                      fieldName: '気づき',
+                      maxLength: InputLimits.reflection,
+                    ),
                   ),
-                  validator: _required,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _nextStepController,
-                  minLines: 2,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    labelText: widget.coach.nextMissionPrompt,
-                    border: OutlineInputBorder(),
+                QuestraFieldLabel(
+                  label: widget.coach.nextMissionPrompt,
+                  required: true,
+                  child: TextFormField(
+                    controller: _nextStepController,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLength: InputLimits.missionDescription,
+                    validator: (value) => InputValidators.requiredText(
+                      value,
+                      fieldName: '次のMission',
+                      maxLength: InputLimits.missionDescription,
+                    ),
                   ),
-                  validator: _required,
                 ),
                 const SizedBox(height: 10),
                 Text(
@@ -884,39 +924,65 @@ class _EditTrailSheetState extends State<_EditTrailSheet> {
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                    border: OutlineInputBorder(),
+                QuestraFieldLabel(
+                  label: 'Trailの名前',
+                  required: true,
+                  child: TextFormField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLength: InputLimits.trailTitle,
+                    validator: (value) => InputValidators.requiredText(
+                      value,
+                      fieldName: 'Trail名',
+                      maxLength: InputLimits.trailTitle,
+                    ),
                   ),
-                  validator: _required,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _summaryController,
-                  decoration: const InputDecoration(
-                    labelText: 'Summary',
-                    border: OutlineInputBorder(),
+                QuestraFieldLabel(
+                  label: 'ひとことで振り返る',
+                  required: true,
+                  child: TextFormField(
+                    controller: _summaryController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLength: InputLimits.trailSummary,
+                    validator: (value) => InputValidators.requiredText(
+                      value,
+                      fieldName: '要約',
+                      maxLength: InputLimits.trailSummary,
+                    ),
                   ),
-                  validator: _required,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _contentController,
-                  decoration: const InputDecoration(
-                    labelText: 'Content',
-                    border: OutlineInputBorder(),
+                QuestraFieldLabel(
+                  label: '詳しい記録',
+                  required: true,
+                  child: TextFormField(
+                    controller: _contentController,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    minLines: 3,
+                    maxLines: 5,
+                    maxLength: InputLimits.trailContent,
+                    validator: (value) => InputValidators.requiredText(
+                      value,
+                      fieldName: '記録',
+                      maxLength: InputLimits.trailContent,
+                    ),
                   ),
-                  minLines: 3,
-                  maxLines: 5,
-                  validator: _required,
                 ),
                 const SizedBox(height: 16),
                 FilledButton.icon(
                   onPressed: _submit,
                   icon: const Icon(Icons.check),
-                  label: const Text('Save Trail'),
+                  label: const Text('変更を保存'),
                 ),
               ],
             ),

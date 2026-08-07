@@ -55,17 +55,20 @@ class QuestraPopupMenu<T> extends StatelessWidget {
     required this.items,
     required this.onSelected,
     required this.tooltip,
+    this.onOpened,
     super.key,
   });
 
   final List<QuestraMenuItem<T>> items;
   final ValueChanged<T> onSelected;
   final String tooltip;
+  final VoidCallback? onOpened;
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<T>(
       tooltip: tooltip,
+      onOpened: onOpened,
       onSelected: onSelected,
       icon: const Icon(Icons.more_horiz),
       itemBuilder: (context) => [

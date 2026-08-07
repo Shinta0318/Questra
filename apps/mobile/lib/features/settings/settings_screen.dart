@@ -10,11 +10,14 @@ import '../../core/theme/app_spacing.dart';
 import '../arc_memory/arc_memory_management_preview_service.dart';
 import '../onboarding/onboarding_tour_controller.dart';
 import '../trust/consent_purpose_registry_service.dart';
+import '../trust/consent_controller.dart';
 import '../trust/data_request_copy_service.dart';
 import '../trust/trust_privacy_review_service.dart';
 import 'settings_information_architecture_service.dart';
 import 'widgets/arc_memory_management_preview_card.dart';
 import 'widgets/beta_feedback_entry_card.dart';
+import 'widgets/experience_settings_card.dart';
+import 'widgets/planning_preferences_card.dart';
 import 'widgets/settings_tutorial_card.dart';
 import 'widgets/trust_privacy_card.dart';
 
@@ -49,6 +52,10 @@ class SettingsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               _SettingsMapCard(map: settingsMap),
+              const SizedBox(height: AppSpacing.lg),
+              const ExperienceSettingsCard(),
+              const SizedBox(height: AppSpacing.lg),
+              const PlanningPreferencesCard(),
               const SizedBox(height: AppSpacing.lg),
               SettingsTutorialCard(
                 onReplay: () => ref
@@ -215,13 +222,14 @@ class _SettingsMapTile extends StatelessWidget {
   }
 }
 
-class _ConsentPurposeRegistryCard extends StatelessWidget {
+class _ConsentPurposeRegistryCard extends ConsumerWidget {
   const _ConsentPurposeRegistryCard({required this.registry});
 
   final ConsentPurposeRegistry registry;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final decisions = ref.watch(consentControllerProvider).value ?? const {};
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -281,7 +289,15 @@ class _ConsentPurposeRegistryCard extends StatelessWidget {
           ...registry.purposes.map(
             (purpose) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _ConsentPurposeTile(purpose: purpose),
+              child: _ConsentPurposeTile(
+                purpose: purpose,
+                decision: decisions[purpose.purpose],
+                onChanged: purpose.requiresContextualConfirmation
+                    ? null
+                    : (value) => ref
+                          .read(consentControllerProvider.notifier)
+                          .setConsent(purpose.purpose, value),
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -313,9 +329,15 @@ class _ConsentPurposeRegistryCard extends StatelessWidget {
 }
 
 class _ConsentPurposeTile extends StatelessWidget {
-  const _ConsentPurposeTile({required this.purpose});
+  const _ConsentPurposeTile({
+    required this.purpose,
+    required this.decision,
+    required this.onChanged,
+  });
 
   final ConsentPurposeDefinition purpose;
+  final ConsentDecision? decision;
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -345,20 +367,14 @@ class _ConsentPurposeTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 92),
-                child: Text(
-                  purpose.defaultStateLabel,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    color: AppColors.skyBlue,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                  ),
+              if (purpose.requiresContextualConfirmation)
+                const Icon(Icons.lock_outline, color: AppColors.skyBlue)
+              else
+                Switch.adaptive(
+                  value: decision?.isGranted ?? false,
+                  onChanged: onChanged,
+                  activeTrackColor: AppColors.gold,
                 ),
-              ),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -370,6 +386,17 @@ class _ConsentPurposeTile extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+          if (purpose.requiresContextualConfirmation) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              purpose.defaultStateLabel,
+              style: const TextStyle(
+                color: AppColors.skyBlue,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: AppSpacing.xs,
@@ -627,10 +654,12 @@ IconData _dataRequestIcon(DataRequestType type) {
 
 IconData _consentPurposeIcon(ConsentPurpose purpose) {
   return switch (purpose) {
-    ConsentPurpose.questSupport => Icons.volunteer_activism_outlined,
-    ConsentPurpose.productAnalytics => Icons.query_stats_outlined,
-    ConsentPurpose.aiQualityReview => Icons.auto_fix_high_outlined,
-    ConsentPurpose.externalConnection => Icons.link_outlined,
+    ConsentPurpose.arcPersonalization => Icons.auto_fix_high_outlined,
+    ConsentPurpose.productImprovement => Icons.build_outlined,
+    ConsentPurpose.anonymousAnalytics => Icons.query_stats_outlined,
+    ConsentPurpose.businessRecommendations => Icons.volunteer_activism_outlined,
+    ConsentPurpose.businessSegmentAnalysis => Icons.groups_outlined,
+    ConsentPurpose.personalDataSharing => Icons.lock_person_outlined,
   };
 }
 

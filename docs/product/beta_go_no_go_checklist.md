@@ -68,7 +68,7 @@ operator/contact、candidate build identityの配布証跡が未確定である�
 | D4 | Arc Chat thinking/fallback | P1 | remote successとforced fallback | UXが壊れない |
 | D5 | Empty account state | P0 | fresh account screenshot | demo dataなし |
 | D6 | Logout / owner switch | P0 | A logout -> B login recording | A data残留なし |
-| D7 | Trail / Guild deferred state | P1 | Coming Soon screenshots | 利用可能と誤認しない |
+| D7 | Trail included / Guild deferred state | P1 | Trail primary navigation + Guild Coming Soon screenshots | scopeを誤認しない |
 
 ## E. Device and Accessibility
 

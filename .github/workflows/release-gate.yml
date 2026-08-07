@@ -1,0 +1,49 @@
+name: Questra Release Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [codex/initial-questra-structure-pr]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve Flutter dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Analyze
+        working-directory: apps/mobile
+        run: flutter analyze --no-pub
+      - name: Unit and widget tests
+        working-directory: apps/mobile
+        run: flutter test --no-pub
+      - name: Supabase release contracts
+        run: |
+          dart run tools/qst/verify_rls_readiness.dart
+          dart run tools/qst/verify_supabase_beta_bootstrap.dart
+          dart run tools/qst/verify_beta_release_notes_readiness.dart
+      - name: Build Web artifact
+        working-directory: apps/mobile
+        run: flutter build web --release --no-pub
+      - name: Build Android artifact
+        working-directory: apps/mobile
+        run: flutter build apk --release --no-pub
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: questra-release-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            apps/mobile/build/web
+            apps/mobile/build/app/outputs/flutter-apk/app-release.apk

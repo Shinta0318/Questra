@@ -125,7 +125,7 @@ class _QuestraOnboardingTourState extends ConsumerState<QuestraOnboardingTour> {
                           const Spacer(),
                           TextButton(
                             onPressed: _dismiss,
-                            child: const Text('Skip'),
+                            child: const Text('スキップ'),
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           FilledButton.icon(

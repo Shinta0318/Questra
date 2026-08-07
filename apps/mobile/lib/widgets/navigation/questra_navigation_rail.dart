@@ -87,19 +87,13 @@ class _RailArcIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      width: selected ? 48 : 44,
-      height: selected ? 48 : 44,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: QuestraColors.white.withValues(alpha: 0.08),
-        border: Border.all(color: QuestraColors.gold, width: selected ? 2 : 1),
-      ),
-      child: const ArcWidget(
+    return const SizedBox.square(
+      dimension: 30,
+      child: ArcWidget(
         emotion: ArcEmotion.normal,
-        size: 34,
+        size: 28,
         showSpeechBubble: false,
+        interactive: false,
       ),
     );
   }

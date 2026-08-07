@@ -15,6 +15,7 @@ Terms of Serviceは引き続きDraftであり、外部BetaまたはStore配布�
 | Quest Guide | Quest detailをEdge Functionへ送信 | Guide生成対象を明記 |
 | Model provider | Gemini Interactions APIが既定、OpenAIは明示互換 | provider、fallback、互換経路を明記 |
 | Gemini storage | requestは`store=false` | server-side state保存を既定で無効化 |
+| Gemini free tier | 内部検証では無料枠を使用 | 送信内容がGoogleの製品改善に利用され得ることを明記し、機密情報を禁止 |
 | Supabase region | Questra BetaはTokyo (`ap-northeast-1`) | primary regionを明記 |
 | Arc fallback | 未設定・失敗時はlocal response | 継続可能だがremote成功と誤認させない |
 | Feedback | clipboard handoff | 自動送信しないと明記 |
@@ -48,7 +49,7 @@ Terms of Serviceは引き続きDraftであり、外部BetaまたはStore配布�
 2. Privacy / support contactとdata request受付手順。
 3. 対象地域、年齢条件、準拠法、紛争解決、consumer law確認。
 4. Supabase DPA、subprocessor、backup retention（primary regionはTokyoで確認済み）。
-5. Gemini paid service、project logging、provider retention、model/provider変更手順。
+5. 外部Betaで利用するGemini billing tier、project logging、provider retention、model/provider変更手順。
 6. Account deletion、export、correction、consent withdrawalの実処理。
 7. External Beta testerから取得する明示同意とversioned acceptance evidence。
 

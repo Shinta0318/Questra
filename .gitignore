@@ -7,3 +7,7 @@ supabase/.temp/
 supabase/.branches/
 supabase/functions/.env.beta.local
 .beta-evidence/
+
+# Local IDE and Codex execution output.
+.idea/
+.codex_flutter_review*.log

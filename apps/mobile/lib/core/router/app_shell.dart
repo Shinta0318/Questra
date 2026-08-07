@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/auth_controller.dart';
 import '../../features/onboarding/onboarding_tour_controller.dart';
 import '../layout/questra_responsive_layout.dart';
 import '../theme/questra_colors.dart';
@@ -21,35 +20,7 @@ class AppShell extends ConsumerStatefulWidget {
 
 class _AppShellState extends ConsumerState<AppShell> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      final profile = ref.read(authControllerProvider).profile;
-      if (profile == null) {
-        return;
-      }
-      ref
-          .read(onboardingTourControllerProvider.notifier)
-          .showIfNeeded(profileHasSeenTour: profile.hasSeenOnboardingTour);
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    ref.listen(authControllerProvider.select((state) => state.profile), (
-      previous,
-      next,
-    ) {
-      if (next == null || previous?.id == next.id) {
-        return;
-      }
-      ref
-          .read(onboardingTourControllerProvider.notifier)
-          .showIfNeeded(profileHasSeenTour: next.hasSeenOnboardingTour);
-    });
     final tourVisible = ref.watch(onboardingTourControllerProvider).isVisible;
     final navigationShell = widget.navigationShell;
 

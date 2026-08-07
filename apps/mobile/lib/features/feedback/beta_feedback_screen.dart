@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/questra_colors.dart';
+import '../../core/validation/input_validators.dart';
+import '../../widgets/forms/questra_field_label.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
 import '../../widgets/questra_card.dart';
 import '../auth/auth_controller.dart';
@@ -100,61 +102,71 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
                           ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    DropdownButtonFormField<BetaFeedbackSurface>(
-                      initialValue: _surface,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: '画面・機能'),
-                      items: BetaFeedbackSurface.values
-                          .map(
-                            (surface) => DropdownMenuItem(
-                              value: surface,
-                              child: Text(surface.label),
-                            ),
-                          )
-                          .toList(growable: false),
-                      onChanged: (value) {
-                        if (value != null) setState(() => _surface = value);
-                      },
+                    QuestraFieldLabel(
+                      label: '画面・機能',
+                      child: DropdownButtonFormField<BetaFeedbackSurface>(
+                        initialValue: _surface,
+                        isExpanded: true,
+                        decoration: const InputDecoration(),
+                        items: BetaFeedbackSurface.values
+                            .map(
+                              (surface) => DropdownMenuItem(
+                                value: surface,
+                                child: Text(surface.label),
+                              ),
+                            )
+                            .toList(growable: false),
+                        onChanged: (value) {
+                          if (value != null) setState(() => _surface = value);
+                        },
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    DropdownButtonFormField<BetaFeedbackType>(
-                      initialValue: _type,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: '種類'),
-                      items: BetaFeedbackType.values
-                          .map(
-                            (type) => DropdownMenuItem(
-                              value: type,
-                              child: Text(type.label),
-                            ),
-                          )
-                          .toList(growable: false),
-                      onChanged: (value) {
-                        if (value != null) setState(() => _type = value);
-                      },
+                    QuestraFieldLabel(
+                      label: '種類',
+                      child: DropdownButtonFormField<BetaFeedbackType>(
+                        initialValue: _type,
+                        isExpanded: true,
+                        decoration: const InputDecoration(),
+                        items: BetaFeedbackType.values
+                            .map(
+                              (type) => DropdownMenuItem(
+                                value: type,
+                                child: Text(type.label),
+                              ),
+                            )
+                            .toList(growable: false),
+                        onChanged: (value) {
+                          if (value != null) setState(() => _type = value);
+                        },
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    DropdownButtonFormField<BetaFeedbackSeverity>(
-                      initialValue: _severity,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: '重要度'),
-                      items: BetaFeedbackSeverity.values
-                          .map(
-                            (severity) => DropdownMenuItem(
-                              value: severity,
-                              child: Text(severity.label),
-                            ),
-                          )
-                          .toList(growable: false),
-                      onChanged: (value) {
-                        if (value != null) setState(() => _severity = value);
-                      },
+                    QuestraFieldLabel(
+                      label: '重要度',
+                      child: DropdownButtonFormField<BetaFeedbackSeverity>(
+                        initialValue: _severity,
+                        isExpanded: true,
+                        decoration: const InputDecoration(),
+                        items: BetaFeedbackSeverity.values
+                            .map(
+                              (severity) => DropdownMenuItem(
+                                value: severity,
+                                child: Text(severity.label),
+                              ),
+                            )
+                            .toList(growable: false),
+                        onChanged: (value) {
+                          if (value != null) setState(() => _severity = value);
+                        },
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _FeedbackField(
                       controller: _summaryController,
                       label: '概要',
                       hint: '何が起きたかを一文で',
+                      maxLength: InputLimits.feedbackSummary,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _FeedbackField(
@@ -162,6 +174,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
                       label: '再現手順',
                       hint: '1. Homeを開く\n2. Questを選ぶ\n3. ...',
                       minLines: 4,
+                      maxLength: InputLimits.feedbackDetail,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _FeedbackField(
@@ -169,6 +182,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
                       label: '期待した結果',
                       hint: '本来どうなると思ったか',
                       minLines: 2,
+                      maxLength: InputLimits.feedbackDetail,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _FeedbackField(
@@ -176,6 +190,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
                       label: '実際の結果',
                       hint: '画面で実際に起きたこと',
                       minLines: 2,
+                      maxLength: InputLimits.feedbackDetail,
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     SizedBox(
@@ -247,23 +262,36 @@ class _FeedbackField extends StatelessWidget {
     required this.controller,
     required this.label,
     required this.hint,
+    required this.maxLength,
     this.minLines = 1,
   });
 
   final TextEditingController controller;
   final String label;
   final String hint;
+  final int maxLength;
   final int minLines;
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      minLines: minLines,
-      maxLines: minLines + 2,
-      decoration: InputDecoration(labelText: label, hintText: hint),
-      validator: (value) =>
-          value == null || value.trim().isEmpty ? '$labelを入力してください。' : null,
+    return QuestraFieldLabel(
+      label: label,
+      required: true,
+      child: TextFormField(
+        controller: controller,
+        keyboardType: minLines > 1 ? TextInputType.multiline : null,
+        textInputAction:
+            minLines > 1 ? TextInputAction.newline : TextInputAction.next,
+        minLines: minLines,
+        maxLines: minLines + 2,
+        decoration: InputDecoration(hintText: hint),
+        maxLength: maxLength,
+        validator: (value) => InputValidators.requiredText(
+          value,
+          fieldName: label,
+          maxLength: maxLength,
+        ),
+      ),
     );
   }
 }

@@ -13,6 +13,19 @@ const requiredFunctions = [
   'generate-mission',
   'generate-quest-guides',
   'generate-star-map',
+  'auth-login',
+  'moderate-quest-intent',
+  'research-mission-resources',
+];
+
+const aiBackedFunctions = [
+  'arc-chat',
+  'arc-quest-guide',
+  'generate-arc-advice',
+  'generate-mission',
+  'generate-quest-guides',
+  'generate-star-map',
+  'moderate-quest-intent',
 ];
 
 const requiredStaticConfig = [
@@ -49,13 +62,15 @@ void main(List<String> arguments) {
   }
   for (final functionName in requiredFunctions) {
     _expect(config, '[functions.$functionName]', configPath, failures);
+    final expectedJwt = functionName == 'auth-login' ? 'false' : 'true';
     final functionBlock = RegExp(
       r'\[functions\.' +
           RegExp.escape(functionName) +
-          r'\]\s*\r?\nverify_jwt = true',
+          r'\]\s*\r?\nverify_jwt = ' +
+          expectedJwt,
     );
     if (!functionBlock.hasMatch(config)) {
-      failures.add('$functionName must keep verify_jwt = true.');
+      failures.add('$functionName must keep verify_jwt = $expectedJwt.');
     }
     if (!File('supabase/functions/$functionName/index.ts').existsSync()) {
       failures.add('Missing Edge Function source: $functionName');
@@ -99,34 +114,49 @@ void main(List<String> arguments) {
   }
 
   for (final snippet in [
-    'https://generativelanguage.googleapis.com/v1/interactions',
+    'https://generativelanguage.googleapis.com/v1beta/interactions',
     'GEMINI_API_KEY',
     'gemini-3.5-flash',
     'AI_PROVIDER',
     'OPENAI_API_KEY',
     'store: false',
+    'max_output_tokens',
+    'thinking_level: "minimal"',
+    'AI_MAX_INPUT_CHARS',
+    'AI_REQUEST_TIMEOUT_MS',
   ]) {
     _expect(aiProvider, snippet, aiProviderPath, failures);
   }
-  for (final functionName in ['arc-chat', 'arc-quest-guide']) {
+  for (final functionName in requiredFunctions) {
     final source = _readRequired(
       'supabase/functions/$functionName/index.ts',
       failures,
     );
-    _expect(
-      source,
-      '../_shared/ai_provider.ts',
-      'supabase/functions/$functionName/index.ts',
-      failures,
-    );
+    if (aiBackedFunctions.contains(functionName)) {
+      _expect(
+        source,
+        '../_shared/ai_provider.ts',
+        'supabase/functions/$functionName/index.ts',
+        failures,
+      );
+    }
+    if (functionName != 'auth-login') {
+      _expect(
+        source,
+        '../_shared/http.ts',
+        'supabase/functions/$functionName/index.ts',
+        failures,
+      );
+    }
   }
 
-  final migrations = Directory('supabase/migrations')
-      .listSync()
-      .whereType<File>()
-      .where((file) => file.path.endsWith('.sql'))
-      .toList()
-    ..sort((left, right) => left.path.compareTo(right.path));
+  final migrations =
+      Directory('supabase/migrations')
+          .listSync()
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.sql'))
+          .toList()
+        ..sort((left, right) => left.path.compareTo(right.path));
   if (migrations.isEmpty) {
     failures.add('No migration files found.');
   } else {
