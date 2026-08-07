@@ -3018,6 +3018,16 @@ items:
     scope: Add achievement-domain analysis, outcome Mission contracts, granularity classification, coverage analysis, strict independent Critic thresholds, bounded targeted repair, approval-gated draft tables, transactional persistence, production Planning v2 Flutter integration, feedback events, and RLS coverage.
     likely_files: [supabase/functions/_shared/quest_planning, supabase/functions/quest-planning-v2/index.ts, supabase/migrations/202608010024_mission_architecture_quality.sql, apps/mobile/lib/features/quest/arc_quest_guide_service.dart, apps/mobile/lib/features/quest/quest_detail_screen.dart, reports/qst/QST-259.md]
     acceptance: [Core architecture and cloud deployment pass; formal completion remains gated by provider-backed corpus quality, candidate-level regenerate/split/merge/Task conversion, Android/Web E2E, and executable dual-account SQL proof.]
+  - id: QST-260
+    title: Mission Card UX Redesign and Quest Mission Task Visual Separation
+    status: ImplementedE2EVisualProofPending
+    priority: P0
+    epic: QUEST-HIERARCHY-V2
+    depends_on: [QST-258, QST-259]
+    goal: Questを最終目的、Missionを中間成果、Taskを具体行動として、説明なしでも理解できるMission操作体験へ刷新する。
+    scope: Add a shared Task-derived Mission card, state-based primary CTA, compact metadata, next Task preview, overflow actions, outcome-focused Mission editing, distinct Mission and Task details, accessibility semantics, analytics, and regression tests.
+    likely_files: [apps/mobile/lib/features/mission/widgets, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/lib/features/mission/mission_detail_screen.dart, apps/mobile/lib/features/task/task_detail_screen.dart, apps/mobile/lib/core/analytics/analytics_event.dart, reports/qst/QST-260.md]
+    acceptance: [Task-derived progress and next action are implemented; vertical action icons and normal-user confidence are removed; full Flutter analyze and tests pass; formal completion remains gated by Android/Web E2E and before-after screenshots.]
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

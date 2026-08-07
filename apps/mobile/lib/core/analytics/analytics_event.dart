@@ -62,6 +62,19 @@ enum AnalyticsEventName {
   arcLongPressed,
   missionCompletedBySwipe,
   missionCompletedByButton,
+  missionCardViewed,
+  missionCardExpanded,
+  missionPrimaryActionClicked,
+  missionMoreMenuOpened,
+  missionArcConsultClicked,
+  missionEditOpened,
+  missionTaskPreviewClicked,
+  missionReorderStarted,
+  missionReorderCompleted,
+  missionDeleteRequested,
+  taskPreviewViewed,
+  taskStartedFromMissionCard,
+  taskCompletedFromMissionCard,
   questCompletionEffectShown,
   completionEffectSkipped,
   soundEffectEnabled,
@@ -189,6 +202,24 @@ extension AnalyticsEventNameStorage on AnalyticsEventName {
         'mission_completed_by_swipe',
       AnalyticsEventName.missionCompletedByButton =>
         'mission_completed_by_button',
+      AnalyticsEventName.missionCardViewed => 'mission_card_viewed',
+      AnalyticsEventName.missionCardExpanded => 'mission_card_expanded',
+      AnalyticsEventName.missionPrimaryActionClicked =>
+        'mission_primary_action_clicked',
+      AnalyticsEventName.missionMoreMenuOpened => 'mission_more_menu_opened',
+      AnalyticsEventName.missionArcConsultClicked =>
+        'mission_arc_consult_clicked',
+      AnalyticsEventName.missionEditOpened => 'mission_edit_opened',
+      AnalyticsEventName.missionTaskPreviewClicked =>
+        'mission_task_preview_clicked',
+      AnalyticsEventName.missionReorderStarted => 'mission_reorder_started',
+      AnalyticsEventName.missionReorderCompleted => 'mission_reorder_completed',
+      AnalyticsEventName.missionDeleteRequested => 'mission_delete_requested',
+      AnalyticsEventName.taskPreviewViewed => 'task_preview_viewed',
+      AnalyticsEventName.taskStartedFromMissionCard =>
+        'task_started_from_mission_card',
+      AnalyticsEventName.taskCompletedFromMissionCard =>
+        'task_completed_from_mission_card',
       AnalyticsEventName.questCompletionEffectShown =>
         'quest_completion_effect_shown',
       AnalyticsEventName.completionEffectSkipped => 'completion_effect_skipped',

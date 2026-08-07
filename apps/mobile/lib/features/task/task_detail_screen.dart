@@ -24,9 +24,20 @@ class TaskDetailScreen extends ConsumerWidget {
       body: QuestraResponsiveListView(
         padding: const EdgeInsets.all(20),
         children: [
+          Text(
+            'QUEST  ${task.questTitle}',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'MISSION  ${task.missionTitle}',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: 12),
+          const Text('TASK', style: TextStyle(fontWeight: FontWeight.w900)),
           Text(task.title, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 6),
-          Text('${task.questTitle} / ${task.missionTitle}'),
+          Text(task.status.label),
           const SizedBox(height: 18),
           QuestraCard(
             padding: const EdgeInsets.all(18),
@@ -37,6 +48,23 @@ class TaskDetailScreen extends ConsumerWidget {
                 _Field(label: '目的', value: task.purpose),
                 _Field(label: '完了の目印', value: task.doneCondition),
                 _Field(label: '残す成果', value: task.expectedOutput),
+                if (task.estimatedEffortMinutes != null)
+                  _Field(
+                    label: '所要時間の目安',
+                    value: '${task.estimatedEffortMinutes}分',
+                  ),
+                if (task.scheduledDate != null)
+                  _Field(
+                    label: '実行予定日',
+                    value: _dateLabel(task.scheduledDate!),
+                  ),
+                if (task.dueDate != null)
+                  _Field(label: '期限', value: _dateLabel(task.dueDate!)),
+                if (task.dependencyIds.isNotEmpty)
+                  _Field(
+                    label: '前提Task',
+                    value: '${task.dependencyIds.length}件の完了後に開始',
+                  ),
               ],
             ),
           ),
@@ -92,6 +120,9 @@ class TaskDetailScreen extends ConsumerWidget {
     );
   }
 }
+
+String _dateLabel(DateTime date) =>
+    '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
 
 class _Field extends StatelessWidget {
   const _Field({required this.label, required this.value});
