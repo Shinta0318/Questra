@@ -13,8 +13,8 @@ project:
   cli_version: "2.109.1"
 migrations:
   status: applied
-  latest_local: "202608010020_progress_event_rpc_hardening.sql"
-  remote_head: "202608010020_progress_event_rpc_hardening.sql"
+  latest_local: "202608010025_progress_event_mission_owner_fix.sql"
+  remote_head: "202608010025_progress_event_mission_owner_fix.sql"
   command: "supabase migration list --linked"
   applied_at_utc: "2026-08-01T00:00:00Z"
   first_attempt:
