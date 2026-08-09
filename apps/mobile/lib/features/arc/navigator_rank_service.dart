@@ -103,10 +103,10 @@ class NavigatorRankService {
 
   String _labelFor(NavigatorRank rank) {
     return switch (rank) {
-      NavigatorRank.novice => 'Novice',
-      NavigatorRank.pathfinder => 'Pathfinder',
-      NavigatorRank.stargazer => 'Stargazer',
-      NavigatorRank.navigator => 'Navigator',
+      NavigatorRank.novice => '見習い航海者',
+      NavigatorRank.pathfinder => '航路の開拓者',
+      NavigatorRank.stargazer => '星を読む人',
+      NavigatorRank.navigator => 'ナビゲーター',
     };
   }
 

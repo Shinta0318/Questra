@@ -28,8 +28,17 @@ QuestとMissionを一つの応答で同時確定しない。長期Questは将来
 - Latest / Experimental: 本番経路では拒否
 - API Key: Supabase Edge FunctionのSecretのみ。Flutterへ含めない
 - State: `store: false`を既定とし、Questra側で必要最小限のPass結果を管理
+- Sampling: Gemini 3.6 Flash / 3.5 Flash-Lite以降では`temperature`、`top_p`、`top_k`を送らない
+- Thinking summary: 内部推論を保存・表示せず、`thinking_summaries: none`を使用する
+- Structured Output: 単一text形式の`response_format` objectを使用し、Provider送信時はGemini対応JSON Schemaサブセットへ変換する
+- Validation: Providerで省略した文字数などの制約は、サーバー側Schema / Semantic Validatorで必ず再検証する
 
 モデル、Prompt、Schema、Thinking Levelは各実行へ記録する。モデル廃止時はRegistryと環境設定だけを変更し、Quest / Missionドメインを変更しない。
+
+上記は2026-08-08時点のGoogle AI公式仕様に基づく。StableモデルとAPI契約は配備前に
+`https://ai.google.dev/gemini-api/docs/latest-model`、
+`https://ai.google.dev/gemini-api/docs/interactions-overview`、
+`https://ai.google.dev/gemini-api/docs/api-versions`で再確認する。
 
 ## 障害時
 

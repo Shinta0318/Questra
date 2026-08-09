@@ -1,6 +1,8 @@
 import '../mission/mission_model.dart';
+import '../task/task_model.dart';
 import 'quest_model.dart';
 import 'route_replanning_model.dart';
+import 'route_snapshot_service.dart';
 
 enum RouteReplanReason { ahead, deadlineRisk, stalled, contextChanged }
 
@@ -81,6 +83,7 @@ abstract final class AdaptiveRouteService {
   static RouteChangeProposal? buildStructuredProposal({
     required Quest quest,
     required List<Mission> missions,
+    List<QuestraTask> tasks = const [],
     DateTime? now,
   }) {
     final evaluated = evaluate(quest: quest, missions: missions, now: now);
@@ -92,6 +95,19 @@ abstract final class AdaptiveRouteService {
     if (evaluated == null || pending.isEmpty) {
       return null;
     }
+    final openTasks =
+        tasks
+            .where(
+              (task) =>
+                  task.questId == quest.id &&
+                  task.isOpen &&
+                  task.status != TaskStatus.blocked,
+            )
+            .toList(growable: false)
+          ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    final focusTask = openTasks
+        .where((task) => task.missionId == pending.first.id)
+        .firstOrNull;
 
     final items = switch (evaluated.reason) {
       RouteReplanReason.deadlineRisk => [
@@ -104,38 +120,95 @@ abstract final class AdaptiveRouteService {
             'targetDate': evaluated.recommendedTargetDate?.toIso8601String(),
           },
         ),
+        if (openTasks.isNotEmpty)
+          RouteChangeItem(
+            action: RouteChangeAction.reschedule,
+            targetMissionId: openTasks.first.missionId,
+            targetTaskId: openTasks.first.id,
+            title: '次のTaskの予定を合わせる',
+            reason: '見直した航路に合わせ、次の行動日を明確にします。',
+            beforeData: {
+              'scheduledDate': openTasks.first.scheduledDate?.toIso8601String(),
+            },
+            afterData: {
+              'scheduledDate':
+                  now?.toIso8601String() ?? DateTime.now().toIso8601String(),
+            },
+          ),
       ],
       RouteReplanReason.stalled => [
-        RouteChangeItem(
-          action: RouteChangeAction.split,
-          targetMissionId: pending.first.id,
-          title: '「${pending.first.title}」を小さく分ける',
-          reason: '未着手期間が長いため、始めやすい2つのMissionに分割します。',
-          beforeData: {
-            'title': pending.first.title,
-            'estimatedDays': pending.first.estimatedDurationDays,
-          },
-          afterData: {
-            'missions': [
-              {'title': '${pending.first.title}の準備をする', 'estimatedDays': 2},
-              {
-                'title': '${pending.first.title}を実行する',
-                'estimatedDays': pending.first.estimatedDurationDays ?? 3,
-              },
-            ],
-          },
-        ),
+        if (focusTask != null)
+          RouteChangeItem(
+            action: RouteChangeAction.split,
+            targetMissionId: focusTask.missionId,
+            targetTaskId: focusTask.id,
+            title: '「${focusTask.title}」を小さく分ける',
+            reason: '停滞しているTaskを、開始と完了を確認しやすい2つに分けます。',
+            beforeData: {
+              'title': focusTask.title,
+              'action': focusTask.action,
+              'status': focusTask.status.storageKey,
+            },
+            afterData: {
+              'tasks': [
+                {
+                  'title': '${focusTask.title}の準備を整える',
+                  'action': '${focusTask.action}ために必要な準備を一つ終える',
+                  'doneCondition': '必要な準備が一つ確認できる',
+                  'estimatedEffortMinutes': 15,
+                },
+                {
+                  'title': focusTask.title,
+                  'action': focusTask.action,
+                  'doneCondition': focusTask.doneCondition,
+                  'estimatedEffortMinutes': focusTask.estimatedEffortMinutes,
+                },
+              ],
+            },
+          )
+        else
+          RouteChangeItem(
+            action: RouteChangeAction.split,
+            targetMissionId: pending.first.id,
+            title: '「${pending.first.title}」を小さく分ける',
+            reason: '未着手期間が長いため、始めやすい2つのMissionに分割します。',
+            beforeData: {
+              'title': pending.first.title,
+              'estimatedDays': pending.first.estimatedDurationDays,
+            },
+            afterData: {
+              'missions': [
+                {'title': '${pending.first.title}の準備をする', 'estimatedDays': 2},
+                {
+                  'title': '${pending.first.title}を実行する',
+                  'estimatedDays': pending.first.estimatedDurationDays ?? 3,
+                },
+              ],
+            },
+          ),
       ],
       RouteReplanReason.ahead => [
-        RouteChangeItem(
-          action: RouteChangeAction.reorder,
-          targetMissionId: pending.first.id,
-          title: '次のMissionを今日の一歩にする',
-          reason: '予定より良いペースなので、次のMissionを前倒しできます。',
-          beforeData: {'isToday': pending.first.isToday},
-          afterData: {'isToday': true},
-          safetyLevel: 1,
-        ),
+        if (openTasks.isNotEmpty)
+          RouteChangeItem(
+            action: RouteChangeAction.reorder,
+            targetMissionId: openTasks.first.missionId,
+            targetTaskId: openTasks.first.id,
+            title: '次のTaskを先頭へ移す',
+            reason: '予定より良いペースなので、次の具体行動を前倒しできます。',
+            beforeData: {'orderIndex': openTasks.first.orderIndex},
+            afterData: const {'orderIndex': 0},
+            safetyLevel: 1,
+          )
+        else
+          RouteChangeItem(
+            action: RouteChangeAction.reorder,
+            targetMissionId: pending.first.id,
+            title: '次のMissionを今日の一歩にする',
+            reason: '予定より良いペースなので、次のMissionを前倒しできます。',
+            beforeData: {'isToday': pending.first.isToday},
+            afterData: {'isToday': true},
+            safetyLevel: 1,
+          ),
       ],
       RouteReplanReason.contextChanged => [
         RouteChangeItem(
@@ -162,24 +235,11 @@ abstract final class AdaptiveRouteService {
             ? 0.88
             : 0.76,
         items: items,
-        routeSnapshot: {
-          'quest': {
-            'id': quest.id,
-            'targetDate': quest.targetDate?.toIso8601String(),
-          },
-          'missions': [
-            for (final mission in missions)
-              {
-                'id': mission.id,
-                'title': mission.title,
-                'status': mission.status.storageKey,
-                'progressPercent': mission.progressPercent,
-                'sortOrder': mission.sortOrder,
-                'isToday': mission.isToday,
-                'routeState': mission.routeState.name,
-              },
-          ],
-        },
+        routeSnapshot: const RouteSnapshotService().capture(
+          quest: quest,
+          missions: missions,
+          tasks: tasks,
+        ),
       ),
     );
   }

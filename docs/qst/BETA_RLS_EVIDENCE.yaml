@@ -1,13 +1,13 @@
-﻿version: 1
-status: verified
-updated_at_utc: "2026-08-01T05:49:37.1115118Z"
-source_commit_at_execution: "a977238274bfc73032918824e2252625f28ebd48"
+version: 3
+status: local_migration_pending_deployment
+updated_at_utc: "2026-08-08T14:29:40.024817Z"
+source_commit_at_execution: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
 working_tree_clean_at_execution: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
 migrations:
-  status: applied
-  latest_local: "202608010020_progress_event_rpc_hardening.sql"
-  remote_head: "202608010020_progress_event_rpc_hardening.sql"
+  status: local_pending_deployment
+  latest_local: "202608090003_data_rights_request_lifecycle.sql"
+  remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   command: "supabase migration list --linked"
 rls_behavior:
   status: passed
@@ -19,7 +19,28 @@ rls_behavior:
   write_denial_checks: passed
   transaction_rolled_back: true
   executed_at_utc: "2026-08-01T05:49:37.1115118Z"
-  psql_version: "supabase-cli 2.110.0 (db query --linked)"
+  psql_version: "supabase-cli 2.111.0 (db query --linked)"
+live_dual_account:
+  status: passed
+  evidence: "docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml"
+  owner_task_reload: passed
+  cross_account_task_read: denied
+  cross_account_task_write: denied
+  owner_task_expansion: passed
+  cross_account_task_expansion: denied
+  cross_parent_task_write: denied
+  cross_parent_trail_write: denied
+  incomplete_mission_confirmation: denied
+  direct_mission_completion: denied
+  mission_completion_rpc: passed
+  task_completion_retry_event_count: 1
+  task_route_unchanged_before_approval: passed
+  task_route_apply_transaction: passed
+  task_route_rollback_restore: passed
+  arc_chat_task_context: passed
+  stale_route_conflict_rejected: passed
+  stale_route_task_unchanged: passed
+  ephemeral_accounts_removed: true
 guardrails:
   database_url_recorded: false
   database_password_recorded: false

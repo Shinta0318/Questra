@@ -59,7 +59,7 @@ Create a QST when one of these is true:
 
 - A feedback item is S0 or S1.
 - Three testers independently report the same S2 issue.
-- A suggestion directly improves the Quest -> Mission -> Trail loop.
+- A suggestion directly improves the Quest -> Mission -> Task -> Trail loop.
 - A trust, safety, persistence, RLS, or data-loss concern appears once.
 
 Each converted QST must include:

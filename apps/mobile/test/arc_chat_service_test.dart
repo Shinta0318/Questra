@@ -8,6 +8,7 @@ import 'package:questra/features/mission/mission_model.dart';
 import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
 import 'package:questra/features/trail/trail_model.dart';
+import 'package:questra/features/task/task_model.dart';
 
 void main() {
   test('local Arc chat response uses Quest and Trail context', () async {
@@ -111,6 +112,18 @@ void main() {
           status: MissionStatus.todo,
         ),
       ),
+      recentTasks: List.generate(
+        QuestraPerformanceLimits.arcChatRecentTaskContextLimit + 2,
+        (index) => QuestraTask(
+          id: 'task-$index',
+          questId: 'quest-0',
+          missionId: 'mission-0',
+          title: 'Task $index',
+          action: longText,
+          doneCondition: '完了条件 $index',
+          status: TaskStatus.ready,
+        ),
+      ),
       recentTrails: List.generate(
         QuestraPerformanceLimits.arcChatRecentTrailContextLimit + 2,
         (index) => Trail(
@@ -151,6 +164,7 @@ void main() {
     final payloadContext = body['context'] as Map<String, Object?>;
     final activeQuests = payloadContext['active_quests'] as List<Object?>;
     final recentMissions = payloadContext['recent_missions'] as List<Object?>;
+    final recentTasks = payloadContext['recent_tasks'] as List<Object?>;
     final recentTrails = payloadContext['recent_trails'] as List<Object?>;
     final memories = payloadContext['memories'] as List<Object?>;
 
@@ -165,6 +179,10 @@ void main() {
     expect(
       recentMissions,
       hasLength(QuestraPerformanceLimits.arcChatRecentMissionContextLimit),
+    );
+    expect(
+      recentTasks,
+      hasLength(QuestraPerformanceLimits.arcChatRecentTaskContextLimit),
     );
     expect(
       recentTrails,
@@ -186,6 +204,10 @@ void main() {
     expect(
       ((recentTrails.first as Map<String, Object?>)['summary'] as String)
           .length,
+      QuestraPerformanceLimits.arcChatContextTextLimit,
+    );
+    expect(
+      ((recentTasks.first as Map<String, Object?>)['action'] as String).length,
       QuestraPerformanceLimits.arcChatContextTextLimit,
     );
     expect(
@@ -252,85 +274,89 @@ void main() {
     expect(inferArcQuestSuggestion('今日は少し疲れた'), isNull);
   });
 
-  test('active Quest question becomes an approvable Mission proposal',
-      () async {
-    const service = LocalArcChatService();
-    final response = await service.send(
-      userMessage: '登山靴ってどんなのがいい？',
-      history: const [],
-      context: ArcChatContext(
-        activeQuests: [
-          Quest(
-            id: 'quest-fuji',
-            title: '富士山に登る',
-            description: '',
-            difficulty: QuestDifficulty.normal,
-            status: QuestStatus.active,
-            visibility: QuestVisibility.private,
-          ),
-        ],
-        recentMissions: const [],
-        recentTrails: const [],
-        memories: const [],
-      ),
-    );
+  test(
+    'active Quest question becomes an approvable Mission proposal',
+    () async {
+      const service = LocalArcChatService();
+      final response = await service.send(
+        userMessage: '登山靴ってどんなのがいい？',
+        history: const [],
+        context: ArcChatContext(
+          activeQuests: [
+            Quest(
+              id: 'quest-fuji',
+              title: '富士山に登る',
+              description: '',
+              difficulty: QuestDifficulty.normal,
+              status: QuestStatus.active,
+              visibility: QuestVisibility.private,
+            ),
+          ],
+          recentMissions: const [],
+          recentTrails: const [],
+          memories: const [],
+        ),
+      );
 
-    expect(response.questChanges, hasLength(1));
-    expect(response.questChanges.first.questId, 'quest-fuji');
-    expect(response.questChanges.first.kind, ArcQuestChangeKind.addMission);
-    expect(response.questChanges.first.title, contains('登山靴'));
-    expect(response.questChanges.first.canApplyDirectly, isTrue);
-  });
+      expect(response.questChanges, hasLength(1));
+      expect(response.questChanges.first.questId, 'quest-fuji');
+      expect(response.questChanges.first.kind, ArcQuestChangeKind.addMission);
+      expect(response.questChanges.first.title, contains('登山靴'));
+      expect(response.questChanges.first.canApplyDirectly, isTrue);
+    },
+  );
 
-  test('structured Quest changes reject foreign IDs and unsafe source URLs',
-      () {
-    final response = SupabaseArcChatService.parseResponseData(
-      {
-        'message': 'この情報をMissionに反映できるよ。',
-        'quest_changes': [
-          {
-            'id': 'valid',
-            'kind': 'add_reference',
-            'quest_id': 'quest-1',
-            'target_mission_id': 'mission-1',
-            'title': '公式ガイドを参考に追加',
-            'description': '最新条件を確認する',
-            'rationale': 'Missionに関連するため',
-          },
-          {
-            'id': 'foreign',
-            'kind': 'delete_mission',
-            'quest_id': 'quest-other',
-            'target_mission_id': 'mission-other',
-            'title': '削除',
-            'description': '',
-            'rationale': '',
-          },
-        ],
-        'grounding_sources': [
-          {
-            'title': 'Official',
-            'publisher': 'Example',
-            'url': 'https://example.com/guide',
-          },
-          {
-            'title': 'Unsafe',
-            'publisher': 'Local',
-            'url': 'http://127.0.0.1/private',
-          },
-        ],
-      },
-      sourceInput: '最新情報を教えて',
-      allowedQuestIds: const {'quest-1'},
-      allowedMissionIds: const {'mission-1'},
-    );
+  test(
+    'structured Quest changes reject foreign IDs and unsafe source URLs',
+    () {
+      final response = SupabaseArcChatService.parseResponseData(
+        {
+          'message': 'この情報をMissionに反映できるよ。',
+          'quest_changes': [
+            {
+              'id': 'valid',
+              'kind': 'add_reference',
+              'quest_id': 'quest-1',
+              'target_mission_id': 'mission-1',
+              'title': '公式ガイドを参考に追加',
+              'description': '最新条件を確認する',
+              'rationale': 'Missionに関連するため',
+            },
+            {
+              'id': 'foreign',
+              'kind': 'delete_mission',
+              'quest_id': 'quest-other',
+              'target_mission_id': 'mission-other',
+              'title': '削除',
+              'description': '',
+              'rationale': '',
+            },
+          ],
+          'grounding_sources': [
+            {
+              'title': 'Official',
+              'publisher': 'Example',
+              'url': 'https://example.com/guide',
+            },
+            {
+              'title': 'Unsafe',
+              'publisher': 'Local',
+              'url': 'http://127.0.0.1/private',
+            },
+          ],
+        },
+        sourceInput: '最新情報を教えて',
+        allowedQuestIds: const {'quest-1'},
+        allowedMissionIds: const {'mission-1'},
+      );
 
-    expect(response.questChanges, hasLength(1));
-    expect(response.questChanges.first.id, 'valid');
-    expect(response.questChanges.first.groundingSources, hasLength(1));
-    expect(
-      response.questChanges.first.groundingSources.first.url.scheme,
-      'https',
-    );
-  });
+      expect(response.questChanges, hasLength(1));
+      expect(response.questChanges.first.id, 'valid');
+      expect(response.questChanges.first.groundingSources, hasLength(1));
+      expect(
+        response.questChanges.first.groundingSources.first.url.scheme,
+        'https',
+      );
+    },
+  );
 }

@@ -125,8 +125,9 @@ class _NavItem extends StatelessWidget {
                         style: TextStyle(
                           color: color,
                           fontSize: 11,
-                          fontWeight:
-                              selected ? FontWeight.w800 : FontWeight.w600,
+                          fontWeight: selected
+                              ? FontWeight.w800
+                              : FontWeight.w600,
                           letterSpacing: 0,
                         ),
                       ),
@@ -181,15 +182,21 @@ class _ArcNavItem extends StatelessWidget {
                       interactive: false,
                     ),
                     const SizedBox(height: 1),
-                    Text(
-                      'Arc',
-                      style: TextStyle(
-                        color:
-                            selected ? QuestraColors.gold : QuestraColors.white,
-                        fontSize: 11,
-                        fontWeight:
-                            selected ? FontWeight.w800 : FontWeight.w600,
-                        letterSpacing: 0,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Arc',
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: selected
+                              ? QuestraColors.gold
+                              : QuestraColors.white,
+                          fontSize: 11,
+                          fontWeight: selected
+                              ? FontWeight.w800
+                              : FontWeight.w600,
+                          letterSpacing: 0,
+                        ),
                       ),
                     ),
                   ],

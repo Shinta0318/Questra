@@ -1,10 +1,13 @@
 import '../../task/task_model.dart';
+import '../../task/task_availability_service.dart';
+import '../../task/task_progress_service.dart';
 import '../mission_model.dart';
 
 enum MissionCardPrimaryAction {
   viewTasks,
   startNextTask,
   resumeTask,
+  reviewOutcome,
   viewCompleted,
   viewDependencies,
 }
@@ -35,32 +38,47 @@ class MissionCardPresentation {
   }) {
     final ordered = tasks.toList(growable: false)
       ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
-    final required = ordered.where((task) => task.required).toList();
-    final completed = required
-        .where((task) => task.status == TaskStatus.completed)
-        .length;
+    final snapshot = const TaskProgressService().forMission(ordered);
     final dependencyBlocked = mission.dependencyIds.any(
       (id) => !completedMissionIds.contains(id),
     );
     final open = ordered.where((task) => task.isOpen).toList();
+    const availabilityService = TaskAvailabilityService();
+    final available = open
+        .where(
+          (task) =>
+              availabilityService.evaluate(task, ordered).canStart ||
+              availabilityService.evaluate(task, ordered).canComplete,
+        )
+        .toList(growable: false);
     final active = open
-        .where((task) => task.status == TaskStatus.inProgress)
+        .where(
+          (task) =>
+              task.status == TaskStatus.inProgress &&
+              availabilityService.evaluate(task, ordered).canComplete,
+        )
         .firstOrNull;
-    final ready = open
-        .where((task) => task.status == TaskStatus.ready)
+    final ready = available
+        .where(
+          (task) =>
+              task.status == TaskStatus.ready ||
+              task.status == TaskStatus.pending,
+        )
         .firstOrNull;
-    final next = active ?? ready ?? open.firstOrNull;
-    final allDone =
-        mission.status == MissionStatus.completed ||
-        (required.isNotEmpty && completed == required.length);
+    final next = active ?? ready ?? available.firstOrNull;
+    final missionConfirmed =
+        mission.status == MissionStatus.completed &&
+        mission.successConfirmedAt != null;
+    final awaitingOutcome = !missionConfirmed && snapshot.allRequiredCompleted;
     final blocked =
-        !allDone &&
-        (dependencyBlocked ||
-            (open.isNotEmpty &&
-                open.every((task) => task.status == TaskStatus.blocked)));
+        !missionConfirmed &&
+        !awaitingOutcome &&
+        (dependencyBlocked || (open.isNotEmpty && available.isEmpty));
 
-    final action = allDone
+    final action = missionConfirmed
         ? MissionCardPrimaryAction.viewCompleted
+        : awaitingOutcome
+        ? MissionCardPrimaryAction.reviewOutcome
         : blocked
         ? MissionCardPrimaryAction.viewDependencies
         : active != null
@@ -68,19 +86,16 @@ class MissionCardPresentation {
         : ready != null
         ? MissionCardPrimaryAction.startNextTask
         : MissionCardPrimaryAction.viewTasks;
-    final fallbackProgress = mission.progressPercent.clamp(0, 100) / 100;
-
     return MissionCardPresentation(
-      completedTasks: completed,
-      totalTasks: required.length,
-      progress: required.isEmpty
-          ? fallbackProgress
-          : completed / required.length,
+      completedTasks: snapshot.completed,
+      totalTasks: snapshot.total,
+      progress: snapshot.percent / 100,
       primaryAction: action,
       primaryLabel: switch (action) {
         MissionCardPrimaryAction.viewTasks => 'Taskを見る',
         MissionCardPrimaryAction.startNextTask => '次のTaskを始める',
         MissionCardPrimaryAction.resumeTask => '続きから',
+        MissionCardPrimaryAction.reviewOutcome => '成果を確認',
         MissionCardPrimaryAction.viewCompleted => '完了内容を見る',
         MissionCardPrimaryAction.viewDependencies => '前提を確認',
       },
@@ -88,6 +103,7 @@ class MissionCardPresentation {
         MissionCardPrimaryAction.viewCompleted => '完了',
         MissionCardPrimaryAction.viewDependencies => '前提待ち',
         MissionCardPrimaryAction.resumeTask => '進行中',
+        MissionCardPrimaryAction.reviewOutcome => '成果確認待ち',
         MissionCardPrimaryAction.startNextTask => '開始できます',
         MissionCardPrimaryAction.viewTasks => '準備中',
       },

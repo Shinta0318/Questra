@@ -21,7 +21,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const fallback = fallbackGuides(payload.quest);
   try {
     const result = await generateAiText({
       feature: "quest_guides",
@@ -62,50 +61,44 @@ Deno.serve(async (req) => {
       maxOutputTokens: 1_200,
       temperature: 0.6,
     });
-    if (!result) return jsonResponse({ guides: fallback });
+    if (!result) return planningUnavailable();
     const parsed = JSON.parse(stripFence(result.text)) as { guides?: unknown };
     const guides = normalizeGuides(parsed.guides);
     return jsonResponse({
-      guides: guides.length === 6 ? guides : fallback,
+      guides,
       source_type: result.sourceType,
-    });
+    }, { status: guides.length === 6 ? 200 : 503 });
   } catch (_) {
-    return jsonResponse({ guides: fallback });
+    return planningUnavailable();
   }
 });
 
 function normalizeGuides(value: unknown) {
   if (!Array.isArray(value)) return [];
-  return value.slice(0, 6).map((item, index) => {
+  return value.slice(0, 6).map((item) => {
     const data = isRecord(item) ? item : {};
     const actions = Array.isArray(data.suggested_actions)
       ? data.suggested_actions.filter((action): action is string => typeof action === "string").slice(0, 3)
       : [];
-    return {
-      guide_type: guideTypes.includes(String(data.guide_type))
-        ? data.guide_type
-        : guideTypes[index],
-      title: text(data.title, `${guideTypes[index]}の航路`),
-      description: text(data.description, "次の一歩を見つけるためのGuideです。"),
-      suggested_actions: actions.length >= 2
-        ? actions
-        : ["今日できる一歩を選ぶ", "進んだことをTrailへ残す"],
-    };
-  });
+    const guideType = String(data.guide_type);
+    const title = requiredText(data.title);
+    const description = requiredText(data.description);
+    if (!guideTypes.includes(guideType) || !title || !description || actions.length < 2) return null;
+    return { guide_type: guideType, title, description, suggested_actions: actions };
+  }).filter((item): item is NonNullable<typeof item> => item !== null);
 }
 
-function fallbackGuides(quest: Record<string, unknown> | undefined) {
-  const title = text(quest?.title, "このQuest");
-  return guideTypes.map((guideType) => ({
-    guide_type: guideType,
-    title: `${title}の航路を整える`,
-    description: `${title}を無理なく進めるための${guideType} Guideです。`,
-    suggested_actions: ["今日できる一歩を選ぶ", "進んだことをTrailへ残す"],
-  }));
+function planningUnavailable() {
+  return jsonResponse({
+    status: "retryable_error",
+    error: "quest_guides_temporarily_unavailable",
+    input_preserved: true,
+    manual_path_available: true,
+  }, { status: 503 });
 }
 
-function text(value: unknown, fallback: string) {
-  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+function requiredText(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 function stripFence(value: string) {

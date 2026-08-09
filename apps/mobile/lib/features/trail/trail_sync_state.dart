@@ -29,18 +29,18 @@ class TrailSyncController extends Notifier<TrailSyncState> {
   @override
   TrailSyncState build() => const TrailSyncState();
 
-  void loading([String message = 'Syncing Trail records...']) {
+  void loading([String message = 'Trailを同期しています...']) {
     state = TrailSyncState(status: TrailSyncStatus.loading, message: message);
   }
 
-  void saved([String message = 'Trail records are saved.']) {
+  void saved([String message = 'Trailを保存しました。']) {
     state = TrailSyncState(status: TrailSyncStatus.saved, message: message);
   }
 
   void failed(Object error) {
     state = TrailSyncState(
       status: TrailSyncStatus.failed,
-      message: 'Trail sync failed: $error',
+      message: 'Trailを同期できませんでした: $error',
     );
   }
 

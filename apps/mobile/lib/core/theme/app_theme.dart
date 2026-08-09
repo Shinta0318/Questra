@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../accessibility/questra_accessibility.dart';
 import 'app_colors.dart';
+import 'app_field_sizes.dart';
 import 'app_gradients.dart';
 import 'app_radius.dart';
 import 'app_shadows.dart';
@@ -72,11 +73,24 @@ abstract final class AppTheme {
           side: BorderSide(color: AppColors.cosmicBlue.withValues(alpha: 0.32)),
           shape: RoundedRectangleBorder(borderRadius: AppRadius.button),
           textStyle: const TextStyle(fontWeight: FontWeight.w800),
+          minimumSize: const Size(48, QuestraAccessibility.minTapTarget),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.cosmicBlue,
+          minimumSize: const Size(48, QuestraAccessibility.minTapTarget),
+          textStyle: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.white,
+        constraints: const BoxConstraints(minHeight: AppFieldSizes.shortInput),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: AppRadius.button,
           borderSide: BorderSide(

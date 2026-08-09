@@ -27,10 +27,10 @@ from internal beta preparation toward public release review.
 
 ## Legal Copy Checklist
 
-- Terms must describe Questra as a Quest, Mission, Trail, Guild, and Arc
+- Terms must describe Questra as a Quest, Mission, Task, Trail, Guild, and Arc
   experience.
 - Terms must not describe Arc as an AI Assistant.
-- Privacy copy must cover account data, Quest/Mission/Trail content, Arc Memory,
+- Privacy copy must cover account data, Quest/Mission/Task/Trail content, Arc Memory,
   media uploads, Guild activity, analytics events, and reports.
 - Privacy copy must explain deletion/export request channels before public
   release.
@@ -43,7 +43,7 @@ from internal beta preparation toward public release review.
 
 - App name: Questra.
 - Subtitle/tagline should focus on guided quests and personal progress.
-- Description should mention Quest, Mission, Trail, Guild, and Arc in product
+- Description should mention Quest, Mission, Task, Trail, Guild, and Arc in product
   language.
 - Do not use `Story` as a product concept.
 - Do not call Arc an AI Assistant.

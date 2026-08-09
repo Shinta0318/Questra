@@ -11,28 +11,28 @@ Questra
 
 ## Subtitle
 
-Turn goals into Quests, Missions, and Trails.
+Turn wishes into Quests, Missions, Tasks, and Trails.
 
 ## Short Description
 
-Questra helps you shape meaningful Quests, choose small Missions, and record
-Trails with Arc as your journey navigator.
+Questra helps you shape meaningful Quests, reach outcome Missions through
+concrete Tasks, and record Trails with Arc as your journey navigator.
 
 ## Full Description
 
-Questra is a personal progress app built around Quests, Missions, and Trails.
-Start with a Quest, break it into focused Missions, and leave Trails that show
-what you tried, learned, and want to do next.
+Questra is a personal progress app built around Quests, Missions, Tasks, and
+Trails. Start with a Quest, define the outcome Missions along its route, choose
+an executable Task, and leave Trails that show what you tried and learned.
 
 Arc helps you keep your journey in view by reflecting on your recent Quest,
-Mission, Trail, and Reflection context. Guild spaces support lightweight
+Mission, Task, Trail, and Reflection context. Guild spaces support lightweight
 questions and shared progress without pulling the experience away from your own
 path.
 
 Use Questra to:
 
 - Shape personal Quests.
-- Turn Quests into small Missions.
+- Turn Quests into outcome Missions and concrete Tasks.
 - Record Trails and Reflections.
 - Review progress from Home and Quest Dashboard.
 - Keep Arc Memory aligned with your journey.
@@ -45,16 +45,16 @@ personal growth
 
 ## Screenshot Plan
 
-1. Home with Arc Welcome, Today's Mission, Active Quest, Recent Trails, and
+1. Home with Arc Welcome, today's Task, its parent Mission, Active Quest, and
    Guild activity.
-2. Quest Dashboard with progress, Mission count, Trail count, and Arc comment.
+2. Quest Dashboard with Mission and Task progress, Trail count, and Arc comment.
 3. Trail screen with private image attachment and Reflection flow.
 4. Arc Chat with contextual guidance.
 5. Profile with journey metrics.
 
 ## Copy Rules
 
-- Use Quest, Mission, Trail, Guild, Arc, Reflection, and Arc Memory.
+- Use Quest, Mission, Task, Trail, Guild, Arc, Reflection, and Arc Memory.
 - Do not use `Story` as a product concept.
 - Do not describe Arc as an AI Assistant.
 - Avoid launch claims until beta evidence exists.

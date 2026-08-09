@@ -7,12 +7,13 @@ void main() {
   test('builds Settings information architecture overview', () {
     final overview = service.buildOverview();
 
-    expect(overview.heading, 'Settings Map');
+    expect(overview.heading, '設定ガイド');
     expect(
       overview.sections.map((section) => section.type),
       containsAll(SettingsSectionType.values),
     );
     expect(overview.sections.first.title, 'Arcチュートリアル');
+    expect(overview.sections.first.statusLabel, 'もう一度見る');
     expect(overview.sections.last.type, SettingsSectionType.consent);
     expect(
       overview.sections

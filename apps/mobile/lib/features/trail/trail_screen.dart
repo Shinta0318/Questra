@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/performance/performance_limits.dart';
-import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../core/validation/input_validators.dart';
 import '../../widgets/forms/questra_field_label.dart';
-import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_presence.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/menu/questra_action_menu.dart';
 import '../../widgets/questra_card.dart';
 import '../arc/arc_celebration_service.dart';
-import '../arc/arc_expression_engine.dart';
 import '../arc/arc_guidance_providers.dart';
 import '../arc/arc_reflection_coach_service.dart';
 import '../auth/auth_controller.dart';
 import '../media/media_model.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
+import '../task/task_controller.dart';
+import '../task/task_model.dart';
 import 'trail_controller.dart';
 import 'trail_highlight_service.dart';
 import 'trail_model.dart';
@@ -32,13 +30,24 @@ final trailHighlightServiceProvider = Provider<TrailHighlightService>((ref) {
   return const TrailHighlightService();
 });
 
-class TrailScreen extends ConsumerWidget {
-  const TrailScreen({super.key});
+class TrailScreen extends ConsumerStatefulWidget {
+  const TrailScreen({super.key, this.initialParent, this.openComposer = false});
+
+  final TrailParentContext? initialParent;
+  final bool openComposer;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TrailScreen> createState() => _TrailScreenState();
+}
+
+class _TrailScreenState extends ConsumerState<TrailScreen> {
+  bool _didOpenComposer = false;
+
+  @override
+  Widget build(BuildContext context) {
     final trails = ref.watch(trailControllerProvider);
     final missions = ref.watch(missionControllerProvider);
+    final tasks = ref.watch(taskControllerProvider);
     final trailMedia = ref.watch(trailMediaControllerProvider);
     final syncState = ref.watch(trailSyncControllerProvider);
     final profile = ref.watch(authControllerProvider).profile;
@@ -52,20 +61,49 @@ class TrailScreen extends ConsumerWidget {
       missions: const [],
       trails: trails,
     );
+    final hierarchyByTrailId = <String, TrailParentContext>{};
+    for (final trail in trails) {
+      final parent = _parentForTrail(trail, missions, tasks);
+      if (parent != null) hierarchyByTrailId[trail.id] = parent;
+    }
+
+    if (widget.openComposer && !_didOpenComposer) {
+      _didOpenComposer = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showCreateTrailSheet(
+          context,
+          ref.read(trailControllerProvider.notifier),
+          parent: widget.initialParent,
+        );
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Trail')),
       body: SafeArea(
         child: QuestraResponsiveListView(
           showScrollbar: true,
-          onRefresh:
-              profile == null ? null : () => controller.loadForUser(profile.id),
+          onRefresh: profile == null
+              ? null
+              : () => controller.loadForUser(profile.id),
           padding: const EdgeInsets.all(20),
           children: [
             ArcPresence(
               surface: ArcPresenceSurface.trail,
               emotion: arcExpression.emotion,
               message: 'TrailはQuestとMissionの足あとを、あとで戻れる航路として残してくれるよ。',
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              key: const ValueKey('trail-primary-create'),
+              onPressed: () => _showCreateTrailSheet(
+                context,
+                controller,
+                parent: widget.initialParent,
+              ),
+              icon: const Icon(Icons.add),
+              label: Text(trails.isEmpty ? '最初のTrailを残す' : 'Trailを残す'),
             ),
             const SizedBox(height: 16),
             if (syncState.status != TrailSyncStatus.idle) ...[
@@ -84,39 +122,19 @@ class TrailScreen extends ConsumerWidget {
             TrailTimelineWidget(
               trails: trails,
               attachments: trailMedia,
-              onCreateTrail: () => _showCreateTrailSheet(context, controller),
               highlights: {
                 for (final highlight in trailHighlights)
                   highlight.trailId: highlight,
               },
+              hierarchyByTrailId: hierarchyByTrailId,
             ),
             const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: () => _showCreateTrailSheet(context, controller),
-              icon: const Icon(Icons.add),
-              label: const Text('Trailを残す'),
-            ),
-            const SizedBox(height: 16),
-            if (trails.isEmpty)
-              ArcEmptyState(
-                title: 'まだTrailがありません',
-                emotion: expressionEngine
-                    .resolve(
-                      const ArcExpressionContext(
-                        moment: ArcExpressionMoment.empty,
-                      ),
-                    )
-                    .emotion,
-                message: 'Missionを完了するかQuestにTrailを残すと、ここに進み方が並びます。',
-                actionLabel: 'Questへ戻る',
-                icon: Icons.timeline_outlined,
-                onAction: () => context.go(AppRoutes.quest),
-              ),
             ...trails.map(
               (trail) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _TrailCard(
                   trail: trail,
+                  parent: hierarchyByTrailId[trail.id],
                   attachment: trailMedia[trail.id],
                   onEdit: () => _showEditTrailSheet(context, controller, trail),
                   onReflect: () => _showReflectTrailSheet(
@@ -131,19 +149,19 @@ class TrailScreen extends ConsumerWidget {
                   onReplaceImage: trailMedia[trail.id] == null
                       ? null
                       : () => _replaceTrailImage(
-                            context,
-                            controller,
-                            trail,
-                            trailMedia[trail.id]!,
-                          ),
+                          context,
+                          controller,
+                          trail,
+                          trailMedia[trail.id]!,
+                        ),
                   onRemoveImage: trailMedia[trail.id] == null
                       ? null
                       : () => _confirmRemoveTrailImage(
-                            context,
-                            controller,
-                            trail,
-                            trailMedia[trail.id]!,
-                          ),
+                          context,
+                          controller,
+                          trail,
+                          trailMedia[trail.id]!,
+                        ),
                   onDelete: () =>
                       _confirmDeleteTrail(context, controller, trail),
                 ),
@@ -161,6 +179,52 @@ class TrailScreen extends ConsumerWidget {
       return null;
     }
     return missions.where((mission) => mission.id == missionId).firstOrNull;
+  }
+
+  TrailParentContext? _parentForTrail(
+    Trail trail,
+    List<Mission> missions,
+    List<QuestraTask> tasks,
+  ) {
+    if (trail.taskId case final taskId?) {
+      final task = tasks.where((item) => item.id == taskId).firstOrNull;
+      if (task != null &&
+          task.questId == trail.questId &&
+          task.missionId == trail.missionId) {
+        return TrailParentContext(
+          questId: task.questId,
+          questTitle: task.questTitle,
+          missionId: task.missionId,
+          missionTitle: task.missionTitle,
+          taskId: task.id,
+          taskTitle: task.title,
+        );
+      }
+    }
+    if (trail.missionId case final missionId?) {
+      final mission = missions
+          .where(
+            (item) => item.id == missionId && item.questId == trail.questId,
+          )
+          .firstOrNull;
+      if (mission != null) {
+        return TrailParentContext(
+          questId: mission.questId,
+          questTitle: mission.questTitle,
+          missionId: mission.id,
+          missionTitle: mission.title,
+        );
+      }
+    }
+    if (widget.initialParent case final initialParent?) {
+      if (initialParent.questId == trail.questId &&
+          (trail.missionId == null ||
+              initialParent.missionId == trail.missionId) &&
+          (trail.taskId == null || initialParent.taskId == trail.taskId)) {
+        return initialParent;
+      }
+    }
+    return null;
   }
 
   Future<void> _replaceTrailImage(
@@ -200,16 +264,16 @@ class TrailScreen extends ConsumerWidget {
     final shouldRemove = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove image?'),
-        content: Text('Remove the image attached to "${trail.title}"?'),
+        title: const Text('画像を削除しますか？'),
+        content: Text('「${trail.title}」に添付された画像を削除します。'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('キャンセル'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Remove'),
+            child: const Text('削除'),
           ),
         ],
       ),
@@ -228,18 +292,23 @@ class TrailScreen extends ConsumerWidget {
     }
   }
 
-  void _showCreateTrailSheet(BuildContext context, TrailController controller) {
+  void _showCreateTrailSheet(
+    BuildContext context,
+    TrailController controller, {
+    TrailParentContext? parent,
+  }) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _CreateTrailSheet(
-        onSubmit: (draft) {
-          controller.addManualTrail(
-            title: draft.title,
-            summary: draft.summary,
-            content: draft.content,
-          );
-        },
+        parent: parent,
+        onSubmit: (draft) => controller.addManualTrailAndWait(
+          trailId: draft.id,
+          title: draft.title,
+          summary: draft.summary,
+          content: draft.content,
+          parent: parent,
+        ),
       ),
     );
   }
@@ -278,7 +347,9 @@ class TrailScreen extends ConsumerWidget {
           controller.updateTrail(updatedTrail);
           showArcCelebrationSnackBar(
             context,
-            ref.read(arcCelebrationServiceProvider).build(
+            ref
+                .read(arcCelebrationServiceProvider)
+                .build(
                   event: ArcCelebrationEvent.trailReflection,
                   subject: updatedTrail.title,
                 ),
@@ -322,16 +393,16 @@ class TrailScreen extends ConsumerWidget {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Trail?'),
-        content: Text('Remove "${trail.title}" from your Trail records?'),
+        title: const Text('Trailを削除しますか？'),
+        content: Text('「${trail.title}」をTrailから削除します。'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('キャンセル'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
+            child: const Text('削除'),
           ),
         ],
       ),
@@ -345,20 +416,23 @@ class TrailScreen extends ConsumerWidget {
 
 class _TrailDraft {
   const _TrailDraft({
+    required this.id,
     required this.title,
     required this.summary,
     required this.content,
   });
 
+  final String id;
   final String title;
   final String summary;
   final String content;
 }
 
 class _CreateTrailSheet extends StatefulWidget {
-  const _CreateTrailSheet({required this.onSubmit});
+  const _CreateTrailSheet({required this.onSubmit, this.parent});
 
-  final ValueChanged<_TrailDraft> onSubmit;
+  final Future<bool> Function(_TrailDraft) onSubmit;
+  final TrailParentContext? parent;
 
   @override
   State<_CreateTrailSheet> createState() => _CreateTrailSheetState();
@@ -366,9 +440,12 @@ class _CreateTrailSheet extends StatefulWidget {
 
 class _CreateTrailSheetState extends State<_CreateTrailSheet> {
   final _formKey = GlobalKey<FormState>();
+  final String _draftId = Trail.createId();
   final _titleController = TextEditingController();
   final _summaryController = TextEditingController();
   final _contentController = TextEditingController();
+  bool _isSaving = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -396,6 +473,10 @@ class _CreateTrailSheetState extends State<_CreateTrailSheet> {
                   'Trailを残す',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
+                if (widget.parent case final parent?) ...[
+                  const SizedBox(height: 12),
+                  _TrailParentBreadcrumb(parent: parent),
+                ],
                 const SizedBox(height: 16),
                 QuestraFieldLabel(
                   label: 'Trailの名前',
@@ -455,10 +536,29 @@ class _CreateTrailSheetState extends State<_CreateTrailSheet> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                if (_errorMessage case final message?) ...[
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      message,
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 FilledButton.icon(
-                  onPressed: _submit,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Trailを保存'),
+                  onPressed: _isSaving ? null : _submit,
+                  icon: _isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.add),
+                  label: Text(_isSaving ? '保存しています...' : 'Trailを保存'),
                 ),
               ],
             ),
@@ -468,18 +568,31 @@ class _CreateTrailSheetState extends State<_CreateTrailSheet> {
     );
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    widget.onSubmit(
+    setState(() {
+      _isSaving = true;
+      _errorMessage = null;
+    });
+    final saved = await widget.onSubmit(
       _TrailDraft(
+        id: _draftId,
         title: _titleController.text.trim(),
         summary: _summaryController.text.trim(),
         content: _contentController.text.trim(),
       ),
     );
-    Navigator.of(context).pop();
+    if (!mounted) return;
+    if (saved) {
+      Navigator.of(context).pop();
+      return;
+    }
+    setState(() {
+      _isSaving = false;
+      _errorMessage = 'Trailを保存できませんでした。入力内容を残したまま再試行できます。';
+    });
   }
 }
 
@@ -491,12 +604,13 @@ class _TrailOverview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final questTrails = trails.where((trail) => trail.questId != null).length;
-    final missionTrails =
-        trails.where((trail) => trail.missionId != null).length;
+    final missionTrails = trails
+        .where((trail) => trail.missionId != null)
+        .length;
     final latestTrail = trails.isEmpty
         ? null
         : (trails.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
-            .first;
+              .first;
 
     return QuestraCard(
       padding: const EdgeInsets.all(16),
@@ -509,10 +623,10 @@ class _TrailOverview extends StatelessWidget {
             spacing: 16,
             runSpacing: 12,
             children: [
-              _TrailMetric(label: 'Trails', value: trails.length.toString()),
-              _TrailMetric(label: 'Quest links', value: questTrails.toString()),
+              _TrailMetric(label: 'Trail', value: trails.length.toString()),
+              _TrailMetric(label: 'Questとの紐づき', value: questTrails.toString()),
               _TrailMetric(
-                label: 'Mission links',
+                label: 'Missionとの紐づき',
                 value: missionTrails.toString(),
               ),
             ],
@@ -520,8 +634,8 @@ class _TrailOverview extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             latestTrail == null
-                ? 'The first Trail will appear after a Mission or Quest step.'
-                : 'Latest: ${latestTrail.title} (${DateFormat.MMMd('ja').format(latestTrail.createdAt)})',
+                ? 'QuestやMissionを進めて、最初のTrailを残しましょう。'
+                : '最新: ${latestTrail.title} (${DateFormat.MMMd('ja').format(latestTrail.createdAt)})',
             style: const TextStyle(color: QuestraColors.slate),
           ),
         ],
@@ -546,9 +660,9 @@ class _TrailMetric extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: QuestraColors.deepNavy,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: QuestraColors.deepNavy,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 2),
           Text(label, style: const TextStyle(color: QuestraColors.slate)),
@@ -561,6 +675,7 @@ class _TrailMetric extends StatelessWidget {
 class _TrailCard extends StatelessWidget {
   const _TrailCard({
     required this.trail,
+    required this.parent,
     required this.attachment,
     required this.onEdit,
     required this.onReflect,
@@ -571,6 +686,7 @@ class _TrailCard extends StatelessWidget {
   });
 
   final Trail trail;
+  final TrailParentContext? parent;
   final MediaAttachment? attachment;
   final VoidCallback onEdit;
   final VoidCallback onReflect;
@@ -677,22 +793,78 @@ class _TrailCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(trail.summary),
           const SizedBox(height: 8),
-          Text(
-            trail.questId == null
-                ? 'Quest: Unlinked'
-                : 'Quest: ${trail.questId}',
-            style: const TextStyle(color: QuestraColors.slate),
-          ),
-          if (trail.missionId != null)
-            Text(
-              'Mission: ${trail.missionId}',
-              style: const TextStyle(color: QuestraColors.slate),
+          if (parent != null)
+            _TrailParentBreadcrumb(parent: parent!)
+          else
+            const Text(
+              'Questに紐づかないTrail',
+              style: TextStyle(color: QuestraColors.slate),
             ),
           if (attachment != null) ...[
             const SizedBox(height: 10),
             _TrailImageAttachment(attachment: attachment!),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _TrailParentBreadcrumb extends StatelessWidget {
+  const _TrailParentBreadcrumb({required this.parent});
+
+  final TrailParentContext parent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Trailの紐づけ',
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          _HierarchyChip(label: 'Quest', value: parent.questTitle),
+          if (parent.missionTitle case final title?) ...[
+            const Icon(Icons.chevron_right, size: 16),
+            _HierarchyChip(label: 'Mission', value: title),
+          ],
+          if (parent.taskTitle case final title?) ...[
+            const Icon(Icons.chevron_right, size: 16),
+            _HierarchyChip(label: 'Task', value: title),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _HierarchyChip extends StatelessWidget {
+  const _HierarchyChip({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 260),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: QuestraColors.cosmicBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: QuestraColors.cosmicBlue.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Text(
+        '$label: $value',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: QuestraColors.deepNavy,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -727,7 +899,7 @@ class _TrailImageAttachment extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          const Text('Private', style: TextStyle(color: QuestraColors.slate)),
+          const Text('非公開', style: TextStyle(color: QuestraColors.slate)),
         ],
       ),
     );
@@ -1040,11 +1212,11 @@ class _TrailSyncBanner extends StatelessWidget {
               color: isFailed ? Colors.redAccent : QuestraColors.cosmicBlue,
             ),
           const SizedBox(width: 12),
-          Expanded(child: Text(state.message ?? 'Trail sync updated.')),
+          Expanded(child: Text(state.message ?? 'Trailの同期状態を更新しました。')),
           if (isFailed && onRetry != null)
-            TextButton(onPressed: onRetry, child: const Text('Retry')),
+            TextButton(onPressed: onRetry, child: const Text('再試行')),
           IconButton(
-            tooltip: 'Dismiss',
+            tooltip: '閉じる',
             onPressed: onDismiss,
             icon: const Icon(Icons.close),
           ),

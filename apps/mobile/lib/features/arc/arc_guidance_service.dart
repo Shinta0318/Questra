@@ -68,7 +68,7 @@ class ArcGuidanceService {
       return 'Reflectionに残した気づきから、5分でできるMissionをひとつ選ぼう。';
     }
     if (quest != null) {
-      return '「${quest.title}」から今日のMissionをひとつ作ろう。小さくて見える一歩がいい。';
+      return '「${quest.title}」を前進させる中間成果をMissionとして決めよう。そこから、今できるTaskを一緒に選べるよ。';
     }
     return 'まずQuestをひとつ星にしよう。そこから次のMissionを一緒に見つけられるよ。';
   }

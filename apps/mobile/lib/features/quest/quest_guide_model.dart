@@ -67,12 +67,12 @@ class StarMapItem {
 extension GuideTypeLabel on GuideType {
   String get label {
     return switch (this) {
-      GuideType.route => 'Route Guide',
-      GuideType.knowledge => 'Knowledge Guide',
-      GuideType.training => 'Training Guide',
-      GuideType.guild => 'Guild Guide',
-      GuideType.resource => 'Resource Guide',
-      GuideType.opportunity => 'Opportunity Guide',
+      GuideType.route => '航路ガイド',
+      GuideType.knowledge => '知識ガイド',
+      GuideType.training => '練習ガイド',
+      GuideType.guild => 'Guildガイド',
+      GuideType.resource => '資料ガイド',
+      GuideType.opportunity => '機会ガイド',
     };
   }
 }

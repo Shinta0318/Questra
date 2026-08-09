@@ -142,6 +142,7 @@ export function validateMissionArchitectureSemantics(value: unknown, questText: 
 export function validateTaskPlan(value: unknown, expectedQuestId: string, missionClientId: string): ValidationResult {
   if (!isRecord(value) || !Array.isArray(value.tasks)) return invalid("$.tasks", "type", "Tasks are required");
   const issues: ValidationIssue[] = [];
+  if (value.tasks.length < 1 || value.tasks.length > 30) issues.push(issue("$.tasks", "count", "Task count must be between 1 and 30"));
   if (value.questId !== expectedQuestId) issues.push(issue("$.questId", "quest_mismatch", "Quest ID does not match"));
   if (value.missionClientId !== missionClientId) issues.push(issue("$.missionClientId", "mission_mismatch", "Mission ID does not match"));
   const ids = new Set<string>();
@@ -152,7 +153,16 @@ export function validateTaskPlan(value: unknown, expectedQuestId: string, missio
     if (id) ids.add(id);
     for (const key of ["title", "action", "purpose", "doneCondition", "expectedOutput"] as const) if (!text(raw[key])) issues.push(issue(`$.tasks[${index}].${key}`, "required", `${key} is required`, id ?? undefined));
     if (!integerBetween(raw.estimatedEffortMinutes, 1, 1440)) issues.push(issue(`$.tasks[${index}].estimatedEffortMinutes`, "range", "Task effort is invalid", id ?? undefined));
+    if (!Array.isArray(raw.dependencies)) issues.push(issue(`$.tasks[${index}].dependencies`, "type", "Task dependencies must be an array", id ?? undefined));
+    if (typeof raw.required !== "boolean") issues.push(issue(`$.tasks[${index}].required`, "type", "required must be boolean", id ?? undefined));
+    if (typeof raw.confidence !== "number" || raw.confidence < 0 || raw.confidence > 1) issues.push(issue(`$.tasks[${index}].confidence`, "range", "confidence must be from 0 to 1", id ?? undefined));
   }
+  const typed = (value.tasks as unknown[]).filter(isMission);
+  for (const task of typed) for (const dependency of task.dependencies) {
+    if (!ids.has(dependency)) issues.push(issue("$.tasks.dependencies", "missing_dependency", `Dependency ${dependency} does not exist`, task.clientId));
+    if (dependency === task.clientId) issues.push(issue("$.tasks.dependencies", "self_dependency", "Task cannot depend on itself", task.clientId));
+  }
+  if (hasCycle(typed)) issues.push(issue("$.tasks", "dependency_cycle", "Task dependency graph contains a cycle"));
   return { valid: issues.length === 0, issues };
 }
 

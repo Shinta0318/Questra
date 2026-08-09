@@ -4,7 +4,7 @@ import 'package:questra/features/trust/data_request_copy_service.dart';
 void main() {
   const service = DataRequestCopyService();
 
-  test('builds data request copy without implementing mutation', () {
+  test('builds data request copy with export and deletion operations', () {
     final review = service.buildReview();
 
     expect(review.heading, 'データリクエスト');
@@ -23,7 +23,7 @@ void main() {
       review.requests
           .firstWhere((request) => request.type == DataRequestType.withdrawal)
           .statusLabel,
-      'Future',
+      '設定する',
     );
     expect(review.safetyNotes, contains('削除・エクスポートは無料で利用できる基本機能として扱う'));
   });

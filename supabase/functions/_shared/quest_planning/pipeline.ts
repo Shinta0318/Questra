@@ -35,6 +35,11 @@ export type PlanningPipelineResult = {
   persistenceAllowed: false;
 };
 
+export type TaskExpansionInput = PlanningInput & {
+  mission: Record<string, unknown>;
+  questContext?: Record<string, unknown>;
+};
+
 export async function runQuestPlanningPipeline(input: PlanningInput): Promise<PlanningPipelineResult> {
   const traceId = crypto.randomUUID();
   const passes: PlanningPass[] = [];
@@ -120,6 +125,48 @@ export async function runQuestPlanningPipeline(input: PlanningInput): Promise<Pl
     currentTaskPlan: taskPlan,
     groundingMetadata: strategy.response.groundingMetadata,
   }, [], prompts);
+}
+
+export async function runTaskExpansionPipeline(input: TaskExpansionInput): Promise<PlanningPipelineResult> {
+  const traceId = crypto.randomUUID();
+  const passes: PlanningPass[] = [];
+  const prompts: Record<string, number> = {};
+  const missionClientId = String(input.mission.clientId ?? input.mission.id ?? "");
+  if (!missionClientId) {
+    return result(traceId, "manual_path", passes, null, [{ path: "$.mission", code: "mission_id_missing", message: "Mission ID is required" }], prompts);
+  }
+  const generated = await runPass("task_generation", {
+    questId: input.questId,
+    quest: input.questContext ?? { title: input.wish },
+    mission: { ...input.mission, clientId: missionClientId },
+    userConstraints: input.constraints ?? [],
+  }, input, traceId, prompts);
+  passes.push(generated.pass);
+  if (!generated.response || generated.response.error) return failed(traceId, passes, prompts, generated.response?.error?.retryable);
+
+  let taskPlan = generated.response.output;
+  let validation = validateTaskPlan(taskPlan, input.questId, missionClientId).issues;
+  passes.push({ name: "task_rule_validation", status: validation.length ? "failed" : "completed", output: { issues: validation } });
+  const critic = await runPass("task_critic", {
+    quest: input.questContext ?? { title: input.wish }, mission: input.mission, taskPlan, validationIssues: validation,
+  }, input, traceId, prompts);
+  passes.push(critic.pass);
+  if (!critic.response || critic.response.error) return failed(traceId, passes, prompts, critic.response?.error?.retryable);
+
+  const failedTaskIds = failedEntityIds(critic.response.output, "taskResults", validation);
+  if (failedTaskIds.length > 0) {
+    const repair = await runPass("task_repair", {
+      quest: input.questContext ?? { title: input.wish }, mission: input.mission, taskPlan,
+      critic: critic.response.output, failedTaskClientIds: failedTaskIds, maxRepairPasses: 1,
+    }, input, traceId, prompts);
+    passes.push(repair.pass);
+    if (!repair.response || repair.response.error) return failed(traceId, passes, prompts, repair.response?.error?.retryable);
+    taskPlan = repair.response.output;
+    validation = validateTaskPlan(taskPlan, input.questId, missionClientId).issues;
+  }
+  passes.push({ name: "task_final_validation", status: validation.length ? "failed" : "completed", output: { issues: validation } });
+  if (validation.length) return result(traceId, "manual_path", passes, null, validation, prompts);
+  return result(traceId, "preview_ready", passes, taskPlan, [], prompts);
 }
 
 async function evaluateMissionPlan(plan: unknown, input: PlanningInput, successContract: unknown, achievementDomains: unknown, traceId: string, prompts: Record<string, number>) {

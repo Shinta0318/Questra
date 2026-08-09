@@ -11,7 +11,7 @@
 Supabase接続済みのBeta環境では、次のデータをアカウントに紐づけて保存します。
 
 - nickname、email、Onboarding設定などのProfile情報。
-- Quest、Mission、Trail、Reflectionと進捗情報。
+- Quest、Mission、Task、Trail、Reflectionと進捗情報。
 - Arc Memory、Arc感情履歴、Tagなど、旅路を支える派生情報。
 - Trailへ追加した画像とMedia metadata。
 
@@ -41,8 +41,8 @@ local responseへ切り替わります。
   自動送信したり、送信済みと扱ったりすることはありません。
 - 外部Crash collectorは現在無効です。自動収集を開始する前に収集項目、保持期間、送信先を
   再レビューします。
-- Crash証跡へQuest、Mission、Trail、Arc Memory、Arc Chat本文を含めません。
-- 現在の内部Beta障害証跡は30日保持する運用です。Account、Quest、Mission、Trail、Arc Memory、
+- Crash証跡へQuest、Mission、Task、Trail、Arc Memory、Arc Chat本文を含めません。
+- 現在の内部Beta障害証跡は30日保持する運用です。Account、Quest、Mission、Task、Trail、Arc Memory、
   Supabase backup、Gemini provider側の最終保持期間は外部配布前に確定します。
 
 ## 現在利用できない操作

@@ -53,6 +53,7 @@ void main() {
     await tester.tap(find.byTooltip('Missionのその他の操作'));
     await tester.pumpAndSettle();
     expect(find.text('Arcに相談'), findsOneWidget);
+    expect(find.text('実行サポート'), findsOneWidget);
     expect(find.text('Missionを削除'), findsOneWidget);
   });
 }

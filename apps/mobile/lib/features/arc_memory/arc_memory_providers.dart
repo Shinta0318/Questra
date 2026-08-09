@@ -8,6 +8,7 @@ import 'arc_memory_model.dart';
 import 'arc_memory_repository.dart';
 import 'arc_memory_retrieval_service.dart';
 import 'memory_extraction_service.dart';
+import 'task_memory_event_service.dart';
 
 final arcMemoryRepositoryProvider = Provider<ArcMemoryRepository>((ref) {
   if (SupabaseConfig.isConfigured) {
@@ -23,6 +24,10 @@ final memoryExtractionServiceProvider = Provider<MemoryExtractionService>((
     repository: ref.watch(arcMemoryRepositoryProvider),
     taggingService: ref.watch(taggingServiceProvider),
   );
+});
+
+final taskMemoryEventServiceProvider = Provider<TaskMemoryEventService>((ref) {
+  return TaskMemoryEventService(ref.watch(memoryExtractionServiceProvider));
 });
 
 final arcMemoryRetrievalServiceProvider = Provider<ArcMemoryRetrievalService>((

@@ -66,7 +66,7 @@ class SupabaseTrailRepository implements TrailRepository {
     final rows = await client
         .from('trails')
         .select(
-          'id,quest_id,mission_id,title,summary,content,trail_type,source_type,created_at',
+          'id,quest_id,mission_id,task_id,title,summary,content,trail_type,source_type,created_at',
         )
         .eq('owner_id', userId)
         .order('created_at', ascending: false)
@@ -87,7 +87,7 @@ class SupabaseTrailRepository implements TrailRepository {
         .from('trails')
         .upsert(_trailToRow(ownerId, trail, visibility))
         .select(
-          'id,quest_id,mission_id,title,summary,content,trail_type,source_type,created_at',
+          'id,quest_id,mission_id,task_id,title,summary,content,trail_type,source_type,created_at',
         )
         .limit(1);
 
@@ -120,6 +120,7 @@ class SupabaseTrailRepository implements TrailRepository {
       'owner_id': ownerId,
       'quest_id': trail.questId,
       'mission_id': trail.missionId,
+      'task_id': trail.taskId,
       'title': trail.title,
       'summary': trail.summary,
       'content': trail.content,
@@ -136,6 +137,7 @@ class SupabaseTrailRepository implements TrailRepository {
       id: row['id'] as String,
       questId: row['quest_id'] as String?,
       missionId: row['mission_id'] as String?,
+      taskId: row['task_id'] as String?,
       title: row['title'] as String,
       summary: row['summary'] as String? ?? '',
       content: row['content'] as String? ?? '',

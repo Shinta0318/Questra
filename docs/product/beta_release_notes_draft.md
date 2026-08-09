@@ -14,14 +14,14 @@
 
 ### Home
 
-- Arcの挨拶、今日のMission、進行中Quest、次の一歩を確認できます。
+- Arcの挨拶、今日のTaskと親Mission、進行中Quest、次の一歩を確認できます。
 - Home -> Arc -> Questを中心に、今日進める内容へ移動できます。
 
 ### QuestとMission
 
 - Questの作成、編集、詳細確認、進捗表示を利用できます。
 - Arc GuideからMission候補を確認し、採用できます。
-- Missionの作成、編集、並べ替え、今日のMission設定、完了を試せます。
+- Missionの作成・編集と、Missionに属するTaskの開始・完了を試せます。
 
 ### Arc
 
@@ -74,10 +74,10 @@
 1. 案内されたBetaアカウントでログインする。
 2. Onboardingを完了し、最初のQuestを作る。
 3. Arc GuideからMissionを1件採用する。
-4. Missionを編集し、今日のMissionとして完了する。
+4. Missionを編集し、Taskを実行して成果を確認する。
 5. 完了した一歩をTrailとして残し、Timelineへ反映されることを確認する。
 6. Arcへ次の一歩を相談する。
-7. アプリを再起動し、同じアカウントでQuest、Mission、Trailが残っていることを確認する。
+7. アプリを再起動し、同じアカウントでQuest、Mission、Task、Trailが残っていることを確認する。
 8. 別アカウントから非公開のQuestが見えないことを運営担当者と確認する。
 
 ## Feedback
@@ -89,7 +89,7 @@ Arcとの会話全文はレポートへ含めないでください。
 
 ## テストを止める条件
 
-- アプリが起動しない、またはHome / Quest / Mission / Trail / Arcでクラッシュする。
+- アプリが起動しない、またはHome / Quest / Mission / Task / Trail / Arcでクラッシュする。
 - 保存成功表示の後にQuestやMissionが失われる。
 - 別アカウントの非公開データが表示される。
 - Arcへの入力や非公開の旅路データが意図しない場所へ表示される。

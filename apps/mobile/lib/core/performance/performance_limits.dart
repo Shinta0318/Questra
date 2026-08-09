@@ -3,16 +3,21 @@ class QuestraPerformanceLimits {
 
   static const questListLimit = 40;
   static const missionListLimit = 80;
+  static const taskListLimit = 200;
+  static const taskPerMissionListLimit = 50;
   static const trailListLimit = 40;
   static const questGuideLimit = 6;
   static const trailEventLimit = 20;
   static const guildTrailPreviewLimit = 3;
   static const homeRecentTrailCount = 3;
   static const homeOpenMissionCount = 5;
+  static const questDetailMissionPreviewLimit = 12;
+  static const longRouteIndexBuildBudgetMs = 100;
   static const arcMemoryVisibleLimit = 12;
   static const arcChatHistoryContextLimit = 10;
   static const arcChatActiveQuestContextLimit = 3;
   static const arcChatRecentMissionContextLimit = 5;
+  static const arcChatRecentTaskContextLimit = 5;
   static const arcChatRecentTrailContextLimit = 5;
   static const arcChatMemoryContextLimit = 5;
   static const arcChatContextTextLimit = 240;

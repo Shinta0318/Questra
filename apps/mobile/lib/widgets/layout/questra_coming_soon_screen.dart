@@ -48,7 +48,7 @@ class QuestraComingSoonScreen extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
                   Text(message, style: Theme.of(context).textTheme.bodyLarge),
                   const SizedBox(height: AppSpacing.lg),
-                  const Chip(label: Text('Coming Soon')),
+                  const Chip(label: Text('準備中')),
                   const SizedBox(height: AppSpacing.xl),
                   QuestraPrimaryButton(
                     label: 'Homeへ戻る',

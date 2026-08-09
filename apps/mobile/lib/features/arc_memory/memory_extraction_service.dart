@@ -45,6 +45,7 @@ class MemoryExtractionService {
       userId: event.userId,
       questId: event.questId,
       missionId: event.missionId,
+      taskId: event.taskId,
       trailId: event.trailId,
       memoryType: memoryType,
       title: event.title ?? _titleFor(memoryType, event),
@@ -76,6 +77,7 @@ class MemoryExtractionService {
 
     if (event.questId != null ||
         event.missionId != null ||
+        event.taskId != null ||
         event.trailId != null) {
       return true;
     }
@@ -103,6 +105,9 @@ class MemoryExtractionService {
       ArcMemorySourceType.questUpdated => ArcMemoryType.questMemory,
       ArcMemorySourceType.missionCreated ||
       ArcMemorySourceType.missionCompleted => ArcMemoryType.missionMemory,
+      ArcMemorySourceType.taskStarted ||
+      ArcMemorySourceType.taskCompleted ||
+      ArcMemorySourceType.taskRescheduled => ArcMemoryType.taskMemory,
       ArcMemorySourceType.trailPosted => ArcMemoryType.trailMemory,
       ArcMemorySourceType.arcChat => ArcMemoryType.arcRelationshipMemory,
       ArcMemorySourceType.guildPost => ArcMemoryType.trailMemory,
@@ -123,7 +128,8 @@ class MemoryExtractionService {
     if (_containsAny(lower, ['孤独', 'ひとり', 'lonely'])) {
       return EmotionalTone.lonely;
     }
-    if (event.sourceType == ArcMemorySourceType.missionCompleted) {
+    if (event.sourceType == ArcMemorySourceType.missionCompleted ||
+        event.sourceType == ArcMemorySourceType.taskCompleted) {
       return EmotionalTone.positive;
     }
     return EmotionalTone.neutral;
@@ -139,7 +145,9 @@ class MemoryExtractionService {
     if (event.questId != null) {
       score += 0.18;
     }
-    if (event.missionId != null || event.trailId != null) {
+    if (event.missionId != null ||
+        event.taskId != null ||
+        event.trailId != null) {
       score += 0.12;
     }
     if (type == ArcMemoryType.lifeEventMemory ||
@@ -188,9 +196,10 @@ class MemoryExtractionService {
 
   String _titleFor(ArcMemoryType type, MemoryExtractionEvent event) {
     return switch (type) {
-      ArcMemoryType.questMemory => 'Quest memory',
-      ArcMemoryType.missionMemory => 'Mission memory',
-      ArcMemoryType.trailMemory => 'Trail memory',
+      ArcMemoryType.questMemory => 'Questの記憶',
+      ArcMemoryType.missionMemory => 'Missionの記憶',
+      ArcMemoryType.taskMemory => 'Taskの記憶',
+      ArcMemoryType.trailMemory => 'Trailの記憶',
       ArcMemoryType.preferenceMemory => 'Preference memory',
       ArcMemoryType.emotionalMemory => 'Emotional memory',
       ArcMemoryType.lifeEventMemory => 'Life event memory',

@@ -72,7 +72,10 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.lg),
               ArcMemoryManagementPreviewCard(preview: memoryPreview),
               const SizedBox(height: AppSpacing.lg),
-              _DataRequestCopyCard(review: dataRequests),
+              _DataRequestCopyCard(
+                review: dataRequests,
+                onOpen: () => context.push(AppRoutes.dataRights),
+              ),
               const SizedBox(height: AppSpacing.lg),
               _ConsentPurposeRegistryCard(registry: consentRegistry),
             ],
@@ -426,9 +429,10 @@ class _ConsentPurposeTile extends StatelessWidget {
 }
 
 class _DataRequestCopyCard extends StatelessWidget {
-  const _DataRequestCopyCard({required this.review});
+  const _DataRequestCopyCard({required this.review, required this.onOpen});
 
   final DataRequestCopyReview review;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -492,6 +496,15 @@ class _DataRequestCopyCard extends StatelessWidget {
             (request) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: _DataRequestTile(request: request),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onOpen,
+              icon: const Icon(Icons.shield_outlined),
+              label: const Text('自分のデータを管理'),
             ),
           ),
           const SizedBox(height: AppSpacing.md),

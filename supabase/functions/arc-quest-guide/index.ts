@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
   const payload = await readJson<{
     mode?: string;
     wish?: string;
+    target_date?: string | null;
     quest?: QuestPayload;
     mission?: Record<string, unknown>;
     regeneration_intent?: string;
@@ -105,7 +106,7 @@ Deno.serve(async (req) => {
   if (!payload) {
     return jsonResponse({ error: "Invalid JSON body" }, { status: 400 });
   }
-  if (payload.mode === "quest_alternatives") {
+  if (payload.mode === "quest_intent") {
     const wish = typeof payload.wish === "string"
       ? payload.wish.trim().slice(0, 1200)
       : "";
@@ -116,7 +117,8 @@ Deno.serve(async (req) => {
     if (safety) {
       return jsonResponse({ error: "unsafe_intent", safety }, { status: 422 });
     }
-    return jsonResponse(await buildQuestAlternatives(wish));
+    const intent = await buildQuestIntent(wish, payload.target_date ?? null);
+    return intent ? jsonResponse(intent) : planningUnavailable("quest_intent");
   }
   if (payload.mode === "regenerate_mission") {
     const quest = payload.quest ?? {};
@@ -127,13 +129,14 @@ Deno.serve(async (req) => {
     if (safety) {
       return jsonResponse({ error: "unsafe_intent", safety }, { status: 422 });
     }
-    return jsonResponse(
-      await buildMissionRegeneration(
-        quest,
-        mission,
-        payload.regeneration_intent ?? "moreSpecific",
-      ),
+    const regeneration = await buildMissionRegeneration(
+      quest,
+      mission,
+      payload.regeneration_intent ?? "moreSpecific",
     );
+    return regeneration
+      ? jsonResponse(regeneration)
+      : planningUnavailable("mission_regeneration");
   }
   const { quest, planning_feedback: planningFeedback } = payload;
   const sanitizedQuest: QuestPayload = {
@@ -154,98 +157,153 @@ Deno.serve(async (req) => {
     planningFeedback ?? [],
     payload.quest_understanding,
   );
-  return jsonResponse(guide);
+  return guide ? jsonResponse(guide) : planningUnavailable("quest_guide");
 });
 
-function questAlternativesSchema() {
+const questTypes = [
+  "achievement",
+  "experience",
+  "travel",
+  "learning",
+  "habit",
+  "career",
+  "financial",
+  "creation",
+  "health_fitness",
+  "relationship",
+  "purchase",
+  "event",
+  "exploration",
+  "other",
+] as const;
+
+const clarificationTypes = [
+  "deadline",
+  "budget",
+  "location",
+  "experience",
+  "safety",
+  "party",
+  "purpose",
+  "target_level",
+  "duration",
+  "frequency",
+] as const;
+
+function questIntentSchema() {
   return {
     type: "object",
     properties: {
-      alternatives: {
+      quest_type: { type: "string", enum: questTypes },
+      clarity: {
+        type: "string",
+        enum: ["clear", "needs_clarification", "multiple_directions"],
+      },
+      optimized_title: { type: "string" },
+      summary: { type: "string" },
+      success_condition: { type: "string" },
+      clarification_questions: {
         type: "array",
-        minItems: 2,
-        maxItems: 5,
+        minItems: 0,
+        maxItems: 3,
+        items: {
+          type: "object",
+          properties: {
+            type: { type: "string", enum: clarificationTypes },
+            label: { type: "string" },
+            hint: { type: "string" },
+          },
+          required: ["type", "label", "hint"],
+        },
+      },
+      directions: {
+        type: "array",
+        minItems: 0,
+        maxItems: 3,
         items: {
           type: "object",
           properties: {
             title: { type: "string" },
-            outcome: { type: "string" },
-            fit_reason: { type: "string" },
-            first_step: { type: "string" },
-            difficulty: {
-              type: "string",
-              enum: ["easy", "normal", "hard", "legendary"],
-            },
-            estimated_duration_label: { type: "string" },
+            success_condition: { type: "string" },
+            rationale: { type: "string" },
           },
-          required: [
-            "title",
-            "outcome",
-            "fit_reason",
-            "first_step",
-            "difficulty",
-            "estimated_duration_label",
-          ],
+          required: ["title", "success_condition", "rationale"],
         },
       },
     },
-    required: ["alternatives"],
+    required: [
+      "quest_type",
+      "clarity",
+      "optimized_title",
+      "summary",
+      "success_condition",
+      "clarification_questions",
+      "directions",
+    ],
   };
 }
 
-async function buildQuestAlternatives(wish: string) {
+async function buildQuestIntent(wish: string, targetDate: string | null) {
   try {
     const result = await generateAiText({
-      feature: "quest_alternatives",
-      promptVersion: "quest_alternatives_v1",
+      feature: "quest_intent",
+      promptVersion: "quest_intent_v2",
       systemInstruction:
-        "You are Arc's private Quest framing planner. Turn one ambiguous wish into 2-5 genuinely different, achievable Quest outcomes in natural Japanese. Vary scope, success evidence, duration, and first step. Do not merely paraphrase. Do not invent current facts or commercial offers. Return schema JSON only.",
+        "You are Arc's private Quest intent planner. Understand the Japanese wish semantically. Never create a title by appending generic phrases such as 小さく試す, 習慣にする, 本格的に取り組む, 挑戦する, or 達成する. If the intent is clear, return clarity=clear, no questions, and an empty directions array. Ask only questions whose answers materially change the route, safety, or success evidence, maximum three. Return 2-3 directions only when there are genuinely different achievable outcomes; never return mere paraphrases. A habit Quest is valid only when the meaning is actually habitual. Do not generate Missions in this operation. Use natural Japanese and schema JSON only.",
       input: {
-        task: "Generate selectable Quest framings. The user will edit or combine them before saving.",
+        task:
+          "Classify the internal Quest type, decide whether clarification is necessary, and create one confirmation-ready Quest summary. Candidate directions are optional, never mandatory.",
         wish,
+        target_date: targetDate,
       },
-      responseSchema: questAlternativesSchema(),
+      responseSchema: questIntentSchema(),
       maxOutputTokens: 1_500,
-      temperature: 0.65,
+      temperature: 0.35,
     });
-    if (!result) return fallbackQuestAlternatives(wish);
+    if (!result) return null;
     const parsed = JSON.parse(stripJsonFence(result.text));
-    const alternatives = Array.isArray(parsed.alternatives)
-      ? parsed.alternatives.slice(0, 5)
+    const clarity = parsed.clarity;
+    const questions = Array.isArray(parsed.clarification_questions)
+      ? parsed.clarification_questions.slice(0, 3)
       : [];
-    return alternatives.length >= 2
-      ? {
-        alternatives,
-        source_type: `${result.provider}_quest_alternatives`,
-      }
-      : fallbackQuestAlternatives(wish);
+    const directions = Array.isArray(parsed.directions)
+      ? parsed.directions.slice(0, 3).filter((item: unknown) =>
+        isValidQuestDirection(wish, item)
+      )
+      : [];
+    if (clarity === "multiple_directions" && directions.length < 2) {
+      return null;
+    }
+    if (clarity !== "multiple_directions" && directions.length > 0) {
+      return null;
+    }
+    if (clarity === "clear" && questions.length > 0) return null;
+    return {
+      ...parsed,
+      clarification_questions: questions,
+      directions,
+      source_type: `${result.provider}_quest_intent`,
+    };
   } catch (_error) {
-    return fallbackQuestAlternatives(wish);
+    return null;
   }
 }
 
-function fallbackQuestAlternatives(wish: string) {
-  return {
-    alternatives: [
-      {
-        title: `${wish}を小さく試す`,
-        outcome: "自分に合う挑戦の形を確認できる",
-        fit_reason: "条件が曖昧でも始められる",
-        first_step: "叶った状態を一文で書く",
-        difficulty: "easy",
-        estimated_duration_label: "約2週間",
-      },
-      {
-        title: `${wish}を続けられる形にする`,
-        outcome: "無理なく続く頻度と環境を整える",
-        fit_reason: "日常へ定着させたい場合に向く",
-        first_step: "週に使える時間を確認する",
-        difficulty: "normal",
-        estimated_duration_label: "約3か月",
-      },
-    ],
-    source_type: "local_quest_alternatives",
-  };
+function isValidQuestDirection(wish: string, value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  const title = String((value as Record<string, unknown>).title ?? "").trim();
+  const success = String(
+    (value as Record<string, unknown>).success_condition ?? "",
+  ).trim();
+  if (!title || !success) return false;
+  if (!title.startsWith(wish.trim())) return true;
+  return ![
+    "を小さく試す",
+    "を習慣にする",
+    "に本格的に取り組む",
+    "に挑戦する",
+    "を達成する",
+  ].some((suffix) => title.endsWith(suffix));
 }
 
 function missionRegenerationSchema() {
@@ -280,53 +338,18 @@ async function buildMissionRegeneration(
       maxOutputTokens: 1_500,
       temperature: 0.35,
     });
-    if (!result) return fallbackMissionRegeneration(mission, intent);
+    if (!result) return null;
     const parsed = JSON.parse(stripJsonFence(result.text));
     const candidate = normalizeCandidate(parsed.mission_candidate);
-    if (!candidate) return fallbackMissionRegeneration(mission, intent);
+    if (!candidate) return null;
     return {
       reason: textOr(parsed.reason, "選んだ方針に合わせて、実行可能な一歩へ描き直しました。"),
       mission_candidate: candidate,
       source_type: `${result.provider}_mission_regeneration`,
     };
   } catch (_error) {
-    return fallbackMissionRegeneration(mission, intent);
+    return null;
   }
-}
-
-function fallbackMissionRegeneration(
-  mission: Record<string, unknown>,
-  intent: string,
-) {
-  const title = textOr(mission.title, "次の一歩");
-  const smaller = intent === "smaller";
-  const done = smaller
-    ? "15分取り組み、次に続ける点を1つ記録する"
-    : textOr(mission.done_condition, "実行結果を確認できる形で記録する");
-  return {
-    reason: "現在のMissionを保ちながら、選んだ方針で始めやすくしました。",
-    mission_candidate: normalizeCandidate({
-      ...mission,
-      plan_key: textOr(mission.id, `mission-${crypto.randomUUID()}`),
-      title: smaller ? `${title}を15分だけ始める` : title,
-      description: `${done}したら完了です。`,
-      done_condition: done,
-      expected_output: textOr(mission.expected_output, "確認できる実行記録"),
-      action: smaller ? "15分だけ着手する" : title,
-      optionality: "required",
-      confidence: 0.58,
-      dependency_plan_keys: [],
-      guide_type: "route",
-      difficulty: "easy",
-      priority: "normal",
-      category: "実行",
-      estimated_duration_days: smaller ? 1 : mission.estimated_duration_days,
-      difficulty_score: mission.difficulty_score,
-      reference_hints: [],
-      enterprise_support_hints: [],
-    }),
-    source_type: "local_mission_regeneration",
-  };
 }
 
 function sanitizePlanningContext(
@@ -386,7 +409,7 @@ async function buildArcQuestGuide(
       maxOutputTokens: 6_000,
       temperature: 0.55,
     });
-    if (!result) return fallbackGuide(quest);
+    if (!result) return null;
 
     const parsed = JSON.parse(stripJsonFence(result.text));
     const initialGuide = normalizeGuide(
@@ -394,15 +417,16 @@ async function buildArcQuestGuide(
       parsed,
       `${result.provider}_arc_quest_guide`,
     );
+    if (!initialGuide) return null;
     return await critiqueAndRepairGuide(quest, initialGuide, understanding);
   } catch (_error) {
-    return fallbackGuide(quest);
+    return null;
   }
 }
 
 async function critiqueAndRepairGuide(
   quest: QuestPayload,
-  initialGuide: ReturnType<typeof normalizeGuide>,
+  initialGuide: NonNullable<ReturnType<typeof normalizeGuide>>,
   understanding?: QuestUnderstanding,
 ) {
   try {
@@ -508,7 +532,7 @@ const questGuideSchema = {
     quest_understanding: questUnderstandingSchema(),
     mission_candidates: {
       type: "array",
-      minItems: 3,
+      minItems: 1,
       maxItems: 30,
       items: {
         type: "object",
@@ -584,7 +608,7 @@ function questUnderstandingSchema() {
 
 function questDnaSchema() {
   const attributes = [
-    "category", "theme", "difficulty", "duration", "budget", "location",
+    "quest_type", "category", "theme", "difficulty", "duration", "budget", "location",
     "season", "required_skills", "related_interests", "risk_level",
     "emotional_weight", "life_stage", "motivation_type", "social_type",
     "monetization_relevance", "enterprise_relevance",
@@ -611,7 +635,7 @@ function questEvaluationSchema() {
     properties: {
       difficulty_score: { type: "integer", minimum: 1, maximum: 5 },
       estimated_duration_days: { type: "integer", minimum: 1, maximum: 36500 },
-      estimated_mission_count: { type: "integer", minimum: 3, maximum: 30 },
+      estimated_mission_count: { type: "integer", minimum: 1, maximum: 30 },
       estimated_cost: { type: "string" },
       risk_summary: { type: "string" },
       estimated_success_rate: { type: "number", minimum: 0, maximum: 1 },
@@ -643,20 +667,6 @@ function stripJsonFence(value: string) {
   return value.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
 }
 
-function fallbackGuide(quest: QuestPayload) {
-  return {
-    ...fallbackGuideWithoutRecursion(quest),
-    plan_quality: {
-      score: 0.72,
-      generation_version: "local_quest_guide_v3",
-      critic_passes: 0,
-      repaired_mission_count: 0,
-      generated_at: new Date().toISOString(),
-    },
-    source_type: "local_arc_quest_guide",
-  };
-}
-
 function normalizeGuide(
   quest: QuestPayload,
   data: Record<string, unknown>,
@@ -669,25 +679,18 @@ function normalizeGuide(
     .map(normalizeCandidate)
     .filter((candidate): candidate is MissionCandidate => candidate !== null);
   const reviewedCandidates = reviewMissionCandidates(normalizedCandidates);
-
-  const fallbackCandidates = fallbackGuideWithoutRecursion(quest);
+  if (reviewedCandidates.length === 0) return null;
+  const acceptedCandidates = reviewedCandidates.slice(0, 20);
   return {
-    summary: textOr(data.summary, fallbackCandidates.summary),
-    path: textOr(data.path, fallbackCandidates.path),
-    cautions: textOr(data.cautions, fallbackCandidates.cautions),
-    encouragement: textOr(
-      data.encouragement,
-      fallbackCandidates.encouragement,
-    ),
-    mission_candidates: reviewedCandidates.length >= 3
-      ? reviewedCandidates.slice(0, 20)
-      : fallbackCandidates.mission_candidates,
+    summary: textOr(data.summary, "ArcがQuestの航路を整理しました。"),
+    path: textOr(data.path, "承認前の航路を確認してください。"),
+    cautions: textOr(data.cautions, "不確かな情報は実行前に確認してください。"),
+    encouragement: textOr(data.encouragement, "一緒に航路を確かめて進みましょう。"),
+    mission_candidates: acceptedCandidates,
     effort_estimate: normalizeEffortEstimate(data.effort_estimate, 720, 60),
     quest_evaluation: normalizeQuestEvaluation(
       data.quest_evaluation,
-      reviewedCandidates.length >= 3
-        ? reviewedCandidates
-        : fallbackCandidates.mission_candidates,
+      acceptedCandidates,
     ),
     quest_dna: normalizeQuestDna(data.quest_dna, quest),
     quest_understanding: normalizeQuestUnderstanding(
@@ -696,9 +699,7 @@ function normalizeGuide(
     ),
     plan_quality: {
       score: scoreMissionCandidates(
-        reviewedCandidates.length >= 3
-          ? reviewedCandidates
-          : fallbackCandidates.mission_candidates,
+        acceptedCandidates,
       ),
       generation_version: "quest_guide_v3",
       critic_passes: 0,
@@ -767,55 +768,14 @@ function reviewMissionCandidates(candidates: MissionCandidate[]) {
   return ordered;
 }
 
-function fallbackGuideWithoutRecursion(quest: QuestPayload) {
-  const title = quest.title?.trim() || "新しいQuest";
-  const template = resolveQuestPlanningTemplate(quest);
-  const detail = quest.description?.trim() || "";
-  const target = quest.target_date ? `期限 ${quest.target_date} を確認し、` : "";
-  const steps = [
-    ["達成した状態を言葉にする", `「${title}」で何ができれば達成かを一文で記録したら完了です。`, "設計"],
-    ["今の条件と不明点を分ける", `${detail ? `「${detail}」を前提に、` : ""}${target}使える時間、予算、場所、不明点をQuestメモへ分けて記録したら完了です。`, "設計"],
-    ["最初に確認する情報源を決める", `${template.safety} 公式または専門家の確認先と確認日をQuestメモに残したら完了です。`, "確認"],
-    ["今日の最小の一歩を予定する", "15分から始められる具体的な行動、実行日時、完了の印を決めたら完了です。", "実行"],
-  ];
-  return {
-    summary: `「${title}」の成功条件と今わかっている条件から、最初の航路を整理しました。`,
-    path: "成功条件を定め、条件を確認し、今日の一歩から具体化します。",
-    cautions: template.safety,
-    encouragement: "このQuestに合う航路は確保できています。最初のMissionから一つずつ進めましょう。",
-    effort_estimate: normalizeEffortEstimate(null, 720, 60),
-    quest_dna: normalizeQuestDna(null, quest),
-    quest_understanding: normalizeQuestUnderstanding(null, quest),
-    mission_candidates: steps.map(([missionTitle, done, category], index) => ({
-      plan_key: `mission-${index + 1}`,
-      title: missionTitle,
-      description: done,
-      guide_type: "route",
-      difficulty: "easy",
-      purpose: `「${title}」を一歩進める`,
-      done_condition: done,
-      expected_output: index === 0
-        ? "Questの成功条件"
-        : index === 1
-        ? "確認済み条件と不明点の一覧"
-        : index === 2
-        ? "確認日付きの公式または専門家の参照先"
-        : "実行日時付きの最初のMission",
-      verification_type: index === 2 ? "official_source" : "artifact",
-      action: missionTitle,
-      optionality: "required",
-      source_requirement: index === 2 ? "official" : "none",
-      confidence: 0.72,
-      dependency_plan_keys: index === 0 ? [] : [`mission-${index}`],
-      priority: index < 2 ? "high" : "normal",
-      category,
-      estimated_duration_days: 5,
-      difficulty_score: 2,
-      reference_hints: [],
-      enterprise_support_hints: [],
-      effort_estimate: normalizeEffortEstimate(null, 90, 5),
-    })).slice(0, 30),
-  };
+function planningUnavailable(operation: string) {
+  return jsonResponse({
+    status: "retryable_error",
+    error: "planning_temporarily_unavailable",
+    operation,
+    input_preserved: true,
+    manual_path_available: true,
+  }, { status: 503 });
 }
 
 function normalizeQuestUnderstanding(value: unknown, quest: QuestPayload) {
@@ -857,6 +817,7 @@ function normalizeQuestDna(value: unknown, quest: QuestPayload) {
     ? raw.attributes as Record<string, unknown>
     : {};
   const fallback: Record<string, string> = {
+    quest_type: textOr(rawAttributes.quest_type, inferQuestType(quest)),
     category: textOr(rawAttributes.category, quest.category || "冒険"),
     theme: textOr(rawAttributes.theme, "人生の航路"),
     difficulty: textOr(rawAttributes.difficulty, "未評価"),
@@ -880,6 +841,17 @@ function normalizeQuestDna(value: unknown, quest: QuestPayload) {
     evaluated_at: new Date().toISOString(),
     provenance: "gemini_structured_output",
   };
+}
+
+function inferQuestType(quest: QuestPayload) {
+  const source = `${quest.title ?? ""} ${quest.description ?? ""}`.toLowerCase();
+  if (/(旅行|旅|海外|観光|登山|キャンプ|行きたい)/.test(source)) return "travel";
+  if (/(毎日|毎朝|毎週|習慣|継続)/.test(source)) return "habit";
+  if (/(英語|学習|勉強|資格|習得)/.test(source)) return "learning";
+  if (/(転職|就職|昇進|仕事|キャリア)/.test(source)) return "career";
+  if (/(健康|運動|走る|筋トレ|減量)/.test(source)) return "health_fitness";
+  if (/(作る|制作|執筆|開発|出版)/.test(source)) return "creation";
+  return "other";
 }
 
 function normalizeCandidate(candidate: unknown): MissionCandidate | null {
@@ -929,7 +901,7 @@ function normalizeQuestEvaluation(value: unknown, missions: MissionCandidate[]) 
   return {
     difficulty_score: boundedInteger(data.difficulty_score, 1, 5, 3),
     estimated_duration_days: boundedInteger(data.estimated_duration_days, 1, 36500, Math.max(1, duration)),
-    estimated_mission_count: Math.max(3, Math.min(30, missions.length)),
+    estimated_mission_count: Math.max(1, Math.min(30, missions.length)),
     estimated_cost: optionalText(data.estimated_cost),
     risk_summary: textOr(data.risk_summary, "状況の変化に合わせて航路を見直しましょう。"),
     estimated_success_rate: boundedNumber(data.estimated_success_rate, 0, 1, 0.65),

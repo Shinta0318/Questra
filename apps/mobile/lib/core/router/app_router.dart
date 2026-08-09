@@ -18,9 +18,12 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/quest/quest_screen.dart';
 import '../../features/quest/quest_route_screen.dart';
 import '../../features/settings/settings_screen.dart';
+import '../../features/trust/data_rights_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/trail/trail_screen.dart';
+import '../../features/trail/trail_model.dart';
 import '../../features/task/task_detail_screen.dart';
+import '../../features/task/task_screen.dart';
 import '../../widgets/layout/questra_coming_soon_screen.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
@@ -56,6 +59,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.dataRights,
+        builder: (context, state) => const DataRightsScreen(),
       ),
       GoRoute(
         path: AppRoutes.feedback,
@@ -136,13 +143,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: AppRoutes.mission,
                 builder: (context, state) => const MissionScreen(),
               ),
+              GoRoute(
+                path: AppRoutes.task,
+                builder: (context, state) => const TaskScreen(),
+              ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: AppRoutes.arc,
-                builder: (context, state) => const ArcScreen(),
+                builder: (context, state) => ArcScreen(
+                  initialPrompt: state.uri.queryParameters['prompt'],
+                  focusQuestId: state.uri.queryParameters['questId'],
+                  focusMissionId: state.uri.queryParameters['missionId'],
+                  returnLocation: state.uri.queryParameters['returnTo'],
+                ),
               ),
             ],
           ),
@@ -150,7 +166,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.trail,
-                builder: (context, state) => const TrailScreen(),
+                builder: (context, state) {
+                  final query = state.uri.queryParameters;
+                  final questId = query['questId'];
+                  final questTitle = query['questTitle'];
+                  final missionId = query['missionId'];
+                  final missionTitle = query['missionTitle'];
+                  final taskId = query['taskId'];
+                  final taskTitle = query['taskTitle'];
+                  final hasTaskParent = [
+                    questId,
+                    questTitle,
+                    missionId,
+                    missionTitle,
+                    taskId,
+                    taskTitle,
+                  ].every((value) => value != null && value.trim().isNotEmpty);
+                  return TrailScreen(
+                    initialParent: hasTaskParent
+                        ? TrailParentContext(
+                            questId: questId!,
+                            questTitle: questTitle!,
+                            missionId: missionId!,
+                            missionTitle: missionTitle!,
+                            taskId: taskId!,
+                            taskTitle: taskTitle!,
+                          )
+                        : null,
+                    openComposer: query['create'] == '1' && hasTaskParent,
+                  );
+                },
               ),
             ],
           ),

@@ -11,7 +11,7 @@ Terms of Serviceは引き続きDraftであり、外部BetaまたはStore配布�
 | Area | Actual behavior | Copy decision |
 | --- | --- | --- |
 | Persistence | 接続時はSupabase、未接続時はin-memory fallback | 保存保証の違いを明記 |
-| Arc Chat | message、recent history、Quest/Mission/Trail/Memory contextをEdge Functionへ送信 | 外部処理範囲を明記 |
+| Arc Chat | message、recent history、Quest/Mission/Task/Trail/Memory contextをEdge Functionへ送信 | 外部処理範囲を明記 |
 | Quest Guide | Quest detailをEdge Functionへ送信 | Guide生成対象を明記 |
 | Model provider | Gemini Interactions APIが既定、OpenAIは明示互換 | provider、fallback、互換経路を明記 |
 | Gemini storage | requestは`store=false` | server-side state保存を既定で無効化 |

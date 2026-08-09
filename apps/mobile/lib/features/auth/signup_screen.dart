@@ -39,7 +39,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return AuthJourneyScaffold(
-      eyebrow: 'BEGIN YOUR JOURNEY',
+      eyebrow: '新しい航海を始める',
       title: '最初のQuestを灯そう',
       message: 'まだ名前のない願いも大丈夫。\nArcと一緒に、君だけの航路を描こう。',
       child: AutofillGroup(
@@ -93,8 +93,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 required: true,
                 child: TextFormField(
                   controller: _emailController,
-                  decoration:
-                      _fieldDecoration(icon: Icons.mail_outline_rounded),
+                  decoration: _fieldDecoration(
+                    icon: Icons.mail_outline_rounded,
+                  ),
                   style: const TextStyle(color: AppColors.white),
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -153,8 +154,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
               TextButton(
-                onPressed:
-                    auth.isLoading ? null : () => context.go(AppRoutes.login),
+                onPressed: auth.isLoading
+                    ? null
+                    : () => context.go(AppRoutes.login),
                 child: const Text('アカウントをお持ちの方はログイン'),
               ),
             ],
@@ -164,10 +166,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     );
   }
 
-  InputDecoration _fieldDecoration({
-    required IconData icon,
-    Widget? suffix,
-  }) {
+  InputDecoration _fieldDecoration({required IconData icon, Widget? suffix}) {
     return InputDecoration(
       prefixIcon: Icon(icon, color: AppColors.skyBlue),
       suffixIcon: suffix,
@@ -183,7 +182,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    await ref.read(authControllerProvider.notifier).signUp(
+    await ref
+        .read(authControllerProvider.notifier)
+        .signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text,
           nickname: _nicknameController.text.trim(),
@@ -201,5 +202,4 @@ Widget? _hiddenCounter(
   required int currentLength,
   required bool isFocused,
   required int? maxLength,
-}) =>
-    null;
+}) => null;

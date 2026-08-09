@@ -21,9 +21,27 @@ void main() {
       );
       expect(adapter, contains('/v1/interactions'));
       expect(adapter, contains('store: false'));
+      expect(adapter, contains('thinking_summaries: "none"'));
+      expect(adapter, isNot(contains('temperature:')));
+      expect(adapter, contains('body.response_format = {'));
+      expect(adapter, contains('toGeminiSchema(request.responseSchema)'));
+      expect(adapter, contains('key === "properties"'));
+      expect(adapter, contains('if (attempt === 1)'));
+      expect(adapter, isNot(contains('"minItems", "maxItems", "minimum", "maximum"')));
+      expect(adapter, isNot(contains('"minLength", "maxLength"')));
+      expect(adapter, isNot(contains('top_p:')));
+      expect(adapter, isNot(contains('top_k:')));
       expect(models, contains('gemini-3.6-flash'));
       expect(models, contains('releaseType: "stable"'));
       expect(models, isNot(contains('gemini-flash-latest')));
+      expect(
+        models,
+        contains(
+          '"gemini-3.5-flash-lite": {\n'
+          '    name: "gemini-3.5-flash-lite"',
+        ),
+      );
+      expect(models, contains('defaultThinkingLevel: "minimal"'));
     },
   );
 

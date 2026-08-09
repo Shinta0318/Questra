@@ -8,6 +8,7 @@ class QuestraFieldLabel extends StatelessWidget {
     this.helper,
     this.required = false,
     this.foregroundColor,
+    this.trailing,
     super.key,
   });
 
@@ -15,6 +16,7 @@ class QuestraFieldLabel extends StatelessWidget {
   final String? helper;
   final bool required;
   final Color? foregroundColor;
+  final Widget? trailing;
   final Widget child;
 
   @override
@@ -23,14 +25,15 @@ class QuestraFieldLabel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Flexible(
               child: Text(
                 label,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: foregroundColor,
-                    ),
+                  fontWeight: FontWeight.w800,
+                  color: foregroundColor,
+                ),
               ),
             ),
             if (required) ...[
@@ -38,11 +41,12 @@ class QuestraFieldLabel extends StatelessWidget {
               Text(
                 '必須',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  color: Theme.of(context).colorScheme.error,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
+            if (trailing != null) ...[const Spacer(), trailing!],
           ],
         ),
         if (helper != null) ...[
@@ -50,9 +54,10 @@ class QuestraFieldLabel extends StatelessWidget {
           Text(
             helper!,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: foregroundColor?.withValues(alpha: 0.72) ??
-                      Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color:
+                  foregroundColor?.withValues(alpha: 0.72) ??
+                  Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
         const SizedBox(height: 8),

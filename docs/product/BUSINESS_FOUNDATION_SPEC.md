@@ -12,7 +12,7 @@ Business Foundationは、Quest達成支援の品質を先に高め、その結�
 - 個人向けQuest DNA原本とBusiness派生Signalを別テーブル・別RLS境界に置く。
 - センシティブなQuest/MissionはBusiness利用を禁止する。
 - 支援情報はMission生成後に分類し、商業性をMission生成プロンプトへ混入させない。
-- 同意拒否によってQuest、Mission、Trail、Arcの基本機能を制限しない。
+- 同意拒否によってQuest、Mission、Task、Trail、Arcの基本機能を制限しない。
 
 ## Event Catalog
 

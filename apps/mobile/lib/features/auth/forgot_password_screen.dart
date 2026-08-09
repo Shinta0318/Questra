@@ -33,7 +33,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return AuthJourneyScaffold(
-      eyebrow: 'RECOVER YOUR ROUTE',
+      eyebrow: 'パスワード再設定',
       title: '航路を取り戻す',
       message: '登録したメールアドレスへ、パスワード再設定の案内を送ります。',
       child: auth.passwordResetRequested
@@ -50,9 +50,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   '入力したメールアドレスに該当するアカウントがある場合、再設定メールを送信しました。',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.white,
-                        height: 1.6,
-                      ),
+                    color: AppColors.white,
+                    height: 1.6,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 FilledButton(
@@ -119,8 +119,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    await ref.read(authControllerProvider.notifier).requestPasswordReset(
-          email: _emailController.text.trim(),
-        );
+    await ref
+        .read(authControllerProvider.notifier)
+        .requestPasswordReset(email: _emailController.text.trim());
   }
 }

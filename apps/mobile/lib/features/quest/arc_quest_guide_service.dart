@@ -150,6 +150,32 @@ class ArcMissionCandidate {
   }
 }
 
+class ArcTaskCandidate {
+  const ArcTaskCandidate({
+    required this.planKey,
+    required this.title,
+    required this.action,
+    required this.purpose,
+    required this.doneCondition,
+    required this.expectedOutput,
+    required this.estimatedEffortMinutes,
+    this.dependencyPlanKeys = const [],
+    this.required = true,
+    this.confidence = 0.5,
+  });
+
+  final String planKey;
+  final String title;
+  final String action;
+  final String purpose;
+  final String doneCondition;
+  final String expectedOutput;
+  final int estimatedEffortMinutes;
+  final List<String> dependencyPlanKeys;
+  final bool required;
+  final double confidence;
+}
+
 class ArcQuestGuide {
   const ArcQuestGuide({
     required this.questId,
@@ -168,6 +194,7 @@ class ArcQuestGuide {
     this.approvalToken,
     this.draftId,
     this.currentMissionClientId,
+    this.currentTaskCandidates = const [],
   });
 
   final String questId;
@@ -186,6 +213,7 @@ class ArcQuestGuide {
   final String? approvalToken;
   final String? draftId;
   final String? currentMissionClientId;
+  final List<ArcTaskCandidate> currentTaskCandidates;
 }
 
 abstract interface class ArcQuestGuideService {
@@ -256,8 +284,40 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
         repairedMissionCount: 0,
         generatedAt: DateTime.now().toUtc(),
       ),
+      currentMissionClientId: candidates.first.planKey,
+      currentTaskCandidates: [_localTaskFor(candidates.first)],
     );
   }
+
+  ArcTaskCandidate _localTaskFor(ArcMissionCandidate mission) {
+    final action = mission.description.trim().isNotEmpty
+        ? mission.description.trim()
+        : mission.action.trim();
+    final doneCondition = mission.doneCondition.trim().isNotEmpty
+        ? mission.doneCondition.trim()
+        : action;
+    return ArcTaskCandidate(
+      planKey: 'task-${mission.planKey}',
+      title: _localTaskTitle(
+        mission.action.trim().isNotEmpty
+            ? mission.action.trim()
+            : mission.title,
+      ),
+      action: action,
+      purpose: mission.purpose.trim().isNotEmpty
+          ? mission.purpose.trim()
+          : mission.title,
+      doneCondition: doneCondition,
+      expectedOutput: mission.expectedOutput.trim().isNotEmpty
+          ? mission.expectedOutput.trim()
+          : doneCondition,
+      estimatedEffortMinutes: 30,
+      confidence: 0.65,
+    );
+  }
+
+  String _localTaskTitle(String value) =>
+      value.length <= 100 ? value : '${value.substring(0, 99)}…';
 
   @override
   Future<void> approve({
@@ -353,7 +413,7 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
         purpose: 'Questを実行へ移す',
         description: '15分から始められる行動、実行日時、完了の印を決めたら完了です。',
         doneCondition: '日時付きの最初の行動を決める',
-        expectedOutput: '今日のMission予定',
+        expectedOutput: '優先Missionの予定',
         verificationType: 'artifact',
         dependencyPlanKeys: ['constraints'],
         guideType: GuideType.training,
@@ -715,6 +775,9 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
     final plan = Map<String, dynamic>.from(
       preview['routeMissionPlan'] as Map? ?? const {},
     );
+    final taskPlan = Map<String, dynamic>.from(
+      preview['currentTaskPlan'] as Map? ?? const {},
+    );
     final critic = Map<String, dynamic>.from(
       preview['missionCritic'] as Map? ?? const {},
     );
@@ -768,8 +831,29 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
       previewId: data['preview_id'] as String?,
       approvalToken: data['approval_token'] as String?,
       draftId: data['draft_id'] as String?,
-      currentMissionClientId:
-          (preview['currentTaskPlan'] as Map?)?['missionClientId'] as String?,
+      currentMissionClientId: taskPlan['missionClientId'] as String?,
+      currentTaskCandidates: [
+        for (final raw in (taskPlan['tasks'] as List? ?? const []))
+          if (raw is Map)
+            _taskCandidateFromPlanningData(Map<String, dynamic>.from(raw)),
+      ],
+    );
+  }
+
+  ArcTaskCandidate _taskCandidateFromPlanningData(Map<String, dynamic> data) {
+    return ArcTaskCandidate(
+      planKey: data['clientId'] as String? ?? '',
+      title: data['title'] as String? ?? '',
+      action: data['action'] as String? ?? '',
+      purpose: data['purpose'] as String? ?? '',
+      doneCondition: data['doneCondition'] as String? ?? '',
+      expectedOutput: data['expectedOutput'] as String? ?? '',
+      estimatedEffortMinutes:
+          (data['estimatedEffortMinutes'] as num?)?.round().clamp(1, 1440) ??
+          30,
+      dependencyPlanKeys: _stringList(data['dependencies'], 20),
+      required: data['required'] != false,
+      confidence: (data['confidence'] as num?)?.toDouble() ?? 0.5,
     );
   }
 

@@ -4,6 +4,11 @@ import 'dart:io';
 const defaultOutputPath = 'docs/qst/BETA_CANDIDATE.yaml';
 const readinessMatrixPath = 'docs/qst/BETA_LAUNCH_READINESS.yaml';
 const pubspecPath = 'apps/mobile/pubspec.yaml';
+const migrationsPath = 'supabase/migrations';
+const functionsPath = 'supabase/functions';
+const flutterTestsPath = 'apps/mobile/test';
+const supabaseEvidencePath = 'docs/qst/BETA_SUPABASE_PROJECT.yaml';
+const deviceEvidencePath = 'docs/qst/BETA_DEVICE_VALIDATION.yaml';
 
 const automatedGateNames = [
   'dependency_resolution',
@@ -27,6 +32,12 @@ Future<void> main(List<String> arguments) async {
   final version = _readAppVersion();
   final generatedAt = DateTime.now().toUtc().toIso8601String();
   final worktreeClean = await _isWorktreeClean(options.outputPath);
+  final latestLocalMigration = _latestSqlMigration();
+  final remoteMigrationHead = _yamlValue(supabaseEvidencePath, 'remote_head');
+  final edgeFunctionCount = _edgeFunctionCount();
+  final flutterTestFileCount = _flutterTestFileCount();
+  final supabaseEvidenceStatus = _yamlValue(supabaseEvidencePath, 'status');
+  final deviceEvidenceStatus = _yamlValue(deviceEvidencePath, 'status');
   final artifacts = <_ArtifactEvidence>[];
 
   for (final path in options.artifactPaths) {
@@ -70,6 +81,12 @@ Future<void> main(List<String> arguments) async {
     checks: checks,
     artifacts: artifacts,
     externalEvidenceComplete: options.externalEvidenceComplete,
+    latestLocalMigration: latestLocalMigration,
+    remoteMigrationHead: remoteMigrationHead,
+    edgeFunctionCount: edgeFunctionCount,
+    flutterTestFileCount: flutterTestFileCount,
+    supabaseEvidenceStatus: supabaseEvidenceStatus,
+    deviceEvidenceStatus: deviceEvidenceStatus,
   );
 
   final output = File(options.outputPath);
@@ -93,6 +110,12 @@ String _buildManifest({
   required Map<String, String> checks,
   required List<_ArtifactEvidence> artifacts,
   required bool externalEvidenceComplete,
+  required String latestLocalMigration,
+  required String? remoteMigrationHead,
+  required int edgeFunctionCount,
+  required int flutterTestFileCount,
+  required String? supabaseEvidenceStatus,
+  required String? deviceEvidenceStatus,
 }) {
   final buffer = StringBuffer()
     ..writeln('version: 1')
@@ -105,6 +128,19 @@ String _buildManifest({
     ..writeln('generated_at_utc: ${_yaml(generatedAt)}')
     ..writeln('worktree_clean_before_manifest: $worktreeClean')
     ..writeln('readiness_matrix: ${_yaml(readinessMatrixPath)}')
+    ..writeln('inventory:')
+    ..writeln('  latest_local_migration: ${_yaml(latestLocalMigration)}')
+    ..writeln(
+      '  remote_migration_head: ${remoteMigrationHead == null ? 'null' : _yaml(remoteMigrationHead)}',
+    )
+    ..writeln('  edge_function_count: $edgeFunctionCount')
+    ..writeln('  flutter_test_file_count: $flutterTestFileCount')
+    ..writeln(
+      '  supabase_evidence_status: ${_yaml(supabaseEvidenceStatus ?? 'missing')}',
+    )
+    ..writeln(
+      '  device_evidence_status: ${_yaml(deviceEvidenceStatus ?? 'missing')}',
+    )
     ..writeln('automated_gates:');
 
   for (final name in automatedGateNames) {
@@ -164,6 +200,42 @@ String _readAppVersion() {
     throw StateError('Missing version in $pubspecPath');
   }
   return match.group(1)!;
+}
+
+String _latestSqlMigration() {
+  final files =
+      Directory(migrationsPath)
+          .listSync()
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.sql'))
+          .map((file) => file.uri.pathSegments.last)
+          .toList()
+        ..sort();
+  if (files.isEmpty) throw StateError('No migrations found.');
+  return files.last;
+}
+
+int _edgeFunctionCount() => Directory(functionsPath)
+    .listSync()
+    .whereType<Directory>()
+    .where((directory) => !directory.uri.pathSegments.last.startsWith('_'))
+    .where((directory) => File('${directory.path}/index.ts').existsSync())
+    .length;
+
+int _flutterTestFileCount() => Directory(flutterTestsPath)
+    .listSync(recursive: true)
+    .whereType<File>()
+    .where((file) => file.path.endsWith('_test.dart'))
+    .length;
+
+String? _yamlValue(String path, String key) {
+  final file = File(path);
+  if (!file.existsSync()) return null;
+  final match = RegExp(
+    '^\\s*${RegExp.escape(key)}:\\s*["\']?([^"\'\\r\\n]+)',
+    multiLine: true,
+  ).firstMatch(file.readAsStringSync());
+  return match?.group(1)?.trim();
 }
 
 Future<bool> _isWorktreeClean(String outputPath) async {

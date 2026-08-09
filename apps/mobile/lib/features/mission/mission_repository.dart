@@ -17,6 +17,7 @@ abstract interface class MissionRepository {
     int limit = QuestraPerformanceLimits.missionListLimit,
   });
   Future<Mission> save(Mission mission);
+  Future<Mission> confirmCompletion(Mission mission);
   Future<void> delete(String missionId);
 }
 
@@ -69,6 +70,9 @@ class InMemoryMissionRepository implements MissionRepository {
     _missions.insert(0, mission);
     return mission;
   }
+
+  @override
+  Future<Mission> confirmCompletion(Mission mission) => save(mission);
 
   @override
   Future<void> delete(String missionId) async {
@@ -134,6 +138,23 @@ class SupabaseMissionRepository implements MissionRepository {
       throw StateError('Mission was not saved.');
     }
 
+    return _missionFromRow(Map<String, dynamic>.from(rows.first));
+  }
+
+  @override
+  Future<Mission> confirmCompletion(Mission mission) async {
+    await client.rpc(
+      'confirm_mission_outcome',
+      params: {'p_mission_id': mission.id},
+    );
+    final rows = await client
+        .from('missions')
+        .select(_missionColumns)
+        .eq('id', mission.id)
+        .limit(1);
+    if (rows.isEmpty) {
+      throw StateError('Mission completion was not saved.');
+    }
     return _missionFromRow(Map<String, dynamic>.from(rows.first));
   }
 

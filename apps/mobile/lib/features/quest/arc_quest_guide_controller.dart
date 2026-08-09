@@ -11,6 +11,7 @@ import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
 import 'arc_quest_guide_service.dart';
 import '../mission/mission_controller.dart';
+import '../task/task_controller.dart';
 import 'planning_preferences_controller.dart';
 import 'quest_model.dart';
 
@@ -118,6 +119,7 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
     await ref.read(missionControllerProvider.notifier).loadForQuests([
       quest.id,
     ]);
+    await ref.read(taskControllerProvider.notifier).loadForQuestIds([quest.id]);
     unawaited(_rememberGuide(quest, guide));
   }
 

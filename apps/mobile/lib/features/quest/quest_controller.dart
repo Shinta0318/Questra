@@ -66,7 +66,7 @@ class QuestController extends Notifier<List<Quest>> {
       sync.saved('Questを読み込みました。');
     } catch (error) {
       if (ref.read(authControllerProvider).profile?.id != userId) return;
-      sync.failed('Quest load', error);
+      sync.failed('Questの読み込み', error);
     }
   }
 
@@ -194,7 +194,7 @@ class QuestController extends Notifier<List<Quest>> {
       }
       sync.saved('Questを保存しました。');
     } catch (error) {
-      sync.failed('Quest save', error);
+      sync.failed('Questの保存', error);
       if (recordJourney) {
         _recordQuestAction(
           ArcActionTrigger.saveFailure,
@@ -263,7 +263,7 @@ class QuestController extends Notifier<List<Quest>> {
               questId: quest.id,
               sourceId: quest.id,
               sourceType: sourceType,
-              title: 'Quest memory',
+              title: 'Questの記憶',
               text: '${quest.title}: ${quest.description}',
               metadata: {'status': quest.status.storageKey},
             ),
@@ -294,7 +294,7 @@ class QuestController extends Notifier<List<Quest>> {
       if (removedQuest != null) {
         state = [removedQuest, ...state];
       }
-      sync.failed('Quest delete', error);
+      sync.failed('Questの削除', error);
     }
   }
 }

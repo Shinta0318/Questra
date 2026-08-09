@@ -9,6 +9,7 @@ void main() {
     MissionStatus status = MissionStatus.todo,
     List<String> dependencies = const [],
     int progress = 0,
+    DateTime? successConfirmedAt,
   }) => Mission(
     id: 'mission-1',
     questId: 'quest-1',
@@ -20,19 +21,25 @@ void main() {
     status: status,
     progressPercent: progress,
     dependencyIds: dependencies,
+    successConfirmedAt: successConfirmedAt,
   );
 
-  QuestraTask task(String id, TaskStatus status, {int order = 0}) =>
-      QuestraTask(
-        id: id,
-        questId: 'quest-1',
-        missionId: 'mission-1',
-        title: 'Task $id',
-        action: '具体的な行動をする',
-        doneCondition: '結果を確認できる',
-        status: status,
-        orderIndex: order,
-      );
+  QuestraTask task(
+    String id,
+    TaskStatus status, {
+    int order = 0,
+    List<String> dependencies = const [],
+  }) => QuestraTask(
+    id: id,
+    questId: 'quest-1',
+    missionId: 'mission-1',
+    title: 'Task $id',
+    action: '具体的な行動をする',
+    doneCondition: '結果を確認できる',
+    status: status,
+    orderIndex: order,
+    dependencyIds: dependencies,
+  );
 
   test('必須Taskの完了数から進捗を計算する', () {
     final state = MissionCardPresentation.resolve(
@@ -76,7 +83,7 @@ void main() {
     expect(state.statusLabel, '前提待ち');
   });
 
-  test('全必須Task完了後は完了内容へ誘導する', () {
+  test('全必須Task完了後はMission成果確認へ誘導する', () {
     final state = MissionCardPresentation.resolve(
       mission: mission(),
       tasks: [task('1', TaskStatus.completed)],
@@ -84,17 +91,45 @@ void main() {
     );
 
     expect(state.progress, 1);
+    expect(state.primaryAction, MissionCardPrimaryAction.reviewOutcome);
+    expect(state.statusLabel, '成果確認待ち');
+  });
+
+  test('成果確認済みMissionだけを完了として表示する', () {
+    final state = MissionCardPresentation.resolve(
+      mission: mission(
+        status: MissionStatus.completed,
+        progress: 100,
+        successConfirmedAt: DateTime(2026, 8, 8),
+      ),
+      tasks: [task('1', TaskStatus.completed)],
+      completedMissionIds: const {},
+    );
+
     expect(state.primaryAction, MissionCardPrimaryAction.viewCompleted);
   });
 
-  test('Task未作成時だけMission進捗へフォールバックする', () {
+  test('未完了の前提Taskがあれば前提確認を表示する', () {
+    final state = MissionCardPresentation.resolve(
+      mission: mission(),
+      tasks: [
+        task('2', TaskStatus.pending, dependencies: const ['1']),
+      ],
+      completedMissionIds: const {},
+    );
+
+    expect(state.primaryAction, MissionCardPrimaryAction.viewDependencies);
+    expect(state.nextTask, isNull);
+  });
+
+  test('Task未作成のMission進捗は0から始まる', () {
     final state = MissionCardPresentation.resolve(
       mission: mission(progress: 40),
       tasks: const [],
       completedMissionIds: const {},
     );
 
-    expect(state.progress, 0.4);
+    expect(state.progress, 0);
     expect(state.primaryAction, MissionCardPrimaryAction.viewTasks);
   });
 }

@@ -35,7 +35,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return AuthJourneyScaffold(
-      eyebrow: 'WELCOME BACK',
+      eyebrow: 'おかえりなさい',
       title: '航海を続けよう',
       message: 'おかえり、キャプテン。\n次の星への航路を、一緒に見つけよう。',
       child: AutofillGroup(
@@ -125,18 +125,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
               OutlinedButton(
-                onPressed:
-                    auth.isLoading ? null : () => context.go(AppRoutes.signup),
+                onPressed: auth.isLoading
+                    ? null
+                    : () => context.go(AppRoutes.signup),
                 child: const Text('新しく航海を始める'),
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'ログインすると、Quest・Mission・Trailの続きから再開できます。',
+                'ログインすると、Quest・Mission・Task・Trailの続きから再開できます。',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.white.withValues(alpha: 0.62),
-                      height: 1.5,
-                    ),
+                  color: AppColors.white.withValues(alpha: 0.62),
+                  height: 1.5,
+                ),
               ),
             ],
           ),
@@ -145,10 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  InputDecoration _fieldDecoration({
-    required IconData icon,
-    Widget? suffix,
-  }) {
+  InputDecoration _fieldDecoration({required IconData icon, Widget? suffix}) {
     return InputDecoration(
       prefixIcon: Icon(icon, color: AppColors.skyBlue),
       suffixIcon: suffix,
@@ -164,7 +162,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    await ref.read(authControllerProvider.notifier).login(
+    await ref
+        .read(authControllerProvider.notifier)
+        .login(
           identifier: _identifierController.text.trim(),
           password: _passwordController.text,
         );
@@ -197,10 +197,9 @@ class _AuthNotice extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.white,
-              height: 1.5,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: AppColors.white, height: 1.5),
       ),
     );
   }
@@ -211,5 +210,4 @@ Widget? _hiddenCounter(
   required int currentLength,
   required bool isFocused,
   required int? maxLength,
-}) =>
-    null;
+}) => null;

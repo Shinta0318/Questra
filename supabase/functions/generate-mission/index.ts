@@ -16,14 +16,6 @@ Deno.serve(async (req) => {
   }
 
   const guideType = text(payload.guide?.guide_type, "route");
-  const fallbackMission = {
-    title: "今日の一歩を10分だけ進める",
-    description: "Questにつながる具体的な行動をひとつ選び、10分だけ試してTrailへ残します。",
-    guide_type: guideType,
-    difficulty: "easy",
-    status: "todo",
-  };
-
   try {
     const result = await generateAiText({
       feature: "mission_generation",
@@ -47,12 +39,15 @@ Deno.serve(async (req) => {
       maxOutputTokens: 280,
       temperature: 0.55,
     });
-    if (!result) return jsonResponse({ mission: fallbackMission });
+    if (!result) return planningUnavailable();
     const parsed = JSON.parse(stripFence(result.text)) as Record<string, unknown>;
+    const title = requiredText(parsed.title);
+    const description = requiredText(parsed.description);
+    if (!title || !description) return planningUnavailable();
     return jsonResponse({
       mission: {
-        title: text(parsed.title, fallbackMission.title),
-        description: text(parsed.description, fallbackMission.description),
+        title,
+        description,
         guide_type: guideType,
         difficulty: parsed.difficulty === "normal" ? "normal" : "easy",
         status: "todo",
@@ -60,9 +55,22 @@ Deno.serve(async (req) => {
       },
     });
   } catch (_) {
-    return jsonResponse({ mission: fallbackMission });
+    return planningUnavailable();
   }
 });
+
+function planningUnavailable() {
+  return jsonResponse({
+    status: "retryable_error",
+    error: "mission_generation_temporarily_unavailable",
+    input_preserved: true,
+    manual_path_available: true,
+  }, { status: 503 });
+}
+
+function requiredText(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
 
 function text(value: unknown, fallback: string) {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;

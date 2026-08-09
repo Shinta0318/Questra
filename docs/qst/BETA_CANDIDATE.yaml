@@ -1,18 +1,25 @@
 version: 1
-candidate_status: "validated"
+candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "faf69ffc8d4d94a108307d34061f4a835fc5e7fe"
-rollback_commit: "49ed2f50f24d3ac9d4a789befb58baf95cb1ae58"
+source_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
+rollback_commit: "1334712618716cbd0c5ce7d0f7dfa890bcf8200b"
 branch: "codex/initial-questra-structure-pr"
-generated_at_utc: "2026-07-17T09:04:10.975442Z"
-worktree_clean_before_manifest: true
+generated_at_utc: "2026-08-09T06:18:23.048998Z"
+worktree_clean_before_manifest: false
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
+inventory:
+  latest_local_migration: "202608090003_data_rights_request_lifecycle.sql"
+  remote_migration_head: "202608080006_route_proposal_stale_conflict_guard.sql"
+  edge_function_count: 11
+  flutter_test_file_count: 158
+  supabase_evidence_status: "local_migration_pending_deployment"
+  device_evidence_status: "evidence_partial"
 automated_gates:
   dependency_resolution: "passed"
   static_analysis: "passed"
-  flutter_tests: "passed"
-  rls_static_readiness: "passed"
+  flutter_tests: "focused_pass_full_pending"
+  rls_static_readiness: "full_pending_after_202608090003"
   performance_readiness: "passed"
   feedback_readiness: "passed"
   error_capture_contract: "passed"

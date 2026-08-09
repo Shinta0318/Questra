@@ -21,11 +21,7 @@ import '../quest/quest_guide_model.dart';
 import '../quest/quest_model.dart';
 import '../quest/planning_preferences_controller.dart';
 import '../quest/quest_progress_service.dart';
-import '../quest/route_replanning_repository.dart';
 import '../tagging/tagging_providers.dart';
-import '../trail/trail_controller.dart';
-import '../trail/trail_event_model.dart';
-import '../trail/trail_providers.dart';
 import 'mission_generation_service.dart';
 import 'mission_contract_service.dart';
 import 'mission_model.dart';
@@ -296,33 +292,6 @@ class MissionController extends Notifier<List<Mission>> {
     }
   }
 
-  void updateProgress(String missionId, int progressPercent) {
-    final mission = state.where((item) => item.id == missionId).firstOrNull;
-    if (mission == null) return;
-    final normalized = progressPercent.clamp(0, 100);
-    final updated = mission.copyWith(
-      progressPercent: normalized,
-      status: normalized == 100 ? MissionStatus.completed : MissionStatus.todo,
-    );
-    state = [
-      for (final item in state)
-        if (item.id == missionId) updated else item,
-    ];
-    _syncQuestProgress(updated.questId);
-    unawaited(
-      _persistMission(
-        updated,
-        sourceType: normalized == 100
-            ? ArcMemorySourceType.missionCompleted
-            : ArcMemorySourceType.missionCreated,
-        recordJourney: normalized == 100,
-      ),
-    );
-    if (normalized == 100) {
-      unawaited(_recordRouteProgressEvent(updated, 'completed'));
-    }
-  }
-
   /// Task is the unit of action. Mission progress is derived from required Tasks.
   void applyTaskProgress(
     String missionId, {
@@ -334,20 +303,43 @@ class MissionController extends Notifier<List<Mission>> {
     final normalized = progressPercent.clamp(0, 100);
     final completed =
         allRequiredTasksCompleted && mission.successConfirmedAt != null;
+    final nextStatus = completed ? MissionStatus.completed : MissionStatus.todo;
+    final confirmationWillClear =
+        !allRequiredTasksCompleted && mission.successConfirmedAt != null;
+    if (mission.progressPercent == normalized &&
+        mission.status == nextStatus &&
+        !confirmationWillClear) {
+      return;
+    }
     final updated = mission.copyWith(
       progressPercent: normalized,
-      status: completed ? MissionStatus.completed : MissionStatus.todo,
+      status: nextStatus,
+      clearSuccessConfirmedAt: !allRequiredTasksCompleted,
     );
     state = [
       for (final item in state)
         if (item.id == missionId) updated else item,
     ];
     _syncQuestProgress(updated.questId);
+    unawaited(
+      _persistMission(
+        updated,
+        sourceType: ArcMemorySourceType.missionCreated,
+        recordJourney: false,
+      ),
+    );
   }
 
-  bool confirmMissionSuccess(String missionId) {
+  bool confirmMissionSuccess(
+    String missionId, {
+    required bool allRequiredTasksCompleted,
+  }) {
     final mission = state.where((item) => item.id == missionId).firstOrNull;
-    if (mission == null || mission.progressPercent < 100) return false;
+    if (mission == null ||
+        !allRequiredTasksCompleted ||
+        mission.progressPercent < 100) {
+      return false;
+    }
     final confirmed = mission.copyWith(
       status: MissionStatus.completed,
       successConfirmedAt: DateTime.now(),
@@ -361,6 +353,7 @@ class MissionController extends Notifier<List<Mission>> {
       _persistMission(
         confirmed,
         sourceType: ArcMemorySourceType.missionCompleted,
+        confirmOutcome: true,
       ),
     );
     return true;
@@ -473,78 +466,6 @@ class MissionController extends Notifier<List<Mission>> {
     }
   }
 
-  Mission? completeMission(String missionId) {
-    final completedMission = state
-        .where((mission) => mission.id == missionId)
-        .firstOrNull;
-    if (completedMission == null ||
-        completedMission.status == MissionStatus.completed) {
-      return null;
-    }
-    final updatedMission = completedMission.copyWith(
-      status: MissionStatus.completed,
-      progressPercent: 100,
-    );
-    state = [
-      for (final mission in state)
-        if (mission.id == missionId) updatedMission else mission,
-    ];
-    _syncQuestProgress(updatedMission.questId);
-    _recordMissionEmotion(
-      updatedMission,
-      trigger: ArcActionTrigger.missionCompleted,
-    );
-    unawaited(
-      ref
-          .read(analyticsServiceProvider)
-          .missionCompleted(
-            userId: ref.read(authControllerProvider).profile?.id,
-            difficulty: updatedMission.difficulty.name,
-            hasQuest: updatedMission.questId.isNotEmpty,
-          ),
-    );
-    unawaited(
-      ref
-          .read(analyticsServiceProvider)
-          .progress(
-            name: AnalyticsEventName.missionCompleted,
-            userId: ref.read(authControllerProvider).profile?.id,
-            questId: updatedMission.questId,
-            missionId: updatedMission.id,
-            properties: {'status': 'completed'},
-            idempotencyKey:
-                'mission_completed:${updatedMission.id}:${updatedMission.updatedAt.microsecondsSinceEpoch}',
-          ),
-    );
-
-    unawaited(
-      _persistMission(
-        updatedMission,
-        sourceType: ArcMemorySourceType.missionCompleted,
-      ),
-    );
-    unawaited(_recordRouteProgressEvent(updatedMission, 'completed'));
-    final trail = ref
-        .read(trailControllerProvider.notifier)
-        .addQuestTrail(
-          questId: completedMission.questId,
-          missionId: completedMission.id,
-          questTitle: completedMission.questTitle,
-        );
-    unawaited(
-      _saveTrailEvent(
-        TrailEvent(
-          trailId: trail.id,
-          questId: completedMission.questId,
-          missionId: completedMission.id,
-          eventType: TrailEventType.missionCompleted,
-          content: 'Mission completed: ${completedMission.title}',
-        ),
-      ),
-    );
-    return updatedMission;
-  }
-
   Future<void> loadForQuests(List<String> questIds) async {
     final ownerId = ref.read(authControllerProvider).profile?.id;
     if (ownerId == null) {
@@ -577,7 +498,7 @@ class MissionController extends Notifier<List<Mission>> {
       sync.saved('Missionを読み込みました。');
     } catch (error) {
       if (ref.read(authControllerProvider).profile?.id != ownerId) return;
-      sync.failed('Mission load', error);
+      sync.failed('Missionの読み込み', error);
     }
   }
 
@@ -602,6 +523,7 @@ class MissionController extends Notifier<List<Mission>> {
     Mission mission, {
     required ArcMemorySourceType sourceType,
     bool recordJourney = true,
+    bool confirmOutcome = false,
   }) async {
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
@@ -619,9 +541,10 @@ class MissionController extends Notifier<List<Mission>> {
     final sync = ref.read(missionSyncControllerProvider.notifier);
     sync.loading('Missionを保存しています...');
     try {
-      final savedMission = await ref
-          .read(missionRepositoryProvider)
-          .save(mission);
+      final repository = ref.read(missionRepositoryProvider);
+      final savedMission = confirmOutcome
+          ? await repository.confirmCompletion(mission)
+          : await repository.save(mission);
       if (ref.read(authControllerProvider).profile?.id != userId) return;
       state = [
         for (final current in state)
@@ -635,7 +558,7 @@ class MissionController extends Notifier<List<Mission>> {
       }
       sync.saved('Missionを保存しました。');
     } catch (error) {
-      sync.failed('Mission save', error);
+      sync.failed('Missionの保存', error);
       _recordMissionEmotion(
         mission,
         trigger: ArcActionTrigger.saveFailure,
@@ -651,7 +574,7 @@ class MissionController extends Notifier<List<Mission>> {
       await ref.read(missionRepositoryProvider).delete(missionId);
       sync.saved('Missionを削除しました。');
     } catch (error) {
-      sync.failed('Mission delete', error);
+      sync.failed('Missionの削除', error);
     }
   }
 
@@ -722,35 +645,6 @@ class MissionController extends Notifier<List<Mission>> {
     }
   }
 
-  Future<void> _saveTrailEvent(TrailEvent event) async {
-    try {
-      await ref.read(trailEventRepositoryProvider).save(event);
-    } catch (error) {
-      ref
-          .read(missionSyncControllerProvider.notifier)
-          .failed('Trail event save', error);
-    }
-  }
-
-  Future<void> _recordRouteProgressEvent(
-    Mission mission,
-    String eventType,
-  ) async {
-    try {
-      await ref
-          .read(routeReplanningRepositoryProvider)
-          .recordProgressEvent(
-            questId: mission.questId,
-            missionId: mission.id,
-            eventType: eventType,
-            eventKey: '$eventType:${mission.id}',
-            metadata: {'progressPercent': mission.progressPercent},
-          );
-    } catch (_) {
-      // Route review telemetry must never block Mission completion.
-    }
-  }
-
   Future<void> _rememberMission(
     Mission mission,
     ArcMemorySourceType sourceType,
@@ -770,7 +664,7 @@ class MissionController extends Notifier<List<Mission>> {
               missionId: mission.id,
               sourceId: mission.id,
               sourceType: sourceType,
-              title: 'Mission memory',
+              title: 'Missionの記憶',
               text: '${mission.title}: ${mission.description}',
               metadata: {'status': mission.status.storageKey},
             ),

@@ -28,6 +28,9 @@ jobs:
       - name: Unit and widget tests
         working-directory: apps/mobile
         run: flutter test --no-pub
+      - name: Core journey integration gate
+        working-directory: apps/mobile
+        run: flutter test test/qst_269_core_journey_test.dart --no-pub
       - name: Supabase release contracts
         run: |
           dart run tools/qst/verify_rls_readiness.dart
@@ -39,6 +42,15 @@ jobs:
       - name: Build Android artifact
         working-directory: apps/mobile
         run: flutter build apk --release --no-pub
+      - name: Package Web artifact
+        run: tar -czf questra-web-${{ github.sha }}.tar.gz -C apps/mobile/build/web .
+      - name: Record candidate and artifact checksums
+        run: |
+          printf "candidate_sha=%s\n" "${{ github.sha }}" > candidate-build.txt
+          sha256sum \
+            apps/mobile/build/app/outputs/flutter-apk/app-release.apk \
+            questra-web-${{ github.sha }}.tar.gz \
+            > artifact-checksums.sha256
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -47,3 +59,52 @@ jobs:
           path: |
             apps/mobile/build/web
             apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+            questra-web-${{ github.sha }}.tar.gz
+            candidate-build.txt
+            artifact-checksums.sha256
+
+  web-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: nanasess/setup-chromedriver@v2
+      - name: Resolve Flutter dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Start ChromeDriver
+        run: chromedriver --port=4444 &
+      - name: Run candidate Web journey
+        working-directory: apps/mobile
+        run: >-
+          flutter drive
+          -d web-server
+          --browser-name=chrome
+          --driver=test_driver/integration_test.dart
+          --target=integration_test/qst_283_candidate_journey_test.dart
+
+  android-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve Flutter dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Run candidate Android journey
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          script: cd apps/mobile && flutter test integration_test/qst_283_candidate_journey_test.dart -d emulator-5554 --no-pub

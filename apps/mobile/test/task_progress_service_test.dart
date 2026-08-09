@@ -28,6 +28,21 @@ void main() {
 
     expect(service.recommendToday(tasks, availableMinutes: 30)?.id, 'ready');
   });
+
+  test('no Task cannot complete a Mission', () {
+    final snapshot = service.forMission(const []);
+
+    expect(snapshot.percent, 0);
+    expect(snapshot.allRequiredCompleted, isFalse);
+  });
+
+  test('optional-only Tasks allow outcome review without blocking', () {
+    final snapshot = service.forMission([_task('optional', required: false)]);
+
+    expect(snapshot.hasOptionalTasksOnly, isTrue);
+    expect(snapshot.percent, 100);
+    expect(snapshot.allRequiredCompleted, isTrue);
+  });
 }
 
 QuestraTask _task(

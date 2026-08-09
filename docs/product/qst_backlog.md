@@ -1,5 +1,10 @@
 # QST Backlog
 
+> Historical index: completed entries preserve the terminology and acceptance
+> text used when each QST was executed. They are evidence, not active domain
+> guidance. New work follows the four-level Quest -> Mission -> Task -> Trail
+> model in the Master Spec and active architecture documents.
+
 This backlog follows
 [`QUESTRA_MASTER_SPEC_V2.md`](../QUESTRA_MASTER_SPEC_V2.md) as Questra's
 highest-level product constitution. The Project Planner and legacy Master Spec

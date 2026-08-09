@@ -1,10 +1,11 @@
 import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
-import { runQuestPlanningPipeline } from "../_shared/quest_planning/pipeline.ts";
+import { runQuestPlanningPipeline, runTaskExpansionPipeline } from "../_shared/quest_planning/pipeline.ts";
 import { validateRouteMissionPlan } from "../_shared/quest_planning/validators.ts";
 
 type RequestBody = {
-  mode?: "plan" | "approve";
+  mode?: "plan" | "approve" | "expand_tasks";
   quest_id?: string;
+  mission_id?: string;
   wish?: string;
   target_date?: string | null;
   budget?: string | null;
@@ -29,12 +30,13 @@ Deno.serve(async (req) => {
   const payload = await readJson<RequestBody>(req);
   if (!payload) return jsonResponse({ error: "invalid_json" }, { status: 400 });
   if (payload.mode === "approve") return approvePreview(auth, userId, payload);
+  if (payload.mode === "expand_tasks") return expandTasks(auth, userId, payload);
 
   const questId = uuid(payload.quest_id);
   const wish = text(payload.wish, 1_200);
   const idempotencyKey = text(payload.idempotency_key, 160);
   if (!questId || !wish || !idempotencyKey) return jsonResponse({ error: "quest_wish_and_idempotency_required" }, { status: 400 });
-  if (!await ownsQuest(userId, questId)) return jsonResponse({ error: "quest_not_found" }, { status: 404 });
+  if (!await ownsQuest(auth, userId, questId)) return jsonResponse({ error: "quest_not_found" }, { status: 404 });
 
   const pipeline = await runQuestPlanningPipeline({
     questId,
@@ -59,6 +61,61 @@ Deno.serve(async (req) => {
   return jsonResponse({ ...pipeline, preview_id: stored.id, approval_token: stored.approvalToken, draft_id: stored.draftId });
 });
 
+async function expandTasks(auth: string, userId: string, payload: RequestBody) {
+  const questId = uuid(payload.quest_id);
+  const missionId = uuid(payload.mission_id);
+  const idempotencyKey = text(payload.idempotency_key, 160);
+  if (!questId || !missionId || !idempotencyKey) {
+    return jsonResponse({ error: "quest_mission_and_idempotency_required" }, { status: 400 });
+  }
+  if (!await ownsQuest(auth, userId, questId)) {
+    return jsonResponse({ error: "quest_not_found" }, { status: 404 });
+  }
+  const [questResponse, missionResponse, taskResponse] = await Promise.all([
+    userFetch(auth, `/rest/v1/quests?id=eq.${questId}&select=id,title,description,target_date&limit=1`),
+    userFetch(auth, `/rest/v1/missions?id=eq.${missionId}&quest_id=eq.${questId}&select=id,title,description,objective,success_condition,expected_outcome,done_condition,expected_output,action&limit=1`),
+    userFetch(auth, `/rest/v1/tasks?mission_id=eq.${missionId}&quest_id=eq.${questId}&select=id,title,action,done_condition,status,order_index&order=order_index.asc&limit=50`),
+  ]);
+  if (!questResponse?.ok || !missionResponse?.ok || !taskResponse?.ok) return jsonResponse({ error: "planning_context_unavailable" }, { status: 503 });
+  const quests = await questResponse.json() as Array<Record<string, unknown>>;
+  const missions = await missionResponse.json() as Array<Record<string, unknown>>;
+  const existingTasks = await taskResponse.json() as Array<Record<string, unknown>>;
+  if (!quests[0] || !missions[0]) return jsonResponse({ error: "mission_not_found" }, { status: 404 });
+  const quest = quests[0];
+  const mission = missions[0];
+  const pipeline = await runTaskExpansionPipeline({
+    questId,
+    wish: String(quest.title ?? ""),
+    targetDate: typeof quest.target_date === "string" ? quest.target_date : null,
+    userId,
+    idempotencyKey,
+    questContext: quest,
+    mission: {
+      clientId: missionId,
+      title: mission.title,
+      description: mission.description,
+      objective: mission.objective,
+      successCondition: mission.success_condition,
+      expectedOutcome: mission.expected_outcome,
+      doneCondition: mission.done_condition,
+      expectedOutput: mission.expected_output,
+      action: mission.action,
+      existingTasks,
+    },
+  });
+  if (pipeline.status !== "preview_ready" || !pipeline.preview) {
+    const status = pipeline.status === "retryable_error" ? 503 : 422;
+    return jsonResponse(pipeline, { status });
+  }
+  return jsonResponse({
+    status: pipeline.status,
+    trace_id: pipeline.traceId,
+    task_plan: pipeline.preview,
+    passes: pipeline.passes,
+    versions: pipeline.versions,
+  });
+}
+
 async function authenticatedUserId(auth: string | null) {
   const url = Deno.env.get("SUPABASE_URL");
   const anon = Deno.env.get("SUPABASE_ANON_KEY");
@@ -69,8 +126,8 @@ async function authenticatedUserId(auth: string | null) {
   return uuid(data.id);
 }
 
-async function ownsQuest(userId: string, questId: string) {
-  const response = await serviceFetch(`/rest/v1/quests?id=eq.${questId}&owner_id=eq.${userId}&select=id&limit=1`);
+async function ownsQuest(auth: string, userId: string, questId: string) {
+  const response = await userFetch(auth, `/rest/v1/quests?id=eq.${questId}&owner_id=eq.${userId}&select=id&limit=1`);
   if (!response?.ok) return false;
   const rows = await response.json() as unknown[];
   return rows.length === 1;
@@ -195,6 +252,17 @@ async function serviceFetch(path: string, init: RequestInit = {}) {
   headers.set("Content-Type", "application/json");
   headers.set("apikey", key);
   headers.set("Authorization", `Bearer ${key}`);
+  return fetch(`${url}${path}`, { ...init, headers });
+}
+
+async function userFetch(auth: string, path: string, init: RequestInit = {}) {
+  const url = Deno.env.get("SUPABASE_URL");
+  const anon = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!url || !anon) return null;
+  const headers = new Headers(init.headers);
+  headers.set("Content-Type", "application/json");
+  headers.set("apikey", anon);
+  headers.set("Authorization", auth);
   return fetch(`${url}${path}`, { ...init, headers });
 }
 

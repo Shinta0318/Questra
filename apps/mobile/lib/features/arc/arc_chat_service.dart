@@ -6,6 +6,8 @@ import '../../core/validation/input_validators.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
+import '../quest/quest_clarification_service.dart';
+import '../task/task_model.dart';
 import '../trail/trail_model.dart';
 import 'arc_quest_change_proposal.dart';
 
@@ -25,12 +27,14 @@ class ArcChatContext {
   const ArcChatContext({
     required this.activeQuests,
     required this.recentMissions,
+    this.recentTasks = const [],
     required this.recentTrails,
     required this.memories,
   });
 
   final List<Quest> activeQuests;
   final List<Mission> recentMissions;
+  final List<QuestraTask> recentTasks;
   final List<Trail> recentTrails;
   final List<ArcMemory> memories;
 }
@@ -42,6 +46,7 @@ class ArcChatResponse {
     this.quickActions = const [],
     this.questSuggestion,
     this.questChanges = const [],
+    this.clarificationQuestions = const [],
   });
 
   final String message;
@@ -49,6 +54,7 @@ class ArcChatResponse {
   final List<String> quickActions;
   final ArcQuestSuggestion? questSuggestion;
   final List<ArcQuestChangeProposal> questChanges;
+  final List<QuestClarificationQuestion> clarificationQuestions;
 }
 
 class ArcQuestSuggestion {
@@ -98,20 +104,34 @@ class LocalArcChatService implements ArcChatService {
     final trail = context.recentTrails.isEmpty
         ? null
         : context.recentTrails.first;
+    final task = context.recentTasks.where((item) => item.isOpen).firstOrNull;
     final suggestion = inferArcQuestSuggestion(userMessage);
+    final clarificationQuestions =
+        suggestion == null || context.activeQuests.isNotEmpty
+        ? const <QuestClarificationQuestion>[]
+        : QuestClarificationService.resolve(
+            input: suggestion.sourceInput,
+            category: suggestion.category,
+            targetDate: null,
+          );
     final questChanges = _inferLocalQuestChanges(userMessage, context);
     final hasConcern = RegExp(r'不安|心配|怖|疲れ|つら|しんど|落ち込').hasMatch(userMessage);
-    final message = switch ((hasConcern, quest, trail, suggestion)) {
-      (true, _, _, _) => '少し気がかりなんだね。いちばん気になっているのは、どの部分？',
-      (false, final Quest activeQuest, final Trail recentTrail, _) =>
+    final message = switch ((hasConcern, quest, task, trail, suggestion)) {
+      (true, _, _, _, _) => '少し気がかりなんだね。いちばん気になっているのは、どの部分？',
+      (false, final Quest activeQuest, final QuestraTask nextTask, _, _) =>
+        '「${activeQuest.title}」の次のTaskは「${nextTask.title}」だね。'
+            '完了条件は「${nextTask.doneCondition}」。どこから一緒に整えようか？',
+      (false, final Quest activeQuest, null, final Trail recentTrail, _) =>
         '「${recentTrail.title}」まで進んだんだね。'
             '「${activeQuest.title}」の次の一歩を小さくするなら、今どこで迷ってる？',
-      (false, final Quest activeQuest, null, _) =>
+      (false, final Quest activeQuest, null, null, _) =>
         '「${activeQuest.title}」を進めているんだね。'
             '今日は、どの部分を一緒に整理しようか？',
-      (false, null, _, final ArcQuestSuggestion questSuggestion) =>
-        'いいね。「${questSuggestion.title}」なら、具体的なMissionに分けられるよ。'
-            'まず、いつ頃までに叶えたい？',
+      (false, null, _, _, final ArcQuestSuggestion questSuggestion) =>
+        clarificationQuestions.isEmpty
+            ? 'いいね。「${questSuggestion.title}」として航路を描けそうだよ。'
+            : 'いいね。「${questSuggestion.title}」を航路にする前に、まず、'
+                  '${clarificationQuestions.first.label}',
       _ => 'そうなんだ。今いちばん整理したいことを、一つだけ教えてくれる？',
     };
 
@@ -127,6 +147,7 @@ class LocalArcChatService implements ArcChatService {
       ],
       questSuggestion: suggestion,
       questChanges: questChanges,
+      clarificationQuestions: clarificationQuestions,
     );
   }
 }
@@ -197,6 +218,13 @@ class SupabaseArcChatService implements ArcChatService {
             sourceInput: sourceInput,
           )
         : inferArcQuestSuggestion(sourceInput);
+    final clarificationQuestions = suggestion == null
+        ? const <QuestClarificationQuestion>[]
+        : QuestClarificationService.resolve(
+            input: suggestion.sourceInput,
+            category: suggestion.category,
+            targetDate: null,
+          );
     return ArcChatResponse(
       message: data['message'] as String? ?? _fallbackMessage,
       sourceType: data['source_type'] as String? ?? 'arc_chat',
@@ -204,6 +232,7 @@ class SupabaseArcChatService implements ArcChatService {
           (data['quick_actions'] as List?)?.whereType<String>().toList() ??
           const [],
       questSuggestion: suggestion,
+      clarificationQuestions: clarificationQuestions,
       questChanges: _questChangesFromData(
         data,
         allowedQuestIds: allowedQuestIds,
@@ -384,6 +413,22 @@ class SupabaseArcChatService implements ArcChatService {
                 'description': _limitText(mission.description),
                 'status': mission.status.storageKey,
                 'sort_order': mission.sortOrder,
+              },
+            )
+            .toList(growable: false),
+        'recent_tasks': context.recentTasks
+            .where((task) => task.isOpen)
+            .take(QuestraPerformanceLimits.arcChatRecentTaskContextLimit)
+            .map(
+              (task) => {
+                'id': task.id,
+                'quest_id': task.questId,
+                'mission_id': task.missionId,
+                'title': _limitText(task.title),
+                'action': _limitText(task.action),
+                'done_condition': _limitText(task.doneCondition),
+                'status': task.status.storageKey,
+                'dependency_ids': task.dependencyIds.take(8).toList(),
               },
             )
             .toList(growable: false),
