@@ -39,6 +39,8 @@ jobs:
       - name: Build Web artifact
         working-directory: apps/mobile
         run: flutter build web --release --no-pub
+      - name: Exclude test-only plugins from Android release
+        run: dart run tools/qst/prepare_android_release_registrant.dart
       - name: Build Android artifact
         working-directory: apps/mobile
         run: flutter build apk --release --no-pub
