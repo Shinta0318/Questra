@@ -13,6 +13,7 @@ import '../../core/router/app_routes.dart';
 import '../../core/safety/quest_safety_service.dart';
 import '../../core/safety/safety_providers.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_field_sizes.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
@@ -26,28 +27,36 @@ import '../../widgets/forms/arc_chat_keyboard_contract.dart';
 import '../../widgets/forms/year_month_picker.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
+import '../../widgets/questra_card.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
+import '../auth/auth_state.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_contract_service.dart';
 import '../mission/mission_model.dart';
 import '../quest/arc_quest_guide_controller.dart';
 import '../quest/arc_quest_guide_service.dart';
-import '../quest/flexible_quest_proposal_service.dart';
 import '../quest/quest_clarification_service.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_feasibility_service.dart';
 import '../quest/quest_intent_model.dart';
 import '../quest/quest_intent_service.dart';
+import '../quest/quest_intent_resolution_service.dart';
 import '../quest/quest_model.dart';
 import '../quest/planning_preferences_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
+import '../task/task_controller.dart';
+import '../task/task_model.dart';
+import '../signal/signal_providers.dart';
+import '../signal/task_signal_card.dart';
 import 'arc_bond_growth_service.dart';
 import 'arc_chat_service.dart';
 import 'arc_quest_change_proposal.dart';
+import 'arc_quest_clarification_session.dart';
+import 'arc_quick_action.dart';
 import 'arc_emotion_timeline_controller.dart';
 import 'arc_emotion_timeline_model.dart';
 import 'arc_guidance_providers.dart';
@@ -57,7 +66,18 @@ import 'stardust_service.dart';
 const _missionUuid = Uuid();
 
 class ArcScreen extends ConsumerStatefulWidget {
-  const ArcScreen({super.key});
+  const ArcScreen({
+    super.key,
+    this.initialPrompt,
+    this.focusQuestId,
+    this.focusMissionId,
+    this.returnLocation,
+  });
+
+  final String? initialPrompt;
+  final String? focusQuestId;
+  final String? focusMissionId;
+  final String? returnLocation;
 
   @override
   ConsumerState<ArcScreen> createState() => _ArcScreenState();
@@ -83,7 +103,21 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
   bool _isThinking = false;
   String? _chatInputError;
   ArcQuestSuggestion? _pendingQuestSuggestion;
+  ArcQuestClarificationSession? _clarificationSession;
   List<ArcQuestChangeProposal> _pendingQuestChanges = const [];
+  String? _appliedLaunchKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _applyLaunchContext();
+  }
+
+  @override
+  void didUpdateWidget(covariant ArcScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _applyLaunchContext();
+  }
 
   @override
   void dispose() {
@@ -97,15 +131,35 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     final quests = ref.watch(questControllerProvider);
     final missions = ref.watch(missionControllerProvider);
     final trails = ref.watch(trailControllerProvider);
+    final tasks = ref.watch(taskControllerProvider);
+    final profile = ref.watch(authControllerProvider).profile;
     final memories = ref.watch(visibleArcMemoriesProvider);
     final emotionEvents = ref.watch(arcEmotionTimelineControllerProvider);
+    final focusQuest = quests
+        .where((quest) => quest.id == widget.focusQuestId)
+        .firstOrNull;
+    final focusMission = missions
+        .where((mission) => mission.id == widget.focusMissionId)
+        .firstOrNull;
+    final returnLocation = _safeReturnLocation;
+    final taskSignals = ref
+        .watch(taskSignalServiceProvider)
+        .generate(
+          tasks: tasks,
+          now: DateTime.now(),
+          frequency: profile?.signalFrequency ?? SignalFrequency.balanced,
+        );
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
       body: QuestraScreenSurface(
         child: Column(
           children: [
-            const _ArcHeader(),
+            _ArcHeader(
+              onBack: returnLocation == null
+                  ? null
+                  : () => context.go(returnLocation),
+            ),
             Expanded(
               child: QuestraResponsiveListView(
                 controller: _scrollController,
@@ -118,6 +172,32 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                   AppSpacing.xl,
                 ),
                 children: [
+                  if (focusMission != null) ...[
+                    _ArcMissionContextCard(
+                      questTitle: focusQuest?.title ?? focusMission.questTitle,
+                      missionTitle: focusMission.title,
+                      onOpenMission: returnLocation == null
+                          ? null
+                          : () => context.go(returnLocation),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                  if (taskSignals.isNotEmpty) ...[
+                    TaskSignalCard(
+                      signal: taskSignals.first,
+                      onOpen: () {
+                        final signal = taskSignals.first;
+                        context.push(
+                          AppRoutes.taskDetail(
+                            signal.questId,
+                            signal.missionId,
+                            signal.taskId,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
                   _ArcCommandCenterCard(
                     activeQuestCount: quests
                         .where((quest) => quest.status == QuestStatus.active)
@@ -156,6 +236,10 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                           setState(() => _pendingQuestSuggestion = null),
                     ),
                   ],
+                  if (_clarificationSession case final session?) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    _ArcClarificationCard(session: session),
+                  ],
                   if (_pendingQuestChanges.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.md),
                     _ArcQuestChangesCard(
@@ -173,16 +257,17 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                   ],
                   if (_isThinking) const _ArcThinkingBubble(),
                   const SizedBox(height: AppSpacing.sm),
-                  _ArcActionCard(
-                    actions: _quickActions,
-                    onQuickAction: (text) => _send(
-                      text,
-                      quests: quests,
-                      missions: missions,
-                      trails: trails,
-                      memories: memories.asData?.value ?? const [],
+                  if (_clarificationSession == null)
+                    _ArcActionCard(
+                      actions: _quickActions,
+                      onQuickAction: (action) => _send(
+                        action.prompt,
+                        quests: quests,
+                        missions: missions,
+                        trails: trails,
+                        memories: memories.asData?.value ?? const [],
+                      ),
                     ),
-                  ),
                   const SizedBox(height: AppSpacing.md),
                   _ArcDetailsDisclosure(
                     events: emotionEvents,
@@ -215,6 +300,23 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         ),
       ),
     );
+  }
+
+  void _applyLaunchContext() {
+    final prompt = widget.initialPrompt?.trim() ?? '';
+    final key = '${widget.focusQuestId}|${widget.focusMissionId}|$prompt';
+    if (prompt.isEmpty || _appliedLaunchKey == key) return;
+    _appliedLaunchKey = key;
+    _controller.text = prompt;
+    _controller.selection = TextSelection.collapsed(offset: prompt.length);
+  }
+
+  String? get _safeReturnLocation {
+    final value = widget.returnLocation?.trim();
+    if (value == null || !value.startsWith('/quest/')) return null;
+    final uri = Uri.tryParse(value);
+    if (uri == null || uri.hasScheme || uri.host.isNotEmpty) return null;
+    return value;
   }
 
   Future<void> _openQuestCreation({ArcQuestSuggestion? suggestion}) async {
@@ -324,21 +426,55 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
           ),
     );
 
+    final focusedQuest = quests
+        .where((quest) => quest.id == widget.focusQuestId)
+        .firstOrNull;
+    final activeQuests = quests
+        .where((quest) => quest.status == QuestStatus.active)
+        .toList(growable: false);
+    final contextQuests = [
+      ?focusedQuest,
+      ...activeQuests.where((quest) => quest.id != focusedQuest?.id),
+    ];
+    final focusedMission = missions
+        .where((mission) => mission.id == widget.focusMissionId)
+        .firstOrNull;
+    final contextMissions = [
+      ?focusedMission,
+      ...missions.where((mission) => mission.id != focusedMission?.id).take(4),
+    ];
+    final contextTasks =
+        ref
+            .read(taskControllerProvider)
+            .where(
+              (task) =>
+                  task.isOpen &&
+                  (focusedMission != null
+                      ? task.missionId == focusedMission.id
+                      : focusedQuest != null
+                      ? task.questId == focusedQuest.id
+                      : contextQuests.any((quest) => quest.id == task.questId)),
+            )
+            .toList(growable: false)
+          ..sort((left, right) {
+            final status = _arcTaskStatusRank(
+              left.status,
+            ).compareTo(_arcTaskStatusRank(right.status));
+            return status != 0
+                ? status
+                : left.orderIndex.compareTo(right.orderIndex);
+          });
     final context = ArcChatContext(
-      activeQuests: quests
-          .where((quest) => quest.status == QuestStatus.active)
-          .toList(growable: false),
-      recentMissions: missions.take(5).toList(growable: false),
+      activeQuests: contextQuests,
+      recentMissions: contextMissions,
+      recentTasks: contextTasks.take(5).toList(growable: false),
       recentTrails: trails.take(5).toList(growable: false),
       memories: ref
           .read(arcMemoryRetrievalServiceProvider)
           .retrieve(
             memories: memories,
             query: text,
-            questIds: quests
-                .where((quest) => quest.status == QuestStatus.active)
-                .map((quest) => quest.id)
-                .toSet(),
+            questIds: contextQuests.map((quest) => quest.id).toSet(),
           ),
     );
 
@@ -355,6 +491,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
             ),
           );
           _pendingQuestSuggestion = null;
+          _clarificationSession = null;
           _pendingQuestChanges = const [];
           _quickActions = safety.safeAlternative == null
               ? const ['別の相談をする']
@@ -372,11 +509,41 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         _scrollToLatest();
         return;
       }
+      if (_clarificationSession case final session?) {
+        final next = session.answer(text);
+        final nextQuestion = next.currentQuestion;
+        final arcMessage = ArcChatMessage(
+          text: next.isComplete
+              ? 'ありがとう。教えてくれたことを航路へ反映したよ。内容を確認してみよう。'
+              : 'ありがとう。次に、${nextQuestion!.label}',
+          fromArc: true,
+          createdAt: DateTime.now(),
+        );
+        if (!mounted) return;
+        setState(() {
+          _messages.add(arcMessage);
+          _clarificationSession = next.isComplete ? null : next;
+          _pendingQuestSuggestion = next.isComplete
+              ? next.resolvedSuggestion
+              : null;
+          _pendingQuestChanges = const [];
+          _isThinking = false;
+        });
+        _scrollToLatest();
+        await _rememberChat(userMessage, arcMessage, context);
+        return;
+      }
       final response = await ref
           .read(arcChatServiceProvider)
           .send(userMessage: text, history: _messages, context: context);
       final arcMessage = ArcChatMessage(
-        text: response.message,
+        text:
+            response.clarificationQuestions.isNotEmpty &&
+                !response.message.contains(
+                  response.clarificationQuestions.first.label,
+                )
+            ? '${response.message}\n\n${response.clarificationQuestions.first.label}'
+            : response.message,
         fromArc: true,
         createdAt: DateTime.now(),
       );
@@ -385,7 +552,17 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       }
       setState(() {
         _messages.add(arcMessage);
-        _pendingQuestSuggestion = response.questSuggestion;
+        final suggestion = response.questSuggestion;
+        if (suggestion != null && response.clarificationQuestions.isNotEmpty) {
+          _clarificationSession = ArcQuestClarificationSession(
+            suggestion: suggestion,
+            questions: response.clarificationQuestions.take(3).toList(),
+          );
+          _pendingQuestSuggestion = null;
+        } else {
+          _clarificationSession = null;
+          _pendingQuestSuggestion = suggestion;
+        }
         _pendingQuestChanges = response.questChanges;
         _quickActions = response.quickActions.isEmpty
             ? _quickActions
@@ -567,7 +744,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
               questId: quest?.id,
               trailId: trail?.id,
               sourceType: ArcMemorySourceType.arcChat,
-              title: 'Arc conversation',
+              title: 'Arcとの会話',
               text: 'User: ${userMessage.text}\nArc: ${arcMessage.text}',
               metadata: {
                 'source': 'arc_chat',
@@ -592,8 +769,77 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
   }
 }
 
+int _arcTaskStatusRank(TaskStatus status) => switch (status) {
+  TaskStatus.inProgress => 0,
+  TaskStatus.ready => 1,
+  TaskStatus.pending => 2,
+  _ => 3,
+};
+
+class _ArcMissionContextCard extends StatelessWidget {
+  const _ArcMissionContextCard({
+    required this.questTitle,
+    required this.missionTitle,
+    required this.onOpenMission,
+  });
+
+  final String questTitle;
+  final String missionTitle;
+  final VoidCallback? onOpenMission;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(AppSpacing.md),
+    decoration: BoxDecoration(
+      color: AppColors.cosmicBlue.withValues(alpha: 0.28),
+      borderRadius: AppRadius.card,
+      border: Border.all(color: AppColors.gold.withValues(alpha: 0.34)),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.route_outlined, color: AppColors.gold),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                questTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: AppColors.skyBlue,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                missionTitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          onPressed: onOpenMission,
+          tooltip: 'Missionを開く',
+          icon: const Icon(Icons.open_in_new, color: AppColors.skyBlue),
+        ),
+      ],
+    ),
+  );
+}
+
 class _ArcHeader extends StatelessWidget {
-  const _ArcHeader();
+  const _ArcHeader({this.onBack});
+
+  final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -606,6 +852,12 @@ class _ArcHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
+          if (onBack != null)
+            IconButton(
+              onPressed: onBack,
+              tooltip: 'Missionへ戻る',
+              icon: const Icon(Icons.arrow_back),
+            ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -756,7 +1008,7 @@ class _ArcActionCard extends StatelessWidget {
   const _ArcActionCard({required this.actions, required this.onQuickAction});
 
   final List<String> actions;
-  final ValueChanged<String> onQuickAction;
+  final ValueChanged<ArcQuickAction> onQuickAction;
 
   @override
   Widget build(BuildContext context) {
@@ -779,7 +1031,8 @@ class _ArcActionCard extends StatelessWidget {
               for (var index = 0; index < actions.length; index++) ...[
                 _QuickAction(
                   label: actions[index],
-                  onTap: () => onQuickAction(actions[index]),
+                  onTap: () =>
+                      onQuickAction(ArcQuickAction.fromLabel(actions[index])),
                 ),
                 if (index != actions.length - 1)
                   const SizedBox(width: AppSpacing.sm),
@@ -989,7 +1242,7 @@ class _ArcEmotionTimelineCard extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
-                    'まだ静かな星図です。Quest、Mission、Trailを進めると、Arcの表情もここに残ります。',
+                    'まだ静かな星図です。Quest、Mission、Task、Trailを進めると、Arcの表情もここに残ります。',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.white,
                       height: 1.45,
@@ -1260,6 +1513,7 @@ class _ArcQuestCreationSheetState
   final _categoryController = TextEditingController();
   final _motivationController = TextEditingController();
   final _successConditionController = TextEditingController();
+  final _wishFocusNode = FocusNode();
   final _clarificationControllers = {
     for (final type in QuestClarificationType.values)
       if (type != QuestClarificationType.deadline)
@@ -1272,9 +1526,9 @@ class _ArcQuestCreationSheetState
   QuestIntentDraft? _intentDraft;
   Set<int> _selectedMissionIndexes = const {};
   int? _firstMissionIndex;
-  List<FlexibleQuestProposal>? _generatedQuestProposals;
-  Set<int> _selectedQuestProposalIndexes = const {};
-  bool _isGeneratingQuestProposals = false;
+  QuestIntentResolution? _intentResolution;
+  bool _isResolvingIntent = false;
+  bool _isIntentConfirmed = false;
   bool _isGenerating = false;
   String? _error;
 
@@ -1289,6 +1543,22 @@ class _ArcQuestCreationSheetState
       _motivationController.text = suggestion.motivation;
       _successConditionController.text = suggestion.successCondition;
       _difficulty = suggestion.difficulty;
+      final questType = classifyQuestType(suggestion.sourceInput);
+      _intentResolution = QuestIntentResolution(
+        originalWish: suggestion.sourceInput,
+        questType: questType,
+        clarity: QuestIntentClarity.clear,
+        optimizedTitle: suggestion.title,
+        summary: '相談内容から、最初に目指す状態を整理しました。',
+        successCondition: suggestion.successCondition,
+        clarificationQuestions: QuestClarificationService.resolve(
+          input: suggestion.sourceInput,
+          category: questType.storageKey,
+          targetDate: null,
+        ),
+        directions: const [],
+        sourceType: 'arc_chat_intent',
+      );
     }
   }
 
@@ -1299,6 +1569,7 @@ class _ArcQuestCreationSheetState
     _categoryController.dispose();
     _motivationController.dispose();
     _successConditionController.dispose();
+    _wishFocusNode.dispose();
     for (final controller in _clarificationControllers.values) {
       controller.dispose();
     }
@@ -1306,6 +1577,7 @@ class _ArcQuestCreationSheetState
   }
 
   List<QuestClarificationQuestion> get _clarificationQuestions =>
+      _intentResolution?.clarificationQuestions ??
       QuestClarificationService.resolve(
         input: _inputController.text,
         category: _categoryController.text,
@@ -1317,47 +1589,64 @@ class _ArcQuestCreationSheetState
       entry.key: entry.value.text.trim(),
   };
 
-  List<FlexibleQuestProposal> get _questProposals =>
-      _generatedQuestProposals ??
-      FlexibleQuestProposalService.propose(_inputController.text);
-
-  void _applyQuestProposal(FlexibleQuestProposal proposal) {
-    _titleController.text = proposal.title;
-    _successConditionController.text = proposal.outcome;
-    _difficulty = proposal.difficulty;
-    _invalidateGuide();
-  }
-
-  Future<void> _generateQuestProposals() async {
+  Future<void> _resolveIntent() async {
     final input = _inputController.text.trim();
-    if (input.isEmpty) return;
-    setState(() => _isGeneratingQuestProposals = true);
-    final proposals = await ref
-        .read(questProposalGeneratorProvider)
-        .generate(input);
-    if (!mounted) return;
+    final inputError = InputValidators.requiredText(
+      input,
+      fieldName: '叶えたいこと',
+      maxLength: InputLimits.arcQuestIdea,
+    );
+    if (inputError != null) {
+      setState(() => _error = inputError);
+      return;
+    }
     setState(() {
-      _generatedQuestProposals = proposals;
-      _selectedQuestProposalIndexes = const {};
-      _isGeneratingQuestProposals = false;
+      _isResolvingIntent = true;
+      _error = null;
     });
+    try {
+      final safety = await ref.read(questSafetyServiceProvider).assess(input);
+      if (safety.action != QuestSafetyAction.allow) {
+        if (!mounted) return;
+        setState(() => _error = safety.userMessage);
+        return;
+      }
+      final resolution = await ref
+          .read(questIntentResolutionServiceProvider)
+          .resolve(wish: input, targetDate: _targetDate);
+      if (!mounted) return;
+      setState(() {
+        _intentResolution = resolution;
+        _isIntentConfirmed = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isResolvingIntent = false);
+      }
+    }
   }
 
-  void _combineQuestProposals() {
-    final selected = _selectedQuestProposalIndexes
-        .where((index) => index >= 0 && index < _questProposals.length)
-        .map((index) => _questProposals[index])
-        .toList(growable: false);
-    if (selected.length < 2) return;
-    _titleController.text = selected.map((item) => item.title).join(' / ');
-    _successConditionController.text = selected
-        .map((item) => item.outcome)
-        .join('。');
-    _difficulty =
-        selected.any((item) => item.difficulty == QuestDifficulty.hard)
-        ? QuestDifficulty.hard
-        : QuestDifficulty.normal;
+  void _acceptIntent([QuestDirection? direction]) {
+    final resolution = _intentResolution;
+    if (resolution == null) return;
+    _titleController.text = direction?.title ?? resolution.optimizedTitle;
+    _successConditionController.text =
+        direction?.successCondition ?? resolution.successCondition;
+    _categoryController.text = resolution.questType.displayLabel;
+    setState(() => _isIntentConfirmed = true);
     _invalidateGuide();
+  }
+
+  void _consultMore() {
+    setState(() {
+      _isIntentConfirmed = false;
+      _intentResolution = null;
+      _error = null;
+    });
+    _wishFocusNode.requestFocus();
   }
 
   String get _planningDescription {
@@ -1388,13 +1677,17 @@ class _ArcQuestCreationSheetState
 
   void _onWishChanged() {
     setState(() {
-      _generatedQuestProposals = null;
-      _selectedQuestProposalIndexes = const {};
+      _intentResolution = null;
+      _isIntentConfirmed = false;
     });
     _invalidateGuide();
   }
 
   Future<void> _generate() async {
+    if (!_isIntentConfirmed) {
+      setState(() => _error = 'まずArcとQuestを整理して、内容を確認してください。');
+      return;
+    }
     final input = _inputController.text.trim();
     final inputError = InputValidators.requiredText(
       input,
@@ -1405,10 +1698,12 @@ class _ArcQuestCreationSheetState
       setState(() => _error = inputError);
       return;
     }
+    final inferred = inferArcQuestSuggestion(input);
     if (_titleController.text.trim().isEmpty) {
-      final inferred = inferArcQuestSuggestion(input);
       _titleController.text =
           inferred?.title ?? input.split(RegExp(r'[\n。！？!?]')).first.trim();
+    }
+    if (_categoryController.text.trim().isEmpty) {
       _categoryController.text = inferred?.category ?? '冒険';
     }
     final titleError = InputValidators.requiredText(
@@ -1546,9 +1841,101 @@ class _ArcQuestCreationSheetState
       targetDate: _targetDate,
       effortEstimate: guide.effortEstimate ?? draftQuest.effortEstimate,
       evaluation: guide.questEvaluation ?? draftQuest.evaluation,
+      dna: guide.questDna ?? draftQuest.dna,
+      understanding: guide.questUnderstanding ?? draftQuest.understanding,
+      planQuality: guide.planQuality ?? draftQuest.planQuality,
     );
     Navigator.of(context).pop(
       _ArcQuestConfirmation(quest: quest, guide: guide, missions: missions),
+    );
+  }
+
+  Widget _buildIntentCard(QuestIntentResolution resolution) {
+    final directions = resolution.directions;
+    return Container(
+      key: const Key('arc-quest-intent-summary'),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.cosmicBlue.withValues(alpha: 0.24),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.warmGold.withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.auto_awesome, color: AppColors.warmGold),
+              SizedBox(width: AppSpacing.sm),
+              Text(
+                'ArcがまとめたQuest',
+                style: TextStyle(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            resolution.optimizedTitle,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: AppColors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (resolution.summary.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              resolution.summary,
+              style: const TextStyle(color: AppColors.parchment),
+            ),
+          ],
+          if (directions.length >= 2) ...[
+            const SizedBox(height: AppSpacing.lg),
+            for (final direction in directions) ...[
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _isGenerating
+                      ? null
+                      : () => _acceptIntent(direction),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(direction.title),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+          ],
+          if (resolution.clarificationQuestions.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              '進む前に${resolution.clarificationQuestions.length}つだけ確認します。',
+              style: const TextStyle(color: AppColors.parchment),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton(
+                  onPressed: _isGenerating ? null : _acceptIntent,
+                  child: const Text('このQuestで進む'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: TextButton(
+                  onPressed: _isGenerating ? null : _consultMore,
+                  child: const Text('Arcともう少し相談する'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -1570,375 +1957,326 @@ class _ArcQuestCreationSheetState
             constraints: BoxConstraints(
               maxHeight: MediaQuery.sizeOf(context).height * 0.92,
             ),
-            child: ListView(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              children: [
-                Row(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: AppFieldSizes.questFormMaxWidth,
+                ),
+                child: ListView(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   children: [
-                    const ArcWidget(
-                      emotion: ArcEmotion.support,
-                      size: 72,
-                      showSpeechBubble: false,
+                    Row(
+                      children: [
+                        const ArcWidget(
+                          emotion: ArcEmotion.support,
+                          size: 72,
+                          showSpeechBubble: false,
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '相談から航路を描く',
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
+                                      color: AppColors.white,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                              ),
+                              const Text(
+                                'Questと最初のMissionを、保存前に確認できます。',
+                                style: TextStyle(color: AppColors.parchment),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.close),
+                          color: AppColors.white,
+                          tooltip: '閉じる',
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '相談から航路を描く',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  color: AppColors.white,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                          ),
-                          const Text(
-                            'Questと最初のMissionを、保存前に確認できます。',
-                            style: TextStyle(color: AppColors.parchment),
-                          ),
-                        ],
+                    const SizedBox(height: AppSpacing.lg),
+                    QuestraFieldLabel(
+                      label: 'Arcに相談すること',
+                      foregroundColor: AppColors.white,
+                      helper: 'やりたいこと、今の状況、迷っている点をそのまま書けます。',
+                      required: true,
+                      child: TextField(
+                        controller: _inputController,
+                        focusNode: _wishFocusNode,
+                        minLines: 3,
+                        maxLines: 6,
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        enabled: !_isGenerating && !_isResolvingIntent,
+                        maxLength: InputLimits.arcQuestIdea,
+                        maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                        style: const TextStyle(color: AppColors.deepNavy),
+                        decoration: const InputDecoration(
+                          hintText: '例: 来年シンガポールへ行きたい。予算や準備の順番が分からない。',
+                        ),
+                        onChanged: (_) => _onWishChanged(),
                       ),
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close),
-                      color: AppColors.white,
-                      tooltip: '閉じる',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                QuestraFieldLabel(
-                  label: 'Arcに相談すること',
-                  foregroundColor: AppColors.white,
-                  helper: 'やりたいこと、今の状況、迷っている点をそのまま書けます。',
-                  required: true,
-                  child: TextField(
-                    controller: _inputController,
-                    minLines: 3,
-                    maxLines: 6,
-                    keyboardType: TextInputType.multiline,
-                    textInputAction: TextInputAction.newline,
-                    enabled: !_isGenerating,
-                    maxLength: InputLimits.arcQuestIdea,
-                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                    style: const TextStyle(color: AppColors.deepNavy),
-                    decoration: const InputDecoration(
-                      hintText: '例: 来年シンガポールへ行きたい。予算や準備の順番が分からない。',
-                    ),
-                    onChanged: (_) => _onWishChanged(),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: _isGenerating || _isGeneratingQuestProposals
-                        ? null
-                        : _generateQuestProposals,
-                    icon: _isGeneratingQuestProposals
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.auto_awesome_outlined),
-                    label: const Text('ArcにQuest案を比較してもらう'),
-                  ),
-                ),
-                if (_questProposals.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    '近いQuestの形',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AppColors.parchment,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    children: [
-                      for (final (index, proposal) in _questProposals.indexed)
-                        FilterChip(
-                          avatar: const Icon(
-                            Icons.auto_awesome_outlined,
-                            size: 18,
-                          ),
-                          label: Text(proposal.title),
-                          tooltip: proposal.fitReason,
-                          selected: _selectedQuestProposalIndexes.contains(
-                            index,
-                          ),
-                          onSelected: _isGenerating
-                              ? null
-                              : (selected) {
-                                  setState(() {
-                                    final next = {
-                                      ..._selectedQuestProposalIndexes,
-                                    };
-                                    if (selected) {
-                                      next.add(index);
-                                    } else {
-                                      next.remove(index);
-                                    }
-                                    _selectedQuestProposalIndexes = next;
-                                  });
-                                  if (selected) _applyQuestProposal(proposal);
-                                },
-                        ),
-                    ],
-                  ),
-                  if (_selectedQuestProposalIndexes.length >= 2)
                     Align(
                       alignment: Alignment.centerLeft,
                       child: TextButton.icon(
-                        onPressed: _combineQuestProposals,
-                        icon: const Icon(Icons.call_merge_outlined),
-                        label: const Text('選んだ案を組み合わせる'),
+                        onPressed: _isGenerating || _isResolvingIntent
+                            ? null
+                            : _resolveIntent,
+                        icon: _isResolvingIntent
+                            ? const SizedBox.square(
+                                dimension: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.auto_awesome_outlined),
+                        label: const Text('Arcと一緒にQuestを整理'),
                       ),
                     ),
-                ],
-                const SizedBox(height: AppSpacing.md),
-                QuestraFieldLabel(
-                  label: 'Questの名前',
-                  foregroundColor: AppColors.white,
-                  helper: '空欄ならArcが相談内容から提案します。',
-                  child: TextField(
-                    controller: _titleController,
-                    enabled: !_isGenerating,
-                    maxLength: InputLimits.questTitle,
-                    textInputAction: TextInputAction.next,
-                    style: const TextStyle(color: AppColors.deepNavy),
-                    decoration: const InputDecoration(
-                      hintText: '例: シンガポールへの旅を実現する',
-                    ),
-                    onChanged: (_) => _invalidateGuide(),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: QuestraFieldLabel(
-                        label: '叶えたい理由',
+                    if (_intentResolution case final resolution?) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      _buildIntentCard(resolution),
+                    ],
+                    if (_isIntentConfirmed) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      QuestraFieldLabel(
+                        label: 'Questの名前',
                         foregroundColor: AppColors.white,
-                        helper: 'Arcが相談内容から提案します。後から編集できます。',
+                        helper: '空欄ならArcが相談内容から提案します。',
                         child: TextField(
-                          controller: _motivationController,
+                          key: const Key('arc-quest-title-field'),
+                          controller: _titleController,
                           enabled: !_isGenerating,
-                          maxLength: 280,
+                          maxLength: InputLimits.questTitle,
+                          textInputAction: TextInputAction.next,
+                          minLines: 1,
+                          maxLines: 2,
                           style: const TextStyle(color: AppColors.deepNavy),
                           decoration: const InputDecoration(
-                            hintText: '例: 大切な人と新しい景色を見たい',
+                            hintText: '例: シンガポールへの旅を実現する',
+                            constraints: BoxConstraints(
+                              minHeight: AppFieldSizes.mediumInput,
+                            ),
                           ),
                           onChanged: (_) => _invalidateGuide(),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: QuestraFieldLabel(
+                      const SizedBox(height: AppFieldSizes.fieldGap),
+                      QuestraFieldLabel(
+                        label: '叶えたい理由',
+                        foregroundColor: AppColors.white,
+                        helper: 'Arcとの相談から提案できます。自分の言葉に書き換えても大丈夫です。',
+                        child: TextField(
+                          key: const Key('arc-quest-motivation-field'),
+                          controller: _motivationController,
+                          enabled: !_isGenerating,
+                          minLines: 3,
+                          maxLines: 6,
+                          keyboardType: TextInputType.multiline,
+                          textInputAction: TextInputAction.newline,
+                          maxLength: 280,
+                          style: const TextStyle(color: AppColors.deepNavy),
+                          decoration: const InputDecoration(
+                            hintText:
+                                'なぜこのQuestを叶えたいと思ったのか、きっかけや実現したい未来を書いてみよう',
+                            constraints: BoxConstraints(
+                              minHeight: AppFieldSizes.longInput,
+                            ),
+                          ),
+                          onChanged: (_) => _invalidateGuide(),
+                        ),
+                      ),
+                      const SizedBox(height: AppFieldSizes.fieldGap),
+                      QuestraFieldLabel(
                         label: '達成したと分かる状態',
                         foregroundColor: AppColors.white,
                         helper: '目で確認できる状態にすると、航路が明確になります。',
                         child: TextField(
+                          key: const Key('arc-quest-success-condition-field'),
                           controller: _successConditionController,
                           enabled: !_isGenerating,
+                          minLines: 3,
+                          maxLines: 6,
+                          keyboardType: TextInputType.multiline,
+                          textInputAction: TextInputAction.newline,
                           maxLength: 280,
                           style: const TextStyle(color: AppColors.deepNavy),
                           decoration: const InputDecoration(
-                            hintText: '例: 現地で3日間過ごし、Trailを残す',
+                            hintText: 'どんな状態になったら、このQuestを達成したと言えそう？',
+                            constraints: BoxConstraints(
+                              minHeight: AppFieldSizes.longInput,
+                            ),
                           ),
                           onChanged: (_) => _invalidateGuide(),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                if (_intentDraft?.realityFrame ==
-                    QuestRealityFrame.symbolic) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'その願いに込めた意味を、実際に進められるQuestへ言い換えました。',
-                    style: const TextStyle(color: AppColors.warmGold),
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.md),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: QuestraFieldLabel(
-                        label: 'テーマ',
-                        foregroundColor: AppColors.white,
-                        child: TextField(
-                          controller: _categoryController,
-                          enabled: !_isGenerating,
-                          maxLength: InputLimits.category,
-                          textInputAction: TextInputAction.done,
-                          style: const TextStyle(color: AppColors.deepNavy),
-                          decoration: const InputDecoration(
-                            hintText: '旅行、学習など',
-                          ),
-                          onChanged: (_) => _invalidateGuide(),
+                      if (_intentDraft?.realityFrame ==
+                          QuestRealityFrame.symbolic) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'その願いに込めた意味を、実際に進められるQuestへ言い換えました。',
+                          style: const TextStyle(color: AppColors.warmGold),
                         ),
+                      ],
+                      const SizedBox(height: AppFieldSizes.fieldGap),
+                      _ArcQuestAnalysisPanel(
+                        guide: guide,
+                        inferredCategory: _categoryController.text,
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: QuestraFieldLabel(
-                        label: '難しさ',
-                        foregroundColor: AppColors.white,
-                        helper: 'Arcが内容とMissionから見積もります。',
-                        child: Container(
-                          constraints: const BoxConstraints(minHeight: 56),
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                          ),
-                          child: Text(
-                            guide?.effortEstimate?.difficultyBand ?? '航路作成後に表示',
-                            style: const TextStyle(color: AppColors.deepNavy),
-                          ),
+                      const SizedBox(height: AppSpacing.md),
+                      _ArcClarificationPanel(
+                        questions: _clarificationQuestions,
+                        controllers: _clarificationControllers,
+                        targetDate: _targetDate,
+                        enabled: !_isGenerating,
+                        onDatePressed: _pickTargetDate,
+                        onAnswerChanged: _invalidateGuide,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      FilledButton.icon(
+                        onPressed: _isGenerating ? null : _generate,
+                        icon: _isGenerating
+                            ? const SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.auto_awesome_outlined),
+                        label: Text(guide == null ? 'Arcと航路を描く' : '航路を描き直す'),
+                      ),
+                    ],
+                    if (_error != null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        _error!,
+                        style: const TextStyle(color: AppColors.warmGold),
+                      ),
+                    ],
+                    if (guide != null) ...[
+                      const SizedBox(height: AppSpacing.xl),
+                      _ArcGuidePreviewBlock(
+                        title: 'Questの輪郭',
+                        body: guide.summary,
+                      ),
+                      if (guide.effortEstimate case final estimate?) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        _ArcGuidePreviewBlock(
+                          title: 'Arcの見積もり',
+                          body:
+                              '${estimate.difficultyBand} / 実作業 ${estimate.activeEffortLabel} / 期間 ${estimate.calendarLabel}\n${estimate.rationale}',
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _ArcClarificationPanel(
-                  questions: _clarificationQuestions,
-                  controllers: _clarificationControllers,
-                  targetDate: _targetDate,
-                  enabled: !_isGenerating,
-                  onDatePressed: _pickTargetDate,
-                  onAnswerChanged: _invalidateGuide,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                FilledButton.icon(
-                  onPressed: _isGenerating ? null : _generate,
-                  icon: _isGenerating
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.auto_awesome_outlined),
-                  label: Text(guide == null ? 'Arcと航路を描く' : '航路を描き直す'),
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    _error!,
-                    style: const TextStyle(color: AppColors.warmGold),
-                  ),
-                ],
-                if (guide != null) ...[
-                  const SizedBox(height: AppSpacing.xl),
-                  _ArcGuidePreviewBlock(title: 'Questの輪郭', body: guide.summary),
-                  if (guide.effortEstimate case final estimate?) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    _ArcGuidePreviewBlock(
-                      title: 'Arcの見積もり',
-                      body:
-                          '${estimate.difficultyBand} / 実作業 ${estimate.activeEffortLabel} / 期間 ${estimate.calendarLabel}\n${estimate.rationale}',
-                    ),
-                    if (_targetDate case final targetMonth?) ...[
+                        if (_targetDate case final targetMonth?) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          _ArcGuidePreviewBlock(
+                            title: '希望月との見通し',
+                            body: QuestFeasibilityService.assess(
+                              now: DateTime.now(),
+                              requestedMonth: targetMonth,
+                              estimate: estimate,
+                            ).message,
+                          ),
+                        ],
+                      ],
                       const SizedBox(height: AppSpacing.md),
                       _ArcGuidePreviewBlock(
-                        title: '希望月との見通し',
-                        body: QuestFeasibilityService.assess(
-                          now: DateTime.now(),
-                          requestedMonth: targetMonth,
-                          estimate: estimate,
-                        ).message,
+                        title: '目的地までの航路',
+                        body: guide.path,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _ArcGuidePreviewBlock(
+                        title: '気をつけること',
+                        body: guide.cautions,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      Text(
+                        '最初のMission',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w900,
+                            ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      ...List.generate(guide.missionCandidates.length, (index) {
+                        final mission = guide.missionCandidates[index];
+                        return CheckboxListTile(
+                          value: _selectedMissionIndexes.contains(index),
+                          onChanged: (selected) {
+                            setState(() {
+                              final next = {..._selectedMissionIndexes};
+                              if (selected == true) {
+                                next.add(index);
+                                _firstMissionIndex ??= index;
+                              } else {
+                                next.remove(index);
+                                if (_firstMissionIndex == index) {
+                                  _firstMissionIndex = next.isEmpty
+                                      ? null
+                                      : next.reduce((a, b) => a < b ? a : b);
+                                }
+                              }
+                              _selectedMissionIndexes = next;
+                            });
+                          },
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          activeColor: AppColors.gold,
+                          title: Text(
+                            mission.title,
+                            style: const TextStyle(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          subtitle: Text(
+                            mission.description,
+                            style: const TextStyle(color: AppColors.parchment),
+                          ),
+                          secondary: IconButton(
+                            onPressed: _selectedMissionIndexes.contains(index)
+                                ? () =>
+                                      setState(() => _firstMissionIndex = index)
+                                : null,
+                            icon: Icon(
+                              _firstMissionIndex == index
+                                  ? Icons.star_rounded
+                                  : Icons.star_outline_rounded,
+                            ),
+                            color: AppColors.gold,
+                            tooltip: '最初の一歩にする',
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: AppSpacing.lg),
+                      _ArcPlanningContextPreview(
+                        lines: QuestClarificationService.answerLines(
+                          targetDate: _targetDate,
+                          answers: _clarificationAnswers,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      FilledButton.icon(
+                        onPressed: _selectedMissionIndexes.isEmpty
+                            ? null
+                            : _confirm,
+                        icon: const Icon(Icons.rocket_launch_outlined),
+                        label: Text(
+                          'Questと${_selectedMissionIndexes.length}件のMissionを始める',
+                        ),
                       ),
                     ],
                   ],
-                  const SizedBox(height: AppSpacing.md),
-                  _ArcGuidePreviewBlock(title: '目的地までの航路', body: guide.path),
-                  const SizedBox(height: AppSpacing.md),
-                  _ArcGuidePreviewBlock(title: '気をつけること', body: guide.cautions),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    '最初のMission',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  ...List.generate(guide.missionCandidates.length, (index) {
-                    final mission = guide.missionCandidates[index];
-                    return CheckboxListTile(
-                      value: _selectedMissionIndexes.contains(index),
-                      onChanged: (selected) {
-                        setState(() {
-                          final next = {..._selectedMissionIndexes};
-                          if (selected == true) {
-                            next.add(index);
-                            _firstMissionIndex ??= index;
-                          } else {
-                            next.remove(index);
-                            if (_firstMissionIndex == index) {
-                              _firstMissionIndex = next.isEmpty
-                                  ? null
-                                  : next.reduce((a, b) => a < b ? a : b);
-                            }
-                          }
-                          _selectedMissionIndexes = next;
-                        });
-                      },
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: AppColors.gold,
-                      title: Text(
-                        mission.title,
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      subtitle: Text(
-                        mission.description,
-                        style: const TextStyle(color: AppColors.parchment),
-                      ),
-                      secondary: IconButton(
-                        onPressed: _selectedMissionIndexes.contains(index)
-                            ? () => setState(() => _firstMissionIndex = index)
-                            : null,
-                        icon: Icon(
-                          _firstMissionIndex == index
-                              ? Icons.star_rounded
-                              : Icons.star_outline_rounded,
-                        ),
-                        color: AppColors.gold,
-                        tooltip: '最初の一歩にする',
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: AppSpacing.lg),
-                  _ArcPlanningContextPreview(
-                    lines: QuestClarificationService.answerLines(
-                      targetDate: _targetDate,
-                      answers: _clarificationAnswers,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  FilledButton.icon(
-                    onPressed: _selectedMissionIndexes.isEmpty
-                        ? null
-                        : _confirm,
-                    icon: const Icon(Icons.rocket_launch_outlined),
-                    label: Text(
-                      'Questと${_selectedMissionIndexes.length}件のMissionを始める',
-                    ),
-                  ),
-                ],
-              ],
+                ),
+              ),
             ),
           ),
         ),
@@ -1956,6 +2294,132 @@ class _ArcQuestCreationSheetState
       _targetDate = picked;
       _invalidateGuide();
     }
+  }
+}
+
+class _ArcQuestAnalysisPanel extends StatelessWidget {
+  const _ArcQuestAnalysisPanel({
+    required this.guide,
+    required this.inferredCategory,
+  });
+
+  final ArcQuestGuide? guide;
+  final String inferredCategory;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = guide?.questDna?.valueFor('theme');
+    final evaluation = guide?.questEvaluation;
+    final category = theme?.trim().isNotEmpty == true
+        ? theme!
+        : inferredCategory.trim().isEmpty
+        ? '航路作成後に提案'
+        : inferredCategory.trim();
+    return Semantics(
+      container: true,
+      label: 'Arcによる航路分析',
+      readOnly: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.cosmicBlue.withValues(alpha: 0.26),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.28)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.auto_awesome_outlined, color: AppColors.gold),
+                SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    'Arcによる航路分析',
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                _ArcAnalysisBadge(),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.xl,
+              runSpacing: AppSpacing.md,
+              children: [
+                _ArcAnalysisValue(label: 'テーマ', value: category),
+                _ArcAnalysisValue(
+                  label: '難易度',
+                  value: evaluation?.difficultyStars ?? '航路作成後に評価',
+                ),
+                _ArcAnalysisValue(
+                  label: '予想期間',
+                  value: evaluation?.durationLabel ?? '航路作成後に評価',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ArcAnalysisBadge extends StatelessWidget {
+  const _ArcAnalysisBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: const Text(
+        'Arcが分析',
+        style: TextStyle(
+          color: AppColors.warmGold,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _ArcAnalysisValue extends StatelessWidget {
+  const _ArcAnalysisValue({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 132),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(color: AppColors.parchment, fontSize: 12),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppColors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -2036,8 +2500,8 @@ class _ArcClarificationPanel extends StatelessWidget {
             icon: const Icon(Icons.event_outlined),
             label: Text(
               targetDate == null
-                  ? '期限はまだ決めない'
-                  : DateFormat('yyyy年M月d日').format(targetDate!),
+                  ? 'YYYY / MM を選ぶ'
+                  : DateFormat('yyyy / MM').format(targetDate!),
             ),
           ),
         ),
@@ -2243,6 +2707,47 @@ class _ArcQuestChangeRow extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _ArcClarificationCard extends StatelessWidget {
+  const _ArcClarificationCard({required this.session});
+
+  final ArcQuestClarificationSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    final question = session.currentQuestion;
+    if (question == null) return const SizedBox.shrink();
+    return QuestraCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.auto_awesome, color: AppColors.gold),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Questを整理中 ${session.answeredCount + 1}/${session.questions.length}',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  question.label,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (question.hint.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(question.hint),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

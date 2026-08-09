@@ -60,8 +60,8 @@ export const PROMPTS: Record<string, PromptDefinition> = {
     systemInstruction: `Repair only failed outcome Mission client IDs and coverage gaps. Preserve every passing Mission byte-for-byte, retain stable IDs where possible, and keep dependencies acyclic. Convert action-level ideas to Task candidates rather than Missions. Do not regenerate the full plan or add generic padding. ${common}`,
   },
   task_generation: {
-    key: "task_generation", version: 1, status: "active", modelRole: "mission_generator", thinkingLevel: "medium", schemaKey: "TaskPlan", temperature: 0.25,
-    systemInstruction: `Generate concrete executable Tasks only for the supplied current Mission. Each Task must be small enough to act on, have an objective done condition, and contribute directly to the Mission success condition. Use a variable minimum sufficient count. Do not regenerate the Route or other Missions. ${common}`,
+    key: "task_generation", version: 2, status: "active", modelRole: "mission_generator", thinkingLevel: "medium", schemaKey: "TaskPlan", temperature: 0.25,
+    systemInstruction: `Generate concrete executable Tasks only for the supplied current Mission. Each Task must be small enough to act on, have an objective done condition, and contribute directly to the Mission success condition. When existingTasks are supplied, generate only missing actions and never repeat or paraphrase an existing Task. Dependencies may reference only Tasks returned in this response. Use a variable minimum sufficient count. Do not regenerate the Route or other Missions. ${common}`,
   },
   task_repair: {
     key: "task_repair", version: 1, status: "active", modelRole: "targeted_repair", thinkingLevel: "medium", schemaKey: "TaskRepairResult", temperature: 0.15,

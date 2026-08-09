@@ -10,14 +10,11 @@ void main() {
     );
 
     expect(questions, hasLength(3));
-    expect(
-      questions.map((question) => question.type),
-      [
-        QuestClarificationType.deadline,
-        QuestClarificationType.budget,
-        QuestClarificationType.experience,
-      ],
-    );
+    expect(questions.map((question) => question.type), [
+      QuestClarificationType.deadline,
+      QuestClarificationType.party,
+      QuestClarificationType.purpose,
+    ]);
   });
 
   test('provided facts are not asked again', () {
@@ -30,10 +27,6 @@ void main() {
     expect(
       questions.map((question) => question.type),
       isNot(contains(QuestClarificationType.deadline)),
-    );
-    expect(
-      questions.map((question) => question.type),
-      isNot(contains(QuestClarificationType.budget)),
     );
     expect(
       questions.map((question) => question.type),
@@ -53,10 +46,10 @@ void main() {
     );
 
     expect(questions, hasLength(2));
-    expect(
-      questions.map((question) => question.type),
-      [QuestClarificationType.deadline, QuestClarificationType.experience],
-    );
+    expect(questions.map((question) => question.type), [
+      QuestClarificationType.purpose,
+      QuestClarificationType.deadline,
+    ]);
   });
 
   test('only answered context is appended for planning', () {

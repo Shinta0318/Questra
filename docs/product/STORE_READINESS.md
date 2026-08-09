@@ -12,9 +12,9 @@
 
 Capture approved Design Bible states for iPhone 6.7in, iPhone 6.1in, Android phone, Android tablet, and Web compact/expanded:
 
-1. Home with Arc and today's Mission
+1. Home with Arc and today's Task, including its parent Mission and Quest
 2. Arc consultation with a natural Japanese response
-3. Quest route with distinct linked Missions
+3. Quest route with distinct Missions and executable Tasks
 4. Trail creation with media state
 5. Profile privacy and account controls
 

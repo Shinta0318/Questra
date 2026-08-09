@@ -1,52 +1,34 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
-import '../../core/analytics/analytics_event.dart';
-import '../../core/analytics/analytics_service.dart';
-import '../../core/experience/experience_settings_controller.dart';
-import '../../core/experience/haptic_feedback_service.dart';
-import '../../core/experience/sound_effect_service.dart';
-import '../../core/theme/questra_colors.dart';
+import '../../core/performance/grouped_collection_index.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_presence.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
-import '../../widgets/menu/questra_action_menu.dart';
-import '../../widgets/motion/questra_motion.dart';
 import '../../widgets/persistence_sync_banner.dart';
 import '../../widgets/questra_card.dart';
-import '../arc/arc_celebration_service.dart';
 import '../arc/arc_expression_engine.dart';
 import '../arc/arc_guidance_providers.dart';
-import '../arc/arc_motion_controller.dart';
 import '../auth/auth_controller.dart';
 import '../quest/quest_controller.dart';
-import '../quest/quest_guide_model.dart';
 import '../signal/mission_signal_model.dart';
 import '../signal/signal_providers.dart';
 import '../task/task_controller.dart';
-import '../task/task_screen.dart';
+import '../task/task_model.dart';
 import 'mission_controller.dart';
 import 'mission_model.dart';
-
-String _verificationLabel(String value) => switch (value) {
-  'artifact' => '成果物で確認',
-  'official_source' => '公式情報で確認',
-  'professional_review' => '専門家へ確認',
-  _ => '自分で確認',
-};
+import 'widgets/mission_card.dart';
+import 'widgets/mission_card_presentation.dart';
 
 class MissionScreen extends ConsumerWidget {
   const MissionScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tasks = ref.watch(taskControllerProvider);
-    if (tasks.isNotEmpty) return const TaskScreen();
     final missions = ref.watch(missionControllerProvider);
+    final tasks = ref.watch(taskControllerProvider);
     final quests = ref.watch(questControllerProvider);
     final profile = ref.watch(authControllerProvider).profile;
     final syncState = ref.watch(missionSyncControllerProvider);
@@ -59,18 +41,44 @@ class MissionScreen extends ConsumerWidget {
       missions: missions,
       trails: const [],
     );
+    final completedMissionIds = missions
+        .where((mission) => mission.status == MissionStatus.completed)
+        .map((mission) => mission.id)
+        .toSet();
+    final tasksByMission = GroupedCollectionIndex<String, QuestraTask>.build(
+      tasks,
+      keyOf: (task) => task.missionId,
+    );
+    final missionTitles = {
+      for (final mission in missions) mission.id: mission.title,
+    };
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mission')),
+      appBar: AppBar(
+        title: const Text('Mission'),
+        actions: [
+          IconButton(
+            tooltip: 'Task一覧',
+            onPressed: () => context.push(AppRoutes.task),
+            icon: const Icon(Icons.checklist_outlined),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: QuestraResponsiveListView(
           onRefresh: profile == null
               ? null
-              : () => ref
-                    .read(missionControllerProvider.notifier)
-                    .loadForQuests(
-                      quests.map((quest) => quest.id).toList(growable: false),
-                    ),
+              : () async {
+                  final questIds = quests
+                      .map((quest) => quest.id)
+                      .toList(growable: false);
+                  await ref
+                      .read(missionControllerProvider.notifier)
+                      .loadForQuests(questIds);
+                  await ref
+                      .read(taskControllerProvider.notifier)
+                      .loadForQuestIds(questIds);
+                },
           padding: const EdgeInsets.all(20),
           children: [
             PersistenceSyncBanner(
@@ -82,7 +90,7 @@ class MissionScreen extends ConsumerWidget {
             ArcPresence(
               surface: ArcPresenceSurface.mission,
               emotion: arcExpression.emotion,
-              message: '小さなMissionも、ちゃんと前進だよ。今日の星をひとつ選ぼう。',
+              message: 'MissionはQuestへ近づいたと分かる中間成果。Taskで少しずつ形にしよう。',
             ),
             const SizedBox(height: 16),
             if (signals.isNotEmpty) ...[
@@ -99,190 +107,80 @@ class MissionScreen extends ConsumerWidget {
                       ),
                     )
                     .emotion,
-                message: 'Quest詳細からMissionを生成すると、ここに今日の一歩が並びます。',
-                actionLabel: 'Questを確認',
+                message: 'Quest詳細でArcと航路を描くと、ここに中間成果が並びます。',
+                actionLabel: 'Questを見る',
                 icon: Icons.travel_explore_outlined,
                 onAction: () => context.go(AppRoutes.quest),
               )
             else
-              ...missions.map(
-                (mission) => Padding(
+              for (final mission in missions)
+                Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _InteractiveMissionCard(mission: mission),
+                  child: MissionCard(
+                    mission: mission,
+                    tasks: tasksByMission.valuesFor(mission.id),
+                    completedMissionIds: completedMissionIds,
+                    parentMissionTitle: mission.parentMissionId == null
+                        ? null
+                        : missionTitles[mission.parentMissionId],
+                    menuActions: const [
+                      MissionCardMenuAction.consultArc,
+                      MissionCardMenuAction.viewSupport,
+                      MissionCardMenuAction.reviewTasks,
+                    ],
+                    onPrimaryPressed: (presentation) =>
+                        _openPrimary(context, mission, presentation),
+                    onMenuSelected: (action) {
+                      final detail = AppRoutes.missionDetail(
+                        mission.questId,
+                        mission.id,
+                      );
+                      switch (action) {
+                        case MissionCardMenuAction.consultArc:
+                          context.push(
+                            AppRoutes.arcForMission(
+                              questId: mission.questId,
+                              missionId: mission.id,
+                              prompt: '「${mission.title}」を進める次の一歩を相談したい。',
+                              returnTo: detail,
+                            ),
+                          );
+                          return;
+                        case MissionCardMenuAction.viewSupport:
+                          context.push(
+                            AppRoutes.missionSupport(
+                              mission.questId,
+                              mission.id,
+                            ),
+                          );
+                          return;
+                        default:
+                          context.push(detail);
+                          return;
+                      }
+                    },
+                  ),
                 ),
-              ),
           ],
         ),
       ),
     );
   }
-}
 
-class _InteractiveMissionCard extends ConsumerWidget {
-  const _InteractiveMissionCard({required this.mission});
-
-  final Mission mission;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(experienceSettingsControllerProvider);
-    final canComplete = mission.status != MissionStatus.completed;
-    final card = QuestraCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(mission.title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          Text(mission.description),
-          if (mission.doneCondition.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.flag_outlined, size: 18),
-                const SizedBox(width: 6),
-                Expanded(child: Text('完了の目印: ${mission.doneCondition}')),
-              ],
-            ),
-          ],
-          if (mission.action.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text('行動: ${mission.action}'),
-          ],
-          if (mission.isOptional) ...[
-            const SizedBox(height: 8),
-            const Text('このMissionは任意です。航路に合わなければ見送れます。'),
-          ],
-          if (mission.sourceRequirement != 'none') ...[
-            const SizedBox(height: 8),
-            Text(switch (mission.sourceRequirement) {
-              'professional' => '専門家による確認が必要です。',
-              'official' => '公式情報で確認してください。',
-              'recent' => '更新日の新しい情報を確認してください。',
-              _ => '情報源を確認してください。',
-            }),
-          ],
-          if (mission.expectedOutput.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text('残すもの: ${mission.expectedOutput}'),
-          ],
-          if (mission.verificationType != 'self_check') ...[
-            const SizedBox(height: 4),
-            Text('確認方法: ${_verificationLabel(mission.verificationType)}'),
-          ],
-          const SizedBox(height: 10),
-          TextButton.icon(
-            onPressed: () =>
-                context.go('${AppRoutes.quest}/${mission.questId}'),
-            icon: const Icon(Icons.route_outlined, size: 18),
-            label: Text('Quest「${mission.questTitle}」のMission'),
-          ),
-          Text('進め方: ${mission.guideType.label}'),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: mission.progressPercent / 100,
-                    minHeight: 8,
-                    backgroundColor: QuestraColors.cloud,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      QuestraColors.gold,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                '${mission.progressPercent}%',
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
-              PopupMenuButton<int>(
-                tooltip: '進捗を更新',
-                icon: const Icon(Icons.tune_outlined),
-                onSelected: (value) => ref
-                    .read(missionControllerProvider.notifier)
-                    .updateProgress(mission.id, value),
-                itemBuilder: (context) => [
-                  for (final value in const [0, 25, 50, 75, 100])
-                    PopupMenuItem(value: value, child: Text('$value%')),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          QuestraActionButton(
-            onPressed: canComplete
-                ? () => _completeMission(
-                    context,
-                    ref,
-                    mission,
-                    source: _MissionCompletionSource.button,
-                  )
-                : null,
-            icon: Icon(
-              canComplete ? Icons.check_circle_outline : Icons.check_circle,
-              color: QuestraColors.gold,
-            ),
-            label: AnimatedSwitcher(
-              duration:
-                  settings.reduceScreenMotion(
-                    osReduceMotion: MediaQuery.disableAnimationsOf(context),
-                  )
-                  ? Duration.zero
-                  : QuestraMotion.fast,
-              switchInCurve: QuestraMotion.standard,
-              switchOutCurve: QuestraMotion.standard,
-              child: Text(
-                key: ValueKey(mission.status),
-                canComplete ? 'Missionを完了' : '完了済み',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (!settings.swipeGesturesEnabled || !canComplete) return card;
-    return Dismissible(
-      key: ValueKey('mission-swipe-${mission.id}'),
-      direction: DismissDirection.startToEnd,
-      dismissThresholds: const {DismissDirection.startToEnd: 0.55},
-      confirmDismiss: (_) async {
-        _completeMission(
-          context,
-          ref,
-          mission,
-          source: _MissionCompletionSource.swipe,
-        );
-        return false;
-      },
-      background: Container(
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        decoration: BoxDecoration(
-          color: QuestraColors.cosmicBlue.withValues(alpha: 0.20),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.check_circle_rounded, color: QuestraColors.gold),
-            SizedBox(width: 8),
-            Text(
-              '完了',
-              style: TextStyle(
-                color: QuestraColors.gold,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
-        ),
-      ),
-      child: card,
-    );
+  void _openPrimary(
+    BuildContext context,
+    Mission mission,
+    MissionCardPresentation presentation,
+  ) {
+    final task = presentation.nextTask;
+    if (task != null &&
+        (presentation.primaryAction == MissionCardPrimaryAction.startNextTask ||
+            presentation.primaryAction ==
+                MissionCardPrimaryAction.resumeTask)) {
+      context.push(AppRoutes.taskDetail(mission.questId, mission.id, task.id));
+      return;
+    }
+    context.push(AppRoutes.missionDetail(mission.questId, mission.id));
   }
 }
 
@@ -292,26 +190,23 @@ class _MissionSignalPanel extends StatelessWidget {
   final List<MissionSignal> signals;
 
   @override
-  Widget build(BuildContext context) {
-    return QuestraCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Signal', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          const Text('Arcが今のMission状況から、やさしく次の一歩を照らします。'),
-          const SizedBox(height: 12),
-          ...signals.map(
-            (signal) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _MissionSignalTile(signal: signal),
-            ),
+  Widget build(BuildContext context) => QuestraCard(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Signal', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        const Text('Arcが今のMission状況から、次の一歩を照らします。'),
+        const SizedBox(height: 12),
+        for (final signal in signals)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _MissionSignalTile(signal: signal),
           ),
-        ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
 }
 
 class _MissionSignalTile extends StatelessWidget {
@@ -322,16 +217,17 @@ class _MissionSignalTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (signal.severity) {
-      MissionSignalSeverity.urgent => QuestraColors.gold,
-      MissionSignalSeverity.focus => QuestraColors.cosmicBlue,
-      MissionSignalSeverity.calm => QuestraColors.slate,
+      MissionSignalSeverity.urgent => Theme.of(context).colorScheme.tertiary,
+      MissionSignalSeverity.focus => Theme.of(context).colorScheme.primary,
+      MissionSignalSeverity.calm => Theme.of(
+        context,
+      ).colorScheme.onSurfaceVariant,
     };
-
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.20)),
       ),
       child: Row(
@@ -356,63 +252,4 @@ class _MissionSignalTile extends StatelessWidget {
       ),
     );
   }
-}
-
-enum _MissionCompletionSource { button, swipe }
-
-void _completeMission(
-  BuildContext context,
-  WidgetRef ref,
-  Mission mission, {
-  required _MissionCompletionSource source,
-}) {
-  final completedMission = ref
-      .read(missionControllerProvider.notifier)
-      .completeMission(mission.id);
-  if (completedMission == null) {
-    final settings = ref.read(experienceSettingsControllerProvider);
-    unawaited(
-      ref
-          .read(hapticFeedbackServiceProvider)
-          .trigger(QuestraHapticCue.error, settings: settings),
-    );
-    return;
-  }
-  final settings = ref.read(experienceSettingsControllerProvider);
-  unawaited(
-    ref
-        .read(hapticFeedbackServiceProvider)
-        .trigger(QuestraHapticCue.success, settings: settings),
-  );
-  unawaited(
-    ref
-        .read(soundEffectServiceProvider)
-        .play(QuestraSoundEffect.missionComplete, settings: settings),
-  );
-  unawaited(
-    ref
-        .read(arcMotionControllerProvider.notifier)
-        .react(ArcAnimationState.cheering),
-  );
-  unawaited(
-    ref
-        .read(analyticsServiceProvider)
-        .track(
-          AnalyticsEvent(
-            name: source == _MissionCompletionSource.swipe
-                ? AnalyticsEventName.missionCompletedBySwipe
-                : AnalyticsEventName.missionCompletedByButton,
-            properties: {'source': source.name},
-          ),
-        ),
-  );
-  showArcCelebrationSnackBar(
-    context,
-    ref
-        .read(arcCelebrationServiceProvider)
-        .build(
-          event: ArcCelebrationEvent.missionCompleted,
-          subject: completedMission.title,
-        ),
-  );
 }

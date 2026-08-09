@@ -10,6 +10,7 @@ enum PerformanceBudgetArea {
   trailImagePreUpload,
   supabaseListQuery,
   arcMemoryRead,
+  longRouteIndex,
 }
 
 class PerformanceBudget {
@@ -94,6 +95,14 @@ class PerformanceBudgetCatalog {
       label: 'Arc Memory取得',
       target: '${QuestraPerformanceLimits.arcMemoryVisibleLimit}件以内',
       checkMethod: 'repository query review and verifier script',
+      betaRequired: true,
+    ),
+    PerformanceBudget(
+      area: PerformanceBudgetArea.longRouteIndex,
+      label: '長期航路インデックス',
+      target:
+          '${QuestraPerformanceLimits.longRouteIndexBuildBudgetMs}ms以内 / 12,000 Task fixture',
+      checkMethod: 'flutter test test/qst_292_long_route_performance_test.dart',
       betaRequired: true,
     ),
   ];

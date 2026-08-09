@@ -10,12 +10,22 @@ Future<void> main() async {
   _requireProjectEvidence(projectRef);
 
   final ids = _TestIds.create();
+  final siblingQuestId = _uuid();
+  final siblingMissionId = _uuid();
+  final taskRouteVersionId = _uuid();
+  final taskRouteProposalId = _uuid();
+  final taskRouteItemId = _uuid();
+  final staleRouteVersionId = _uuid();
+  final staleRouteProposalId = _uuid();
+  final staleRouteItemId = _uuid();
   _Session? accountA;
   _Session? accountB;
   var questCreated = false;
+  var taskCreated = false;
   var memoryCreated = false;
   var mediaCreated = false;
   var storageObjectCreated = false;
+  var siblingQuestCreated = false;
   String? guildPublicationId;
 
   try {
@@ -49,6 +59,39 @@ Future<void> main() async {
       'title': 'Verify persistence after re-login',
       'status': 'todo',
     });
+    await accountA.insert('tasks', {
+      'id': ids.task,
+      'owner_id': accountA.userId,
+      'quest_id': ids.quest,
+      'mission_id': ids.mission,
+      'title': 'Verify hosted Task persistence',
+      'action': 'Reload this Task after a new session',
+      'done_condition': 'The same Task row is visible after re-login',
+      'status': 'pending',
+      'required': true,
+      'order_index': 0,
+    });
+    taskCreated = true;
+    await accountA.expectArcTaskContext(
+      questId: ids.quest,
+      missionId: ids.mission,
+      taskId: ids.task,
+    );
+    await accountA.insert('quests', {
+      'id': siblingQuestId,
+      'owner_id': accountA.userId,
+      'title': 'QST-278 sibling hierarchy probe',
+      'description': 'Cross-parent integrity record',
+      'status': 'active',
+      'visibility': 'private',
+    });
+    siblingQuestCreated = true;
+    await accountA.insert('missions', {
+      'id': siblingMissionId,
+      'quest_id': siblingQuestId,
+      'title': 'Sibling Mission for parent guard',
+      'status': 'todo',
+    });
     await accountA.insert('arc_memories', {
       'id': ids.memory,
       'user_id': accountA.userId,
@@ -66,6 +109,7 @@ Future<void> main() async {
       'owner_id': accountA.userId,
       'quest_id': ids.quest,
       'mission_id': ids.mission,
+      'task_id': ids.task,
       'title': 'QST-199 private Trail probe',
       'summary': 'Automated Beta acceptance record',
       'content': 'Automated Beta acceptance record',
@@ -127,6 +171,14 @@ Future<void> main() async {
     await _expectOne(accountA, 'user_profiles', 'id', accountA.userId);
     await _expectOne(accountA, 'quests', 'id', ids.quest);
     await _expectOne(accountA, 'missions', 'id', ids.mission);
+    await accountA.expectFieldValue(
+      'missions',
+      'id',
+      ids.mission,
+      'quest_id',
+      ids.quest,
+    );
+    await _expectOne(accountA, 'tasks', 'id', ids.task);
     await _expectOne(accountA, 'arc_memories', 'id', ids.memory);
     await _expectOne(accountA, 'trails', 'id', ids.trail);
     await _expectOne(accountA, 'media', 'id', ids.media);
@@ -143,6 +195,7 @@ Future<void> main() async {
 
     await _expectNone(accountB, 'quests', 'id', ids.quest);
     await _expectNone(accountB, 'missions', 'id', ids.mission);
+    await _expectNone(accountB, 'tasks', 'id', ids.task);
     await _expectNone(accountB, 'arc_memories', 'id', ids.memory);
     await _expectNone(accountB, 'trails', 'id', ids.trail);
     await _expectNone(accountB, 'media', 'id', ids.media);
@@ -175,6 +228,45 @@ Future<void> main() async {
       'generated_by': 'user',
       'generation_reason': 'Cross-account Route write must fail',
     });
+    await accountB.expectInsertDenied('tasks', {
+      'owner_id': accountB.userId,
+      'quest_id': ids.quest,
+      'mission_id': ids.mission,
+      'title': 'Cross-account Task write must fail',
+      'action': 'Attempt a write against another owner Mission',
+      'done_condition': 'The database rejects this row',
+      'status': 'pending',
+    });
+    await accountA.expectInsertDenied('tasks', {
+      'owner_id': accountA.userId,
+      'quest_id': ids.quest,
+      'mission_id': siblingMissionId,
+      'title': 'Cross-parent Task must fail',
+      'action': 'Attempt to mix a Quest and Mission hierarchy',
+      'done_condition': 'The database rejects this row',
+      'status': 'pending',
+    });
+    await accountA.expectInsertDenied('trails', {
+      'id': _uuid(),
+      'owner_id': accountA.userId,
+      'quest_id': ids.quest,
+      'mission_id': siblingMissionId,
+      'title': 'Cross-parent Trail must fail',
+      'summary': 'Integrity probe',
+      'content': 'Integrity probe',
+      'visibility': 'private',
+      'trail_type': 'mission_record',
+    });
+    await accountB.expectTaskExpansionDenied(
+      questId: ids.quest,
+      missionId: ids.mission,
+      idempotencyKey: 'qst273-denied:${ids.task}',
+    );
+    await accountA.expectTaskExpansionReady(
+      questId: ids.quest,
+      missionId: ids.mission,
+      idempotencyKey: 'qst273-owner:${ids.task}',
+    );
     await accountB.expectRpcDenied('apply_route_change_proposal', {
       'p_proposal_id': ids.routeProposal,
       'p_accepted_item_ids': <String>[ids.routeItem],
@@ -207,6 +299,124 @@ Future<void> main() async {
       ids.routeProposal,
       'status',
       'rolledBack',
+    );
+    await accountA.insert('route_versions', {
+      'id': staleRouteVersionId,
+      'quest_id': ids.quest,
+      'version_number': 100,
+      'status': 'proposed',
+      'generated_by': 'arc',
+      'generation_reason': 'QST-286 stale route proof',
+    });
+    await accountA.insert('route_change_proposals', {
+      'id': staleRouteProposalId,
+      'quest_id': ids.quest,
+      'route_version_id': staleRouteVersionId,
+      'proposal_type': 'manualReview',
+      'summary': 'This proposal must become stale after progress changes',
+      'reason': 'manualReview',
+      'confidence_score': 0.9,
+    });
+    await accountA.insert('route_change_items', {
+      'id': staleRouteItemId,
+      'proposal_id': staleRouteProposalId,
+      'action_type': 'reorder',
+      'target_mission_id': ids.mission,
+      'target_task_id': ids.task,
+      'title': 'Stale Task reorder must not apply',
+      'reason': 'Hosted concurrent progress protection proof',
+      'before_data': {'orderIndex': 0},
+      'after_data': {'orderIndex': 7},
+      'safety_level': 1,
+    });
+    await accountA.update('tasks', 'id', ids.task, {
+      'scheduled_date': DateTime.now()
+          .toUtc()
+          .add(const Duration(days: 2))
+          .toIso8601String()
+          .substring(0, 10),
+    });
+    await accountA.expectStaleTaskRouteProposal(
+      proposalId: staleRouteProposalId,
+      itemId: staleRouteItemId,
+      routeVersionId: staleRouteVersionId,
+    );
+    await accountA.expectFieldValue('tasks', 'id', ids.task, 'order_index', 0);
+    await accountA.expectFieldValue(
+      'route_change_proposals',
+      'id',
+      staleRouteProposalId,
+      'status',
+      'stale',
+    );
+    await accountA.insert('route_versions', {
+      'id': taskRouteVersionId,
+      'quest_id': ids.quest,
+      'version_number': 99,
+      'status': 'proposed',
+      'generated_by': 'arc',
+      'generation_reason': 'QST-279 Task route proof',
+    });
+    await accountA.insert('route_change_proposals', {
+      'id': taskRouteProposalId,
+      'quest_id': ids.quest,
+      'route_version_id': taskRouteVersionId,
+      'proposal_type': 'manualReview',
+      'summary': 'Reorder one Task after approval',
+      'reason': 'manualReview',
+      'confidence_score': 0.9,
+    });
+    await accountA.insert('route_change_items', {
+      'id': taskRouteItemId,
+      'proposal_id': taskRouteProposalId,
+      'action_type': 'reorder',
+      'target_mission_id': ids.mission,
+      'target_task_id': ids.task,
+      'title': 'Move Task in the route',
+      'reason': 'Hosted Task route transaction proof',
+      'before_data': {'orderIndex': 0},
+      'after_data': {'orderIndex': 5},
+      'safety_level': 1,
+    });
+    await accountA.expectFieldValue('tasks', 'id', ids.task, 'order_index', 0);
+    await accountA.applyTaskRouteProposal(
+      proposalId: taskRouteProposalId,
+      itemId: taskRouteItemId,
+      routeVersionId: taskRouteVersionId,
+    );
+    await accountA.expectFieldValue('tasks', 'id', ids.task, 'order_index', 5);
+    await accountA.rollbackTaskRouteProposal(taskRouteProposalId);
+    await accountA.expectFieldValue('tasks', 'id', ids.task, 'order_index', 0);
+    await accountA.expectFieldValue(
+      'route_change_proposals',
+      'id',
+      taskRouteProposalId,
+      'status',
+      'rolledBack',
+    );
+    await accountA.expectRpcDenied('confirm_mission_outcome', {
+      'p_mission_id': ids.mission,
+    });
+    await accountA.expectUpdateDenied('missions', 'id', ids.mission, {
+      'status': 'completed',
+      'success_confirmed_at': DateTime.now().toUtc().toIso8601String(),
+    });
+    await accountA.update('tasks', 'id', ids.task, {'status': 'completed'});
+    await accountA.update('tasks', 'id', ids.task, {'status': 'completed'});
+    final completionEvents = await accountA.countWhere('task_progress_events', {
+      'task_id': 'eq.${ids.task}',
+      'event_name': 'eq.task_completed',
+    });
+    if (completionEvents != 1) {
+      throw StateError('Task completion retry created duplicate events.');
+    }
+    await accountA.confirmMissionOutcome(ids.mission);
+    await accountA.expectFieldValue(
+      'missions',
+      'id',
+      ids.mission,
+      'status',
+      'completed',
     );
 
     final anonymous = _Session(
@@ -245,8 +455,12 @@ Future<void> main() async {
 
     await accountA.delete('arc_memories', 'id', ids.memory);
     memoryCreated = false;
+    await accountA.delete('tasks', 'id', ids.task);
+    taskCreated = false;
     await accountA.delete('quests', 'id', ids.quest);
     questCreated = false;
+    await accountA.delete('quests', 'id', siblingQuestId);
+    siblingQuestCreated = false;
     await _writeEvidence(projectRef);
     stdout.writeln('Dual-account persistence acceptance passed.');
     stdout.writeln('Sanitized evidence written to $evidencePath');
@@ -266,8 +480,14 @@ Future<void> main() async {
       if (mediaCreated) {
         await accountA.delete('media', 'id', ids.media);
       }
+      if (taskCreated) {
+        await accountA.delete('tasks', 'id', ids.task);
+      }
       if (questCreated) {
         await accountA.delete('quests', 'id', ids.quest);
+      }
+      if (siblingQuestCreated) {
+        await accountA.delete('quests', 'id', siblingQuestId);
       }
       accountA.close();
     }
@@ -349,7 +569,7 @@ Future<void> _writeEvidence(String projectRef) async {
   final statusResult = await Process.run('git', ['status', '--porcelain']);
   final workingTreeClean = (statusResult.stdout as String).trim().isEmpty;
   final now = DateTime.now().toUtc().toIso8601String();
-  File(evidencePath).writeAsStringSync('''version: 1
+  File(evidencePath).writeAsStringSync('''version: 3
 status: verified
 updated_at_utc: "$now"
 source_commit_at_execution: "$commit"
@@ -359,6 +579,7 @@ acceptance:
   account_a_profile_after_relogin: passed
   account_a_quest_after_relogin: passed
   account_a_mission_after_relogin: passed
+  account_a_task_after_relogin: passed
   account_a_arc_memory_after_relogin: passed
   account_a_trail_after_relogin: passed
   account_a_media_after_relogin: passed
@@ -366,6 +587,22 @@ acceptance:
   account_a_storage_object_read: passed
   account_b_private_quest_visibility: denied
   account_b_private_mission_visibility: denied
+  account_b_private_task_visibility: denied
+  account_b_private_task_write: denied
+  account_b_task_expansion: denied
+  account_a_task_expansion: passed
+  account_a_cross_parent_task_write: denied
+  account_a_cross_parent_trail_write: denied
+  account_a_incomplete_mission_confirmation: denied
+  account_a_direct_mission_completion: denied
+  account_a_mission_completion_rpc: passed
+  task_completion_retry_event_count: 1
+  task_route_unchanged_before_approval: passed
+  task_route_apply_transaction: passed
+  task_route_rollback_restore: passed
+  arc_chat_task_context: passed
+  stale_route_conflict_rejected: passed
+  stale_route_task_unchanged: passed
   account_b_private_arc_memory_visibility: denied
   account_b_private_trail_visibility: denied
   account_b_private_media_visibility: denied
@@ -422,11 +659,141 @@ class _Session {
     );
   }
 
+  Future<void> update(
+    String table,
+    String field,
+    String value,
+    Map<String, Object?> values,
+  ) async {
+    await _request(
+      'PATCH',
+      table,
+      query: {field: 'eq.$value'},
+      body: values,
+      expectedStatuses: {204},
+    );
+  }
+
   Future<void> expectInsertDenied(
     String table,
     Map<String, Object?> row,
   ) async {
-    await _request('POST', table, body: row, expectedStatuses: {401, 403});
+    await _request('POST', table, body: row, expectedStatuses: {400, 401, 403});
+  }
+
+  Future<void> expectUpdateDenied(
+    String table,
+    String field,
+    String value,
+    Map<String, Object?> values,
+  ) async {
+    await _request(
+      'PATCH',
+      table,
+      query: {field: 'eq.$value'},
+      body: values,
+      expectedStatuses: {400, 401, 403},
+    );
+  }
+
+  Future<int> countWhere(String table, Map<String, String> filters) async {
+    final body = await _request(
+      'GET',
+      table,
+      query: {'select': 'id', ...filters},
+      expectedStatuses: {200},
+    );
+    return (jsonDecode(body) as List<dynamic>).length;
+  }
+
+  Future<void> expectTaskExpansionReady({
+    required String questId,
+    required String missionId,
+    required String idempotencyKey,
+  }) async {
+    final body = await _functionRequest(
+      'quest-planning-v2',
+      body: {
+        'mode': 'expand_tasks',
+        'quest_id': questId,
+        'mission_id': missionId,
+        'idempotency_key': idempotencyKey,
+      },
+      expectedStatuses: {200},
+    );
+    final decoded = jsonDecode(body) as Map<String, dynamic>;
+    final plan = decoded['task_plan'];
+    if (decoded['status'] != 'preview_ready' ||
+        plan is! Map<String, dynamic> ||
+        plan['tasks'] is! List ||
+        (plan['tasks'] as List).isEmpty) {
+      throw StateError('Hosted Task expansion did not return a valid preview.');
+    }
+  }
+
+  Future<void> expectArcTaskContext({
+    required String questId,
+    required String missionId,
+    required String taskId,
+  }) async {
+    final raw = await _functionRequest(
+      'arc-chat',
+      body: {
+        'message': '次に実行するTaskを教えて',
+        'history': const [],
+        'context': {
+          'active_quests': [
+            {'id': questId, 'title': 'QST Arc context probe'},
+          ],
+          'recent_missions': [
+            {
+              'id': missionId,
+              'quest_id': questId,
+              'title': 'Hosted Mission context',
+            },
+          ],
+          'recent_tasks': [
+            {
+              'id': taskId,
+              'quest_id': questId,
+              'mission_id': missionId,
+              'title': 'Verify hosted Task persistence',
+              'action': 'Reload this Task after a new session',
+              'done_condition': 'The same Task row is visible after re-login',
+              'status': 'pending',
+            },
+          ],
+          'recent_trails': const [],
+          'memories': const [],
+        },
+      },
+      expectedStatuses: {200},
+    );
+    final response = jsonDecode(raw) as Map<String, dynamic>;
+    final usage = response['context_usage'] as Map<String, dynamic>?;
+    if (usage?['task_count'] != 1 || usage?['focused_task_id'] != taskId) {
+      throw StateError('Arc Chat did not accept the owner Task context.');
+    }
+    if ((response['message'] as String?)?.trim().isEmpty ?? true) {
+      throw StateError('Arc Chat returned no message for Task context.');
+    }
+  }
+
+  Future<void> expectTaskExpansionDenied({
+    required String questId,
+    required String missionId,
+    required String idempotencyKey,
+  }) async {
+    await _functionRequest(
+      'quest-planning-v2',
+      body: {
+        'mode': 'expand_tasks',
+        'quest_id': questId,
+        'mission_id': missionId,
+        'idempotency_key': idempotencyKey,
+      },
+      expectedStatuses: {404},
+    );
   }
 
   Future<String> publishGuildQuest(String questId) async {
@@ -502,6 +869,46 @@ class _Session {
 
   Future<void> rollbackRouteProposal(String proposalId) async {
     await _rpc('rollback_route_change_proposal', {'p_proposal_id': proposalId});
+  }
+
+  Future<void> applyTaskRouteProposal({
+    required String proposalId,
+    required String itemId,
+    required String routeVersionId,
+  }) async {
+    await _rpc('apply_task_aware_route_change_proposal', {
+      'p_proposal_id': proposalId,
+      'p_accepted_item_ids': <String>[itemId],
+      'p_expected_route_version_id': routeVersionId,
+    });
+  }
+
+  Future<void> expectStaleTaskRouteProposal({
+    required String proposalId,
+    required String itemId,
+    required String routeVersionId,
+  }) async {
+    final body = await _rpc('apply_task_aware_route_change_proposal', {
+      'p_proposal_id': proposalId,
+      'p_accepted_item_ids': <String>[itemId],
+      'p_expected_route_version_id': routeVersionId,
+    });
+    final result = jsonDecode(body) as Map<String, dynamic>;
+    if (result['status'] != 'stale' ||
+        result['stale_reason'] != 'route_state_changed_after_proposal' ||
+        result['conflict_snapshot'] is! Map) {
+      throw StateError('Stale route proposal was not rejected safely.');
+    }
+  }
+
+  Future<void> rollbackTaskRouteProposal(String proposalId) async {
+    await _rpc('rollback_task_aware_route_change_proposal', {
+      'p_proposal_id': proposalId,
+    });
+  }
+
+  Future<void> confirmMissionOutcome(String missionId) async {
+    await _rpc('confirm_mission_outcome', {'p_mission_id': missionId});
   }
 
   Future<void> expectFieldValue(
@@ -580,11 +987,36 @@ class _Session {
     final responseBody = await utf8.decodeStream(response);
     if (!expectedStatuses.contains(response.statusCode)) {
       final detail = responseBody.replaceAll(RegExp(r'\s+'), ' ').trim();
-      final safeDetail = detail.length > 300
-          ? detail.substring(0, 300)
+      final safeDetail = detail.length > 400
+          ? detail.substring(0, 400)
           : detail;
       throw HttpException(
         '$table $method failed (${response.statusCode}): $safeDetail',
+      );
+    }
+    return responseBody;
+  }
+
+  Future<String> _functionRequest(
+    String function, {
+    required Map<String, Object?> body,
+    required Set<int> expectedStatuses,
+  }) async {
+    final uri = config.projectUrl.resolve('/functions/v1/$function');
+    final request = await client.postUrl(uri);
+    request.headers.contentType = ContentType.json;
+    request.headers.set('apikey', config.anonKey);
+    request.headers.set('Authorization', 'Bearer $token');
+    request.write(jsonEncode(body));
+    final response = await request.close();
+    final responseBody = await utf8.decodeStream(response);
+    if (!expectedStatuses.contains(response.statusCode)) {
+      final detail = responseBody.replaceAll(RegExp(r'\s+'), ' ').trim();
+      final safeDetail = detail.length > 400
+          ? detail.substring(0, 400)
+          : detail;
+      throw HttpException(
+        '$function failed (${response.statusCode}): $safeDetail',
       );
     }
     return responseBody;
@@ -638,6 +1070,7 @@ class _TestIds {
   const _TestIds(
     this.quest,
     this.mission,
+    this.task,
     this.memory,
     this.trail,
     this.media,
@@ -657,10 +1090,12 @@ class _TestIds {
     _uuid(),
     _uuid(),
     _uuid(),
+    _uuid(),
   );
 
   final String quest;
   final String mission;
+  final String task;
   final String memory;
   final String trail;
   final String media;

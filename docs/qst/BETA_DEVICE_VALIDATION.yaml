@@ -1,6 +1,14 @@
 version: 1
 status: evidence_partial
 updated_at_utc: null
+automation:
+  status: ready_external_execution_pending
+  integration_target: apps/mobile/integration_test/qst_283_candidate_journey_test.dart
+  web_command: flutter drive -d web-server --browser-name=chrome --driver=test_driver/integration_test.dart --target=integration_test/qst_283_candidate_journey_test.dart
+  android_command: flutter test integration_test/qst_283_candidate_journey_test.dart -d emulator-5554 --no-pub
+  workflow: .github/workflows/release-gate.yml
+  candidate_binding: github.sha
+  artifact_checksum_file: artifact-checksums.sha256
 results:
   - class: android_phone
     status: pending
@@ -11,7 +19,7 @@ results:
     tester_role: null
     checks:
       home: pending
-      quest_mission_trail: pending
+      quest_mission_task_trail: pending
       arc: pending
       owner_switch: pending
       fallback: pending
@@ -28,7 +36,7 @@ results:
     tester_role: null
     checks:
       home: pending
-      quest_mission_trail: pending
+      quest_mission_task_trail: pending
       arc: pending
       owner_switch: pending
       fallback: pending
@@ -45,7 +53,7 @@ results:
     tester_role: null
     checks:
       home: pending
-      quest_mission_trail: pending
+      quest_mission_task_trail: pending
       arc: pending
       owner_switch: pending
       fallback: pending
@@ -62,7 +70,7 @@ results:
     tester_role: null
     checks:
       home: pending
-      quest_mission_trail: pending
+      quest_mission_task_trail: pending
       arc: pending
       owner_switch: pending
       fallback: pending
@@ -79,7 +87,7 @@ results:
     tester_role: null
     checks:
       home: pending
-      quest_mission_trail: pending
+      quest_mission_task_trail: pending
       arc: pending
       owner_switch: pending
       fallback: pending

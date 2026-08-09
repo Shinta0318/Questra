@@ -333,10 +333,7 @@ class _QuestProgressDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Quest Dashboard',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Questの現在地', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -345,7 +342,7 @@ class _QuestProgressDashboard extends StatelessWidget {
                 label: 'Mission',
                 value: progress.missionCountLabel,
               ),
-              _DashboardMetric(label: 'Trails', value: trailCount.toString()),
+              _DashboardMetric(label: 'Trail', value: trailCount.toString()),
             ],
           ),
           const SizedBox(height: 12),

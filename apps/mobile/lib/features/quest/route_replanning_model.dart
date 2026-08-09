@@ -22,6 +22,7 @@ enum RouteProposalStatus {
   rejected,
   expired,
   rolledBack,
+  stale,
 }
 
 enum RouteProposalReason {
@@ -39,6 +40,8 @@ class RouteMutationResult {
     required this.status,
     required this.persistedAtomically,
     this.routeVersionId,
+    this.staleReason,
+    this.conflictSnapshot = const {},
   });
 
   final String proposalId;
@@ -46,6 +49,8 @@ class RouteMutationResult {
   final RouteProposalStatus status;
   final bool persistedAtomically;
   final String? routeVersionId;
+  final String? staleReason;
+  final Map<String, Object?> conflictSnapshot;
 }
 
 class RouteChangeItem {
@@ -57,6 +62,7 @@ class RouteChangeItem {
     required this.beforeData,
     required this.afterData,
     this.targetMissionId,
+    this.targetTaskId,
     this.safetyLevel = 2,
   }) : id = id ?? _routeUuid.v4();
 
@@ -67,6 +73,7 @@ class RouteChangeItem {
   final Map<String, Object?> beforeData;
   final Map<String, Object?> afterData;
   final String? targetMissionId;
+  final String? targetTaskId;
   final int safetyLevel;
 }
 
@@ -81,6 +88,8 @@ class RouteChangeProposal {
     required this.items,
     this.routeSnapshot = const {},
     this.status = RouteProposalStatus.pending,
+    this.staleReason,
+    this.conflictSnapshot = const {},
     DateTime? createdAt,
   }) : id = id ?? _routeUuid.v4(),
        routeVersionId = routeVersionId ?? _routeUuid.v4(),
@@ -95,9 +104,15 @@ class RouteChangeProposal {
   final List<RouteChangeItem> items;
   final Map<String, Object?> routeSnapshot;
   final RouteProposalStatus status;
+  final String? staleReason;
+  final Map<String, Object?> conflictSnapshot;
   final DateTime createdAt;
 
-  RouteChangeProposal copyWith({RouteProposalStatus? status}) {
+  RouteChangeProposal copyWith({
+    RouteProposalStatus? status,
+    String? staleReason,
+    Map<String, Object?>? conflictSnapshot,
+  }) {
     return RouteChangeProposal(
       id: id,
       routeVersionId: routeVersionId,
@@ -108,6 +123,8 @@ class RouteChangeProposal {
       items: items,
       routeSnapshot: routeSnapshot,
       status: status ?? this.status,
+      staleReason: staleReason ?? this.staleReason,
+      conflictSnapshot: conflictSnapshot ?? this.conflictSnapshot,
       createdAt: createdAt,
     );
   }

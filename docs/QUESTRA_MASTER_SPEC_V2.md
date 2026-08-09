@@ -30,7 +30,7 @@ Questraがつくるのは、夢を一覧管理する場所ではない。
 
 これがQuestraの中心思想である。
 
-ユーザーはQuestを持ち、Arcと共にMissionへ分解し、Trailとして記録し、
+ユーザーはQuestを持ち、Arcと共にMissionとTaskへ分解し、Trailとして記録し、
 Guildでつながる。蓄積された挑戦は、本人の意思と同意を前提に、
 学び、信用、仲間、支援、次の挑戦へ接続される。
 
@@ -42,7 +42,7 @@ Guildでつながる。蓄積された挑戦は、本人の意思と同意を前
 1. ユーザーの挑戦に本当に役立つか。
 2. Arcとの信頼を損なわないか。
 3. ユーザーの主体性と同意が守られるか。
-4. Questra固有のQuest、Mission、Trailの循環を強くするか。
+4. Questra固有のQuest、Mission、Task、Trailの循環を強くするか。
 5. MVPまたは現在のPhaseに必要か。
 6. 安全に説明・監査・撤回できるか。
 7. 事業として持続可能か。
@@ -131,7 +131,7 @@ Arc、企業、Guild、推薦アルゴリズムは意思決定を支援するが
 
 ### 5.3 構造と物語性を両立する
 
-Quest、Mission、Trailは明確なプロダクト構造でありながら、星、航海、
+Quest、Mission、Task、Trailは明確なプロダクト構造でありながら、星、航海、
 冒険という世界観を通して、ユーザーが自分の旅路を実感できるようにする。
 世界観は装飾ではなく、行動の意味を理解しやすくする体験設計である。
 
@@ -170,7 +170,8 @@ Quest、Mission、Trailは明確なプロダクト構造でありながら、星
 | Questra | アプリおよび挑戦支援プラットフォームの名称。 |
 | Arc | ユーザーの旅路に伴走するAI Companion。単なるチャット機能ではない。 |
 | Quest | ユーザー自身が選ぶ目標、願い、挑戦。 |
-| Mission | Questを前進させるための具体的かつ実行可能な行動。 |
+| Mission | Questを前進させる、検証可能な中間成果または航路上の節目。 |
+| Task | 1つのMissionに属する、今すぐ実行できる最小の具体行動。 |
 | Trail | 挑戦の記録、進捗、学び、感情、軌跡。 |
 | Guild | 同じQuest、関心、経験を持つユーザーが助け合うコミュニティ。 |
 | Stardust | 挑戦、継続、記録によって得る経験値。金銭ではない。 |
@@ -194,7 +195,8 @@ Arcは画面ごとに孤立したキャラクターではなく、ユーザー�
 
 ### 8.2 Actionable Progress
 
-大きなQuestをMissionへ分解し、次に何をすべきかが分かる状態をつくる。
+大きなQuestを中間成果であるMissionへ分解し、各MissionをTaskへ落とし込むことで、
+次に何をすべきかが分かる状態をつくる。
 計画は固定せず、Trailから学び、再構成できる。
 
 ### 8.3 Meaningful Record
@@ -232,7 +234,7 @@ Arcは単なるAIではなく、ユーザーの人生の挑戦に伴走する存
 
 ### 9.2 行動原則
 
-ArcはユーザーのQuest、Mission、Trail、Reflection、Star Memoryを必要な
+ArcはユーザーのQuest、Mission、Task、Trail、Reflection、Star Memoryを必要な
 範囲で参照し、文脈に合う次の一歩を提案する。確信がない場合は断定せず、
 前提を示す。高リスク領域では専門家への相談を促し、医療、法律、金融などの
 最終判断を代行しない。
@@ -291,47 +293,73 @@ ArcはQuestの内容、理由、希望期限、Quest DNA、ユーザーが提供
 
 ### 10.4 MVP境界
 
-MVPではQuest作成、編集、一覧、詳細、進捗、Mission・Trailとの関連、
+MVPではQuest作成、編集、一覧、詳細、進捗、Mission・Task・Trailとの関連、
 Supabase永続化を扱う。Marketplace、Passport、Scoreは含めない。
 
 ## 11. Mission System
 
-Missionは、Questを今日または近い将来に進める具体行動である。
+Missionは、Questを前進させる検証可能な中間成果、または航路上の節目である。
+Missionは具体行動の一覧ではなく、「何ができた状態になれば次へ進めるか」を表す。
 
 ### 11.1 設計原則
 
-- 一度に理解できる大きさにする。
-- 完了条件を可能な限り明確にする。
+- Quest固有の中間成果として、一度に理解できる大きさにする。
+- 成功条件と期待する成果物を可能な限り明確にする。
 - ユーザーの時間、体力、予算、場所を考慮する。
 - AI生成結果は候補であり、ユーザーが採用・編集・削除できる。
-- 完了時はTrailへ自然に接続する。
+- 実行は必ず1件以上のTaskへ分解し、完了時はTrailへ自然に接続する。
 - 停滞時はSignalやArcの心配として扱い、叱責しない。
 
 ### 11.2 生成
 
 ArcはQuestの目的、Quest DNA、既存Trail、ユーザー設定を参照し、
 複数のMission候補を生成できる。生成理由と想定負荷を示し、実行不可能な
-場合はより小さなMissionへ再分解する。
+場合はMissionの範囲を見直すか、より小さなTaskへ再分解する。
 
 Mission数を製品都合の固定数へ合わせて水増ししてはならない。AIはQuestの
 複雑さに応じて必要最小限の完全な航路を設計し、実装上の安全な上下限内で
-件数を決める。Missionは親子関係、依存関係、優先度、期間、完了条件を持てる。
+件数を決める。Missionは依存関係、優先度、期間、成功条件を持てる。
 グラフは循環せず、すべて同一Questと正しい所有者境界に属さなければならない。
 
-### 11.3 Adaptive Route
+### 11.3 Task
+
+Taskは、1つのMissionに属する、今すぐ実行できる最小の具体行動である。
+
+- Taskは必ず1つのMissionへ属し、Missionを介して1つのQuestへ属する。
+- 動詞で始まる明確な行動と、完了を判定できる条件を持つ。
+- 開始、進行中、完了などの実行状態を持ち、Mission進捗の算出根拠になる。
+- 必須Taskが完了しても、Missionの成功条件または成果物を確認するまではMissionを自動完了しない。
+- Taskの完了、学び、証拠はTrailとして記録できる。
+- Taskは独立したQuestやMissionとして表示せず、所属する航路を常に示す。
+
+### 11.4 Adaptive Route
 
 航路は一度生成して終わりではない。進捗、期限、停滞、予算や生活条件の変化を
 もとに、Arcは再計画を提案できる。ただし、次を守る。
 
-- 完了済みMissionと関連Trailを自動削除しない。
+- 完了済みMission、Task、関連Trailを自動削除しない。
 - 希望期限、Missionの追加・削除・並べ替えを黙って変更しない。
 - 変更理由と前後差分を提示し、ユーザーの明示的な承認後だけ反映する。
 - ユーザーは提案を拒否し、既存航路を続けられる。
 - 緊急性や不安を誇張して行動を迫らない。
 
-### 11.4 MVP境界
+### 11.5 完了判定
 
-MVPではMission生成、手動作成、採用、完了、Questとの関連、
+Missionの進捗はTaskの状態から算出できる。ただしMissionの完了には、必須Taskの完了に加えて、
+ユーザーによる成功条件または成果物の明示的な確認を必要とする。Task完了だけでMissionやQuestを
+連鎖的に自動完了してはならない。
+
+### 11.6 既存データの移行規則
+
+- 旧仕様で具体行動として保存されたMissionは、直ちに削除・上書きしない。
+- 旧Missionの目的をまとめる中間成果Missionを新設し、元の具体行動をTask候補として関連づける。
+- 移行中は既存APIとDBに互換マッピングを置き、新旧データを識別できる版情報を保持する。
+- 自動変換に確信がない場合はプレビューを示し、ユーザー承認後に反映する。
+- 移行後も元の識別子、完了状態、Trailとの関連を追跡できるようにする。
+
+### 11.7 MVP境界
+
+MVPではMission生成、Task生成・手動作成・進捗、Missionの成果確認、Questとの関連、
 Supabase永続化を提供する。高度な自動スケジューリングはFutureとする。
 
 ## 12. Trail System
@@ -347,6 +375,7 @@ Trailは、挑戦の過程を本人の資産として残す記録である。
 - 写真や関連メディア
 - 次の一歩
 - Quest、Missionとの関連
+- Taskとの関連
 - Reflection
 - ArcによるStar Memory候補
 
@@ -437,6 +466,7 @@ Challenge Graphは、次のノードを接続する将来のグラフ構造で�
 
 - Quest
 - Mission
+- Task
 - Trail
 - Skill
 - Interest
@@ -448,7 +478,7 @@ Challenge Graphは、次のノードを接続する将来のグラフ構造で�
 
 ### 15.1 目的
 
-- 類似Questと次のMissionを発見する。
+- 類似Quest、次のMission、実行可能なTaskを発見する。
 - 必要なSkill、知識、場所、時期を理解する。
 - 適切なGuildや経験者を見つける。
 - 企業支援をユーザーの文脈に適合させる。
@@ -476,6 +506,7 @@ Arc Memoryは、Arcがユーザーの旅路を継続的に理解するための�
 
 - Quest Memory
 - Mission Memory
+- Task Memory
 - Trail / Reflection Memory
 - Preference Memory
 - Emotional Memory
@@ -495,7 +526,7 @@ Arc Memoryは、Arcがユーザーの旅路を継続的に理解するための�
 
 ### 16.3 MVP境界
 
-MVP/BetaではQuest、Mission、Trail、Reflection、Arc Chatからの限定的な
+MVP/BetaではQuest、Mission、Task、Trail、Reflection、Arc Chatからの限定的な
 記憶を扱う。人生全体の自動記録や外部データ統合はFutureとする。
 
 ## 17. Enterprise Platform
@@ -740,7 +771,7 @@ Mission、Trail、Arcの単一ユーザー価値を成立させ、その後Guild
 ### 25.2 Platform Core
 
 - Identity and consent
-- Quest / Mission / Trail domain
+- Quest / Mission / Task / Trail domain
 - Quest DNA
 - Arc Memory
 - Tagging and recommendation
@@ -818,7 +849,7 @@ Mission、Trail、Arcの単一ユーザー価値を成立させ、その後Guild
 
 完了条件:
 
-- ユーザーがログインし、自分のQuest、Mission、Trailを永続化できる。
+- ユーザーがログインし、自分のQuest、Mission、Task、Trailを永続化できる。
 - Arcが文脈に沿う基本的な伴走を提供する。
 - 主要導線がクラッシュせず、RLSで所有者が分離される。
 
@@ -1093,7 +1124,7 @@ Arcはその旅路の中心でユーザーの味方であり続ける。企業�
 1. `QUESTRA_MVP_SPEC.md`
 2. `ARC_CONSTITUTION_SPEC.md`
 3. `ARC_MEMORY_AND_PRIVACY_SPEC.md`
-4. `QUEST_MISSION_TRAIL_DOMAIN_SPEC.md`
+4. `architecture/quest-mission-task-trail.md`
 5. `QUEST_DNA_SPEC.md`
 6. `CHALLENGE_GRAPH_SPEC.md`
 7. `GUILD_AND_MODERATION_SPEC.md`

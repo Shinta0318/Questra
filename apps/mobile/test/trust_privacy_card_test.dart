@@ -16,7 +16,7 @@ void main() {
     );
 
     expect(find.text(review.heading), findsOneWidget);
-    expect(find.text('Quest / Mission / Trail'), findsOneWidget);
+    expect(find.text('Quest / Mission / Task / Trail'), findsOneWidget);
     expect(find.text('Arcの生成機能'), findsOneWidget);
     expect(find.text('Betaでの取り扱い'), findsOneWidget);
     expect(find.textContaining('クリップボード'), findsOneWidget);

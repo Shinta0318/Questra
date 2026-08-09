@@ -1,14 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
-import '../../core/experience/experience_settings_controller.dart';
-import '../../core/experience/haptic_feedback_service.dart';
-import '../../core/experience/sound_effect_service.dart';
+import '../../core/performance/grouped_collection_index.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
 import '../../core/theme/app_radius.dart';
@@ -20,7 +16,6 @@ import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
 import '../arc/arc_daily_greeting_service.dart';
-import '../arc/arc_motion_controller.dart';
 import '../arc/navigator_rank_service.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_state.dart';
@@ -35,11 +30,16 @@ import '../quest/planning_preferences_controller.dart';
 import '../quest/weekly_availability.dart';
 import '../quest/quest_progress_service.dart';
 import '../signal/mission_signal_model.dart';
+import '../signal/signal_providers.dart';
+import '../signal/task_signal_card.dart';
 import '../star_map/star_map_recommendation_service.dart';
 import '../trail/trail_model.dart';
 import '../trail/trail_controller.dart';
 import '../task/task_controller.dart';
+import '../task/task_availability_service.dart';
 import '../task/task_model.dart';
+import '../task/task_load_state.dart';
+import 'home_today_task_journey.dart';
 import 'widgets/home_horizon_card.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -50,7 +50,8 @@ class HomeScreen extends ConsumerWidget {
     final profile = ref.watch(authControllerProvider).profile;
     final quests = ref.watch(questControllerProvider);
     final missions = ref.watch(missionControllerProvider);
-    ref.watch(taskControllerProvider);
+    final tasks = ref.watch(taskControllerProvider);
+    final taskLoadState = ref.watch(taskLoadStateProvider);
     final todayTask = ref.read(taskControllerProvider.notifier).todaysTask;
     final planningPreferences = ref.watch(
       planningPreferencesControllerProvider,
@@ -99,20 +100,36 @@ class HomeScreen extends ConsumerWidget {
     final todayMissions = todayRecommendation == null
         ? const <Mission>[]
         : <Mission>[todayRecommendation.mission];
+    final todayJourney = const HomeTodayTaskJourneyService().resolve(
+      tasks: tasks,
+      loadState: taskLoadState,
+      now: now,
+      recommendedTask: todayTask,
+      hasActiveJourney: activeQuests.isNotEmpty || missions.isNotEmpty,
+      isSignedIn: profile != null,
+    );
+    final taskSignals = ref
+        .watch(taskSignalServiceProvider)
+        .generate(
+          tasks: tasks,
+          now: now,
+          frequency: profile?.signalFrequency ?? SignalFrequency.balanced,
+        );
+    final missionsByQuest = GroupedCollectionIndex<String, Mission>.build(
+      missions,
+      keyOf: (mission) => mission.questId,
+    );
     final questItems = activeQuests
         .take(3)
         .map(
           (quest) => _HomeQuestItem(
             quest: quest,
             progress: const QuestProgressService().calculate(
-              missions.where((mission) => mission.questId == quest.id),
+              missionsByQuest.valuesFor(quest.id),
             ),
-            nextMission: missions
-                .where(
-                  (mission) =>
-                      mission.questId == quest.id &&
-                      mission.status == MissionStatus.todo,
-                )
+            nextMission: missionsByQuest
+                .valuesFor(quest.id)
+                .where((mission) => mission.status == MissionStatus.todo)
                 .firstOrNull,
           ),
         )
@@ -132,7 +149,7 @@ class HomeScreen extends ConsumerWidget {
             AppSpacing.xl,
             AppSpacing.lg,
             AppSpacing.xl,
-            AppSpacing.xxl,
+            120,
           ),
           children: [
             _SimplifiedArcHero(
@@ -142,38 +159,49 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.xl),
             const _SimpleSectionTitle(title: '今日のTask'),
             const SizedBox(height: AppSpacing.md),
-            if (todayTask != null)
-              _HomeTaskCard(task: todayTask)
-            else
-              _HomeMissionList(
-                missions: todayMissions,
-                recommendationReason: todayRecommendation?.reason,
-                onComplete: (mission) => ref
-                    .read(missionControllerProvider.notifier)
-                    .completeMission(mission.id),
-                onOpenArc: () => context.go(AppRoutes.arc),
-                isResting: activeTodayPreference.isResting,
-                onChooseAnother: todayRecommendation == null
-                    ? null
-                    : () => ref
-                          .read(
-                            todayMissionPreferenceControllerProvider.notifier,
-                          )
-                          .chooseAnother(todayRecommendation.mission.id),
-                onFiveMinutes: todayRecommendation == null
-                    ? null
-                    : () => ref
-                          .read(
-                            todayMissionPreferenceControllerProvider.notifier,
-                          )
-                          .useFiveMinutes(todayRecommendation.mission.id),
-                onRest: () => ref
-                    .read(todayMissionPreferenceControllerProvider.notifier)
-                    .restToday(),
-                onResume: () => ref
-                    .read(todayMissionPreferenceControllerProvider.notifier)
-                    .resumeToday(),
+            _HomeTodayTaskCard(
+              journey: todayJourney,
+              suggestedMission: todayMissions.firstOrNull,
+              recommendationReason: todayRecommendation?.reason,
+              isResting: activeTodayPreference.isResting,
+              onOpenTask: (task) => context.push(
+                AppRoutes.taskDetail(task.questId, task.missionId, task.id),
               ),
+              onStartTask: (task) async {
+                final started = await ref
+                    .read(taskControllerProvider.notifier)
+                    .start(task.id);
+                if (started && context.mounted) {
+                  context.push(
+                    AppRoutes.taskDetail(task.questId, task.missionId, task.id),
+                  );
+                }
+              },
+              onOpenMission: (questId, missionId) =>
+                  context.push(AppRoutes.missionDetail(questId, missionId)),
+              onOpenArc: () => context.go(AppRoutes.arc),
+              onOpenTrail: () => context.go(AppRoutes.trail),
+              onRetry: () => ref.read(taskControllerProvider.notifier).reload(),
+              onResume: () => ref
+                  .read(todayMissionPreferenceControllerProvider.notifier)
+                  .resumeToday(),
+            ),
+            if (taskSignals.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
+              TaskSignalCard(
+                signal: taskSignals.first,
+                onOpen: () {
+                  final signal = taskSignals.first;
+                  context.push(
+                    AppRoutes.taskDetail(
+                      signal.questId,
+                      signal.missionId,
+                      signal.taskId,
+                    ),
+                  );
+                },
+              ),
+            ],
             const SizedBox(height: AppSpacing.xl),
             const _SimpleSectionTitle(title: '進行中のQuest'),
             const SizedBox(height: AppSpacing.md),
@@ -488,238 +516,252 @@ class _SimpleSectionTitle extends StatelessWidget {
   }
 }
 
-class _HomeTaskCard extends ConsumerWidget {
-  const _HomeTaskCard({required this.task});
-
-  final QuestraTask task;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.midnightNavy,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.38)),
-        boxShadow: AppShadows.glassCard,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(task.title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.sm),
-          Text(task.action),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: TextButton.icon(
-                  onPressed: () => context.go(
-                    AppRoutes.missionDetail(task.questId, task.missionId),
-                  ),
-                  icon: const Icon(Icons.account_tree_outlined),
-                  label: Text(task.missionTitle),
-                ),
-              ),
-              FilledButton.icon(
-                onPressed: task.status == TaskStatus.completed
-                    ? null
-                    : () => ref
-                          .read(taskControllerProvider.notifier)
-                          .complete(task.id),
-                icon: const Icon(Icons.check),
-                label: const Text('完了'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HomeMissionList extends ConsumerWidget {
-  const _HomeMissionList({
-    required this.missions,
+class _HomeTodayTaskCard extends ConsumerWidget {
+  const _HomeTodayTaskCard({
+    required this.journey,
+    required this.suggestedMission,
     required this.recommendationReason,
-    required this.onComplete,
-    required this.onOpenArc,
     required this.isResting,
-    required this.onChooseAnother,
-    required this.onFiveMinutes,
-    required this.onRest,
+    required this.onOpenTask,
+    required this.onStartTask,
+    required this.onOpenMission,
+    required this.onOpenArc,
+    required this.onOpenTrail,
+    required this.onRetry,
     required this.onResume,
   });
 
-  final List<Mission> missions;
+  final HomeTodayTaskJourney journey;
+  final Mission? suggestedMission;
   final String? recommendationReason;
-  final ValueChanged<Mission> onComplete;
-  final VoidCallback onOpenArc;
   final bool isResting;
-  final VoidCallback? onChooseAnother;
-  final VoidCallback? onFiveMinutes;
-  final VoidCallback onRest;
+  final ValueChanged<QuestraTask> onOpenTask;
+  final ValueChanged<QuestraTask> onStartTask;
+  final void Function(String questId, String missionId) onOpenMission;
+  final VoidCallback onOpenArc;
+  final VoidCallback onOpenTrail;
+  final VoidCallback onRetry;
   final VoidCallback onResume;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (missions.isEmpty) {
-      return _HomeEmptyActionCard(
-        icon: Icons.task_alt_outlined,
-        title: isResting ? '今日は休む日' : '今日はまだ自由です',
-        message: isResting
-            ? '休むことも航路の一部です。記録や評価にペナルティはありません。'
-            : '話したいことがあれば、Arcと次の一歩を見つけられます。',
-        actionLabel: isResting ? 'やっぱり進める' : 'Arcを開く',
-        onAction: isResting ? onResume : onOpenArc,
+    if (journey.status == HomeTodayTaskStatus.loading) {
+      return const _HomeTaskStateCard(
+        icon: Icons.auto_awesome,
+        title: '今日の一歩を探しています',
+        message: 'Arcが現在の航路を確認しています。',
+        showProgress: true,
+      );
+    }
+    if (journey.status == HomeTodayTaskStatus.failed) {
+      return _HomeTaskStateCard(
+        icon: Icons.cloud_off_outlined,
+        title: '今日のTaskを読み込めませんでした',
+        message: '入力内容は失われていません。通信を確認して、もう一度お試しください。',
+        actionLabel: 'もう一度読み込む',
+        onAction: onRetry,
+      );
+    }
+    if (journey.status == HomeTodayTaskStatus.completed) {
+      return _HomeTaskStateCard(
+        icon: Icons.check_circle_outline_rounded,
+        title: '今日の一歩を進めました',
+        message: '${journey.task!.title}を完了しました。この瞬間をTrailに残せます。',
+        contextLabel: _parentContext(journey.task!),
+        actionLabel: 'Trailに残す',
+        onAction: onOpenTrail,
+      );
+    }
+    if (journey.status == HomeTodayTaskStatus.empty) {
+      if (isResting) {
+        return _HomeTaskStateCard(
+          icon: Icons.bedtime_outlined,
+          title: '今日は休む日',
+          message: '休むことも航路の一部です。明日の一歩へ備えましょう。',
+          actionLabel: 'やっぱり進める',
+          onAction: onResume,
+        );
+      }
+      final mission = suggestedMission;
+      return _HomeTaskStateCard(
+        icon: Icons.route_outlined,
+        title: mission == null ? '今日の航路はまだ自由です' : '次のTaskを整えましょう',
+        message: mission == null
+            ? 'Arcと話して、いまの自分に合う小さな一歩を見つけられます。'
+            : recommendationReason ?? 'Missionを開いて、実行できるTaskを確認しましょう。',
+        contextLabel: mission == null
+            ? null
+            : '${mission.questTitle}  /  ${mission.title}',
+        actionLabel: mission == null ? 'Arcに相談する' : 'Missionを確認する',
+        onAction: mission == null
+            ? onOpenArc
+            : () => onOpenMission(mission.questId, mission.id),
       );
     }
 
-    return _HomeGlassCard(
-      child: Column(
-        children: [
-          if (recommendationReason != null) ...[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                recommendationReason!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.skyBlue,
-                  fontWeight: FontWeight.w700,
-                ),
+    final task = journey.task!;
+    final missionTasks = ref
+        .watch(taskControllerProvider)
+        .where((item) => item.missionId == task.missionId);
+    final availability = const TaskAvailabilityService().evaluate(
+      task,
+      missionTasks,
+    );
+    final canStart = availability.canStart;
+    final actionLabel = canStart ? 'このTaskを始める' : 'Taskを開く';
+    return Semantics(
+      container: true,
+      label: '今日のTask、${task.title}。${_parentContext(task)}',
+      child: _HomeGlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _parentContext(task),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.skyBlue,
+                fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
-          ],
-          for (var index = 0; index < missions.length; index++) ...[
-            if (ref
-                .watch(experienceSettingsControllerProvider)
-                .swipeGesturesEnabled)
-              Dismissible(
-                key: ValueKey('home-mission-${missions[index].id}'),
-                direction: DismissDirection.startToEnd,
-                dismissThresholds: const {DismissDirection.startToEnd: 0.55},
-                confirmDismiss: (_) async {
-                  _completeWithFeedback(ref, missions[index]);
-                  return false;
-                },
-                background: Container(
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xl,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.auroraTeal.withValues(alpha: 0.22),
-                    borderRadius: AppRadius.card,
-                  ),
-                  child: const Icon(
-                    Icons.check_circle_rounded,
-                    color: AppColors.auroraTeal,
-                  ),
+            Text(
+              task.title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppColors.white,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              task.action,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.parchment,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _QuestTag(label: task.status.label),
+                if (task.estimatedEffortMinutes != null)
+                  _QuestTag(label: '約${task.estimatedEffortMinutes}分'),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => canStart
+                    ? onStartTask(task)
+                    : availability.isDependencyBlocked
+                    ? onOpenMission(task.questId, task.missionId)
+                    : onOpenTask(task),
+                icon: Icon(
+                  canStart ? Icons.play_arrow_rounded : Icons.arrow_forward,
                 ),
-                child: _HomeMissionTile(
-                  mission: missions[index],
-                  onComplete: () => _completeWithFeedback(ref, missions[index]),
+                label: Text(
+                  availability.isDependencyBlocked
+                      ? '前提Taskを確認する'
+                      : actionLabel,
                 ),
-              )
-            else
-              _HomeMissionTile(
-                mission: missions[index],
-                onComplete: () => _completeWithFeedback(ref, missions[index]),
               ),
-            if (index != missions.length - 1)
-              Divider(color: AppColors.skyBlue.withValues(alpha: 0.18)),
+            ),
           ],
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              TextButton.icon(
-                onPressed: onChooseAnother,
-                icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                label: const Text('別のMission'),
-              ),
-              TextButton.icon(
-                onPressed: onFiveMinutes,
-                icon: const Icon(Icons.timer_outlined, size: 18),
-                label: const Text('5分だけ'),
-              ),
-              TextButton.icon(
-                onPressed: onRest,
-                icon: const Icon(Icons.bedtime_outlined, size: 18),
-                label: const Text('今日は休む'),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  void _completeWithFeedback(WidgetRef ref, Mission mission) {
-    onComplete(mission);
-    final settings = ref.read(experienceSettingsControllerProvider);
-    unawaited(
-      ref
-          .read(hapticFeedbackServiceProvider)
-          .trigger(QuestraHapticCue.success, settings: settings),
-    );
-    unawaited(
-      ref
-          .read(soundEffectServiceProvider)
-          .play(QuestraSoundEffect.missionComplete, settings: settings),
-    );
-    unawaited(
-      ref
-          .read(arcMotionControllerProvider.notifier)
-          .react(ArcAnimationState.cheering),
-    );
+  String _parentContext(QuestraTask task) {
+    final quest = task.questTitle.isEmpty ? 'Quest' : task.questTitle;
+    final mission = task.missionTitle.isEmpty ? 'Mission' : task.missionTitle;
+    return '$quest  /  $mission';
   }
 }
 
-class _HomeMissionTile extends StatelessWidget {
-  const _HomeMissionTile({required this.mission, required this.onComplete});
+class _HomeTaskStateCard extends StatelessWidget {
+  const _HomeTaskStateCard({
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.contextLabel,
+    this.actionLabel,
+    this.onAction,
+    this.showProgress = false,
+  });
 
-  final Mission mission;
-  final VoidCallback onComplete;
+  final IconData icon;
+  final String title;
+  final String message;
+  final String? contextLabel;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final bool showProgress;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Checkbox(
-          value: false,
-          onChanged: (_) => onComplete(),
-          semanticLabel: '${mission.title}を完了',
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    return Semantics(
+      container: true,
+      liveRegion: showProgress,
+      label: '$title。$message',
+      child: _HomeGlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: AppColors.gold, size: 30),
+            if (contextLabel != null) ...[
+              const SizedBox(height: AppSpacing.sm),
               Text(
-                mission.title,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                mission.questTitle,
-                maxLines: 1,
+                contextLabel!,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.skyBlue,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
-          ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: AppColors.white,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.parchment,
+                height: 1.45,
+              ),
+            ),
+            if (showProgress) ...[
+              const SizedBox(height: AppSpacing.md),
+              const LinearProgressIndicator(),
+            ],
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: onAction,
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: Text(actionLabel!),
+                ),
+              ),
+            ],
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -867,7 +909,7 @@ class _JourneyFlowCard extends StatelessWidget {
               _FlowStepPill(
                 icon: Icons.home_outlined,
                 label: '現在地',
-                value: mission?.title ?? '今日のMissionを準備中',
+                value: mission?.title ?? '優先Missionを準備中',
               ),
               _FlowStepPill(
                 icon: Icons.auto_awesome,
@@ -978,7 +1020,7 @@ class _TodayMissionCard extends StatelessWidget {
     if (mission == null) {
       return _HomeEmptyActionCard(
         icon: Icons.task_alt_outlined,
-        title: '今日のMissionはまだありません',
+        title: '優先Missionはまだありません',
         message: 'Questを作ると、Arcが最初の小さなMission候補を一緒に描きます。',
         actionLabel: 'Questから始める',
         onAction: onCreateQuest,
@@ -1085,10 +1127,16 @@ class _HomeQuestDeckState extends State<_HomeQuestDeck> {
           );
         }
 
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
+        final compactTextAllowance = ((500 - constraints.maxWidth) * 0.9)
+            .clamp(0, 160)
+            .toDouble();
+        final deckHeight =
+            178 + compactTextAllowance * (textScale - 1).clamp(0, 1);
         return Column(
           children: [
             SizedBox(
-              height: 178,
+              height: deckHeight,
               child: PageView.builder(
                 controller: _controller,
                 padEnds: false,
@@ -1339,7 +1387,7 @@ class _GuildActivitySummary extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   hasContext
-                      ? 'Quest、Mission、TrailからGuildへ持ち寄れる相談の種が$countText件あります。'
+                      ? 'Quest、Mission、Task、TrailからGuildへ持ち寄れる相談の種が$countText件あります。'
                       : 'QuestやTrailが増えると、Guildで相談しやすい問いがここに浮かびます。',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.parchment,
@@ -1530,7 +1578,7 @@ class _StarMapPreview extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   recommendation == null
-                      ? 'Quest、Mission、Trailをつないで、次の一歩を見つけよう。'
+                      ? 'Quest、Mission、Task、Trailをつないで、次の一歩を見つけよう。'
                       : recommendation!.title,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.deepNavy,

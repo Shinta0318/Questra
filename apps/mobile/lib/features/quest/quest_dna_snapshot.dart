@@ -33,43 +33,43 @@ class QuestDnaSnapshotResolver {
       attributes: [
         QuestDnaAttribute(
           key: 'category',
-          label: 'Category',
+          label: 'カテゴリ',
           value: quest.category,
           source: QuestDnaSource.userInput,
         ),
         QuestDnaAttribute(
           key: 'theme',
-          label: 'Theme',
+          label: 'テーマ',
           value: theme.name,
           source: QuestDnaSource.inferred,
         ),
         QuestDnaAttribute(
           key: 'difficulty',
-          label: 'Difficulty',
+          label: '難易度',
           value: quest.difficulty.label,
           source: QuestDnaSource.userInput,
         ),
         QuestDnaAttribute(
           key: 'duration',
-          label: 'Duration',
+          label: '期間',
           value: _durationLabel(quest),
           source: QuestDnaSource.inferred,
         ),
         QuestDnaAttribute(
           key: 'motivation_type',
-          label: 'Motivation',
+          label: '動機',
           value: _motivationLabel(quest, theme),
           source: QuestDnaSource.inferred,
         ),
         QuestDnaAttribute(
           key: 'social_type',
-          label: 'Social',
+          label: '共有範囲',
           value: _socialLabel(quest),
           source: QuestDnaSource.inferred,
         ),
         QuestDnaAttribute(
           key: 'risk_level',
-          label: 'Risk',
+          label: '注意度',
           value: _riskLabel(quest),
           source: QuestDnaSource.inferred,
         ),
@@ -99,10 +99,10 @@ class QuestDnaSnapshotResolver {
   String _motivationLabel(Quest quest, QuestThemeCard theme) {
     final source = '${quest.category} ${quest.title} ${quest.description}'
         .toLowerCase();
-    if (source.contains('学') || theme.name == 'Learning Voyage') {
+    if (source.contains('学') || theme.name == '学びの航海') {
       return '学習';
     }
-    if (source.contains('家族') || theme.name == 'Warm Harbor') {
+    if (source.contains('家族') || theme.name == 'あたたかな港') {
       return '関係';
     }
     if (source.contains('仕事') || source.contains('起業')) {

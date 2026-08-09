@@ -53,35 +53,49 @@ class ProfileScreen extends ConsumerWidget {
         );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('プロフィール')),
+      appBar: AppBar(
+        title: const Text('プロフィール'),
+        actions: [
+          IconButton(
+            tooltip: '設定',
+            onPressed: () => context.push(AppRoutes.settings),
+            icon: const Icon(Icons.settings_outlined),
+          ),
+          IconButton(
+            tooltip: '改善点を送る',
+            onPressed: () => context.push(AppRoutes.feedback),
+            icon: const Icon(Icons.feedback_outlined),
+          ),
+        ],
+      ),
       body: QuestraScreenSurface(
         child: QuestraResponsiveListView(
           maxContentWidth: 720,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
           children: [
             QuestraCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    profile?.nickname ?? 'Guest',
+                    profile?.nickname ?? 'ゲスト',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
-                  Text(profile?.email ?? 'Not logged in'),
+                  Text(profile?.email ?? 'ログインしていません'),
                   const SizedBox(height: 8),
                   Text(
                     profile == null
-                        ? 'Journey owner: Guest session'
-                        : 'Journey owner: ${profile.id}',
+                        ? 'この端末だけのゲスト航路です'
+                        : '航路の所有者ID: ${profile.id}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 12),
                   Chip(
                     label: Text(
                       profile?.onboardingCompleted == true
-                          ? 'Onboarding complete'
-                          : 'Onboarding needed',
+                          ? '初期設定済み'
+                          : '初期設定が必要です',
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -118,10 +132,7 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Journey State',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+                  Text('旅の現在地', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 12,
@@ -144,8 +155,8 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   Text(
                     profile == null
-                        ? 'Log in to keep this journey connected across devices.'
-                        : 'Quest, Mission, Trail, and Arc Memory data use this profile as the owner boundary.',
+                        ? 'ログインすると、この航路を別の端末でも続けられます。'
+                        : 'Quest、Mission、Task、Trail、Arc Memoryは、このプロフィールに紐づいて保存されます。',
                   ),
                 ],
               ),
@@ -275,8 +286,8 @@ class _NavigatorRankCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              Chip(label: Text('Rank score ${rank.score}')),
-              if (storedRank != null) Chip(label: Text('Saved $storedRank')),
+              Chip(label: Text('ランクスコア ${rank.score}')),
+              if (storedRank != null) Chip(label: Text('保存済み: $storedRank')),
             ],
           ),
         ],

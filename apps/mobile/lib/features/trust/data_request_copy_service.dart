@@ -42,30 +42,31 @@ class DataRequestCopyService {
         DataRequestCopy(
           type: DataRequestType.export,
           title: 'データエクスポート',
-          summary: '自分のQuest、Mission、Trail、Arc Memory、Profile情報を取り出すための導線です。',
-          scope: ['Quest', 'Mission', 'Trail', 'Arc Memory', 'Profile'],
-          statusLabel: 'Planned',
+          summary:
+              '自分のQuest、Mission、Task、Trail、Arc Memory、Profile情報を取り出すための導線です。',
+          scope: ['Quest', 'Mission', 'Task', 'Trail', 'Arc Memory', 'Profile'],
+          statusLabel: '利用可能',
         ),
         DataRequestCopy(
           type: DataRequestType.deletion,
           title: 'データ削除リクエスト',
           summary: '不要になった挑戦データやアカウント関連データの削除を依頼するための導線です。',
-          scope: ['Quest', 'Mission', 'Trail', 'Media', 'Arc Memory'],
-          statusLabel: 'Planned',
+          scope: ['Quest', 'Mission', 'Task', 'Trail', 'Media', 'Arc Memory'],
+          statusLabel: '利用可能',
         ),
         DataRequestCopy(
           type: DataRequestType.correction,
           title: '訂正リクエスト',
           summary: 'Arcの推定、タグ、記憶、プロフィール情報に誤りがある場合に知らせる導線です。',
           scope: ['Arc推定', 'Tag', 'Arc Memory', 'Profile'],
-          statusLabel: 'Planned',
+          statusLabel: '準備中',
         ),
         DataRequestCopy(
           type: DataRequestType.withdrawal,
           title: '同意の見直し',
           summary: '将来のQuest支援、分析、外部連携に対する同意を目的別に見直す導線です。',
           scope: ['Quest Support', '分析', '外部連携'],
-          statusLabel: 'Future',
+          statusLabel: '設定する',
         ),
       ],
       safetyNotes: [

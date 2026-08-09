@@ -17,7 +17,7 @@ void main() {
     expect(find.text('共通画面'), findsOneWidget);
   });
 
-  testWidgets('Coming Soon screen exposes one clear Home action', (
+  testWidgets('preparation screen exposes one clear Home action', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -30,7 +30,7 @@ void main() {
     );
 
     expect(find.text('Guild'), findsWidgets);
-    expect(find.text('Coming Soon'), findsOneWidget);
+    expect(find.text('準備中'), findsOneWidget);
     expect(find.text('Homeへ戻る'), findsOneWidget);
     expect(find.byType(FilledButton), findsOneWidget);
   });

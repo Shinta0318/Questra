@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
+import '../../core/performance/performance_limits.dart';
 import 'task_model.dart';
 
 const _taskColumns =
@@ -8,10 +9,14 @@ const _taskColumns =
 abstract interface class TaskRepository {
   Future<List<QuestraTask>> findByQuestIds(
     List<String> questIds, {
-    int limit = 200,
+    int limit = QuestraPerformanceLimits.taskListLimit,
   });
-  Future<List<QuestraTask>> findByMission(String missionId, {int limit = 50});
+  Future<List<QuestraTask>> findByMission(
+    String missionId, {
+    int limit = QuestraPerformanceLimits.taskPerMissionListLimit,
+  });
   Future<QuestraTask> save(QuestraTask task);
+  Future<List<QuestraTask>> saveAll(List<QuestraTask> tasks);
   Future<void> delete(String taskId);
 }
 
@@ -21,7 +26,7 @@ class InMemoryTaskRepository implements TaskRepository {
   @override
   Future<List<QuestraTask>> findByQuestIds(
     List<String> questIds, {
-    int limit = 200,
+    int limit = QuestraPerformanceLimits.taskListLimit,
   }) async {
     final ids = questIds.toSet();
     return (_tasks.where((task) => ids.contains(task.questId)).toList()
@@ -33,7 +38,7 @@ class InMemoryTaskRepository implements TaskRepository {
   @override
   Future<List<QuestraTask>> findByMission(
     String missionId, {
-    int limit = 50,
+    int limit = QuestraPerformanceLimits.taskPerMissionListLimit,
   }) async =>
       (_tasks.where((task) => task.missionId == missionId).toList()
             ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex)))
@@ -48,6 +53,15 @@ class InMemoryTaskRepository implements TaskRepository {
   }
 
   @override
+  Future<List<QuestraTask>> saveAll(List<QuestraTask> tasks) async {
+    for (final task in tasks) {
+      _tasks.removeWhere((item) => item.id == task.id);
+      _tasks.add(task);
+    }
+    return List.unmodifiable(tasks);
+  }
+
+  @override
   Future<void> delete(String taskId) async =>
       _tasks.removeWhere((task) => task.id == taskId);
 }
@@ -59,7 +73,7 @@ class SupabaseTaskRepository implements TaskRepository {
   @override
   Future<List<QuestraTask>> findByQuestIds(
     List<String> questIds, {
-    int limit = 200,
+    int limit = QuestraPerformanceLimits.taskListLimit,
   }) async {
     if (questIds.isEmpty) return const [];
     final rows = await client
@@ -77,7 +91,7 @@ class SupabaseTaskRepository implements TaskRepository {
   @override
   Future<List<QuestraTask>> findByMission(
     String missionId, {
-    int limit = 50,
+    int limit = QuestraPerformanceLimits.taskPerMissionListLimit,
   }) async {
     final rows = await client
         .from('tasks')
@@ -92,37 +106,26 @@ class SupabaseTaskRepository implements TaskRepository {
 
   @override
   Future<QuestraTask> save(QuestraTask task) async {
+    final saved = await saveAll([task]);
+    return saved.single;
+  }
+
+  @override
+  Future<List<QuestraTask>> saveAll(List<QuestraTask> tasks) async {
+    if (tasks.isEmpty) return const [];
     final ownerId = client.auth.currentUser?.id;
     if (ownerId == null) throw StateError('Taskの保存にはログインが必要です。');
     final rows = await client
         .from('tasks')
-        .upsert({
-          'id': task.id,
-          'owner_id': ownerId,
-          'quest_id': task.questId,
-          'mission_id': task.missionId,
-          'title': task.title,
-          'action': task.action,
-          'purpose': task.purpose,
-          'done_condition': task.doneCondition,
-          'expected_output': task.expectedOutput,
-          'estimated_effort_minutes': task.estimatedEffortMinutes,
-          'status': task.status.storageKey,
-          'required': task.required,
-          'order_index': task.orderIndex,
-          'dependency_ids': task.dependencyIds,
-          'scheduled_date': _date(task.scheduledDate),
-          'due_date': _date(task.dueDate),
-          'completed_at': task.completedAt?.toIso8601String(),
-          'verification_type': task.verificationType.storageKey,
-          'generated_by': task.generatedBy.name,
-          'generation_version': task.generationVersion,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
+        .upsert(tasks.map((task) => _toRow(task, ownerId)).toList())
         .select(_taskColumns)
-        .limit(1);
-    if (rows.isEmpty) throw StateError('Taskを保存できませんでした。');
-    return _fromRow(Map<String, dynamic>.from(rows.first));
+        .limit(tasks.length);
+    if (rows.length != tasks.length) {
+      throw StateError('Taskをすべて保存できませんでした。');
+    }
+    return rows
+        .map((row) => _fromRow(Map<String, dynamic>.from(row)))
+        .toList(growable: false);
   }
 
   @override
@@ -172,6 +175,30 @@ class SupabaseTaskRepository implements TaskRepository {
           DateTime.parse(row['created_at'] as String),
     );
   }
+
+  Map<String, Object?> _toRow(QuestraTask task, String ownerId) => {
+    'id': task.id,
+    'owner_id': ownerId,
+    'quest_id': task.questId,
+    'mission_id': task.missionId,
+    'title': task.title,
+    'action': task.action,
+    'purpose': task.purpose,
+    'done_condition': task.doneCondition,
+    'expected_output': task.expectedOutput,
+    'estimated_effort_minutes': task.estimatedEffortMinutes,
+    'status': task.status.storageKey,
+    'required': task.required,
+    'order_index': task.orderIndex,
+    'dependency_ids': task.dependencyIds,
+    'scheduled_date': _date(task.scheduledDate),
+    'due_date': _date(task.dueDate),
+    'completed_at': task.completedAt?.toIso8601String(),
+    'verification_type': task.verificationType.storageKey,
+    'generated_by': task.generatedBy.name,
+    'generation_version': task.generationVersion,
+    'updated_at': DateTime.now().toIso8601String(),
+  };
 
   String? _date(DateTime? value) => value?.toIso8601String().split('T').first;
   DateTime? _parseDate(Object? value) =>

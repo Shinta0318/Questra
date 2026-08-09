@@ -57,12 +57,12 @@ class TrailController extends Notifier<List<Trail>> {
   Future<void> loadForUser(String userId) async {
     if (ref.read(authControllerProvider).profile?.id != userId) return;
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Loading Trail records...');
+    sync.loading('Trailを読み込んでいます...');
     try {
       final trails = await ref.read(trailRepositoryProvider).findByUser(userId);
       if (ref.read(authControllerProvider).profile?.id != userId) return;
       state = trails;
-      sync.saved('Trail records loaded.');
+      sync.saved('Trailを読み込みました。');
     } catch (error) {
       if (ref.read(authControllerProvider).profile?.id != userId) return;
       sync.failed(error);
@@ -95,18 +95,69 @@ class TrailController extends Notifier<List<Trail>> {
     required String title,
     required String summary,
     required String content,
+    String? trailId,
+    TrailParentContext? parent,
   }) {
-    final trail = Trail(
+    final trail = _addManualTrailToState(
       title: title,
       summary: summary,
       content: content,
-      trailType: TrailType.manualNote,
-      sourceType: 'manual',
+      trailId: trailId,
+      parent: parent,
     );
-    state = [trail, ...state];
+    unawaited(_persistTrail(trail));
+    return trail;
+  }
+
+  Future<bool> addManualTrailAndWait({
+    required String title,
+    required String summary,
+    required String content,
+    String? trailId,
+    TrailParentContext? parent,
+  }) async {
+    final trail = _addManualTrailToState(
+      title: title,
+      summary: summary,
+      content: content,
+      trailId: trailId,
+      parent: parent,
+    );
+    final saved = await _persistTrailWithResult(trail);
+    if (!saved) {
+      state = state.where((current) => current.id != trail.id).toList();
+    }
+    return saved;
+  }
+
+  Trail _addManualTrailToState({
+    required String title,
+    required String summary,
+    required String content,
+    String? trailId,
+    TrailParentContext? parent,
+  }) {
+    if (parent != null && !parent.isStructurallyValid) {
+      throw ArgumentError.value(parent, 'parent', 'Trail parent is invalid.');
+    }
+    final trail = Trail(
+      id: trailId,
+      questId: parent?.questId,
+      missionId: parent?.missionId,
+      taskId: parent?.taskId,
+      title: title,
+      summary: summary,
+      content: content,
+      trailType: parent?.missionId != null
+          ? TrailType.missionRecord
+          : parent != null
+          ? TrailType.questRecord
+          : TrailType.manualNote,
+      sourceType: parent?.taskId != null ? 'task_trail' : 'manual',
+    );
+    state = [trail, ...state.where((current) => current.id != trail.id)];
     _recordTrailEmotion(trail);
     _trackTrailPosted(trail, surface: 'manual');
-    unawaited(_persistTrail(trail));
     return trail;
   }
 
@@ -163,7 +214,7 @@ class TrailController extends Notifier<List<Trail>> {
               surface: 'trail',
             ),
       );
-      sync.saved('Trail image attached.');
+      sync.saved('Trailに画像を添付しました。');
       return attachment;
     } catch (error) {
       sync.failed(error);
@@ -200,7 +251,7 @@ class TrailController extends Notifier<List<Trail>> {
       ref
           .read(trailMediaControllerProvider.notifier)
           .setAttachment(trail.id, attachment);
-      sync.saved('Trail image replaced.');
+      sync.saved('Trail画像を差し替えました。');
       return attachment;
     } catch (error) {
       sync.failed(error);
@@ -227,7 +278,7 @@ class TrailController extends Notifier<List<Trail>> {
           .read(mediaRepositoryProvider)
           .deleteTrailImage(ownerId: userId, attachment: attachment);
       ref.read(trailMediaControllerProvider.notifier).clearAttachment(trail.id);
-      sync.saved('Trail image removed.');
+      sync.saved('Trail画像を削除しました。');
       return true;
     } catch (error) {
       sync.failed(error);
@@ -236,6 +287,10 @@ class TrailController extends Notifier<List<Trail>> {
   }
 
   Future<void> _persistTrail(Trail trail) async {
+    await _persistTrailWithResult(trail);
+  }
+
+  Future<bool> _persistTrailWithResult(Trail trail) async {
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
       final decision = ref
@@ -256,17 +311,17 @@ class TrailController extends Notifier<List<Trail>> {
             missionId: trail.missionId,
             trailId: trail.id,
           );
-      return;
+      return true;
     }
 
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Saving Trail record...');
+    sync.loading('Trailを保存しています...');
 
     try {
       final savedTrail = await ref
           .read(trailRepositoryProvider)
           .save(ownerId: userId, trail: trail);
-      if (ref.read(authControllerProvider).profile?.id != userId) return;
+      if (ref.read(authControllerProvider).profile?.id != userId) return false;
       state = [
         for (final current in state)
           if (current.id == trail.id) savedTrail else current,
@@ -274,7 +329,8 @@ class TrailController extends Notifier<List<Trail>> {
       unawaited(_tagTrail(userId, savedTrail));
       _growBond(savedTrail);
       unawaited(_rememberTrail(userId, savedTrail));
-      sync.saved('Trail record saved.');
+      sync.saved('Trailを保存しました。');
+      return true;
     } catch (error) {
       sync.failed(error);
       final decision = ref
@@ -295,6 +351,7 @@ class TrailController extends Notifier<List<Trail>> {
             missionId: trail.missionId,
             trailId: trail.id,
           );
+      return false;
     }
   }
 
@@ -371,7 +428,7 @@ class TrailController extends Notifier<List<Trail>> {
               trailId: trail.id,
               sourceId: trail.id,
               sourceType: ArcMemorySourceType.trailPosted,
-              title: 'Trail memory',
+              title: 'Trailの記憶',
               text: '${trail.title}: ${trail.summary} ${trail.content}',
               metadata: {'trail_type': trail.trailType.storageKey},
             ),
@@ -389,13 +446,13 @@ class TrailController extends Notifier<List<Trail>> {
     }
 
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Deleting Trail record...');
+    sync.loading('Trailを削除しています...');
 
     try {
       await ref
           .read(trailRepositoryProvider)
           .delete(ownerId: userId, trailId: trailId);
-      sync.saved('Trail record deleted.');
+      sync.saved('Trailを削除しました。');
     } catch (error) {
       if (removedTrail != null) {
         state = [removedTrail, ...state];

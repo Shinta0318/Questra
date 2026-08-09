@@ -24,15 +24,15 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
         store: false,
         generation_config: {
           max_output_tokens: bounded(request.maxOutputTokens, 2_048, 128, 16_384),
-          temperature: boundedNumber(request.temperature, 0.35, 0, 1.5),
           thinking_level: thinkingLevel,
+          thinking_summaries: "none",
         },
       };
       if (request.responseSchema) {
         body.response_format = {
           type: "text",
           mime_type: "application/json",
-          schema: request.responseSchema,
+          schema: toGeminiSchema(request.responseSchema),
         };
       }
       if (request.tools?.length) body.tools = request.tools;
@@ -49,11 +49,19 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
       });
       if (!response.ok) {
         lastError = classifyProviderError(response.status);
+        const providerMessage = await safeProviderErrorMessage(response);
         if (shouldRetry(lastError, attempt)) {
           await delay(attempt * 400);
           continue;
         }
-        return failure(request, startedAt, lastError.code, lastError.message, response.status, model.name);
+        return failure(
+          request,
+          startedAt,
+          lastError.code,
+          providerMessage ?? lastError.message,
+          response.status,
+          model.name,
+        );
       }
       const data = await response.json() as Record<string, unknown>;
       const text = extractText(data);
@@ -62,6 +70,11 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
         try {
           output = JSON.parse(text);
         } catch (_) {
+          lastError = classifyProviderError(400);
+          if (attempt === 1) {
+            await delay(400);
+            continue;
+          }
           return failure(request, startedAt, "malformed_output", "Structured output was not valid JSON", undefined, model.name);
         }
       }
@@ -159,8 +172,37 @@ function visit(value: unknown, callback: (item: Record<string, unknown>) => void
   for (const nested of Object.values(value)) visit(nested, callback);
 }
 function boundedJson(value: unknown) { const text = JSON.stringify(value) ?? "{}"; return text.slice(0, 40_000); }
+async function safeProviderErrorMessage(response: Response) {
+  try {
+    const body = await response.json() as Record<string, unknown>;
+    const error = isRecord(body.error) ? body.error : {};
+    const message = stringValue(error.message);
+    return message?.replace(/key=[^&\s]+/gi, "key=[redacted]").slice(0, 400) ?? null;
+  } catch (_) {
+    return null;
+  }
+}
+function toGeminiSchema(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(toGeminiSchema);
+  if (!isRecord(value)) return value;
+  const supported = new Set([
+    "type", "title", "description", "properties", "required",
+    "enum", "format", "items",
+  ]);
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => supported.has(key))
+      .map(([key, nested]) => [
+        key,
+        key === "properties" && isRecord(nested)
+          ? Object.fromEntries(
+            Object.entries(nested).map(([name, schema]) => [name, toGeminiSchema(schema)]),
+          )
+          : toGeminiSchema(nested),
+      ]),
+  );
+}
 function bounded(value: number | undefined, fallback: number, min: number, max: number) { return Number.isFinite(value) ? Math.min(max, Math.max(min, Math.round(value!))) : fallback; }
-function boundedNumber(value: number | undefined, fallback: number, min: number, max: number) { return Number.isFinite(value) ? Math.min(max, Math.max(min, value!)) : fallback; }
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null; }
 function stringValue(value: unknown) { return typeof value === "string" && value.trim() ? value.trim() : null; }
 function numberValue(value: unknown) { return typeof value === "number" && Number.isFinite(value) ? value : undefined; }

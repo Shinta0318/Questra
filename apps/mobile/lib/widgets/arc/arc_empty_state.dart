@@ -9,8 +9,8 @@ class ArcEmptyState extends StatelessWidget {
   const ArcEmptyState({
     required this.title,
     required this.message,
-    required this.actionLabel,
-    required this.onAction,
+    this.actionLabel,
+    this.onAction,
     this.emotion = ArcEmotion.lonely,
     this.icon = Icons.auto_awesome_outlined,
     super.key,
@@ -18,8 +18,8 @@ class ArcEmptyState extends StatelessWidget {
 
   final String title;
   final String message;
-  final String actionLabel;
-  final VoidCallback onAction;
+  final String? actionLabel;
+  final VoidCallback? onAction;
   final ArcEmotion emotion;
   final IconData icon;
 
@@ -38,12 +38,14 @@ class ArcEmptyState extends StatelessWidget {
             'ここには、あなたの航路が少しずつ集まっていきます。',
             style: TextStyle(color: QuestraColors.slate),
           ),
-          const SizedBox(height: 14),
-          FilledButton.icon(
-            onPressed: onAction,
-            icon: Icon(icon),
-            label: Text(actionLabel),
-          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              onPressed: onAction,
+              icon: Icon(icon),
+              label: Text(actionLabel!),
+            ),
+          ],
         ],
       ),
     );

@@ -104,13 +104,9 @@ class LocalMissionRegenerationProposalService
 
 class SupabaseMissionRegenerationProposalService
     implements MissionRegenerationProposalService {
-  const SupabaseMissionRegenerationProposalService(
-    this.client, {
-    this.fallback = const LocalMissionRegenerationProposalService(),
-  });
+  const SupabaseMissionRegenerationProposalService(this.client);
 
   final SupabaseClient client;
-  final MissionRegenerationProposalService fallback;
 
   @override
   Future<RouteChangeProposal> propose({
@@ -139,12 +135,12 @@ class SupabaseMissionRegenerationProposalService
       if (response.status < 200 ||
           response.status >= 300 ||
           response.data is! Map) {
-        return fallback.propose(quest: quest, mission: mission, intent: intent);
+        throw const MissionRegenerationUnavailableException();
       }
       final data = Map<String, dynamic>.from(response.data as Map);
       final replacement = data['mission_candidate'];
       if (replacement is! Map) {
-        return fallback.propose(quest: quest, mission: mission, intent: intent);
+        throw const MissionRegenerationUnavailableException();
       }
       final after = Map<String, dynamic>.from(replacement);
       return _proposal(
@@ -169,10 +165,20 @@ class SupabaseMissionRegenerationProposalService
         confidence:
             (after['confidence'] as num?)?.toDouble().clamp(0, 1) ?? 0.6,
       );
+    } on MissionRegenerationUnavailableException {
+      rethrow;
     } catch (_) {
-      return fallback.propose(quest: quest, mission: mission, intent: intent);
+      throw const MissionRegenerationUnavailableException();
     }
   }
+}
+
+class MissionRegenerationUnavailableException implements Exception {
+  const MissionRegenerationUnavailableException();
+
+  @override
+  String toString() =>
+      'ArcがMissionを描き直せませんでした。元のMissionは変更されていません。もう一度試してください。';
 }
 
 RouteChangeProposal _proposal({

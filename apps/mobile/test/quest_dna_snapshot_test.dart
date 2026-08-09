@@ -44,7 +44,7 @@ void main() {
 
     expect(category.value, '学習');
     expect(category.source, QuestDnaSource.userInput);
-    expect(theme.value, 'Learning Voyage');
+    expect(theme.value, '学びの航海');
     expect(theme.source, QuestDnaSource.inferred);
     expect(social.value, 'Guild');
   });

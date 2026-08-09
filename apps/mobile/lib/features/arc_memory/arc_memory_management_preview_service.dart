@@ -62,6 +62,11 @@ class ArcMemoryManagementPreviewService {
           description: '小さな一歩と完了の記録',
         ),
         ArcMemoryTypePreview(
+          type: ArcMemoryType.taskMemory,
+          label: 'Task Memory',
+          description: '開始、完了、延期した具体的な行動',
+        ),
+        ArcMemoryTypePreview(
           type: ArcMemoryType.trailMemory,
           label: 'Trail Memory',
           description: '挑戦の記録と振り返り',
@@ -82,25 +87,25 @@ class ArcMemoryManagementPreviewService {
           action: ArcMemoryManagementAction.review,
           title: '記憶を確認',
           summary: 'Arcが参照する記憶を、ユーザーが読める形で表示する。',
-          statusLabel: 'Preview',
+          statusLabel: '確認する',
         ),
         ArcMemoryManagementItem(
           action: ArcMemoryManagementAction.delete,
           title: '記憶を削除',
           summary: '不要な記憶を本人の操作で消せるようにする。',
-          statusLabel: 'Planned',
+          statusLabel: '準備中',
         ),
         ArcMemoryManagementItem(
           action: ArcMemoryManagementAction.sensitivity,
           title: '感度を見直す',
           summary: 'Personal / Sensitiveな記憶を区別して扱う。',
-          statusLabel: 'Planned',
+          statusLabel: '準備中',
         ),
         ArcMemoryManagementItem(
           action: ArcMemoryManagementAction.export,
           title: 'エクスポート',
           summary: '将来、本人の記憶データを取り出せるようにする。',
-          statusLabel: 'Future',
+          statusLabel: '今後対応',
         ),
       ],
     );

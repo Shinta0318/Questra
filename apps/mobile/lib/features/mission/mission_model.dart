@@ -57,7 +57,7 @@ class Mission {
     this.generatedBy = 'user',
     this.generationVersion,
     this.successConfirmedAt,
-    this.hierarchyRole = 'legacy_unclassified',
+    this.hierarchyRole = 'outcome',
   }) : id = id ?? _uuid.v4(),
        progressPercent =
            progressPercent ?? (status == MissionStatus.completed ? 100 : 0),
@@ -149,6 +149,7 @@ class Mission {
     String? generatedBy,
     String? generationVersion,
     DateTime? successConfirmedAt,
+    bool clearSuccessConfirmedAt = false,
     String? hierarchyRole,
   }) {
     return Mission(
@@ -197,7 +198,9 @@ class Mission {
       targetDate: targetDate ?? this.targetDate,
       generatedBy: generatedBy ?? this.generatedBy,
       generationVersion: generationVersion ?? this.generationVersion,
-      successConfirmedAt: successConfirmedAt ?? this.successConfirmedAt,
+      successConfirmedAt: clearSuccessConfirmedAt
+          ? null
+          : successConfirmedAt ?? this.successConfirmedAt,
       hierarchyRole: hierarchyRole ?? this.hierarchyRole,
     );
   }

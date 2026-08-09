@@ -1,7 +1,7 @@
-version: 1
-status: verified
-updated_at_utc: "2026-08-01T00:00:00Z"
-candidate_source_commit: "aa6a2791a15693f5aa79c6ddc314e74d5f8d7f5c"
+version: 2
+status: local_migration_pending_deployment
+updated_at_utc: "2026-08-08T14:29:40Z"
+candidate_source_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
 working_tree_clean_at_deploy: false
 project:
   ref: "dhbmgwarnrtelrcrmmfk"
@@ -10,13 +10,13 @@ project:
   access_verified: true
   dashboard_evidence: "Supabase Dashboard project overview verified 2026-07-17: Questra Beta, Tokyo"
   linked_at_utc: "2026-07-17T12:15:36Z"
-  cli_version: "2.109.1"
+  cli_version: "2.111.0"
 migrations:
-  status: applied
-  latest_local: "202608010025_progress_event_mission_owner_fix.sql"
-  remote_head: "202608010025_progress_event_mission_owner_fix.sql"
+  status: local_pending_deployment
+  latest_local: "202608090003_data_rights_request_lifecycle.sql"
+  remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   command: "supabase migration list --linked"
-  applied_at_utc: "2026-08-01T00:00:00Z"
+  applied_at_utc: "2026-08-08T14:29:40Z"
   first_attempt:
     status: stopped_on_error
     migration: "202607240001_mission_progress_and_planning_feedback.sql"
@@ -25,39 +25,47 @@ migrations:
 functions:
   - name: arc-chat
     status: deployed
-    deployed_at_utc: "2026-07-25T05:03:41Z"
-    version: 12
+    deployed_at_utc: "2026-08-08T13:47:42Z"
+    version: 16
   - name: arc-quest-guide
     status: deployed
-    deployed_at_utc: "2026-07-25T05:03:49Z"
-    version: 9
+    deployed_at_utc: "2026-08-09T01:21:05Z"
+    version: 20
   - name: generate-arc-advice
     status: deployed
-    deployed_at_utc: "2026-07-25T05:03:55Z"
-    version: 6
+    deployed_at_utc: "2026-07-31T00:30:45Z"
+    version: 7
   - name: generate-mission
     status: deployed
-    deployed_at_utc: "2026-07-25T05:04:01Z"
-    version: 6
+    deployed_at_utc: "2026-08-08T11:09:42Z"
+    version: 8
   - name: generate-quest-guides
     status: deployed
-    deployed_at_utc: "2026-07-25T05:04:09Z"
-    version: 6
+    deployed_at_utc: "2026-08-08T11:09:45Z"
+    version: 8
   - name: generate-star-map
     status: deployed
-    deployed_at_utc: "2026-07-25T05:04:15Z"
-    version: 6
+    deployed_at_utc: "2026-07-31T00:30:45Z"
+    version: 7
   - name: auth-login
     status: deployed
     deployed_at_utc: "2026-07-25T05:04:23Z"
     version: 1
   - name: moderate-quest-intent
     status: deployed
-    deployed_at_utc: "2026-07-25T05:04:30Z"
-    version: 1
+    deployed_at_utc: "2026-07-31T00:30:45Z"
+    version: 2
   - name: research-mission-resources
     status: deployed
     deployed_at_utc: "2026-07-25T05:04:36Z"
+    version: 1
+  - name: quest-planning-v2
+    status: deployed
+    deployed_at_utc: "2026-08-08T10:29:11Z"
+    version: 14
+  - name: quest-planning-tools
+    status: deployed
+    deployed_at_utc: "2026-08-01T06:50:27Z"
     version: 1
 secrets:
   status: verified
@@ -91,10 +99,24 @@ client_configuration:
     - OPENAI_API_KEY
 deployment_smoke:
   status: passed
-  verified_at_utc: "2026-07-25T05:05:00Z"
-  edge_function_options: "9/9 returned success"
+  verified_at_utc: "2026-08-08T14:29:40Z"
+  edge_function_options: "quest-planning-v2 v14 and 10 supporting functions active"
   auth_login_invalid_input: "401"
-  authenticated_owner_flows: "pending QST-199 and QST-201"
+  authenticated_owner_flows: "passed with ephemeral two-account Task, Trail hierarchy, Mission completion RPC, Route, Memory and Media acceptance"
+  task_expansion_owner: passed
+  task_expansion_cross_account: denied
+  cross_parent_task_write: denied
+  cross_parent_trail_write: denied
+  incomplete_mission_confirmation: denied
+  direct_mission_completion: denied
+  mission_completion_rpc: passed
+  task_completion_retry_event_count: 1
+  task_route_unchanged_before_approval: passed
+  task_route_apply_transaction: passed
+  task_route_rollback_restore: passed
+  arc_chat_task_context: passed
+  stale_route_conflict_rejected: passed
+  stale_route_task_unchanged: passed
 guardrails:
   gemini_tier_target: free_internal_validation
   gemini_request_store: false

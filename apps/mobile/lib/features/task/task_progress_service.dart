@@ -1,13 +1,23 @@
 import 'task_model.dart';
 
 class TaskProgressSnapshot {
-  const TaskProgressSnapshot({required this.completed, required this.total});
+  const TaskProgressSnapshot({
+    required this.completed,
+    required this.total,
+    required this.hasTasks,
+  });
 
   final int completed;
   final int total;
+  final bool hasTasks;
 
-  int get percent => total == 0 ? 0 : ((completed / total) * 100).round();
-  bool get allRequiredCompleted => total > 0 && completed == total;
+  int get percent => total == 0
+      ? hasTasks
+            ? 100
+            : 0
+      : ((completed / total) * 100).round();
+  bool get allRequiredCompleted => hasTasks && completed == total;
+  bool get hasOptionalTasksOnly => hasTasks && total == 0;
 }
 
 class TaskProgressService {
@@ -22,6 +32,7 @@ class TaskProgressService {
           .where((task) => task.status == TaskStatus.completed)
           .length,
       total: required.length,
+      hasTasks: tasks.isNotEmpty,
     );
   }
 

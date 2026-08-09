@@ -3028,6 +3028,586 @@ items:
     scope: Add a shared Task-derived Mission card, state-based primary CTA, compact metadata, next Task preview, overflow actions, outcome-focused Mission editing, distinct Mission and Task details, accessibility semantics, analytics, and regression tests.
     likely_files: [apps/mobile/lib/features/mission/widgets, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/lib/features/mission/mission_detail_screen.dart, apps/mobile/lib/features/task/task_detail_screen.dart, apps/mobile/lib/core/analytics/analytics_event.dart, reports/qst/QST-260.md]
     acceptance: [Task-derived progress and next action are implemented; vertical action icons and normal-user confidence are removed; full Flutter analyze and tests pass; formal completion remains gated by Android/Web E2E and before-after screenshots.]
+  - id: QST-261
+    title: Task Creation and Generation Completion Path
+    status: ImplementedDeploymentE2EPending
+    priority: P0
+    epic: QUEST-HIERARCHY-V2
+    depends_on: [QST-258, QST-259, QST-260]
+    goal: Mission確定後にTaskが必ず表示され、AI提案または手動追加から実行へ進める導線を完成する。
+    scope: Preserve the initial structured Task plan, reload approved Tasks, add Mission-scoped Gemini Task expansion with Critic and targeted repair, require preview approval, support manual Task creation, batch persistence, duplicate prevention, loading/error/retry states, and regression tests.
+    likely_files: [apps/mobile/lib/features/task, apps/mobile/lib/features/mission/mission_detail_screen.dart, apps/mobile/lib/features/quest/arc_quest_guide_service.dart, supabase/functions/_shared/quest_planning/pipeline.ts, supabase/functions/quest-planning-v2/index.ts, reports/qst/QST-261.md]
+    acceptance: [Initial approved Tasks load without reopening the app, empty Missions expose AI and manual creation paths, generated Tasks are previewed before save, batch save and reload preserve dependencies, failures keep user input and allow retry, and formal completion remains gated by Edge Function deployment and Android/Web E2E.]
+  - id: QST-262
+    title: Mission Progress Single Source and Route Identity
+    status: Completed
+    priority: P0
+    epic: QUEST-HIERARCHY-V2
+    depends_on: [QST-261]
+    goal: Mission進捗をTask由来へ統一し、MissionとTaskのRoute責務を固定する。
+    scope: Keep /mission as Mission-only, add a distinct Task route, remove direct Mission progress mutation, reuse the shared Mission card, and preserve back navigation.
+    likely_files: [apps/mobile/lib/features/mission/mission_screen.dart, apps/mobile/lib/features/task/task_screen.dart, apps/mobile/lib/core/router, reports/qst/QST-262.md]
+    acceptance: [/mission always renders Missions, Task list has a stable separate route, progress is derived from required Tasks, and route/back-navigation tests pass.]
+  - id: QST-263
+    title: Task Dependency and Mission Completion Integrity
+    status: Completed
+    priority: P0
+    epic: QUEST-HIERARCHY-V2
+    depends_on: [QST-261, QST-262]
+    goal: Task AvailabilityとMission成果確認を一つのDomain ruleへ統合する。
+    scope: Enforce Task dependency chains, optional-only and no-Task rules, outcome review state, rollback safety, and consistent cards/details.
+    likely_files: [apps/mobile/lib/features/task, apps/mobile/lib/features/mission, reports/qst/QST-263.md]
+    acceptance: [Blocked Tasks cannot start, Task completion leads to outcome review rather than automatic Mission success, and dependency/rollback tests pass.]
+  - id: QST-264
+    title: Mission Support and Contextual Arc Navigation Restoration
+    status: Completed
+    priority: P1
+    epic: CORE-JOURNEY-UX
+    depends_on: [QST-262]
+    goal: Missionの参考情報、支援、Arc相談を同一文脈で利用可能にする。
+    scope: Restore Mission support links, pass Quest/Mission context into Arc drafts, preserve deep links and back stack, and add navigation tests.
+    likely_files: [apps/mobile/lib/features/mission, apps/mobile/lib/features/arc, apps/mobile/lib/core/router, reports/qst/QST-264.md]
+    acceptance: [Mission and Quest names remain visible across Arc and Support, every entry is reachable, and returning restores the originating Mission.]
+  - id: QST-265
+    title: Quest Route Action Completion and Dead Control Removal
+    status: Completed
+    priority: P1
+    epic: DYNAMIC-ROUTE
+    depends_on: [QST-185, QST-186, QST-187, QST-188]
+    goal: 航路見直しCTAをDynamic Route Reviewへ接続し、未接続操作をなくす。
+    scope: Connect route review, add loading/error/approval states, and replace unavailable behavior with an explicit disabled or future state.
+    likely_files: [apps/mobile/lib/features/quest/quest_route_screen.dart, apps/mobile/lib/features/quest/route_replanning_controller.dart, reports/qst/QST-265.md]
+    acceptance: [Every visible control has a result, route changes remain approval-gated, and tap/loading/error tests pass.]
+  - id: QST-266
+    title: Mobile Copy Contrast and Responsive Polish
+    status: Completed
+    priority: P1
+    epic: BETA-UX-POLISH
+    depends_on: [QST-262]
+    goal: Compact viewportと拡大文字でも主要情報と操作を読み切れるようにする。
+    scope: Polish Home, Arc, Quest detail, Bottom Navigation and theme contrast at 320/390/430 widths and text scale 1.0/1.3/2.0.
+    likely_files: [apps/mobile/lib/features/home, apps/mobile/lib/features/arc, apps/mobile/lib/features/quest, apps/mobile/lib/widgets/navigation, apps/mobile/test, reports/qst/QST-266.md]
+    acceptance: [No overflow or clipped primary copy, important controls meet contrast intent, and responsive/semantics matrices pass.]
+  - id: QST-267
+    title: Japanese UI Terminology and Copy Consistency
+    status: Completed
+    priority: P1
+    epic: BETA-UX-POLISH
+    depends_on: []
+    goal: Questra固有語を保ちながら、表示文を自然な日本語へ統一する。
+    scope: Review Home, Quest, Mission, Task, Trail, Profile, Settings, Auth and Guild; add a visible-string terminology verifier.
+    likely_files: [apps/mobile/lib, apps/mobile/test, reports/qst/QST-267.md]
+    acceptance: [No prohibited Story label or unintended untranslated copy remains, Arc wording is consistent, and visible-string tests pass.]
+  - id: QST-268
+    title: Trail First Record UX and CTA Consolidation
+    status: Completed
+    priority: P1
+    epic: CORE-JOURNEY-UX
+    depends_on: [QST-267]
+    goal: 最初のTrailを初期画面内の一つの明確なCTAから記録できるようにする。
+    scope: Consolidate the empty-state CTA, creation sheet, keyboard handling, save/error state and immediate Timeline reflection.
+    likely_files: [apps/mobile/lib/features/trail, apps/mobile/test, reports/qst/QST-268.md]
+    acceptance: [One primary CTA is visible above the fold, save updates Timeline, and empty/create/error/keyboard tests pass.]
+  - id: QST-269
+    title: QST-260 Visual Accessibility and E2E Release Gate
+    status: ImplementedWebAndroidEvidencePending
+    priority: P1
+    epic: QUEST-HIERARCHY-V2
+    depends_on: [QST-261, QST-262, QST-263, QST-264, QST-265, QST-266, QST-267, QST-268]
+    goal: 修正後のMissionとTask導線を画面幅、読み上げ、実機操作で証明する。
+    scope: Add integration tests, golden evidence, compact/medium/wide checks, Android/Web journey proof, cancel/retry/offline and accessibility review.
+    likely_files: [apps/mobile/integration_test, apps/mobile/test, reports/qst/evidence, reports/qst/QST-269.md]
+    acceptance: [Core journey passes on Web and Android, accessibility order is verified, and before/after evidence closes QST-260 gates.]
+  - id: QST-270
+    title: Master Spec Task Domain Alignment
+    status: Completed
+    priority: P0
+    epic: PRODUCT-CONSTITUTION
+    depends_on: [QST-258, QST-262, QST-263]
+    goal: Quest、Mission、Task、Trailの責務を最上位仕様と実装で一致させる。
+    scope: Update Master Spec v2, terminology, domain model and Design Bible with Task as the concrete action and a documented migration rule.
+    likely_files: [docs/QUESTRA_MASTER_SPEC_V2.md, docs/product, docs/design, reports/qst/QST-270.md]
+    acceptance: [Task is an official term, each hierarchy level has one responsibility, conflicting definitions are removed, and terminology verification passes.]
+  - id: QST-271
+    title: QST-261 to QST-270 Decennial Cross Review
+    status: Completed
+    priority: P0
+    epic: CONTINUOUS-QUALITY
+    depends_on: [QST-261, QST-262, QST-263, QST-264, QST-265, QST-266, QST-267, QST-268, QST-269, QST-270]
+    goal: 直近10件を横断レビューし、検出した課題を次サイクルへ強制反映する。
+    scope: Review Master Spec, product flow, UI/UX, AI, DB/RLS, security, performance, accessibility, tests and release readiness; rank findings and register the next ten QSTs.
+    likely_files: [docs/qst/BACKLOG.yaml, reports/qst/QST-271.md, reports/qst/evidence]
+    acceptance: [Every completed QST is rechecked, scores and evidence are recorded, Critical and High findings become QST-272 onward, and the next review boundary is scheduled after ten implementation QSTs.]
+  - id: QST-272
+    title: Mission Completion Integrity Closure
+    status: Completed
+    priority: P0
+    epic: QUEST-HIERARCHY-V2
+    depends_on: [QST-263, QST-270, QST-271]
+    goal: 旧Mission完了APIを廃止し、Task完了と成果確認を必須とする一つの完了経路へ統合する。
+    scope: Remove direct progress-to-complete paths, require Task-derived progress and explicit outcome confirmation, add persistence and regression guards.
+    likely_files: [apps/mobile/lib/features/mission, apps/mobile/lib/features/task, apps/mobile/test, reports/qst/QST-272.md]
+    acceptance: [No public path completes a Mission from progress alone, legacy callers migrate safely, and controller/repository tests prevent regression.]
+  - id: QST-273
+    title: Hosted Task Planning Deployment and RLS Proof
+    status: Completed
+    priority: P0
+    epic: SUPABASE-BETA
+    depends_on: [QST-261, QST-272]
+    goal: expand_tasks経路とTask階層を実Supabaseへ配備し、二アカウントで所有者分離を証明する。
+    scope: Deploy current migrations and quest-planning-v2, run authenticated Task generation/save/reload and cross-account denial checks, record immutable evidence.
+    likely_files: [supabase, docs/qst/BETA_SUPABASE_PROJECT.yaml, docs/qst/BETA_RLS_EVIDENCE.yaml, reports/qst/evidence, reports/qst/QST-273.md]
+    acceptance: [Hosted expand_tasks succeeds, owner data reloads, another account cannot read or mutate it, and deployed versions and rollback point are recorded.]
+  - id: QST-274
+    title: Android and Web Core Journey Evidence Closure
+    status: ImplementedExternalDeviceEvidencePending
+    priority: P0
+    epic: RELEASE-EVIDENCE
+    depends_on: [QST-269, QST-272, QST-273]
+    goal: QuestからTrailまでの中心導線をWebとAndroidで実行し、アクセシビリティを含む実証を完了する。
+    scope: Run the actual Web and Android journey, add device-capable integration binding and CI/manual evidence, verify IME, keyboard, focus, TalkBack order and retry behavior.
+    likely_files: [apps/mobile/integration_test, apps/mobile/pubspec.yaml, .github/workflows/release-gate.yml, reports/qst/evidence, reports/qst/QST-274.md]
+    acceptance: [The same candidate passes on Web and Android, device and build metadata are recorded, and QST-269 can be formally closed.]
+  - id: QST-275
+    title: Gemini Interactions GA Contract Refresh
+    status: Completed
+    priority: P0
+    epic: GEMINI-PLANNING-V2
+    depends_on: [QST-248, QST-249, QST-251, QST-271]
+    goal: Gemini Interactions v1の現行契約へAdapterとModel Registryを同期する。
+    scope: Remove deprecated sampling parameters for current models, verify stable model capabilities and response fields against official docs, add versioned contract tests and migration notes.
+    likely_files: [supabase/functions/_shared/quest_planning, docs/architecture/GEMINI_QUEST_PLANNING_V2.md, reports/qst/QST-275.md]
+    acceptance: [Production requests contain no deprecated parameters, configured models are supported and pinned, structured output remains valid, and contract tests cover primary and fallback routes.]
+  - id: QST-276
+    title: Legacy Template Fallback Retirement
+    status: Completed
+    priority: P0
+    epic: GEMINI-PLANNING-V2
+    depends_on: [QST-255, QST-275]
+    goal: AI障害時に固定Mission本文を返す旧Edge Function経路を廃止または安全な手動導線へ置換する。
+    scope: Inventory deployed legacy endpoints, remove template Quest/Mission fallbacks, preserve user input and partial passes, expose retry/manual continuation and decommission criteria.
+    likely_files: [supabase/functions, apps/mobile/lib/features/quest, apps/mobile/lib/features/mission, reports/qst/QST-276.md]
+    acceptance: [No reachable planning endpoint returns fixed template Missions, errors preserve user work, and legacy function retirement is verified.]
+  - id: QST-277
+    title: Task Persistence Retry and Offline UX
+    status: Completed
+    priority: P1
+    epic: CORE-JOURNEY-RELIABILITY
+    depends_on: [QST-261, QST-268, QST-272]
+    goal: Task作成・更新・完了の保存状態を可視化し、失敗や再接続後も入力と進捗を失わないようにする。
+    scope: Add saving/saved/failed states, idempotent retry, optimistic rollback, offline queue boundaries and user-facing recovery for Task mutations.
+    likely_files: [apps/mobile/lib/features/task, apps/mobile/lib/core/persistence, apps/mobile/test, reports/qst/QST-277.md]
+    acceptance: [Task input and status survive failures, retries do not duplicate events, offline state is explicit, and recovery tests pass.]
+  - id: QST-278
+    title: Quest Mission Task Trail Database Integrity
+    status: Completed
+    priority: P0
+    epic: SUPABASE-BETA
+    depends_on: [QST-258, QST-272, QST-273]
+    goal: Quest・Mission・Task・Trailの親子関係と完了条件をDB側でも迂回不能にする。
+    scope: Add parent consistency constraints or guarded RPCs, server-side Mission confirmation, Task dependency validation, Trail task linkage and rollback-safe migrations.
+    likely_files: [supabase/migrations, apps/mobile/lib/features/mission, apps/mobile/lib/features/trail, tools/qst, reports/qst/QST-278.md]
+    acceptance: [Cross-owner and cross-parent writes fail, Mission completion requires valid Task state and confirmation, Trail context is consistent, and rollback and RLS tests pass.]
+  - id: QST-279
+    title: Task-Aware Dynamic Route Replanning
+    status: Completed
+    priority: P1
+    epic: DYNAMIC-ROUTE
+    depends_on: [QST-185, QST-186, QST-187, QST-188, QST-272, QST-278]
+    goal: 動的航路更新をMission単位からMissionとTaskの階層へ拡張する。
+    scope: Include Task progress and dependencies in review input, propose Task add/split/reorder/reschedule changes, preserve approval/diff/undo rules and completed work.
+    likely_files: [apps/mobile/lib/features/quest, apps/mobile/lib/features/task, supabase/functions, reports/qst/QST-279.md]
+    acceptance: [Route review understands Task state, never mutates before approval, displays hierarchy-aware diffs, and can restore the prior route.]
+  - id: QST-280
+    title: Home Today Task Journey Polish
+    status: Completed
+    priority: P1
+    epic: CORE-JOURNEY-UX
+    depends_on: [QST-267, QST-268, QST-270, QST-272]
+    goal: Homeの今日導線をTask中心に統一し、親MissionとQuestの文脈を迷わず理解できるようにする。
+    scope: Review empty/loading/error/completed states, parent labels, one primary CTA, Arc guidance, return state and compact accessibility for today's Task.
+    likely_files: [apps/mobile/lib/features/home, apps/mobile/lib/features/task, apps/mobile/test, reports/qst/QST-280.md]
+    acceptance: [Home shows one actionable Task with Mission and Quest context, every state has a clear next action, and responsive/semantics tests pass.]
+  - id: QST-281
+    title: Lower Specification Task Terminology Alignment
+    status: Completed
+    priority: P2
+    epic: PRODUCT-CONSTITUTION
+    depends_on: [QST-270, QST-275, QST-276, QST-279, QST-280]
+    goal: 下位仕様・β資料・Store文言をMaster Specの4階層へ揃え、旧3階層表現の誤実装を防ぐ。
+    scope: Classify historical evidence versus active guidance, update active Quest-Mission-Trail loops to include Task, and extend terminology verification without rewriting historical reports.
+    likely_files: [docs/architecture, docs/product, apps/mobile/test, reports/qst/QST-281.md]
+    acceptance: [Active guidance uses the four-level hierarchy, historical records remain identifiable, prohibited responsibility conflicts fail verification, and documentation links remain readable.]
+  - id: QST-282
+    title: QST-272 to QST-281 Decennial Cross Review
+    status: Completed
+    priority: P0
+    epic: CONTINUOUS-QUALITY
+    depends_on: [QST-272, QST-273, QST-274, QST-275, QST-276, QST-277, QST-278, QST-279, QST-280, QST-281]
+    goal: 次の10件を横断レビューし、実配備・実機・AI・DB・UXの証跡を次サイクルへ反映する。
+    scope: Re-score product, AI, data, security, accessibility, performance and release readiness; verify every acceptance criterion and register QST-283 onward.
+    likely_files: [docs/qst/BACKLOG.yaml, reports/qst/QST-282.md, reports/qst/evidence]
+    acceptance: [All ten QSTs are rechecked with evidence, unresolved Critical or High findings become the next backlog, and the following ten-QST review boundary is registered.]
+  - id: QST-283
+    title: Candidate Device and Artifact Evidence Closure
+    status: ImplementedExternalDeviceEvidencePending
+    priority: P0
+    epic: RELEASE-EVIDENCE
+    depends_on: [QST-274, QST-280, QST-281, QST-282]
+    goal: 同一candidate SHAのAndroidとWeb artifactを作成し、中心導線とアクセシビリティの外部実行証跡を完了する。
+    scope: Build signed or internal artifacts, run Quest-Mission-Task-Trail on Android and Web, capture IME, keyboard, focus, TalkBack, large-text, retry and artifact checksums.
+    likely_files: [.github/workflows, apps/mobile/integration_test, docs/qst/BETA_DEVICE_VALIDATION.yaml, reports/qst/evidence, reports/qst/QST-283.md]
+    acceptance: [Android and Web evidence share one candidate SHA, required device checks pass, artifact checksums and rollback SHA are recorded, and QST-274 can close.]
+  - id: QST-284
+    title: Arc Task Context Integration
+    status: Completed
+    priority: P0
+    epic: ARC-COMPANION
+    depends_on: [QST-273, QST-276, QST-280, QST-282]
+    goal: Arc Chatが現在のTaskと依存・完了条件を理解し、Missionとの責務を混同せず次の行動を支援できるようにする。
+    scope: Add bounded recent and focused Task context to Flutter and Edge Function contracts, owner validation, prompt rules, local fallback and context tests.
+    likely_files: [apps/mobile/lib/features/arc, apps/mobile/lib/features/task, supabase/functions/arc-chat, apps/mobile/test, reports/qst/QST-284.md]
+    acceptance: [Arc can reference the focused Task and parent Mission, context is owner-scoped and bounded, completed work is not re-proposed, and hosted response evidence passes.]
+  - id: QST-285
+    title: Task-Linked Trail Capture
+    status: Completed
+    priority: P1
+    epic: CORE-JOURNEY
+    depends_on: [QST-268, QST-278, QST-280]
+    goal: Task完了後のTrailをQuest・Mission・Taskへ一貫して紐づけ、航跡の出所をUIから理解できるようにする。
+    scope: Add Task Detail Trail CTA, carry hierarchy context into create flow, persist task_id, display breadcrumbs, reload and verify cross-parent denial.
+    likely_files: [apps/mobile/lib/features/task, apps/mobile/lib/features/trail, apps/mobile/test, tools/qst, reports/qst/QST-285.md]
+    acceptance: [A Trail created from Task retains all valid parents, Timeline shows the Task context, invalid parent combinations fail, and retry does not duplicate the Trail.]
+  - id: QST-286
+    title: Route Proposal Stale Conflict Protection
+    status: Completed
+    priority: P1
+    epic: DYNAMIC-ROUTE
+    depends_on: [QST-278, QST-279, QST-282]
+    goal: 提案作成後にTaskやMissionが変化した場合、古い航路差分が新しい進捗を上書きしないようにする。
+    scope: Add snapshot revision checks, stale status, conflict diff, refresh proposal action, transaction guards and concurrent mutation tests.
+    likely_files: [supabase/migrations, apps/mobile/lib/features/quest, apps/mobile/lib/features/task, tools/qst, reports/qst/QST-286.md]
+    acceptance: [Stale proposals cannot overwrite newer progress, completed Tasks remain immutable, conflicts are understandable, and refreshed proposals preserve rejection history.]
+  - id: QST-287
+    title: Durable Task Offline Queue
+    status: Completed
+    priority: P1
+    epic: CORE-JOURNEY-RELIABILITY
+    depends_on: [QST-277, QST-280]
+    goal: Task変更の保留Queueをアプリ再起動後も安全に復元し、所有者を跨いで漏らさない。
+    scope: Persist minimal encrypted or protected mutation payloads, partition by owner, expire stale entries, replay idempotently and expose discard controls.
+    likely_files: [apps/mobile/lib/features/task, apps/mobile/lib/core/persistence, apps/mobile/test, reports/qst/QST-287.md]
+    acceptance: [Pending Task work survives restart, another account never sees or replays it, successful replay clears it, and expired or invalid payloads fail closed.]
+  - id: QST-288
+    title: Task Signal and Due-Date Planner
+    status: Completed
+    priority: P1
+    epic: RETENTION
+    depends_on: [QST-276, QST-280, QST-284]
+    goal: Taskの予定日・期限・依存関係から、押し付けないSignalと次の一歩を生成する。
+    scope: Derive due and stalled states, add quiet-hour and frequency preferences, Home and Arc surfaces, local notification boundary and tests.
+    likely_files: [apps/mobile/lib/features/task, apps/mobile/lib/features/signal, apps/mobile/lib/features/home, apps/mobile/test, reports/qst/QST-288.md]
+    acceptance: [Signals identify the exact Task and parent context, blocked Tasks are not urged, quiet settings are respected, and no notification is sent without consent.]
+  - id: QST-289
+    title: Arc Memory Task Event Integration
+    status: ImplementedDeploymentRLSEvidencePending
+    priority: P1
+    epic: ARC-MEMORY
+    depends_on: [QST-278, QST-284]
+    goal: 重要なTask開始・完了・延期をArc Memoryへ関連づけ、同意済みの文脈だけを再利用する。
+    scope: Add Task source links and event types, relevance limits, consent filters, deletion propagation, memory UI context and RLS tests.
+    likely_files: [apps/mobile/lib/features/arc_memory, apps/mobile/lib/features/task, supabase/migrations, tools/qst, reports/qst/QST-289.md]
+    acceptance: [Memories can link to a Task and parents, retrieval is bounded and consent-aware, deleted private context is not retained, and cross-account reads fail.]
+  - id: QST-290
+    title: Beta Candidate Manifest and Readiness Refresh
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: RELEASE-MANAGEMENT
+    depends_on: [QST-273, QST-278, QST-281, QST-283]
+    goal: 古いBeta Readiness値を現行migration・function・test・artifact証跡へ更新し、Go/No-Goを一つのmanifestで判定する。
+    scope: Regenerate candidate SHA, migration/function inventory, test totals, blocker status, artifact checksums, rollback point and human sign-off placeholders.
+    likely_files: [docs/qst/BETA_CANDIDATE.yaml, docs/qst/BETA_LAUNCH_READINESS.yaml, docs/product/beta_readiness_report.md, tools/qst, reports/qst/QST-290.md]
+    acceptance: [Every readiness claim points to current evidence, stale counts fail verification, distribution_ready remains false until all P0 evidence exists, and rollback is reproducible.]
+  - id: QST-291
+    title: Task-Aware Data Rights Operations
+    status: ImplementedDeploymentRLSEvidencePending
+    priority: P1
+    epic: TRUST-PRIVACY
+    depends_on: [QST-278, QST-281, QST-289]
+    goal: エクスポート・削除・訂正の実処理へTaskを含め、Privacy表示と実際の操作を一致させる。
+    scope: Add authenticated export manifest, deletion preview and transaction, Task and Trail relationship handling, audit events and recovery rules.
+    likely_files: [apps/mobile/lib/features/trust, supabase/functions, supabase/migrations, docs/legal, tools/qst, reports/qst/QST-291.md]
+    acceptance: [Owner can export Task data, deletion preview shows impact, confirmed deletion is auditable and owner-scoped, and no other account data is included.]
+  - id: QST-292
+    title: Long Route Task Performance Pass
+    status: Completed
+    priority: P2
+    epic: PERFORMANCE
+    depends_on: [QST-278, QST-279, QST-285, QST-288]
+    goal: 長期Questの多数Mission・Task・TrailでもHomeと詳細画面の応答性を維持する。
+    scope: Profile large route fixtures, paginate bounded queries, avoid rebuild-heavy selectors, measure scroll and route review, and define regression budgets.
+    likely_files: [apps/mobile/lib/features/home, apps/mobile/lib/features/quest, apps/mobile/lib/features/task, apps/mobile/test, tools/qst, reports/qst/QST-292.md]
+    acceptance: [Large route fixtures stay within documented frame and query budgets, Home fetch remains bounded, route review is responsive, and performance tests prevent regression.]
+  - id: QST-293
+    title: QST-283 to QST-292 Decennial Cross Review
+    status: Completed
+    priority: P0
+    epic: CONTINUOUS-QUALITY
+    depends_on: [QST-283, QST-284, QST-285, QST-286, QST-287, QST-288, QST-289, QST-290, QST-291, QST-292]
+    goal: 次の10件を横断レビューし、実機・Arc・Task・Trail・Privacy・性能の証跡を次サイクルへ反映する。
+    scope: Re-score product, AI, data, security, privacy, accessibility, performance and release readiness; verify acceptance and register the next cycle.
+    likely_files: [docs/qst/BACKLOG.yaml, reports/qst/QST-293.md, reports/qst/evidence]
+    acceptance: [All ten QSTs are rechecked, unresolved Critical or High findings become the next backlog, current candidate evidence is cited, and the following review boundary is registered.]
+  - id: QST-294
+    title: Quest Creation Form UX Redesign
+    status: ImplementedAndroidEvidencePending
+    priority: P1
+    epic: QUEST-CREATION-UX
+    depends_on: [QST-155, QST-184, QST-250, QST-260]
+    goal: Quest作成・編集をArcと一緒に願いを言語化する1カラム体験へ刷新し、ユーザー入力とAI分析の責務を明確にする。
+    scope: Add form sizing tokens, responsive width limits, multiline motivation and success evidence, target year/month, read-only Arc analysis, Japanese IME coverage and visual evidence.
+    likely_files: [apps/mobile/lib/core/theme, apps/mobile/lib/widgets/forms, apps/mobile/lib/features/quest, apps/mobile/lib/features/arc, apps/mobile/test, docs/product/DESIGN_BIBLE_V2.md, reports/qst/QST-294.md]
+    acceptance: [Long inputs show at least three lines, reflective fields remain one column, difficulty and theme are not required manual inputs, target month is user-owned, Arc analysis is read-only, Japanese IME and responsive tests pass, and before/after evidence is retained.]
+  - id: QST-295
+    title: Remove Template-Based Quest Variants
+    status: Completed
+    priority: P1
+    epic: QUEST-PLANNING-QUALITY
+    depends_on: [QST-248, QST-250, QST-252, QST-294]
+    goal: 固定接頭辞・接尾辞によるQuest候補を廃止し、Arcが願いの意味を理解して必要な確認だけを行うQuest確定体験へ移行する。
+    scope: Remove the legacy nearby-Quest variants, add typed Quest intent resolution and semantic Quest Type, allow zero candidates for clear intent, limit clarification and genuinely distinct directions to three, and separate Quest confirmation from Mission planning.
+    likely_files: [apps/mobile/lib/features/arc, apps/mobile/lib/features/quest, supabase/functions/arc-quest-guide, apps/mobile/test, docs/product/DESIGN_BIBLE_V2.md, reports/qst/QST-295.md]
+    acceptance: [Legacy variant UI and string transforms are removed, clear intent skips candidates, only material questions and directions appear, Mission planning starts after Quest confirmation, Quest Type connects to Quest DNA, compatibility tests pass, and Web evidence is retained.]
+  - id: QST-296
+    title: Full UI UX Audit and QST-260 Revalidation
+    status: CompletedReview
+    priority: P0
+    epic: CONTINUOUS-QUALITY
+    depends_on: [QST-260, QST-294, QST-295]
+    goal: 実画面・全導線・コードを横断し、QuestからTaskまでの理解性とBeta体験の阻害要因を特定する。
+    scope: Audit all routes and responsive evidence, revalidate Mission Card states, score UX, and register actionable findings without changing production data.
+    likely_files: [reports/qst/QST-296_UI_UX_AUDIT_20260809.md, reports/qst/evidence]
+    acceptance: [Every reachable screen is inventoried, QST-260 is rechecked, Critical and High findings have evidence, and follow-up QSTs are registered.]
+  - id: QST-297
+    title: Arc Clarification State Machine
+    status: Completed
+    priority: P0
+    epic: ARC-QUEST-CREATION
+    depends_on: [QST-252, QST-295, QST-296]
+    goal: Arcの確認質問、Quest提案、Quest確定を排他的な状態として扱い、回答途中に確定CTAを出さない。
+    scope: Add typed clarification states, suppress proposal actions while answers are required, preserve assumptions, and test clear and ambiguous wishes.
+    likely_files: [apps/mobile/lib/features/arc, apps/mobile/lib/features/quest, supabase/functions/quest-planning-v2, apps/mobile/test, reports/qst/QST-297.md]
+    acceptance: [Clarification and confirmation never compete, clear intent skips unnecessary questions, at most three material questions appear, and Quest persistence starts only after confirmation.]
+  - id: QST-298
+    title: Arc Journey Draft Persistence
+    status: FoundationCompletedIntegrationPending
+    priority: P0
+    epic: ARC-RELIABILITY
+    depends_on: [QST-287, QST-297]
+    goal: 相談途中の会話、回答、Quest draftを画面移動と再起動後に同じ所有者だけへ復元する。
+    scope: Add owner-partitioned draft sessions, expiry and discard, route restoration, pending planning state, and privacy-safe persistence tests.
+    likely_files: [apps/mobile/lib/features/arc, apps/mobile/lib/features/quest, apps/mobile/lib/core/persistence, apps/mobile/test, reports/qst/QST-298.md]
+    acceptance: [A draft survives route changes and restart, another account cannot read it, stale drafts expire, user can discard it, and no duplicate Quest is created.]
+  - id: QST-299
+    title: Settings and Beta Feedback Reachability
+    status: Completed
+    priority: P1
+    epic: BETA-OPERATIONS
+    depends_on: [QST-124, QST-296]
+    goal: ProfileからSettings、Privacy、Data Rights、Beta Feedbackへ迷わず到達できる通常導線を完成する。
+    scope: Add Profile actions, coherent return routes, feedback persistence boundary, loading and error states, and navigation accessibility tests.
+    likely_files: [apps/mobile/lib/features/profile, apps/mobile/lib/features/settings, apps/mobile/lib/features/feedback, apps/mobile/lib/core/router, apps/mobile/test, reports/qst/QST-299.md]
+    acceptance: [Settings and Feedback are reachable without direct URLs, back navigation is stable, feedback state is honest, and Data Rights is no more than two actions from Profile.]
+  - id: QST-300
+    title: Mobile Home Readability and Safe Insets
+    status: Completed
+    priority: P1
+    epic: HOME-UX
+    depends_on: [QST-266, QST-280, QST-296]
+    goal: 小型端末と大文字表示でHomeの次の一歩が省略・Bottom Navigation重なりなく読めるようにする。
+    scope: Shorten copy, revise max lines, add bottom safe padding, compact empty sections, and update 320/390/large-text goldens.
+    likely_files: [apps/mobile/lib/features/home, apps/mobile/lib/widgets/navigation, apps/mobile/test/goldens, reports/qst/QST-300.md]
+    acceptance: [Primary Task and Arc guidance remain readable at 320 and 390 widths, content clears navigation insets, large text has no overflow, and one primary CTA remains visible.]
+  - id: QST-301
+    title: Hosted Candidate Evidence Closure
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: RELEASE-MANAGEMENT
+    depends_on: [QST-283, QST-289, QST-290, QST-291]
+    goal: 最新Migration、二アカウントRLS、Gemini、Android/Web E2E、artifact checksumを同一candidate SHAで実証する。
+    scope: Deploy pending migrations and Functions, run strict dual-account checks, execute hosted device workflow, bind artifacts and checksums, and update Go/No-Go evidence.
+    likely_files: [docs/qst/BETA_CANDIDATE.yaml, docs/qst/BETA_SUPABASE_PROJECT.yaml, docs/qst/BETA_RLS_EVIDENCE.yaml, docs/qst/BETA_DEVICE_VALIDATION.yaml, reports/qst/QST-301.md]
+    acceptance: [Local and remote heads match, two-account checks pass, Gemini hosted route passes, Android and Web share one SHA, checksums exist, and distribution remains false on any missing gate.]
+  - id: QST-302
+    title: Unified Journey Surface Pass
+    status: ReviewedImplementationPending
+    priority: P1
+    epic: DESIGN-SYSTEM
+    depends_on: [QST-208, QST-260, QST-296]
+    goal: Home、Arc、Quest、Mission、Task、Trailを一続きのQuestra体験として見せるsurface tokenと画面shellを統一する。
+    scope: Define semantic surfaces, migrate light outliers, normalize cards and typography, preserve accessibility contrast, and add cross-screen golden evidence.
+    likely_files: [apps/mobile/lib/core/theme, apps/mobile/lib/widgets/layout, apps/mobile/lib/features/mission, apps/mobile/lib/features/task, apps/mobile/lib/features/trail, apps/mobile/test, reports/qst/QST-302.md]
+    acceptance: [Journey screens share semantic surfaces, no plain white Material page interrupts the core flow, contrast passes, and component states remain distinguishable.]
+  - id: QST-303
+    title: Typed Arc Quick Actions
+    status: Completed
+    priority: P1
+    epic: ARC-UX
+    depends_on: [QST-211, QST-297]
+    goal: Arcのクイック操作を表示文言の自動送信ではなく、型付きIntentと自然な会話表示へ分離する。
+    scope: Add ArcActionIntent, map actions to context operations, separate visible transcript text, add analytics and safety validation, and test keyboard parity.
+    likely_files: [apps/mobile/lib/features/arc, apps/mobile/lib/core/analytics, supabase/functions/arc-chat, apps/mobile/test, reports/qst/QST-303.md]
+    acceptance: [Quick actions do not inject UI labels as raw user speech, intent is structured, permissions are checked, transcript remains natural, and manual input behavior is unchanged.]
+  - id: QST-304
+    title: Japanese Accessibility and Golden Evidence Gate
+    status: ImplementedExternalEvidencePending
+    priority: P1
+    epic: ACCESSIBILITY
+    depends_on: [QST-283, QST-296, QST-300]
+    goal: 日本語フォントを含む判読可能なGoldenとTalkBack・大文字・IMEの端末証跡をRelease Gateへ組み込む。
+    scope: Bundle deterministic test fonts, regenerate key goldens, add semantics assertions, document TalkBack matrix, and bind evidence to candidate SHA.
+    likely_files: [apps/mobile/test/goldens, apps/mobile/test, apps/mobile/integration_test, docs/qst/BETA_DEVICE_VALIDATION.yaml, reports/qst/QST-304.md]
+    acceptance: [Japanese glyphs render in goldens, 200 percent text has no critical overflow, semantic labels identify parent context, TalkBack evidence is SHA-bound, and IME composition remains intact.]
+  - id: QST-305
+    title: Core Screen Modularization Pass One
+    status: ReviewedImplementationPending
+    priority: P2
+    epic: MAINTAINABILITY
+    depends_on: [QST-209, QST-296, QST-302]
+    goal: Quest Detail、Arc、Homeの高変更領域を機能WidgetとControllerへ分割し、挙動を変えずに回帰範囲を縮小する。
+    scope: Extract stable sections, move derived presentation logic out of build, retain providers and routes, and add focused widget tests.
+    likely_files: [apps/mobile/lib/features/quest, apps/mobile/lib/features/arc, apps/mobile/lib/features/home, apps/mobile/test, reports/qst/QST-305.md]
+    acceptance: [Each extraction has focused tests, build methods stop owning business rules, no route or visual regression occurs, and unrelated state no longer rebuilds whole screens.]
+  - id: QST-306
+    title: Data Rights Correction and Account Deletion Completion
+    status: ImplementedDeploymentUIEvidencePending
+    priority: P1
+    epic: TRUST-PRIVACY
+    depends_on: [QST-291, QST-299, QST-301]
+    goal: exportとTask削除に加えて、訂正依頼、同意撤回、アカウント削除の実処理と監査可能な状態遷移を完成する。
+    scope: Add request lifecycle, identity reauthentication, impact preview, retention exceptions, cancellation window, owner audit view, and legal copy alignment.
+    likely_files: [apps/mobile/lib/features/trust, supabase/migrations, supabase/functions, docs/legal, apps/mobile/test, reports/qst/QST-306.md]
+    acceptance: [Users can submit and track correction, revoke eligible consent, preview account deletion, reauthenticate destructive actions, and verify audit status without exposing another owner.]
+  - id: QST-307
+    title: QST-297 to QST-306 Decennial Cross Review
+    status: CompletedReview
+    priority: P0
+    epic: CONTINUOUS-QUALITY
+    depends_on: [QST-297, QST-298, QST-299, QST-300, QST-301, QST-302, QST-303, QST-304, QST-305, QST-306]
+    goal: Arc相談、Beta導線、実環境証跡、モバイルUI、Trustの次10件を横断レビューする。
+    scope: Re-score Master Spec, UX, AI, data, privacy, security, accessibility, performance and release readiness; create the following cycle from evidence.
+    likely_files: [docs/qst/BACKLOG.yaml, reports/qst/QST-307.md, reports/qst/evidence]
+    acceptance: [All ten QSTs are rechecked, unresolved Critical and High findings are registered, candidate evidence is current, and the next review boundary exists.]
+  - id: QST-308
+    title: Arc Draft Screen Integration
+    status: Planned
+    priority: P0
+    epic: ARC-RELIABILITY
+    depends_on: [QST-298]
+    goal: secure draftをArc画面へ接続し、会話・clarification・Quest案を再起動後に復元する。
+    scope: Restore, autosave, discard, expiry UI, owner switch and duplicate prevention.
+    likely_files: [apps/mobile/lib/features/arc, apps/mobile/test, reports/qst/QST-308.md]
+    acceptance: [Draft restores after restart, answers survive, owner isolation passes, and discard is available.]
+  - id: QST-309
+    title: Data Rights Reauthentication and Worker
+    status: Planned
+    priority: P0
+    epic: TRUST-PRIVACY
+    depends_on: [QST-306]
+    goal: アカウント削除等の高影響requestへ再認証、取消猶予、処理workerを追加する。
+    scope: Reauthentication token, cancellation window, worker, retention exceptions and status UI.
+    likely_files: [apps/mobile/lib/features/trust, supabase/functions, supabase/migrations, reports/qst/QST-309.md]
+    acceptance: [Destructive work requires recent auth, can be cancelled in window, is idempotent, and is auditable.]
+  - id: QST-310
+    title: Unified Journey Surface Migration
+    status: Planned
+    priority: P1
+    epic: DESIGN-SYSTEM
+    depends_on: [QST-302, QST-305]
+    goal: Mission、Task、Trailをsemantic Questra surfaceへ移行する。
+    scope: Shared shell, cards, typography, contrast and cross-screen goldens.
+    likely_files: [apps/mobile/lib/core/theme, apps/mobile/lib/features/mission, apps/mobile/lib/features/task, apps/mobile/lib/features/trail, apps/mobile/test]
+    acceptance: [No plain Material interruption remains, contrast passes, and journey state remains clear.]
+  - id: QST-311
+    title: Core Screen Extraction
+    status: Planned
+    priority: P1
+    epic: MAINTAINABILITY
+    depends_on: [QST-305]
+    goal: Arc、Quest Detail、Homeを機能Widgetとpresentation controllerへ段階分割する。
+    scope: Extract sections without route or state behavior changes and add focused tests.
+    likely_files: [apps/mobile/lib/features/arc, apps/mobile/lib/features/quest, apps/mobile/lib/features/home, apps/mobile/test]
+    acceptance: [Business rules leave build methods, extracted widgets have tests, and visual behavior is unchanged.]
+  - id: QST-312
+    title: Hosted Evidence Execution
+    status: PlannedExternalExecution
+    priority: P0
+    epic: RELEASE-MANAGEMENT
+    depends_on: [QST-301, QST-304, QST-309]
+    goal: 最新SHAでmigration、RLS、Gemini、Web/Android、TalkBack、artifactを実証する。
+    scope: Deploy, strict two-account run, hosted E2E, physical device matrix and checksums.
+    likely_files: [docs/qst, reports/qst/evidence, reports/qst/QST-312.md]
+    acceptance: [Local and remote heads match and every external gate is SHA-bound.]
+  - id: QST-313
+    title: Beta Feedback Persistence
+    status: Planned
+    priority: P1
+    epic: BETA-OPERATIONS
+    depends_on: [QST-299]
+    goal: Clipboard fallbackからowner-scoped Feedback永続化へ移行する。
+    scope: Repository, RLS, retry, receipt and triage state.
+    likely_files: [apps/mobile/lib/features/feedback, supabase/migrations, apps/mobile/test]
+    acceptance: [Submission is persisted, retry is idempotent, receipt is visible, and another owner cannot read it.]
+  - id: QST-314
+    title: Arc Draft Privacy Controls
+    status: Planned
+    priority: P1
+    epic: ARC-PRIVACY
+    depends_on: [QST-308]
+    goal: Arc相談draftの保持期間、端末保存、削除をユーザーが管理できるようにする。
+    scope: Settings controls, consent boundary, clear-all and privacy copy.
+    likely_files: [apps/mobile/lib/features/arc, apps/mobile/lib/features/settings, docs/legal]
+    acceptance: [Retention is visible, opt-out works, clear-all is immediate, and no draft crosses owners.]
+  - id: QST-315
+    title: Compact Journey Visual Evidence
+    status: Planned
+    priority: P1
+    epic: MOBILE-UX
+    depends_on: [QST-300, QST-310]
+    goal: 320/390幅と200%文字でHomeからTrailまでの判読性を証明する。
+    scope: Goldens, overflow assertions, navigation inset and primary CTA matrix.
+    likely_files: [apps/mobile/test/goldens, apps/mobile/integration_test, reports/qst/evidence]
+    acceptance: [No critical truncation or overlap remains across the core journey.]
+  - id: QST-316
+    title: Accessibility Device Closure
+    status: PlannedExternalExecution
+    priority: P1
+    epic: ACCESSIBILITY
+    depends_on: [QST-304, QST-315]
+    goal: TalkBack、IME、focus順、tap targetを実端末で完了する。
+    scope: Device matrix, recordings, defects and SHA binding.
+    likely_files: [docs/qst/BETA_DEVICE_VALIDATION.yaml, reports/qst/evidence]
+    acceptance: [Core journey is operable with TalkBack and Japanese IME on the candidate SHA.]
+  - id: QST-317
+    title: Trust Legal Operations Sign-Off
+    status: PlannedExternalExecution
+    priority: P0
+    epic: TRUST-OPERATIONS
+    depends_on: [QST-309, QST-312, QST-313]
+    goal: Privacy窓口、retention、削除運用、法務承認を配布candidateへ固定する。
+    scope: Named owners, contacts, SLA, retention and signed evidence.
+    likely_files: [docs/legal, docs/product, docs/qst/BETA_LAUNCH_READINESS.yaml]
+    acceptance: [Operational owners and legal reviewer sign the exact candidate.]
+  - id: QST-318
+    title: QST-308 to QST-317 Decennial Cross Review
+    status: Planned
+    priority: P0
+    epic: CONTINUOUS-QUALITY
+    depends_on: [QST-308, QST-309, QST-310, QST-311, QST-312, QST-313, QST-314, QST-315, QST-316, QST-317]
+    goal: 次10件のArc継続性、Trust、UI、実環境証跡を横断レビューする。
+    scope: Re-score all product and release gates and register the next evidence-driven cycle.
+    likely_files: [docs/qst/BACKLOG.yaml, reports/qst/QST-318.md]
+    acceptance: [All ten items are rechecked, blockers are carried forward, and the next review boundary exists.]
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

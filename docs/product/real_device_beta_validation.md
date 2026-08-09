@@ -3,7 +3,7 @@
 ## Purpose
 
 Before expanding internal beta, Questra needs one repeatable real-device pass.
-This checklist focuses on the core Quest -> Mission -> Trail loop and the
+This checklist focuses on the core Quest -> Mission -> Task -> Trail loop and the
 surfaces most likely to break outside desktop web.
 
 ## Required Devices
@@ -19,7 +19,7 @@ surfaces most likely to break outside desktop web.
 
 | Class | Target | Minimum Coverage | Notes |
 | --- | --- | --- | --- |
-| Android phone | 390 x 844 or common Android portrait | Full Quest -> Mission -> Trail loop | Physical device preferred for keyboard, camera, and media behavior. |
+| Android phone | 390 x 844 or common Android portrait | Full Quest -> Mission -> Task -> Trail loop | Physical device preferred for keyboard, camera, and media behavior. |
 | Small phone | 320-360 px logical width | Navigation, text scale, keyboard, create flows | Focus on overflow, clipped buttons, and bottom sheet usability. |
 | Large phone | 430-480 px logical width | Home, Quest Detail, Trail, Arc Chat, Profile | Confirm spacing does not become sparse and CTAs remain reachable. |
 | Tablet | 800+ px logical width | Navigation rail, centered content, scrolling, Arc entry | Confirm medium/expanded behavior and no stretched reading columns. |
@@ -77,7 +77,7 @@ Copy this block once per device class during beta validation.
 - Date:
 - Result: Pass / Fail
 - Screens checked:
-- Quest -> Mission -> Trail loop: Pass / Fail / Not applicable
+- Quest -> Mission -> Task -> Trail loop: Pass / Fail / Not applicable
 - Arc Chat: Pass / Fail / Not applicable
 - Media flow: Pass / Fail / Not applicable
 - Issues:
@@ -98,7 +98,7 @@ Copy this block once per device class during beta validation.
 - Device model and OS.
 - Build commit.
 - Screenshots for Home, Quest Detail, Trail, Arc Chat, and Profile.
-- Screen recording for one full Quest -> Mission -> Trail loop.
+- Screen recording for one full Quest -> Mission -> Task -> Trail loop.
 - List of S0/S1 feedback items created from the pass.
 - One result log entry for Android phone, small phone, large phone, and tablet.
 

@@ -51,7 +51,7 @@ class TrustPrivacyReviewService {
       items: [
         TrustPrivacyReviewItem(
           area: TrustPrivacyArea.journeyData,
-          title: 'Quest / Mission / Trail',
+          title: 'Quest / Mission / Task / Trail',
           summary:
               '接続済みのBeta環境では、Profileと挑戦データをSupabaseへ保存します。未接続のデモ環境では端末上の一時データとして動作します。',
           statusLabel: '非公開が既定',
@@ -61,7 +61,7 @@ class TrustPrivacyReviewService {
           area: TrustPrivacyArea.arcMemory,
           title: 'Arc Memory',
           summary:
-              'Quest、Mission、Trail、Reflection、Arcとの対話から、旅路を支える記憶を作成・保存する場合があります。',
+              'Quest、Mission、Task、Trail、Reflection、Arcとの対話から、旅路を支える記憶を作成・保存する場合があります。',
           statusLabel: '本人専用',
           userControl: 'Guildや企業支援へ自動共有しません。確認・個別削除は現在プレビュー段階です。',
         ),
@@ -69,7 +69,7 @@ class TrustPrivacyReviewService {
           area: TrustPrivacyArea.aiTransparency,
           title: 'Arcの生成機能',
           summary:
-              '外部生成が有効な場合、入力、直近の会話、進行中のQuest、最近のMission・Trail、選ばれたArc MemoryをSupabase Edge Function経由でGemini APIへ送ります。OpenAI互換経路は運営側が明示設定した場合だけ利用します。',
+              '外部生成が有効な場合、入力、直近の会話、進行中のQuest、最近のMission・Task・Trail、選ばれたArc MemoryをSupabase Edge Function経由でGemini APIへ送ります。OpenAI互換経路は運営側が明示設定した場合だけ利用します。',
           statusLabel: '外部処理あり',
           userControl:
               'Geminiへのrequest保存は無効化しています。未設定・失敗時は端末内の応答へ切り替わります。生成内容は誤ることがあるため、重要な判断では確認してください。',

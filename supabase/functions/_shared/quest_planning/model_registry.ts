@@ -51,10 +51,10 @@ export const GEMINI_MODELS: Record<string, ModelDefinition> = {
     enabled: true,
     supportsInteractions: true,
     supportsStructuredOutput: true,
-    supportsGoogleSearch: false,
+    supportsGoogleSearch: true,
     supportsFunctionCalling: true,
     supportedThinkingLevels: ["minimal", "low", "medium", "high"],
-    defaultThinkingLevel: "low",
+    defaultThinkingLevel: "minimal",
   },
   "gemini-3.1-pro-preview": {
     name: "gemini-3.1-pro-preview",

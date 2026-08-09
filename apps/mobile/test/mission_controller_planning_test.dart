@@ -96,7 +96,18 @@ void main() {
       0,
     );
 
-    controller.completeMission(first.id);
+    controller.applyTaskProgress(
+      first.id,
+      progressPercent: 100,
+      allRequiredTasksCompleted: true,
+    );
+    expect(
+      controller.confirmMissionSuccess(
+        first.id,
+        allRequiredTasksCompleted: true,
+      ),
+      isTrue,
+    );
 
     expect(
       container

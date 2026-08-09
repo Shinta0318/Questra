@@ -24,7 +24,7 @@ void main() {
   test('resolves learning Quest theme from Japanese category', () {
     final theme = resolver.resolve(quest(title: '英語を話せるようになる', category: '学習'));
 
-    expect(theme.name, 'Learning Voyage');
+    expect(theme.name, '学びの航海');
     expect(theme.icon, Icons.menu_book_outlined);
     expect(theme.dnaLabel, contains('学習'));
     expect(theme.arcHint, contains('知識'));
@@ -35,7 +35,7 @@ void main() {
       quest(title: 'Questraをローンチする', category: '起業'),
     );
 
-    expect(theme.name, 'Builder Route');
+    expect(theme.name, '創造の航路');
     expect(theme.icon, Icons.rocket_launch_outlined);
     expect(theme.dnaLabel, contains('仕事'));
   });
@@ -43,7 +43,7 @@ void main() {
   test('falls back to a neutral personal Quest theme', () {
     final theme = resolver.resolve(quest(title: 'まだ名前のない挑戦', category: 'その他'));
 
-    expect(theme.name, 'Personal Quest');
+    expect(theme.name, '自分だけのQuest');
     expect(theme.dnaLabel, 'Quest DNA');
     expect(theme.arcHint, contains('願い'));
   });

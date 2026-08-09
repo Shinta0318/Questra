@@ -51,7 +51,7 @@ similarity search can be added without changing the memory contract.
 - Guild post
 
 It creates a memory candidate only when the event appears durable: connected to
-a Quest/Mission/Trail, emotionally meaningful, preference-bearing, life-event
+a Quest/Mission/Task/Trail, emotionally meaningful, preference-bearing, life-event
 related, or useful for Arc's future relationship with the user.
 
 ## Privacy Notes

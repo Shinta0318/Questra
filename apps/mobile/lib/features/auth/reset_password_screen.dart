@@ -36,7 +36,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return AuthJourneyScaffold(
-      eyebrow: 'SET A NEW PASSWORD',
+      eyebrow: '新しいパスワードを設定',
       title: '新しい鍵を決める',
       message: 'これからの航路を守る、新しいパスワードを設定してください。',
       child: Form(
@@ -109,23 +109,23 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   }
 
   InputDecoration _passwordDecoration() => InputDecoration(
-        prefixIcon: const Icon(Icons.lock_outline_rounded),
-        suffixIcon: IconButton(
-          onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
-          icon: Icon(
-            _passwordVisible
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
-          ),
-          tooltip: _passwordVisible ? 'パスワードを隠す' : 'パスワードを表示',
-        ),
-      );
+    prefixIcon: const Icon(Icons.lock_outline_rounded),
+    suffixIcon: IconButton(
+      onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+      icon: Icon(
+        _passwordVisible
+            ? Icons.visibility_off_outlined
+            : Icons.visibility_outlined,
+      ),
+      tooltip: _passwordVisible ? 'パスワードを隠す' : 'パスワードを表示',
+    ),
+  );
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    await ref.read(authControllerProvider.notifier).completePasswordReset(
-          newPassword: _passwordController.text,
-        );
+    await ref
+        .read(authControllerProvider.notifier)
+        .completePasswordReset(newPassword: _passwordController.text);
     if (mounted && ref.read(authControllerProvider).passwordResetCompleted) {
       context.go(AppRoutes.login);
     }

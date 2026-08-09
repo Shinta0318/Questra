@@ -81,11 +81,11 @@ void main() {
       ),
     );
 
-    expect(find.text('Trails'), findsOneWidget);
-    expect(find.text('Reflection'), findsOneWidget);
+    expect(find.text('Trail'), findsOneWidget);
+    expect(find.text('振り返り'), findsOneWidget);
     expect(find.text('Star候補'), findsOneWidget);
-    expect(find.text('Media'), findsOneWidget);
-    expect(find.text('2 Trails'), findsOneWidget);
+    expect(find.text('画像'), findsOneWidget);
+    expect(find.text('Trail 2件'), findsOneWidget);
     expect(find.text('Trailを残す'), findsOneWidget);
   });
 }

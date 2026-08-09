@@ -8,6 +8,7 @@ guide.
 - Home
 - Quest
 - Mission
+- Task
 - Trail
 - Guild
 - Arc Chat
@@ -29,11 +30,12 @@ navigation pattern if product usage shows they need permanent tab placement.
 
 ## Route Policy
 
-- Home is the dashboard for today's Mission, Quest progress, recent Trail, Arc,
+- Home is the dashboard for today's Task and parent Mission, Quest progress, recent Trail, Arc,
   Guild, and Profile entry points.
 - Quest is the main creation and detail surface.
-- Quest Detail owns the deepest MVP loop: Guide -> Mission -> Trail.
-- Mission is the user's focused action list.
+- Quest Detail owns the deepest MVP loop: Guide -> Mission -> Task -> Trail.
+- Mission is the route of verifiable intermediate outcomes.
+- Task is the focused action list under one Mission.
 - Trail is the user's journey record, not a temporary post format.
 - Guild is a place for people sharing Quests or values.
 - Arc Chat is the companion conversation surface.

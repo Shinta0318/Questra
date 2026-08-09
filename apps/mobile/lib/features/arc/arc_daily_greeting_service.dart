@@ -68,8 +68,8 @@ class ArcDailyGreetingService {
       return ArcDailyGreeting(
         message: isStale
             ? 'おかえり、$name。\nMission「${openMission.title}」が少し長く港にいます。今日は半分の大きさにして、航路へ戻りましょう。'
-            : 'おかえり、$name。\n今日のMissionは「${openMission.title}」。完璧より、記録できる一歩を一緒に選びましょう。',
-        contextLabel: isStale ? '見直しのMission' : '今日のMission',
+            : 'おかえり、$name。\n進行中のMissionは「${openMission.title}」。次に実行するTaskを一緒に選びましょう。',
+        contextLabel: isStale ? '見直しのMission' : '進行中のMission',
         emotion: isStale ? ArcEmotion.worried : ArcEmotion.support,
       );
     }

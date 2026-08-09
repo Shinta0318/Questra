@@ -140,6 +140,7 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
       'reason': proposal.reason.name,
       'confidence_score': proposal.confidence,
       'status': proposal.status.name,
+      'base_snapshot': proposal.routeSnapshot,
     });
     await client.from('route_change_items').insert([
       for (final item in proposal.items)
@@ -148,6 +149,7 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
           'proposal_id': proposal.id,
           'action_type': item.action.name,
           'target_mission_id': item.targetMissionId,
+          'target_task_id': item.targetTaskId,
           'title': item.title,
           'before_data': item.beforeData,
           'after_data': item.afterData,
@@ -205,7 +207,14 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
       return _mutationFromValue(value, persistedAtomically: true);
     }
     final value = await client.rpc(
-      'apply_route_change_proposal',
+      selected.any(
+            (item) =>
+                item.targetTaskId != null ||
+                (item.action == RouteChangeAction.add &&
+                    item.afterData['task'] is Map),
+          )
+          ? 'apply_task_aware_route_change_proposal'
+          : 'apply_route_change_proposal',
       params: {
         'p_proposal_id': proposal.id,
         'p_accepted_item_ids': acceptedItemIds,
@@ -217,8 +226,22 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
 
   @override
   Future<RouteMutationResult> rollbackProposal(String proposalId) async {
+    final taskItems = await client
+        .from('route_change_items')
+        .select('target_task_id,action_type,after_data')
+        .eq('proposal_id', proposalId)
+        .limit(20);
+    final taskAware = taskItems.any(
+      (value) =>
+          value['target_task_id'] != null ||
+          (value['action_type'] == 'add' &&
+              value['after_data'] is Map &&
+              (value['after_data'] as Map).containsKey('task')),
+    );
     final value = await client.rpc(
-      'rollback_route_change_proposal_v2',
+      taskAware
+          ? 'rollback_task_aware_route_change_proposal'
+          : 'rollback_route_change_proposal_v2',
       params: {'p_proposal_id': proposalId},
     );
     return _mutationFromValue(value, persistedAtomically: true);
@@ -263,7 +286,13 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
       confidence: (row['confidence_score'] as num).toDouble(),
       status: RouteProposalStatus.values.byName(row['status'] as String),
       createdAt: DateTime.parse(row['created_at'] as String),
-      routeSnapshot: const {},
+      routeSnapshot: Map<String, Object?>.from(
+        row['base_snapshot'] as Map? ?? const {},
+      ),
+      staleReason: row['stale_reason'] as String?,
+      conflictSnapshot: Map<String, Object?>.from(
+        row['conflict_snapshot'] as Map? ?? const {},
+      ),
       items: [
         for (final value in itemRows)
           () {
@@ -274,6 +303,7 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
                 item['action_type'] as String,
               ),
               targetMissionId: item['target_mission_id'] as String?,
+              targetTaskId: item['target_task_id'] as String?,
               title: item['title'] as String,
               reason: item['reason'] as String,
               beforeData: Map<String, Object?>.from(
@@ -303,6 +333,10 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
       routeVersionId: row['route_version_id'] as String?,
       status: RouteProposalStatus.values.byName(row['status'] as String),
       persistedAtomically: persistedAtomically,
+      staleReason: row['stale_reason'] as String?,
+      conflictSnapshot: Map<String, Object?>.from(
+        row['conflict_snapshot'] as Map? ?? const {},
+      ),
     );
   }
 }

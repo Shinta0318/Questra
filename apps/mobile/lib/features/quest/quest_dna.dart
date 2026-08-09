@@ -1,3 +1,4 @@
+import 'quest_intent_resolution_service.dart';
 import 'quest_model.dart';
 
 /// Versioned, AI-derived facts used only after explicit Quest creation.
@@ -11,6 +12,7 @@ class QuestDna {
   });
 
   static const keys = <String>[
+    'quest_type',
     'category',
     'theme',
     'difficulty',
@@ -85,6 +87,7 @@ class QuestDna {
         };
     return QuestDna(
       attributes: {
+        'quest_type': classifyQuestType(source).storageKey,
         'category': quest.category,
         'theme': isTravel
             ? '冒険'

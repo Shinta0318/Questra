@@ -27,7 +27,7 @@ class PlaceholderScreen extends StatelessWidget {
         title: const Text('Questra'),
         actions: [
           IconButton(
-            tooltip: 'Settings',
+            tooltip: '設定',
             onPressed: () => context.go(AppRoutes.settings),
             icon: const Icon(Icons.settings_outlined),
           ),

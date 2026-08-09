@@ -9,6 +9,7 @@ import 'mission_card_presentation.dart';
 
 enum MissionCardMenuAction {
   consultArc,
+  viewSupport,
   edit,
   reviewTasks,
   regenerate,
@@ -30,6 +31,7 @@ class MissionCard extends StatefulWidget {
     this.onExpandedChanged,
     this.onMoreMenuOpened,
     this.parentMissionTitle,
+    this.menuActions = MissionCardMenuAction.values,
     super.key,
   });
 
@@ -42,6 +44,7 @@ class MissionCard extends StatefulWidget {
   final VoidCallback? onViewed;
   final ValueChanged<bool>? onExpandedChanged;
   final VoidCallback? onMoreMenuOpened;
+  final List<MissionCardMenuAction> menuActions;
 
   @override
   State<MissionCard> createState() => _MissionCardState();
@@ -96,59 +99,95 @@ class _MissionCardState extends State<MissionCard> {
                     ),
                   ),
                 ),
-                QuestraPopupMenu<MissionCardMenuAction>(
-                  tooltip: 'Missionのその他の操作',
-                  onOpened: widget.onMoreMenuOpened,
-                  onSelected: widget.onMenuSelected,
-                  items: [
-                    const QuestraMenuItem(
-                      value: MissionCardMenuAction.consultArc,
-                      label: 'Arcに相談',
-                      icon: Icons.auto_awesome_outlined,
-                    ),
-                    const QuestraMenuItem(
-                      value: MissionCardMenuAction.edit,
-                      label: 'Missionを編集',
-                      icon: Icons.edit_outlined,
-                    ),
-                    const QuestraMenuItem(
-                      value: MissionCardMenuAction.reviewTasks,
-                      label: 'Taskを見直す',
-                      icon: Icons.checklist_outlined,
-                    ),
-                    const QuestraMenuItem(
-                      value: MissionCardMenuAction.regenerate,
-                      label: 'Missionを再生成',
-                      icon: Icons.auto_fix_high_outlined,
-                    ),
-                    const QuestraMenuItem(
-                      value: MissionCardMenuAction.changeDueDate,
-                      label: '期限を変更',
-                      icon: Icons.event_outlined,
-                    ),
-                    const QuestraMenuItem(
-                      value: MissionCardMenuAction.reorder,
-                      label: '順番を変更',
-                      icon: Icons.swap_vert,
-                    ),
-                    QuestraMenuItem(
-                      value: MissionCardMenuAction.toggleOptional,
-                      label: widget.mission.isOptional ? '必須に戻す' : '任意にする',
-                      icon: Icons.low_priority,
-                    ),
-                    const QuestraMenuItem(
-                      value: MissionCardMenuAction.archive,
-                      label: 'アーカイブ',
-                      icon: Icons.archive_outlined,
-                    ),
-                    const QuestraMenuItem(
-                      value: MissionCardMenuAction.delete,
-                      label: 'Missionを削除',
-                      icon: Icons.delete_outline,
-                      destructive: true,
-                    ),
-                  ],
-                ),
+                if (widget.menuActions.isNotEmpty)
+                  QuestraPopupMenu<MissionCardMenuAction>(
+                    tooltip: 'Missionのその他の操作',
+                    onOpened: widget.onMoreMenuOpened,
+                    onSelected: widget.onMenuSelected,
+                    items: [
+                      if (widget.menuActions.contains(
+                        MissionCardMenuAction.consultArc,
+                      ))
+                        const QuestraMenuItem(
+                          value: MissionCardMenuAction.consultArc,
+                          label: 'Arcに相談',
+                          icon: Icons.auto_awesome_outlined,
+                        ),
+                      if (widget.menuActions.contains(
+                        MissionCardMenuAction.viewSupport,
+                      ))
+                        const QuestraMenuItem(
+                          value: MissionCardMenuAction.viewSupport,
+                          label: '実行サポート',
+                          icon: Icons.travel_explore_outlined,
+                        ),
+                      if (widget.menuActions.contains(
+                        MissionCardMenuAction.edit,
+                      ))
+                        const QuestraMenuItem(
+                          value: MissionCardMenuAction.edit,
+                          label: 'Missionを編集',
+                          icon: Icons.edit_outlined,
+                        ),
+                      if (widget.menuActions.contains(
+                        MissionCardMenuAction.reviewTasks,
+                      ))
+                        const QuestraMenuItem(
+                          value: MissionCardMenuAction.reviewTasks,
+                          label: 'Taskを見直す',
+                          icon: Icons.checklist_outlined,
+                        ),
+                      if (widget.menuActions.contains(
+                        MissionCardMenuAction.regenerate,
+                      ))
+                        const QuestraMenuItem(
+                          value: MissionCardMenuAction.regenerate,
+                          label: 'Missionを再生成',
+                          icon: Icons.auto_fix_high_outlined,
+                        ),
+                      if (widget.menuActions.contains(
+                        MissionCardMenuAction.changeDueDate,
+                      ))
+                        const QuestraMenuItem(
+                          value: MissionCardMenuAction.changeDueDate,
+                          label: '期限を変更',
+                          icon: Icons.event_outlined,
+                        ),
+                      if (widget.menuActions.contains(
+                        MissionCardMenuAction.reorder,
+                      ))
+                        const QuestraMenuItem(
+                          value: MissionCardMenuAction.reorder,
+                          label: '順番を変更',
+                          icon: Icons.swap_vert,
+                        ),
+                      if (widget.menuActions.contains(
+                        MissionCardMenuAction.toggleOptional,
+                      ))
+                        QuestraMenuItem(
+                          value: MissionCardMenuAction.toggleOptional,
+                          label: widget.mission.isOptional ? '必須に戻す' : '任意にする',
+                          icon: Icons.low_priority,
+                        ),
+                      if (widget.menuActions.contains(
+                        MissionCardMenuAction.archive,
+                      ))
+                        const QuestraMenuItem(
+                          value: MissionCardMenuAction.archive,
+                          label: 'アーカイブ',
+                          icon: Icons.archive_outlined,
+                        ),
+                      if (widget.menuActions.contains(
+                        MissionCardMenuAction.delete,
+                      ))
+                        const QuestraMenuItem(
+                          value: MissionCardMenuAction.delete,
+                          label: 'Missionを削除',
+                          icon: Icons.delete_outline,
+                          destructive: true,
+                        ),
+                    ],
+                  ),
               ],
             ),
             if (widget.parentMissionTitle case final title?) ...[
@@ -264,6 +303,7 @@ class _MissionCardState extends State<MissionCard> {
 IconData _primaryIcon(MissionCardPrimaryAction action) => switch (action) {
   MissionCardPrimaryAction.startNextTask => Icons.play_arrow,
   MissionCardPrimaryAction.resumeTask => Icons.play_circle_outline,
+  MissionCardPrimaryAction.reviewOutcome => Icons.fact_check_outlined,
   MissionCardPrimaryAction.viewCompleted => Icons.verified_outlined,
   MissionCardPrimaryAction.viewDependencies => Icons.account_tree_outlined,
   MissionCardPrimaryAction.viewTasks => Icons.checklist_outlined,

@@ -117,7 +117,7 @@ void main() {
     expect(find.text('次の航路'), findsOneWidget);
   });
 
-  testWidgets('Home exposes a right-swipe Mission completion gesture', (
+  testWidgets('Home opens Mission instead of completing it directly', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 900);
@@ -137,10 +137,9 @@ void main() {
     );
     await tester.pump();
 
-    final dismissible = tester.widget<Dismissible>(find.byType(Dismissible));
-    expect(dismissible.direction, DismissDirection.startToEnd);
-    expect(dismissible.dismissThresholds[DismissDirection.startToEnd], 0.55);
-    expect(find.text('航路をひとつ確認する'), findsOneWidget);
+    expect(find.byType(Dismissible), findsNothing);
+    expect(find.byIcon(Icons.route_outlined), findsWidgets);
+    expect(find.text('Missionを確認する'), findsOneWidget);
   });
 
   testWidgets('Quest Detail focuses on progress and editable Missions', (
@@ -201,20 +200,20 @@ void main() {
     await tester.pump();
 
     expect(find.text('設定'), findsOneWidget);
-    expect(find.text('Settings Map'), findsOneWidget);
+    expect(find.text('設定ガイド'), findsOneWidget);
     expect(find.text('Arcチュートリアル'), findsWidgets);
     await tester.scrollUntilVisible(
-      find.text('Trust & Privacy'),
+      find.text('信頼とプライバシー'),
       180,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Trust & Privacy'), findsOneWidget);
+    expect(find.text('信頼とプライバシー'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('Quest / Mission / Trail'),
+      find.text('Quest / Mission / Task / Trail'),
       180,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Quest / Mission / Trail'), findsOneWidget);
+    expect(find.text('Quest / Mission / Task / Trail'), findsOneWidget);
     expect(find.text('Arc Memory'), findsWidgets);
     expect(find.text('Betaでは未接続'), findsOneWidget);
     await tester.scrollUntilVisible(
@@ -365,12 +364,9 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.scrollUntilVisible(
-      find.text('Trailを残す'),
-      200,
-      scrollable: find.byType(Scrollable).first,
+    final createTrailAction = find.byKey(
+      const ValueKey('trail-primary-create'),
     );
-    final createTrailAction = find.text('Trailを残す').first;
     await tester.ensureVisible(createTrailAction);
     await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(createTrailAction);

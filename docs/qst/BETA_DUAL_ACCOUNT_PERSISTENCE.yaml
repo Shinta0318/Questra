@@ -1,13 +1,14 @@
-version: 1
+version: 3
 status: verified
-updated_at_utc: "2026-08-01T06:48:13.612263Z"
-source_commit_at_execution: "a52fc88ca53bc69bcd6f76c95adc71c85712f84a"
+updated_at_utc: "2026-08-08T14:29:40.024817Z"
+source_commit_at_execution: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
 working_tree_clean_at_execution: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
 acceptance:
   account_a_profile_after_relogin: passed
   account_a_quest_after_relogin: passed
   account_a_mission_after_relogin: passed
+  account_a_task_after_relogin: passed
   account_a_arc_memory_after_relogin: passed
   account_a_trail_after_relogin: passed
   account_a_media_after_relogin: passed
@@ -15,6 +16,22 @@ acceptance:
   account_a_storage_object_read: passed
   account_b_private_quest_visibility: denied
   account_b_private_mission_visibility: denied
+  account_b_private_task_visibility: denied
+  account_b_private_task_write: denied
+  account_b_task_expansion: denied
+  account_a_task_expansion: passed
+  account_a_cross_parent_task_write: denied
+  account_a_cross_parent_trail_write: denied
+  account_a_incomplete_mission_confirmation: denied
+  account_a_direct_mission_completion: denied
+  account_a_mission_completion_rpc: passed
+  task_completion_retry_event_count: 1
+  task_route_unchanged_before_approval: passed
+  task_route_apply_transaction: passed
+  task_route_rollback_restore: passed
+  arc_chat_task_context: passed
+  stale_route_conflict_rejected: passed
+  stale_route_task_unchanged: passed
   account_b_private_arc_memory_visibility: denied
   account_b_private_trail_visibility: denied
   account_b_private_media_visibility: denied

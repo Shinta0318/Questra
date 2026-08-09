@@ -7,6 +7,7 @@ import 'package:questra/core/router/app_routes.dart';
 import 'package:questra/features/arc/arc_screen.dart';
 import 'package:questra/features/mission/mission_screen.dart';
 import 'package:questra/features/trail/trail_screen.dart';
+import 'package:questra/features/task/task_screen.dart';
 import 'package:questra/widgets/layout/questra_coming_soon_screen.dart';
 import 'package:questra/widgets/navigation/questra_bottom_navigation.dart';
 import 'package:questra/widgets/navigation/questra_navigation_rail.dart';
@@ -73,6 +74,37 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.byType(MissionScreen), findsOneWidget);
+    expect(find.byType(QuestraBottomNavigation), findsOneWidget);
+    final questSemantics = tester
+        .widgetList<Semantics>(find.byType(Semantics))
+        .singleWhere((widget) => widget.properties.label == 'Quest');
+    expect(questSemantics.properties.selected, isTrue);
+  });
+
+  testWidgets('Task list has a stable route in the Quest branch', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final router = container.read(appRouterProvider);
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    router.go(AppRoutes.task);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(TaskScreen), findsOneWidget);
+    expect(find.byType(MissionScreen), findsNothing);
     expect(find.byType(QuestraBottomNavigation), findsOneWidget);
     final questSemantics = tester
         .widgetList<Semantics>(find.byType(Semantics))
@@ -163,7 +195,7 @@ void main() {
 
     expect(find.byType(TrailScreen), findsOneWidget);
     expect(find.text('Trail'), findsWidgets);
-    expect(find.text('Coming Soon'), findsNothing);
+    expect(find.text('準備中'), findsNothing);
     expect(find.byType(QuestraBottomNavigation), findsOneWidget);
     final trailSemantics = tester
         .widgetList<Semantics>(find.byType(Semantics))
@@ -195,7 +227,7 @@ void main() {
 
     expect(find.byType(QuestraComingSoonScreen), findsOneWidget);
     expect(find.text('Guild'), findsWidgets);
-    expect(find.text('Coming Soon'), findsOneWidget);
+    expect(find.text('準備中'), findsOneWidget);
     expect(find.text('Guildの現在地'), findsNothing);
     expect(find.text('相談ドラフト'), findsNothing);
     expect(find.byType(QuestraBottomNavigation), findsNothing);

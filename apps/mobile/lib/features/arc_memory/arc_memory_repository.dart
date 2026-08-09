@@ -10,6 +10,7 @@ abstract interface class ArcMemoryRepository {
   });
   Future<bool> existsByDedupeKey(String dedupeKey);
   Future<void> save(ArcMemory memory);
+  Future<void> deleteByTaskId(String userId, String taskId);
 }
 
 class InMemoryArcMemoryRepository implements ArcMemoryRepository {
@@ -45,6 +46,13 @@ class InMemoryArcMemoryRepository implements ArcMemoryRepository {
   Future<void> save(ArcMemory memory) async {
     _memories.add(memory);
   }
+
+  @override
+  Future<void> deleteByTaskId(String userId, String taskId) async {
+    _memories.removeWhere(
+      (memory) => memory.userId == userId && memory.taskId == taskId,
+    );
+  }
 }
 
 class SupabaseArcMemoryRepository implements ArcMemoryRepository {
@@ -60,7 +68,7 @@ class SupabaseArcMemoryRepository implements ArcMemoryRepository {
     final rows = await client
         .from('arc_memories')
         .select(
-          'id,user_id,quest_id,mission_id,trail_id,memory_type,title,content,importance_score,emotional_tone,source_type,source_id,metadata,sensitivity_level,user_visible,created_at,updated_at',
+          'id,user_id,quest_id,mission_id,task_id,trail_id,memory_type,title,content,importance_score,emotional_tone,source_type,source_id,metadata,sensitivity_level,user_visible,created_at,updated_at',
         )
         .eq('user_id', userId)
         .eq('user_visible', true)
@@ -88,12 +96,22 @@ class SupabaseArcMemoryRepository implements ArcMemoryRepository {
     await client.from('arc_memories').insert(_memoryToRow(memory));
   }
 
+  @override
+  Future<void> deleteByTaskId(String userId, String taskId) async {
+    await client
+        .from('arc_memories')
+        .delete()
+        .eq('user_id', userId)
+        .eq('task_id', taskId);
+  }
+
   Map<String, Object?> _memoryToRow(ArcMemory memory) {
     return {
       'id': memory.id,
       'user_id': memory.userId,
       'quest_id': memory.questId,
       'mission_id': memory.missionId,
+      'task_id': memory.taskId,
       'trail_id': memory.trailId,
       'memory_type': memory.memoryType.storageKey,
       'title': memory.title,
@@ -117,6 +135,7 @@ class SupabaseArcMemoryRepository implements ArcMemoryRepository {
       userId: row['user_id'] as String,
       questId: row['quest_id'] as String?,
       missionId: row['mission_id'] as String?,
+      taskId: row['task_id'] as String?,
       trailId: row['trail_id'] as String?,
       memoryType: _memoryTypeFromStorage(row['memory_type'] as String),
       title: row['title'] as String,

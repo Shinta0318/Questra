@@ -5,6 +5,7 @@ const _uuid = Uuid();
 enum ArcMemoryType {
   questMemory,
   missionMemory,
+  taskMemory,
   trailMemory,
   preferenceMemory,
   emotionalMemory,
@@ -17,6 +18,9 @@ enum ArcMemorySourceType {
   questUpdated,
   missionCreated,
   missionCompleted,
+  taskStarted,
+  taskCompleted,
+  taskRescheduled,
   trailPosted,
   arcChat,
   guildPost,
@@ -41,6 +45,7 @@ class ArcMemory {
     required this.userId,
     this.questId,
     this.missionId,
+    this.taskId,
     this.trailId,
     required this.memoryType,
     required this.title,
@@ -63,6 +68,7 @@ class ArcMemory {
   final String userId;
   final String? questId;
   final String? missionId;
+  final String? taskId;
   final String? trailId;
   final ArcMemoryType memoryType;
   final String title;
@@ -82,7 +88,7 @@ class ArcMemory {
     final normalized = content
         .toLowerCase()
         .replaceAll(RegExp(r'\s+'), ' ')
-        .replaceAll(RegExp(r'[^\w\s]'), '')
+        .replaceAll(RegExp(r'[、。,.!?！？:;「」『』（）()\[\]{}]'), '')
         .trim();
     return '${userId}_${memoryType.name}_${sourceId ?? sourceType.name}_$normalized';
   }
@@ -96,6 +102,7 @@ class MemoryExtractionEvent {
     this.sourceId,
     this.questId,
     this.missionId,
+    this.taskId,
     this.trailId,
     this.title,
     this.metadata = const {},
@@ -107,6 +114,7 @@ class MemoryExtractionEvent {
   final String? sourceId;
   final String? questId;
   final String? missionId;
+  final String? taskId;
   final String? trailId;
   final String? title;
   final Map<String, Object?> metadata;
@@ -117,6 +125,7 @@ extension ArcMemoryTypeStorageKey on ArcMemoryType {
     return switch (this) {
       ArcMemoryType.questMemory => 'quest_memory',
       ArcMemoryType.missionMemory => 'mission_memory',
+      ArcMemoryType.taskMemory => 'task_memory',
       ArcMemoryType.trailMemory => 'trail_memory',
       ArcMemoryType.preferenceMemory => 'preference_memory',
       ArcMemoryType.emotionalMemory => 'emotional_memory',
@@ -133,6 +142,9 @@ extension ArcMemorySourceStorageKey on ArcMemorySourceType {
       ArcMemorySourceType.questUpdated => 'quest_updated',
       ArcMemorySourceType.missionCreated => 'mission_created',
       ArcMemorySourceType.missionCompleted => 'mission_completed',
+      ArcMemorySourceType.taskStarted => 'task_started',
+      ArcMemorySourceType.taskCompleted => 'task_completed',
+      ArcMemorySourceType.taskRescheduled => 'task_rescheduled',
       ArcMemorySourceType.trailPosted => 'trail_posted',
       ArcMemorySourceType.arcChat => 'arc_chat',
       ArcMemorySourceType.guildPost => 'guild_post',

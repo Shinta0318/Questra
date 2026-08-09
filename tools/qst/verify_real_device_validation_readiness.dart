@@ -13,7 +13,7 @@ const requiredDeviceClasses = [
 
 const requiredChecks = [
   'home',
-  'quest_mission_trail',
+  'quest_mission_task_trail',
   'arc',
   'owner_switch',
   'fallback',
@@ -38,7 +38,7 @@ void main(List<String> arguments) {
     'Result Log Template',
     'Stop Conditions',
     'Evidence To Capture',
-    'Quest -> Mission -> Trail',
+    'Quest -> Mission -> Task -> Trail',
     'Android phone',
     'Small phone',
     'Large phone',

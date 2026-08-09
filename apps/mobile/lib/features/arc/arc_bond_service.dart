@@ -52,10 +52,10 @@ class ArcBondService {
 
   String _labelFor(ArcBondTier tier) {
     return switch (tier) {
-      ArcBondTier.firstLight => 'First Light',
-      ArcBondTier.steadyOrbit => 'Steady Orbit',
-      ArcBondTier.trustedNavigator => 'Trusted Navigator',
-      ArcBondTier.stellarBond => 'Stellar Bond',
+      ArcBondTier.firstLight => '最初の光',
+      ArcBondTier.steadyOrbit => '安定した軌道',
+      ArcBondTier.trustedNavigator => '信頼のナビゲーター',
+      ArcBondTier.stellarBond => '星の絆',
     };
   }
 

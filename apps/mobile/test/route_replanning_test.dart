@@ -6,6 +6,7 @@ import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/quest/route_replanning_model.dart';
 import 'package:questra/features/quest/route_replanning_trigger_service.dart';
 import 'package:questra/features/quest/route_replanning_repository.dart';
+import 'package:questra/features/task/task_model.dart';
 
 void main() {
   test('deadline risk becomes a reviewable reschedule diff', () {
@@ -63,6 +64,58 @@ void main() {
       () => const RouteProposalValidator().validate(proposal),
       throwsFormatException,
     );
+  });
+
+  test('stalled route proposes a Task split and preserves completed Tasks', () {
+    final quest = Quest(
+      id: 'quest-task',
+      title: '英語で会話する',
+      description: '',
+      difficulty: QuestDifficulty.normal,
+      status: QuestStatus.active,
+      visibility: QuestVisibility.private,
+    );
+    final mission = Mission(
+      id: 'mission-task',
+      questId: quest.id,
+      questTitle: quest.title,
+      title: '会話練習を習慣化する',
+      description: '',
+      guideType: GuideType.route,
+      difficulty: MissionDifficulty.normal,
+      status: MissionStatus.todo,
+      createdAt: DateTime(2026, 7, 1),
+    );
+    final completed = QuestraTask(
+      id: 'task-done',
+      questId: quest.id,
+      missionId: mission.id,
+      title: '教材を選ぶ',
+      action: '教材を一つ選ぶ',
+      doneCondition: '教材名が記録されている',
+      status: TaskStatus.completed,
+    );
+    final open = QuestraTask(
+      id: 'task-open',
+      questId: quest.id,
+      missionId: mission.id,
+      title: '会話練習を始める',
+      action: 'オンライン会話を予約して参加する',
+      doneCondition: '会話練習を一回完了している',
+      orderIndex: 1,
+    );
+
+    final proposal = AdaptiveRouteService.buildStructuredProposal(
+      quest: quest,
+      missions: [mission],
+      tasks: [completed, open],
+      now: DateTime(2026, 8, 8),
+    );
+
+    expect(proposal, isNotNull);
+    expect(proposal!.items.single.targetTaskId, open.id);
+    expect(proposal.items.single.action, RouteChangeAction.split);
+    expect(proposal.routeSnapshot['tasks'], hasLength(2));
   });
 
   test('manual and urgent triggers bypass the cooldown', () {

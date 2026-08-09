@@ -21,7 +21,7 @@ Guildを交流量の最大化ではなく、次に挑戦したいQuest、役立�
 
 - GuildはHomeとArcを置き換えない。`Home -> Arc -> Quest`が主導線である。
 - Questを始めるためにGuild参加を必須にしない。
-- 公開前のQuest、Mission、Trail、Arc MemoryをDiscoveryへ混入させない。
+- 公開前のQuest、Mission、Task、Trail、Arc MemoryをDiscoveryへ混入させない。
 - コピーは参照元と派生関係を記録し、原本を変更しない。
 - Arcによる最適化は提案であり、明示承認前にユーザーの航路を変更しない。
 - 企業支援は独立した透明な枠で扱い、人気Questに偽装しない。

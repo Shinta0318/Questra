@@ -9,6 +9,7 @@ class Trail {
     String? id,
     this.questId,
     this.missionId,
+    this.taskId,
     required this.title,
     required this.summary,
     required this.content,
@@ -21,6 +22,7 @@ class Trail {
   final String id;
   final String? questId;
   final String? missionId;
+  final String? taskId;
   final String title;
   final String summary;
   final String content;
@@ -28,9 +30,12 @@ class Trail {
   final String sourceType;
   final DateTime createdAt;
 
+  static String createId() => _uuid.v4();
+
   Trail copyWith({
     String? questId,
     String? missionId,
+    String? taskId,
     String? title,
     String? summary,
     String? content,
@@ -42,6 +47,7 @@ class Trail {
       id: id,
       questId: questId ?? this.questId,
       missionId: missionId ?? this.missionId,
+      taskId: taskId ?? this.taskId,
       title: title ?? this.title,
       summary: summary ?? this.summary,
       content: content ?? this.content,
@@ -49,6 +55,40 @@ class Trail {
       sourceType: sourceType ?? this.sourceType,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+}
+
+class TrailParentContext {
+  const TrailParentContext({
+    required this.questId,
+    required this.questTitle,
+    this.missionId,
+    this.missionTitle,
+    this.taskId,
+    this.taskTitle,
+  });
+
+  final String questId;
+  final String questTitle;
+  final String? missionId;
+  final String? missionTitle;
+  final String? taskId;
+  final String? taskTitle;
+
+  bool get isStructurallyValid {
+    if (questId.trim().isEmpty || questTitle.trim().isEmpty) return false;
+    if (missionId == null) return taskId == null;
+    if (missionId!.trim().isEmpty || (missionTitle?.trim().isEmpty ?? true)) {
+      return false;
+    }
+    if (taskId == null) return true;
+    return taskId!.trim().isNotEmpty && (taskTitle?.trim().isNotEmpty ?? false);
+  }
+
+  String get compactLabel {
+    if (taskTitle case final title?) return 'Task: $title';
+    if (missionTitle case final title?) return 'Mission: $title';
+    return 'Quest: $questTitle';
   }
 }
 

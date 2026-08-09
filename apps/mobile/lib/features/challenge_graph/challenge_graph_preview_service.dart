@@ -210,7 +210,7 @@ class ChallengeGraphPreviewService {
         ChallengeGraphInsight(
           type: ChallengeGraphInsightType.steady,
           title: '航路はつながっています',
-          message: 'Quest、Mission、Trailがつながり、星図の輪郭が見えています。',
+          message: 'Quest、Mission、Task、Trailがつながり、星図の輪郭が見えています。',
           suggestedAction: quest.progress >= 0.8
               ? '達成前の最後のTrailを残す'
               : '次のMissionを一つ進める',

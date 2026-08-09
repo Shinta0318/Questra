@@ -1,35 +1,35 @@
-version: 1
-updated: 2026-07-17
+version: 2
+updated: 2026-08-09
 decision: no_go
-decision_reason: P0 external environment, device, operations, and legal evidence is incomplete.
+decision_reason: Arc Memory Task and Task Data Rights migrations, candidate device artifacts, operations, and legal evidence remain incomplete.
 score:
-  total: 76
+  total: 70
   maximum: 100
   dimensions:
     - id: product_core
       weight: 30
-      earned: 28
-      status: ready
+      earned: 27
+      status: implementation_ready_ux_follow_up
     - id: automated_quality
       weight: 20
       earned: 20
       status: passed
     - id: supabase_security_evidence
       weight: 20
-      earned: 15
-      status: partial_evidence
+      earned: 14
+      status: new_migration_pending
     - id: device_distribution_evidence
       weight: 15
-      earned: 4
+      earned: 3
       status: evidence_missing
     - id: trust_legal_operations
       weight: 15
-      earned: 9
+      earned: 6
       status: evidence_missing
 automated_gates:
   dependency_resolution: passed
   static_analysis: passed
-  flutter_tests: passed_219
+  flutter_tests: passed_510_before_qst307_plus_focused_5
   rls_static_readiness: passed
   performance_readiness: passed
   feedback_readiness: passed
@@ -38,23 +38,23 @@ automated_gates:
   release_notes_contract: passed
 p0_blockers:
   - id: BLK-001
-    title: Supabase Project Evidence
+    title: Current Migration and RLS Evidence
     owner: Engineering Owner
-    status: partial_evidence
-    progress: Questra Beta project, migrations, Functions, and RLS evidence exist; Gemini provider secret verification remains in QST-160.
-    resolution_qst: QST-160
+    status: local_migration_pending_deployment
+    progress: Questra Beta project and prior RLS evidence exist; local migrations through 202608090003_data_rights_request_lifecycle.sql require deployment and two-account verification.
+    resolution_qst: QST-289,QST-290,QST-291,QST-301,QST-306,QST-312
   - id: BLK-002
     title: Persistence and Cross-Account RLS
     owner: Engineering Owner
-    status: partial_evidence
-    progress: QST-161 cloud RLS passed 23 assertions; QST-162 dual-account persistence runner is ready and awaits dedicated account execution.
-    resolution_qst: QST-161,QST-162
+    status: prior_candidate_passed_current_candidate_pending
+    progress: Prior two-account Task, Trail, Route, Memory and Media checks passed; Task-linked Arc Memory and Data Rights RPC contracts must be rerun on the current candidate.
+    resolution_qst: QST-289,QST-291,QST-301
   - id: BLK-003
     title: Candidate Artifact and Device Evidence
     owner: Release Manager
     status: partial_evidence
-    progress: QST-163 candidate-bound device evidence contract is ready; Android, compact, large-text, keyboard, tablet, and conditional iOS execution remain pending.
-    resolution_qst: QST-163,QST-166
+    progress: QST-283 Web and Android CI journeys and checksum contract are implemented; hosted execution, physical Android, IME, TalkBack and large-text evidence remain pending.
+    resolution_qst: QST-283,QST-290,QST-301,QST-304
   - id: BLK-004
     title: Beta Operations
     owner: Release Manager
@@ -75,4 +75,4 @@ go_requirements:
     - Engineering Owner
     - Product Owner
     - Legal Reviewer
-  final_review_qst: QST-167
+  final_review_qst: QST-307

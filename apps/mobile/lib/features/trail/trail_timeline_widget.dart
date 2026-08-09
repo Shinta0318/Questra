@@ -16,6 +16,7 @@ class TrailTimelineWidget extends StatelessWidget {
     required this.attachments,
     super.key,
     this.highlights = const {},
+    this.hierarchyByTrailId = const {},
     this.service = const TrailTimelineService(),
     this.onCreateTrail,
   });
@@ -23,6 +24,7 @@ class TrailTimelineWidget extends StatelessWidget {
   final List<Trail> trails;
   final Map<String, MediaAttachment> attachments;
   final Map<String, TrailHighlight> highlights;
+  final Map<String, TrailParentContext> hierarchyByTrailId;
   final TrailTimelineService service;
   final VoidCallback? onCreateTrail;
 
@@ -33,9 +35,7 @@ class TrailTimelineWidget extends StatelessWidget {
         title: 'Timelineはまだ静かです',
         emotion: ArcEmotion.normal,
         message: 'Trailを残すと、日付ごとの航路としてここに並びます。',
-        actionLabel: 'Trailを残す',
         icon: Icons.timeline_outlined,
-        onAction: onCreateTrail ?? _noop,
       );
     }
 
@@ -86,6 +86,7 @@ class TrailTimelineWidget extends StatelessWidget {
                 day: day,
                 attachments: attachments,
                 highlights: highlights,
+                hierarchyByTrailId: hierarchyByTrailId,
               ),
             ),
           ),
@@ -95,18 +96,18 @@ class TrailTimelineWidget extends StatelessWidget {
   }
 }
 
-void _noop() {}
-
 class _TimelineDaySection extends StatelessWidget {
   const _TimelineDaySection({
     required this.day,
     required this.attachments,
     required this.highlights,
+    required this.hierarchyByTrailId,
   });
 
   final TrailTimelineDay day;
   final Map<String, MediaAttachment> attachments;
   final Map<String, TrailHighlight> highlights;
+  final Map<String, TrailParentContext> hierarchyByTrailId;
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +125,7 @@ class _TimelineDaySection extends StatelessWidget {
                 ),
               ),
             ),
-            _TimelinePill(label: '${day.trails.length} Trails'),
+            _TimelinePill(label: 'Trail ${day.trails.length}件'),
           ],
         ),
         const SizedBox(height: 10),
@@ -133,6 +134,7 @@ class _TimelineDaySection extends StatelessWidget {
             trail: trail,
             attachment: attachments[trail.id],
             highlight: highlights[trail.id],
+            parent: hierarchyByTrailId[trail.id],
           ),
         ),
       ],
@@ -161,12 +163,12 @@ class _TimelineSummary extends StatelessWidget {
       children: [
         _TimelineSummaryChip(
           icon: Icons.timeline_outlined,
-          label: 'Trails',
+          label: 'Trail',
           value: trailCount.toString(),
         ),
         _TimelineSummaryChip(
           icon: Icons.auto_awesome_outlined,
-          label: 'Reflection',
+          label: '振り返り',
           value: reflectionCount.toString(),
         ),
         _TimelineSummaryChip(
@@ -176,7 +178,7 @@ class _TimelineSummary extends StatelessWidget {
         ),
         _TimelineSummaryChip(
           icon: Icons.image_outlined,
-          label: 'Media',
+          label: '画像',
           value: mediaCount.toString(),
         ),
       ],
@@ -248,11 +250,13 @@ class _TimelineTrailTile extends StatelessWidget {
     required this.trail,
     required this.attachment,
     required this.highlight,
+    required this.parent,
   });
 
   final Trail trail;
   final MediaAttachment? attachment;
   final TrailHighlight? highlight;
+  final TrailParentContext? parent;
 
   @override
   Widget build(BuildContext context) {
@@ -330,6 +334,10 @@ class _TimelineTrailTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(trail.summary),
+                    if (parent case final hierarchy?) ...[
+                      const SizedBox(height: 8),
+                      _TimelineHierarchy(parent: hierarchy),
+                    ],
                     if (hasMedia) ...[
                       const SizedBox(height: 8),
                       _TimelineMediaChip(attachment: attachment!),
@@ -345,6 +353,27 @@ class _TimelineTrailTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TimelineHierarchy extends StatelessWidget {
+  const _TimelineHierarchy({required this.parent});
+
+  final TrailParentContext parent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        _TimelinePill(label: 'Quest: ${parent.questTitle}'),
+        if (parent.missionTitle case final title?)
+          _TimelinePill(label: 'Mission: $title'),
+        if (parent.taskTitle case final title?)
+          _TimelinePill(label: 'Task: $title'),
+      ],
     );
   }
 }

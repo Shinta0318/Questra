@@ -31,7 +31,7 @@ QST-126でBeta向け収集戦略を`Prepared`とする。外部Crash SDKや自�
 - `app_crash`: process継続が保証できない未処理例外。
 - `flutter_framework_error`: Flutter frameworkから通知された例外。
 - `unhandled_async_error`: isolate / platform境界の未処理非同期例外。
-- `persistence_failure`: Quest、Mission、Trail、Reflection、Arc Memory、Profileの保存・取得失敗。
+- `persistence_failure`: Quest、Mission、Task、Trail、Reflection、Arc Memory、Profileの保存・取得失敗。
 - `auth_failure`: sign-in、session restore、profile bootstrap失敗。
 - `media_failure`: Trail画像のupload、replace、delete失敗。
 - `ai_fallback`: Arc Chat、Quest Guide、Arc Adviceがremote応答を使えずlocal結果へ切替。
@@ -43,7 +43,7 @@ QST-126でBeta向け収集戦略を`Prepared`とする。外部Crash SDKや自�
 - `build_version`: app versionとcommitまたはbuild number。
 - `environment`: local、internal_beta、production。
 - `platform`: Android、iOS、Webなど。
-- `surface`: Home、Quest、Mission、Trail、Guild、Arc Chat、Arc Memory、Profile、Media、Auth。
+- `surface`: Home、Quest、Mission、Task、Trail、Guild、Arc Chat、Arc Memory、Profile、Media、Auth。
 - `operation`: `quest.create`、`trail.media.replace`、`arc_chat.invoke`などの固定key。
 - `event_type`: Event Taxonomyの値。
 - `severity`: QST-125のS0-S3。
@@ -61,7 +61,7 @@ HTTP status、Supabase request ID、匿名化tester ID、stack fingerprintは、
 以下はevent、breadcrumb、tag、添付logへ保存しない。
 
 - メールアドレス、氏名、電話番号、位置情報、認証token、cookie、API key。
-- Quest、Mission、Trail、Reflection、Arc Memoryの本文。
+- Quest、Mission、Task、Trail、Reflection、Arc Memoryの本文。
 - Arc Chatのprompt、会話履歴、生成応答全文。
 - 画像、画像URL、signed URL、Storage object path。
 - Supabase request body、database row全文、raw SQL、raw exception message。

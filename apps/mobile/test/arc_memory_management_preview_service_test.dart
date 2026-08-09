@@ -29,7 +29,7 @@ void main() {
             (action) => action.action == ArcMemoryManagementAction.delete,
           )
           .statusLabel,
-      'Planned',
+      '準備中',
     );
   });
 }

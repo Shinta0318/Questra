@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-Questraの認証は、ユーザーのQuest、Mission、Trail、Arc Memoryを本人だけが継続利用できるようにするための境界である。認証UXの簡潔さより、アカウント乗っ取り、認証情報漏えい、列挙攻撃、ブルートフォースへの耐性を優先する。
+Questraの認証は、ユーザーのQuest、Mission、Task、Trail、Arc Memoryを本人だけが継続利用できるようにするための境界である。認証UXの簡潔さより、アカウント乗っ取り、認証情報漏えい、列挙攻撃、ブルートフォースへの耐性を優先する。
 
 ## 2. Account Identity
 

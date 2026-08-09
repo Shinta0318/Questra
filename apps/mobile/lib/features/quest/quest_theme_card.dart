@@ -48,45 +48,45 @@ class QuestThemeResolver {
 
     if (_containsAny(source, const ['学習', '英語', 'study', 'learn', '資格'])) {
       return const QuestThemeCard(
-        name: 'Learning Voyage',
+        name: '学びの航海',
         icon: Icons.menu_book_outlined,
         primary: QuestraColors.midnightNavy,
         secondary: Color(0xFF284FA8),
         accent: Color(0xFF8FD3FF),
-        dnaLabel: '学習 / Skill',
+        dnaLabel: '学習 / スキル',
         arcHint: '知識の星を少しずつ結んでいこう。',
       );
     }
     if (_containsAny(source, const ['健康', '運動', 'fitness', 'run', '登る', '山'])) {
       return const QuestThemeCard(
-        name: 'Active Horizon',
+        name: '挑戦の地平線',
         icon: Icons.directions_run_outlined,
         primary: Color(0xFF0A2A32),
         secondary: Color(0xFF157A6E),
         accent: Color(0xFF69F0AE),
-        dnaLabel: '健康 / Challenge',
+        dnaLabel: '健康 / 挑戦',
         arcHint: '身体が覚える一歩も、立派なTrailになるよ。',
       );
     }
     if (_containsAny(source, const ['仕事', '起業', 'business', 'launch', '開発'])) {
       return const QuestThemeCard(
-        name: 'Builder Route',
+        name: '創造の航路',
         icon: Icons.rocket_launch_outlined,
         primary: QuestraColors.midnightNavy,
         secondary: Color(0xFF334155),
         accent: QuestraColors.gold,
-        dnaLabel: '仕事 / Build',
+        dnaLabel: '仕事 / 創造',
         arcHint: '構想をMissionに分ければ、航路は見えてくる。',
       );
     }
     if (_containsAny(source, const ['家族', 'family', '暮らし', '生活'])) {
       return const QuestThemeCard(
-        name: 'Warm Harbor',
+        name: 'あたたかな港',
         icon: Icons.favorite_border,
         primary: Color(0xFF2A1836),
         secondary: Color(0xFF9A4D6C),
         accent: Color(0xFFFFC7A8),
-        dnaLabel: '家族 / Life',
+        dnaLabel: '家族 / 暮らし',
         arcHint: '大切な人との時間も、君の星図の中心だよ。',
       );
     }
@@ -99,18 +99,18 @@ class QuestThemeResolver {
       'adventure',
     ])) {
       return const QuestThemeCard(
-        name: 'Adventure Map',
+        name: '冒険の星図',
         icon: Icons.travel_explore,
         primary: QuestraColors.midnightNavy,
         secondary: QuestraColors.cosmicBlue,
         accent: QuestraColors.gold,
-        dnaLabel: '冒険 / Travel',
+        dnaLabel: '冒険 / 旅',
         arcHint: '遠い目的地も、今日の一歩から近づいていく。',
       );
     }
 
     return const QuestThemeCard(
-      name: 'Personal Quest',
+      name: '自分だけのQuest',
       icon: Icons.auto_awesome_outlined,
       primary: QuestraColors.midnightNavy,
       secondary: QuestraColors.cosmicBlue,

@@ -146,7 +146,7 @@ error_capture:
   prohibited_payloads:
     - auth_tokens_or_api_keys
     - personal_contact_details
-    - quest_mission_trail_or_reflection_text
+    - quest_mission_task_trail_or_reflection_text
     - arc_chat_prompt_history_or_response
     - image_or_signed_url
     - database_rows_or_raw_request_bodies
