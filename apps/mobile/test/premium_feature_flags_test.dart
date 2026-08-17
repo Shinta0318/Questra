@@ -18,4 +18,23 @@ void main() {
     expect(access.futurePremiumCandidate, isTrue);
     expect(access.reason, contains('Beta'));
   });
+
+  test('core Arc and planning capabilities are not Premium candidates', () {
+    const flags = PremiumFeatureFlags();
+
+    expect(
+      flags.accessFor(PremiumCapability.arcConsultation).futurePremiumCandidate,
+      isFalse,
+    );
+    expect(
+      flags
+          .accessFor(PremiumCapability.basicMissionPlanning)
+          .futurePremiumCandidate,
+      isFalse,
+    );
+    expect(
+      flags.accessFor(PremiumCapability.missionRedesign).futurePremiumCandidate,
+      isTrue,
+    );
+  });
 }

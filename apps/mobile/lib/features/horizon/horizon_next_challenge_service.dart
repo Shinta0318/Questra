@@ -4,6 +4,8 @@ import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
 import '../trail/trail_model.dart';
 
+enum HorizonDestination { arc, mission, trail }
+
 class HorizonNextChallenge {
   const HorizonNextChallenge({
     required this.title,
@@ -11,6 +13,9 @@ class HorizonNextChallenge {
     required this.reason,
     required this.readinessLabel,
     required this.suggestedAction,
+    required this.destination,
+    this.questId,
+    this.missionId,
   });
 
   final String title;
@@ -18,6 +23,9 @@ class HorizonNextChallenge {
   final String reason;
   final String readinessLabel;
   final String suggestedAction;
+  final HorizonDestination destination;
+  final String? questId;
+  final String? missionId;
 }
 
 class HorizonNextChallengeService {
@@ -43,13 +51,46 @@ class HorizonNextChallengeService {
         .where((trail) => trail.trailType == TrailType.arcReflection)
         .length;
 
-    if (quests.isEmpty || rank.rank == NavigatorRank.novice) {
+    if (quests.isEmpty) {
       return const HorizonNextChallenge(
-        title: '7日で終わる小さなQuest',
+        title: 'Arcと最初のQuestを見つける',
         category: 'はじめの航路',
-        readinessLabel: 'Low readiness',
-        reason: 'まずは短く終わるQuestで、Arcと一緒に成功の感覚を作りましょう。',
-        suggestedAction: '今日できる目的地を1つだけ書く',
+        readinessLabel: 'はじめの一歩',
+        reason: '叶えたいことをArcに話すと、目指す状態を一緒に整理できます。',
+        suggestedAction: 'Arcに話す',
+        destination: HorizonDestination.arc,
+      );
+    }
+
+    final activeQuest = activeQuests.firstOrNull;
+    final nextMission = activeQuest == null
+        ? null
+        : (missions
+                  .where(
+                    (mission) =>
+                        mission.questId == activeQuest.id &&
+                        mission.status == MissionStatus.todo &&
+                        mission.routeState == MissionRouteState.active,
+                  )
+                  .toList()
+                ..sort((a, b) {
+                  if (a.isToday != b.isToday) return a.isToday ? -1 : 1;
+                  final order = a.orderIndex.compareTo(b.orderIndex);
+                  return order != 0
+                      ? order
+                      : a.sortOrder.compareTo(b.sortOrder);
+                }))
+              .firstOrNull;
+    if (activeQuest != null && nextMission != null) {
+      return HorizonNextChallenge(
+        title: nextMission.title,
+        category: activeQuest.title,
+        readinessLabel: '次のMission',
+        reason: '進行中の「${activeQuest.title}」を前へ進める、現在の航路です。',
+        suggestedAction: 'Missionを開く',
+        destination: HorizonDestination.mission,
+        questId: activeQuest.id,
+        missionId: nextMission.id,
       );
     }
 
@@ -60,9 +101,23 @@ class HorizonNextChallengeService {
       return HorizonNextChallenge(
         title: graphInsight.title,
         category: 'Challenge Graph',
-        readinessLabel: 'Graph readiness',
+        readinessLabel: '航路の提案',
         reason: graphInsight.message,
-        suggestedAction: graphInsight.suggestedAction,
+        suggestedAction: 'ArcとMissionを考える',
+        destination: HorizonDestination.arc,
+        questId: activeQuest?.id,
+      );
+    }
+
+    if (activeQuest != null) {
+      return HorizonNextChallenge(
+        title: '「${activeQuest.title}」の次のMissionを考える',
+        category: activeQuest.category,
+        readinessLabel: '航路を準備',
+        reason: '進行中のQuestに、次に取り組めるMissionがまだありません。',
+        suggestedAction: 'Arcに相談する',
+        destination: HorizonDestination.arc,
+        questId: activeQuest.id,
       );
     }
 
@@ -73,9 +128,10 @@ class HorizonNextChallengeService {
       return HorizonNextChallenge(
         title: '$categoryを広げる次のQuest',
         category: category,
-        readinessLabel: 'High readiness',
+        readinessLabel: '次のQuest候補',
         reason: '完了した航路があります。今の勢いを、少し広い挑戦へつなげられます。',
-        suggestedAction: '前回より少しだけ大きい到達点を決める',
+        suggestedAction: 'Arcと次を考える',
+        destination: HorizonDestination.arc,
       );
     }
 
@@ -85,9 +141,10 @@ class HorizonNextChallengeService {
       return const HorizonNextChallenge(
         title: 'Trailから見つける次のQuest',
         category: 'Reflection',
-        readinessLabel: 'Medium readiness',
+        readinessLabel: 'Trailから発見',
         reason: 'MissionやTrailが育っています。記録の中から次の挑戦の種を選べます。',
-        suggestedAction: '最近のTrailを1つ開いて、次のテーマを抜き出す',
+        suggestedAction: '最近のTrailを見る',
+        destination: HorizonDestination.trail,
       );
     }
 
@@ -95,9 +152,10 @@ class HorizonNextChallengeService {
     return HorizonNextChallenge(
       title: '${quest?.title ?? '今のQuest'}を一段進める',
       category: quest?.category ?? '冒険',
-      readinessLabel: 'Medium readiness',
+      readinessLabel: '次の一歩',
       reason: '進行中のQuestがあります。新しい挑戦より、まず今の航路を一段だけ進めましょう。',
-      suggestedAction: '未完了Missionを1つ完了する',
+      suggestedAction: 'Arcに相談する',
+      destination: HorizonDestination.arc,
     );
   }
 }

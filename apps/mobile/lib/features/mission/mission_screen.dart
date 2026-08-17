@@ -7,6 +7,7 @@ import '../../core/performance/grouped_collection_index.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_presence.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/layout/questra_journey_scaffold.dart';
 import '../../widgets/persistence_sync_banner.dart';
 import '../../widgets/questra_card.dart';
 import '../arc/arc_expression_engine.dart';
@@ -53,116 +54,109 @@ class MissionScreen extends ConsumerWidget {
       for (final mission in missions) mission.id: mission.title,
     };
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mission'),
-        actions: [
-          IconButton(
-            tooltip: 'Task一覧',
-            onPressed: () => context.push(AppRoutes.task),
-            icon: const Icon(Icons.checklist_outlined),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: QuestraResponsiveListView(
-          onRefresh: profile == null
-              ? null
-              : () async {
-                  final questIds = quests
-                      .map((quest) => quest.id)
-                      .toList(growable: false);
-                  await ref
-                      .read(missionControllerProvider.notifier)
-                      .loadForQuests(questIds);
-                  await ref
-                      .read(taskControllerProvider.notifier)
-                      .loadForQuestIds(questIds);
-                },
-          padding: const EdgeInsets.all(20),
-          children: [
-            PersistenceSyncBanner(
-              state: syncState,
-              onDismiss: () =>
-                  ref.read(missionSyncControllerProvider.notifier).clear(),
-            ),
-            if (syncState.isActive) const SizedBox(height: 12),
-            ArcPresence(
-              surface: ArcPresenceSurface.mission,
-              emotion: arcExpression.emotion,
-              message: 'MissionはQuestへ近づいたと分かる中間成果。Taskで少しずつ形にしよう。',
-            ),
-            const SizedBox(height: 16),
-            if (signals.isNotEmpty) ...[
-              _MissionSignalPanel(signals: signals.take(3).toList()),
-              const SizedBox(height: 16),
-            ],
-            if (missions.isEmpty)
-              ArcEmptyState(
-                title: 'まだMissionがありません',
-                emotion: expressionEngine
-                    .resolve(
-                      const ArcExpressionContext(
-                        moment: ArcExpressionMoment.empty,
-                      ),
-                    )
-                    .emotion,
-                message: 'Quest詳細でArcと航路を描くと、ここに中間成果が並びます。',
-                actionLabel: 'Questを見る',
-                icon: Icons.travel_explore_outlined,
-                onAction: () => context.go(AppRoutes.quest),
-              )
-            else
-              for (final mission in missions)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: MissionCard(
-                    mission: mission,
-                    tasks: tasksByMission.valuesFor(mission.id),
-                    completedMissionIds: completedMissionIds,
-                    parentMissionTitle: mission.parentMissionId == null
-                        ? null
-                        : missionTitles[mission.parentMissionId],
-                    menuActions: const [
-                      MissionCardMenuAction.consultArc,
-                      MissionCardMenuAction.viewSupport,
-                      MissionCardMenuAction.reviewTasks,
-                    ],
-                    onPrimaryPressed: (presentation) =>
-                        _openPrimary(context, mission, presentation),
-                    onMenuSelected: (action) {
-                      final detail = AppRoutes.missionDetail(
-                        mission.questId,
-                        mission.id,
-                      );
-                      switch (action) {
-                        case MissionCardMenuAction.consultArc:
-                          context.push(
-                            AppRoutes.arcForMission(
-                              questId: mission.questId,
-                              missionId: mission.id,
-                              prompt: '「${mission.title}」を進める次の一歩を相談したい。',
-                              returnTo: detail,
-                            ),
-                          );
-                          return;
-                        case MissionCardMenuAction.viewSupport:
-                          context.push(
-                            AppRoutes.missionSupport(
-                              mission.questId,
-                              mission.id,
-                            ),
-                          );
-                          return;
-                        default:
-                          context.push(detail);
-                          return;
-                      }
-                    },
-                  ),
-                ),
-          ],
+    return QuestraJourneyScaffold(
+      title: 'Mission',
+      actions: [
+        IconButton(
+          tooltip: 'Task一覧',
+          onPressed: () => context.push(AppRoutes.task),
+          icon: const Icon(Icons.checklist_outlined),
         ),
+      ],
+      child: QuestraResponsiveListView(
+        onRefresh: profile == null
+            ? null
+            : () async {
+                final questIds = quests
+                    .map((quest) => quest.id)
+                    .toList(growable: false);
+                await ref
+                    .read(missionControllerProvider.notifier)
+                    .loadForQuests(questIds);
+                await ref
+                    .read(taskControllerProvider.notifier)
+                    .loadForQuestIds(questIds);
+              },
+        padding: const EdgeInsets.all(20),
+        children: [
+          PersistenceSyncBanner(
+            state: syncState,
+            onDismiss: () =>
+                ref.read(missionSyncControllerProvider.notifier).clear(),
+          ),
+          if (syncState.isActive) const SizedBox(height: 12),
+          ArcPresence(
+            surface: ArcPresenceSurface.mission,
+            emotion: arcExpression.emotion,
+            message: 'MissionはQuestへ近づいたと分かる中間成果。Taskで少しずつ形にしよう。',
+          ),
+          const SizedBox(height: 16),
+          if (signals.isNotEmpty) ...[
+            _MissionSignalPanel(signals: signals.take(3).toList()),
+            const SizedBox(height: 16),
+          ],
+          if (missions.isEmpty)
+            ArcEmptyState(
+              title: 'まだMissionがありません',
+              emotion: expressionEngine
+                  .resolve(
+                    const ArcExpressionContext(
+                      moment: ArcExpressionMoment.empty,
+                    ),
+                  )
+                  .emotion,
+              message: 'Quest詳細でArcと航路を描くと、ここに中間成果が並びます。',
+              actionLabel: 'Questを見る',
+              icon: Icons.travel_explore_outlined,
+              onAction: () => context.go(AppRoutes.quest),
+            )
+          else
+            for (final mission in missions)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: MissionCard(
+                  mission: mission,
+                  tasks: tasksByMission.valuesFor(mission.id),
+                  completedMissionIds: completedMissionIds,
+                  parentMissionTitle: mission.parentMissionId == null
+                      ? null
+                      : missionTitles[mission.parentMissionId],
+                  menuActions: const [
+                    MissionCardMenuAction.consultArc,
+                    MissionCardMenuAction.viewSupport,
+                    MissionCardMenuAction.reviewTasks,
+                  ],
+                  onPrimaryPressed: (presentation) =>
+                      _openPrimary(context, mission, presentation),
+                  onMenuSelected: (action) {
+                    final detail = AppRoutes.missionDetail(
+                      mission.questId,
+                      mission.id,
+                    );
+                    switch (action) {
+                      case MissionCardMenuAction.consultArc:
+                        context.push(
+                          AppRoutes.arcForMission(
+                            questId: mission.questId,
+                            missionId: mission.id,
+                            prompt: '「${mission.title}」を進める次の一歩を相談したい。',
+                            returnTo: detail,
+                          ),
+                        );
+                        return;
+                      case MissionCardMenuAction.viewSupport:
+                        context.push(
+                          AppRoutes.missionSupport(mission.questId, mission.id),
+                        );
+                        return;
+                      default:
+                        context.push(detail);
+                        return;
+                    }
+                  },
+                ),
+              ),
+        ],
       ),
     );
   }

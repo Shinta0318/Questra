@@ -10,6 +10,27 @@ import 'app_spacing.dart';
 import 'app_typography.dart';
 
 abstract final class AppTheme {
+  static SnackBarThemeData get _snackBarTheme => SnackBarThemeData(
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: AppColors.notificationSurface,
+    actionTextColor: AppColors.warmGold,
+    disabledActionTextColor: AppColors.notificationMuted,
+    contentTextStyle: const TextStyle(
+      color: AppColors.notificationText,
+      fontSize: 15,
+      height: 1.35,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0,
+    ),
+    elevation: 6,
+    insetPadding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+    showCloseIcon: true,
+    closeIconColor: AppColors.notificationMuted,
+    actionOverflowThreshold: 0.34,
+    dismissDirection: DismissDirection.down,
+    shape: RoundedRectangleBorder(borderRadius: AppRadius.button),
+  );
+
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.cosmicBlue,
@@ -108,16 +129,7 @@ abstract final class AppTheme {
           borderSide: const BorderSide(color: AppColors.gold, width: 1.6),
         ),
       ),
-      snackBarTheme: SnackBarThemeData(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.midnightNavy,
-        contentTextStyle: const TextStyle(
-          color: AppColors.white,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.button),
-      ),
+      snackBarTheme: _snackBarTheme,
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: AppColors.midnightNavy,
@@ -187,6 +199,22 @@ abstract final class AppTheme {
         interactive: true,
       ),
       extensions: <ThemeExtension<dynamic>>[const QuestraThemeTokens()],
+    );
+  }
+
+  static ThemeData get dark {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: AppColors.cosmicBlue,
+      brightness: Brightness.dark,
+      primary: AppColors.skyBlue,
+      secondary: AppColors.gold,
+      surface: AppColors.midnightNavy,
+    );
+    return light.copyWith(
+      brightness: Brightness.dark,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: AppColors.deepNavy,
+      snackBarTheme: _snackBarTheme,
     );
   }
 }

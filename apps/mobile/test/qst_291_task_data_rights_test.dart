@@ -32,6 +32,8 @@ void main() {
     await tester.tap(find.text('閉じる'));
     await tester.pumpAndSettle();
 
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -420));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byTooltip('削除の影響を確認'));
     await tester.tap(find.byTooltip('削除の影響を確認'));
     await tester.pumpAndSettle();
@@ -98,4 +100,16 @@ class _FakeDataRightsRepository implements DataRightsRepository {
         trailCount: 2,
         memoryCount: 1,
       );
+
+  @override
+  Future<List<DataRightsRequest>> listRequests() async => const [];
+
+  @override
+  Future<DataRightsRequest> requestAccountDeletion({
+    required String password,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<DataRightsRequest> cancelRequest(String requestId) =>
+      throw UnimplementedError();
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_controller.dart';
+import '../arc/stardust_service.dart';
 import '../arc_memory/arc_memory_providers.dart';
 import '../mission/mission_controller.dart';
 import '../quest/quest_controller.dart';
@@ -111,6 +112,51 @@ class TaskController extends Notifier<List<QuestraTask>> {
     return _persistBatch(tasks);
   }
 
+  Future<bool> reorderMissionTasks(
+    String missionId,
+    List<QuestraTask> ordered,
+  ) async {
+    if (ordered.isEmpty) return true;
+    if (ordered.any((task) => task.missionId != missionId)) return false;
+    final desired = [
+      for (var index = 0; index < ordered.length; index++)
+        ordered[index].copyWith(orderIndex: index),
+    ];
+    final ids = desired.map((task) => task.id).toSet();
+    final previous = state
+        .where((task) => ids.contains(task.id))
+        .toList(growable: false);
+    if (previous.length != desired.length) return false;
+    final mutation = PendingTaskMutation(
+      ownerId: ref.read(authControllerProvider).profile?.id ?? 'local-preview',
+      idempotencyKey: _mutationKey(desired),
+      desired: List.unmodifiable(desired),
+      previous: List.unmodifiable(previous),
+      queuedAt: DateTime.now().toUtc(),
+    );
+    final sync = ref.read(taskMutationControllerProvider.notifier);
+    await _queueMutation(mutation);
+    sync.saving(mutation);
+    _merge(desired);
+    try {
+      final saved = await ref
+          .read(taskRepositoryProvider)
+          .reorderMissionTasks(
+            missionId,
+            desired,
+            operationId: mutation.idempotencyKey,
+          );
+      _merge(saved);
+      sync.saved('Taskの順番を更新しました。');
+      await _clearQueuedMutation(mutation.ownerId);
+      return true;
+    } catch (error) {
+      state = [...state.where((task) => !ids.contains(task.id)), ...previous];
+      sync.failed(mutation, error);
+      return false;
+    }
+  }
+
   Future<bool> updateTask(QuestraTask task) => _save(task);
 
   Future<void> restoreRouteSnapshot(
@@ -151,6 +197,24 @@ class TaskController extends Notifier<List<QuestraTask>> {
             .canComplete) {
       return false;
     }
+    return _updateStatus(
+      taskId,
+      TaskStatus.completed,
+      completedAt: DateTime.now(),
+    );
+  }
+
+  /// Workspace completion is intentionally one action. Dependency validation
+  /// remains authoritative, but a ready Task does not require a separate
+  /// "start" tap before it can be checked off.
+  Future<bool> completeFromWorkspace(String taskId) async {
+    final task = _find(taskId);
+    if (task == null) return false;
+    final availability = const TaskAvailabilityService().evaluate(
+      task,
+      forMission(task.missionId),
+    );
+    if (!availability.canStart && !availability.canComplete) return false;
     return _updateStatus(
       taskId,
       TaskStatus.completed,
@@ -252,12 +316,38 @@ class TaskController extends Notifier<List<QuestraTask>> {
     _merge(desired);
     _syncMissions(desired);
     try {
-      final saved = await ref.read(taskRepositoryProvider).saveAll(desired);
+      final repository = ref.read(taskRepositoryProvider);
+      final isAtomicCompletion =
+          repository.supportsAtomicCompletion &&
+          desired.length == 1 &&
+          previous.length == 1 &&
+          previous.single.status != TaskStatus.completed &&
+          desired.single.status == TaskStatus.completed;
+      final saved = isAtomicCompletion
+          ? [
+              await repository.completeAtomically(
+                desired.single,
+                operationId: mutation.idempotencyKey,
+              ),
+            ]
+          : await repository.saveAll(desired);
       _merge(saved);
       _syncMissions(saved);
       for (final task in saved) {
         final before = previous.where((item) => item.id == task.id).firstOrNull;
         unawaited(_rememberTaskTransition(before, task));
+        if (!isAtomicCompletion &&
+            before?.status != TaskStatus.completed &&
+            task.status == TaskStatus.completed) {
+          unawaited(
+            ref
+                .read(authControllerProvider.notifier)
+                .awardStardust(
+                  event: StardustEvent.taskCompleted,
+                  sourceId: task.id,
+                ),
+          );
+        }
       }
       sync.saved(
         saved.length == 1 ? 'Taskを保存しました。' : '${saved.length}件のTaskを保存しました。',

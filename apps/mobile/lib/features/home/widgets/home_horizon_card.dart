@@ -7,9 +7,14 @@ import '../../../core/theme/app_spacing.dart';
 import '../../horizon/horizon_next_challenge_service.dart';
 
 class HomeHorizonCard extends StatelessWidget {
-  const HomeHorizonCard({super.key, required this.challenge});
+  const HomeHorizonCard({
+    super.key,
+    required this.challenge,
+    required this.onAction,
+  });
 
   final HorizonNextChallenge challenge;
+  final VoidCallback onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -55,11 +60,12 @@ class HomeHorizonCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  challenge.suggestedAction,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.skyBlue,
-                    fontWeight: FontWeight.w900,
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: onAction,
+                    icon: const Icon(Icons.arrow_forward_rounded),
+                    label: Text(challenge.suggestedAction),
                   ),
                 ),
               ],

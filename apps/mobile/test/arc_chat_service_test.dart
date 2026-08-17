@@ -257,6 +257,16 @@ void main() {
       'message': 'シンガポールへ向かう星図を描いてみよう。',
       'source_type': 'gemini_interactions',
       'quick_actions': ['旅程を考える'],
+      'intent_type': 'quest_intent',
+      'intent_confidence': 0.96,
+      'quest_cta': {
+        'show': true,
+        'reason': '旅行の実現を希望しているため',
+        'suggested_title': 'シンガポールを訪れる',
+      },
+      'related_quest_ids': <String>[],
+      'requires_clarification': false,
+      'safety_status': 'allowed',
       'quest_suggestion': {
         'title': 'シンガポールを訪れる',
         'description': '文化と食を楽しむ旅を実現する',
@@ -312,6 +322,12 @@ void main() {
       final response = SupabaseArcChatService.parseResponseData(
         {
           'message': 'この情報をMissionに反映できるよ。',
+          'intent_type': 'active_quest_support',
+          'intent_confidence': 0.91,
+          'quest_cta': {'show': false, 'reason': ''},
+          'related_quest_ids': ['quest-1', 'quest-other'],
+          'requires_clarification': false,
+          'safety_status': 'allowed',
           'quest_changes': [
             {
               'id': 'valid',
@@ -359,4 +375,90 @@ void main() {
       );
     },
   );
+
+  test('general conversation never exposes Quest operations', () async {
+    const service = LocalArcChatService();
+    final response = await service.send(
+      userMessage: '今日は何曜日？',
+      history: const [],
+      context: const ArcChatContext(
+        activeQuests: [],
+        recentMissions: [],
+        recentTrails: [],
+        memories: [],
+      ),
+    );
+
+    expect(response.intentType, ArcConversationIntent.generalQuestion);
+    expect(response.showQuestCta, isFalse);
+    expect(response.questSuggestion, isNull);
+    expect(response.questChanges, isEmpty);
+    expect(response.quickActions, isNot(contains('Questを作る')));
+  });
+
+  test('explicit conversation-only request suppresses Quest CTA', () async {
+    const service = LocalArcChatService();
+    final response = await service.send(
+      userMessage: '質問だけ。シンガポールに行きたい場合は何が必要？',
+      history: const [],
+      context: const ArcChatContext(
+        activeQuests: [],
+        recentMissions: [],
+        recentTrails: [],
+        memories: [],
+      ),
+    );
+
+    expect(response.intentType, ArcConversationIntent.conversationSupport);
+    expect(response.showQuestCta, isFalse);
+    expect(response.questSuggestion, isNull);
+    expect(response.clarificationQuestions, isEmpty);
+    expect(response.quickActions, isNot(contains('Questとして始める')));
+  });
+
+  test('safe multi-step wish exposes a consent CTA without saving', () async {
+    const service = LocalArcChatService();
+    final response = await service.send(
+      userMessage: 'シンガポールに行きたい',
+      history: const [],
+      context: const ArcChatContext(
+        activeQuests: [],
+        recentMissions: [],
+        recentTrails: [],
+        memories: [],
+      ),
+    );
+
+    expect(response.intentType, ArcConversationIntent.questIntent);
+    expect(response.showQuestCta, isTrue);
+    expect(response.questSuggestion, isNotNull);
+  });
+
+  test('unsafe or malformed structured output fails closed', () {
+    final response = SupabaseArcChatService.parseResponseData(
+      {
+        'message': 'この内容はQuestにはできないよ。',
+        'intent_type': 'quest_intent',
+        'intent_confidence': 2,
+        'quest_cta': {'show': true, 'reason': 'candidate'},
+        'related_quest_ids': ['owned', 'foreign'],
+        'requires_clarification': true,
+        'safety_status': 'blocked',
+        'quest_suggestion': {
+          'title': '保存してはいけない候補',
+          'description': 'blocked',
+          'category': 'その他',
+          'difficulty': 'normal',
+        },
+      },
+      sourceInput: 'blocked input',
+      allowedQuestIds: const {'owned'},
+    );
+
+    expect(response.showQuestCta, isFalse);
+    expect(response.questSuggestion, isNull);
+    expect(response.intentConfidence, 1);
+    expect(response.relatedQuestIds, isEmpty);
+    expect(response.requiresClarification, isFalse);
+  });
 }

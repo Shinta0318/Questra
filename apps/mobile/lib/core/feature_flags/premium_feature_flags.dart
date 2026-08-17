@@ -1,4 +1,9 @@
 enum PremiumCapability {
+  arcConsultation,
+  questPlanning,
+  basicMissionPlanning,
+  missionRedesign,
+  detailedProgressReview,
   advancedArcMemory,
   extendedDreamBoard,
   guildBoosts,
@@ -36,7 +41,12 @@ class PremiumFeatureFlags {
     return PremiumFeatureAccess(
       capability: capability,
       enabledForBeta: betaOpenAccess,
-      futurePremiumCandidate: true,
+      futurePremiumCandidate: switch (capability) {
+        PremiumCapability.arcConsultation ||
+        PremiumCapability.questPlanning ||
+        PremiumCapability.basicMissionPlanning => false,
+        _ => true,
+      },
       reason: _reasonFor(capability),
     );
   }
@@ -47,6 +57,16 @@ class PremiumFeatureFlags {
 
   String _reasonFor(PremiumCapability capability) {
     return switch (capability) {
+      PremiumCapability.arcConsultation =>
+        'Arcとの基本的な相談は、Questraの中核体験としてFreeに含めます。',
+      PremiumCapability.questPlanning =>
+        '基本のQuest設計は、挑戦を始めるための中核体験としてFreeに含めます。',
+      PremiumCapability.basicMissionPlanning =>
+        '最初のMission設計は、Questを行動へつなぐ中核体験としてFreeに含めます。',
+      PremiumCapability.missionRedesign =>
+        '状況に応じたMission再設計は、将来の深い伴走枠として評価します。',
+      PremiumCapability.detailedProgressReview =>
+        '詳細な進捗レビューは、将来の継続的な伴走枠として評価します。',
       PremiumCapability.advancedArcMemory =>
         'BetaではArc Memoryの信頼性検証を優先するため開放します。',
       PremiumCapability.extendedDreamBoard =>

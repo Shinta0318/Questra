@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
 import 'quest_clarification_service.dart';
+import 'quest_title_service.dart';
 
 enum QuestType {
   achievement,
@@ -120,7 +121,7 @@ class LocalQuestIntentResolutionService
       clarity: questions.isEmpty
           ? QuestIntentClarity.clear
           : QuestIntentClarity.needsClarification,
-      optimizedTitle: input,
+      optimizedTitle: QuestTitleService.normalize(input, fallback: input),
       summary: questions.isEmpty
           ? '叶えたい状態と達成条件を、この内容から整理できます。'
           : '航路を決める前に、${questions.length}つだけ確認したいことがあります。',
@@ -169,7 +170,10 @@ class SupabaseQuestIntentResolutionService
         .whereType<Map>()
         .map((value) {
           final item = Map<String, dynamic>.from(value);
-          final title = (item['title'] as String?)?.trim() ?? '';
+          final title = QuestTitleService.normalize(
+            (item['title'] as String?)?.trim() ?? '',
+            fallback: wish,
+          );
           final success = (item['success_condition'] as String?)?.trim() ?? '';
           if (title.isEmpty || success.isEmpty) return null;
           return QuestDirection(
@@ -190,10 +194,10 @@ class SupabaseQuestIntentResolutionService
       originalWish: wish.trim(),
       questType: type,
       clarity: clarity,
-      optimizedTitle:
-          (data['optimized_title'] as String?)?.trim().isNotEmpty == true
-          ? (data['optimized_title'] as String).trim()
-          : wish.trim(),
+      optimizedTitle: QuestTitleService.normalize(
+        (data['optimized_title'] as String?)?.trim() ?? '',
+        fallback: wish,
+      ),
       summary: (data['summary'] as String?)?.trim() ?? '',
       successCondition: (data['success_condition'] as String?)?.trim() ?? '',
       clarificationQuestions: questions,

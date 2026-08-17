@@ -108,6 +108,7 @@ export function validateMissionArchitectureSemantics(value: unknown, questText: 
   const issues: ValidationIssue[] = [];
   const normalizedQuest = normalize(questText);
   const actionOnly = /^(調べる|確認する|予約する|比較する|書く|練習する|購入する|申し込む|電話する)(こと)?$/;
+  const internalPlanningArtifact = /^(達成したと分かる状態を決める|今の条件と不明点を分ける|Questの成功条件を決める|成功条件を明確にする|計画の前提を整理する)$/;
   const titles = new Map<string, string>();
   for (const raw of value.missions) {
     if (!isRecord(raw)) continue;
@@ -115,6 +116,7 @@ export function validateMissionArchitectureSemantics(value: unknown, questText: 
     const title = text(raw.title) ?? "";
     const normalizedTitle = normalize(title);
     if (actionOnly.test(title.trim())) issues.push(issue("$.missions.title", "task_granularity", "Standalone actions must be Tasks", id ?? undefined));
+    if (internalPlanningArtifact.test(title.trim())) issues.push(issue("$.missions.title", "internal_planning_artifact", "Internal planning work must not be exposed as a Mission", id ?? undefined));
     if (Number(raw.childTaskEstimate) < 2 && raw.required !== false) issues.push(issue("$.missions.childTaskEstimate", "task_granularity", "A Mission should normally contain multiple Tasks", id ?? undefined));
     if (normalizedTitle === normalizedQuest || normalizedQuest.includes(normalizedTitle) && normalizedTitle.length >= normalizedQuest.length * 0.8) issues.push(issue("$.missions.title", "quest_paraphrase", "Mission title is only a Quest paraphrase", id ?? undefined));
     const fingerprint = normalizedTitle.replace(/(を|の|に|へ|と|が|する|完了|確定)/g, "");

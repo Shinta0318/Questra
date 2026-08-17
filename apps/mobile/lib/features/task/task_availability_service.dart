@@ -27,7 +27,7 @@ class TaskAvailabilityService {
     Set<String>? completedTaskIds,
   }) {
     if (task.status == TaskStatus.completed) {
-      return const TaskAvailability(
+      return TaskAvailability(
         canStart: false,
         canComplete: false,
         canReopen: true,
@@ -35,13 +35,16 @@ class TaskAvailabilityService {
       );
     }
     if (task.status == TaskStatus.skipped ||
+        task.status == TaskStatus.deferred ||
         task.status == TaskStatus.cancelled) {
-      return const TaskAvailability(
+      return TaskAvailability(
         canStart: false,
         canComplete: false,
         canReopen: false,
         blockingDependencyIds: [],
-        reason: 'このTaskは現在の航路では実行しません。',
+        reason: task.status == TaskStatus.deferred
+            ? 'このTaskは「あとで」に移動されています。'
+            : 'このTaskは現在の航路では実行しません。',
       );
     }
     if (task.status == TaskStatus.blocked) {
@@ -54,8 +57,7 @@ class TaskAvailabilityService {
       );
     }
 
-    final completedIds =
-        completedTaskIds ??
+    final completedIds = completedTaskIds ??
         missionTasks
             .where((item) => item.status == TaskStatus.completed)
             .map((item) => item.id)

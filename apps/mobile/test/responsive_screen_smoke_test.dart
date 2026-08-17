@@ -172,14 +172,15 @@ void main() {
     await tester.pump();
 
     expect(find.byTooltip('Questを編集'), findsOneWidget);
-    expect(find.text('1 進捗'), findsOneWidget);
-    expect(find.text('2 Arcが描いた航路'), findsOneWidget);
-    expect(find.text('Arcガイドを生成'), findsOneWidget);
-    expect(find.text('3 このQuestのMission'), findsOneWidget);
-    expect(find.text('完了したMission 0/0'), findsOneWidget);
-    expect(find.textContaining('最初のMissionをつくる'), findsOneWidget);
+    expect(find.text('航路を進める'), findsOneWidget);
+    expect(find.text('次の一歩'), findsOneWidget);
+    expect(find.text('航路'), findsOneWidget);
+    await tester.tap(find.text('航路'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('航路はまだ白紙です'), findsOneWidget);
+    expect(find.text('Arcと航路を描く'), findsOneWidget);
     expect(find.text('Missionを追加'), findsOneWidget);
-    expect(find.text('ArcにMissionを提案してもらう'), findsOneWidget);
+    expect(find.text('Questの詳細情報'), findsOneWidget);
     expect(find.text('Quest DNA Snapshot'), findsNothing);
     expect(find.text('Challenge Graph Preview'), findsNothing);
     expect(find.text('Quest支援の透明性'), findsNothing);

@@ -6,7 +6,7 @@ class ArcQuestClarificationSession {
     required this.suggestion,
     required this.questions,
     this.answers = const {},
-  }) : assert(questions.length <= 3);
+  }) : assert(questions.length <= 5);
 
   final ArcQuestSuggestion suggestion;
   final List<QuestClarificationQuestion> questions;
@@ -47,7 +47,7 @@ class ArcQuestClarificationSession {
       description: '${suggestion.description.trim()}\n\n航路条件:\n$context',
       category: suggestion.category,
       difficulty: suggestion.difficulty,
-      sourceInput: '${suggestion.sourceInput.trim()}\n$context',
+      sourceInput: suggestion.sourceInput.trim(),
       motivation: suggestion.motivation,
       successCondition: suggestion.successCondition,
       realityFrame: suggestion.realityFrame,

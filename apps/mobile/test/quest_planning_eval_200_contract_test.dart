@@ -20,7 +20,7 @@ void main() {
   });
 
   test(
-    'local fallback keeps all 200 cases inside planning contracts',
+    '200-case corpus is retained while fixed local fallback stays disabled',
     () async {
       final root = Directory.current.parent.parent;
       final corpus =
@@ -34,59 +34,33 @@ void main() {
       const service = LocalArcQuestGuideService();
 
       expect(corpus, hasLength(200));
-      for (final item in corpus) {
-        final quest = Quest(
-          title: item['title'] as String,
-          description: item['description'] as String,
-          difficulty: QuestDifficulty.normal,
-          status: QuestStatus.active,
-          visibility: QuestVisibility.private,
-          category: item['category'] as String,
-        );
-        final guide = await service.generate(
+      expect(
+        corpus.every(
+          (item) =>
+              (item['title'] as String).trim().isNotEmpty &&
+              (item['description'] as String).trim().isNotEmpty &&
+              item['planning_context'] is Map,
+        ),
+        isTrue,
+      );
+      final item = corpus.first;
+      final quest = Quest(
+        title: item['title'] as String,
+        description: item['description'] as String,
+        difficulty: QuestDifficulty.normal,
+        status: QuestStatus.active,
+        visibility: QuestVisibility.private,
+        category: item['category'] as String,
+      );
+      await expectLater(
+        service.generate(
           quest: quest,
           planningContext: PlanningContext.fromJson(
             Map<String, dynamic>.from(item['planning_context'] as Map),
           ),
-        );
-        final titles = guide.missionCandidates
-            .map((mission) => mission.title.trim().toLowerCase())
-            .toList(growable: false);
-
-        expect(
-          guide.missionCandidates.length,
-          inInclusiveRange(3, 30),
-          reason: item['id'] as String,
-        );
-        expect(
-          titles.toSet(),
-          hasLength(titles.length),
-          reason: item['id'] as String,
-        );
-        expect(
-          titles,
-          isNot(contains(quest.title.trim().toLowerCase())),
-          reason: item['id'] as String,
-        );
-        expect(
-          guide.missionCandidates.every(
-            (mission) =>
-                mission.doneCondition.isNotEmpty &&
-                mission.expectedOutput.isNotEmpty &&
-                mission.action.isNotEmpty &&
-                mission.confidence >= 0 &&
-                mission.confidence <= 1 &&
-                mission.description.contains('完了です'),
-          ),
-          isTrue,
-          reason: item['id'] as String,
-        );
-        expect(
-          guide.planQuality?.score,
-          greaterThanOrEqualTo(0.70),
-          reason: item['id'] as String,
-        );
-      }
+        ),
+        throwsStateError,
+      );
     },
   );
 }

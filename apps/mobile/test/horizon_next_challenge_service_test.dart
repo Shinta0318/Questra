@@ -10,7 +10,7 @@ import 'package:questra/features/trail/trail_model.dart';
 void main() {
   const service = HorizonNextChallengeService();
 
-  test('suggests a small Quest for low readiness users', () {
+  test('routes users without a Quest to Arc without inventing a Quest', () {
     final suggestion = service.suggest(
       rank: _rank(NavigatorRank.novice),
       quests: const [],
@@ -18,11 +18,12 @@ void main() {
       trails: const [],
     );
 
-    expect(suggestion.readinessLabel, 'Low readiness');
-    expect(suggestion.title, contains('7日'));
+    expect(suggestion.readinessLabel, 'はじめの一歩');
+    expect(suggestion.title, 'Arcと最初のQuestを見つける');
+    expect(suggestion.destination, HorizonDestination.arc);
   });
 
-  test('suggests Trail-based challenge for medium progress users', () {
+  test('active Quest without a pending Mission routes back to Arc', () {
     final quest = _quest(status: QuestStatus.active, progress: 0.5);
     final suggestion = service.suggest(
       rank: _rank(NavigatorRank.stargazer),
@@ -43,8 +44,25 @@ void main() {
       ],
     );
 
-    expect(suggestion.readinessLabel, 'Medium readiness');
-    expect(suggestion.reason, contains('記録'));
+    expect(suggestion.readinessLabel, '航路を準備');
+    expect(suggestion.destination, HorizonDestination.arc);
+  });
+
+  test('active Quest exposes its real next Mission', () {
+    final quest = _quest(status: QuestStatus.active, progress: 0.2);
+    final mission = _mission(quest, MissionStatus.todo);
+    final suggestion = service.suggest(
+      rank: _rank(NavigatorRank.novice),
+      quests: [quest],
+      missions: [mission],
+      trails: const [],
+    );
+
+    expect(suggestion.title, mission.title);
+    expect(suggestion.readinessLabel, '次のMission');
+    expect(suggestion.destination, HorizonDestination.mission);
+    expect(suggestion.questId, quest.id);
+    expect(suggestion.missionId, mission.id);
   });
 
   test('suggests larger challenge after completed Quest', () {
@@ -56,7 +74,7 @@ void main() {
       trails: const [],
     );
 
-    expect(suggestion.readinessLabel, 'High readiness');
+    expect(suggestion.readinessLabel, '次のQuest候補');
     expect(suggestion.title, contains(quest.category));
   });
 
@@ -78,7 +96,7 @@ void main() {
       ],
     );
 
-    expect(suggestion.readinessLabel, 'Graph readiness');
+    expect(suggestion.readinessLabel, '航路の提案');
     expect(suggestion.title, 'Missionの星を足す');
     expect(suggestion.suggestedAction, contains('Mission'));
   });
@@ -89,7 +107,9 @@ NavigatorRankState _rank(NavigatorRank rank) {
     rank: rank,
     label: rank.name,
     description: 'rank',
-    score: 0,
+    stardust: 0,
+    currentThreshold: 0,
+    nextThreshold: 50,
     progressToNext: 0,
   );
 }

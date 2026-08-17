@@ -7,6 +7,7 @@ import '../arc_memory/arc_memory_model.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
 import '../quest/quest_clarification_service.dart';
+import '../quest/quest_title_service.dart';
 import '../task/task_model.dart';
 import '../trail/trail_model.dart';
 import 'arc_quest_change_proposal.dart';
@@ -47,6 +48,11 @@ class ArcChatResponse {
     this.questSuggestion,
     this.questChanges = const [],
     this.clarificationQuestions = const [],
+    this.intentType = ArcConversationIntent.generalQuestion,
+    this.intentConfidence = 0,
+    this.showQuestCta = false,
+    this.relatedQuestIds = const [],
+    this.requiresClarification = false,
   });
 
   final String message;
@@ -55,6 +61,28 @@ class ArcChatResponse {
   final ArcQuestSuggestion? questSuggestion;
   final List<ArcQuestChangeProposal> questChanges;
   final List<QuestClarificationQuestion> clarificationQuestions;
+  final ArcConversationIntent intentType;
+  final double intentConfidence;
+  final bool showQuestCta;
+  final List<String> relatedQuestIds;
+  final bool requiresClarification;
+}
+
+enum ArcConversationIntent {
+  generalQuestion('general_question'),
+  conversationSupport('conversation_support'),
+  questIntent('quest_intent'),
+  activeQuestSupport('active_quest_support');
+
+  const ArcConversationIntent(this.storageKey);
+  final String storageKey;
+}
+
+ArcConversationIntent arcConversationIntentFromStorage(Object? value) {
+  return ArcConversationIntent.values.firstWhere(
+    (intent) => intent.storageKey == value,
+    orElse: () => ArcConversationIntent.generalQuestion,
+  );
 }
 
 class ArcQuestSuggestion {
@@ -116,7 +144,28 @@ class LocalArcChatService implements ArcChatService {
           );
     final questChanges = _inferLocalQuestChanges(userMessage, context);
     final hasConcern = RegExp(r'不安|心配|怖|疲れ|つら|しんど|落ち込').hasMatch(userMessage);
-    final message = switch ((hasConcern, quest, task, trail, suggestion)) {
+    final explicitConversationOnly = RegExp(
+      r'質問だけ|相談だけ|話を聞いて',
+    ).hasMatch(userMessage);
+    final intent = hasConcern || explicitConversationOnly
+        ? ArcConversationIntent.conversationSupport
+        : suggestion != null
+        ? ArcConversationIntent.questIntent
+        : context.activeQuests.isNotEmpty &&
+              (questChanges.isNotEmpty ||
+                  RegExp(
+                    r'Quest|Mission|Task|進捗|計画|期限|航路|次の一歩',
+                    caseSensitive: false,
+                  ).hasMatch(userMessage))
+        ? ArcConversationIntent.activeQuestSupport
+        : ArcConversationIntent.generalQuestion;
+    final contextualMessage = switch ((
+      hasConcern,
+      quest,
+      task,
+      trail,
+      suggestion,
+    )) {
       (true, _, _, _, _) => '少し気がかりなんだね。いちばん気になっているのは、どの部分？',
       (false, final Quest activeQuest, final QuestraTask nextTask, _, _) =>
         '「${activeQuest.title}」の次のTaskは「${nextTask.title}」だね。'
@@ -134,20 +183,41 @@ class LocalArcChatService implements ArcChatService {
                   '${clarificationQuestions.first.label}',
       _ => 'そうなんだ。今いちばん整理したいことを、一つだけ教えてくれる？',
     };
+    final message = switch (intent) {
+      ArcConversationIntent.generalQuestion =>
+        'もちろん。まずは質問として一緒に考えるよ。知りたいことをもう少し教えてくれる？',
+      ArcConversationIntent.conversationSupport when !hasConcern =>
+        'わかったよ。Questにはせず、このまま相談として話そう。',
+      _ => contextualMessage,
+    };
 
     return ArcChatResponse(
       message: message,
       sourceType: 'local_fallback',
-      quickActions: const [
-        'やりたいことを相談',
-        'Questを作る',
-        '今日の一歩を決める',
-        '計画を見直す',
-        '情報を調べる',
-      ],
-      questSuggestion: suggestion,
-      questChanges: questChanges,
-      clarificationQuestions: clarificationQuestions,
+      quickActions: switch (intent) {
+        ArcConversationIntent.questIntent => const ['Questとして始める', '相談として続ける'],
+        ArcConversationIntent.activeQuestSupport => const [
+          '今日の一歩を決める',
+          '計画を見直す',
+          '情報を調べる',
+        ],
+        _ => const ['もう少し話す', '別の質問をする'],
+      },
+      questSuggestion: intent == ArcConversationIntent.questIntent
+          ? suggestion
+          : null,
+      questChanges: intent == ArcConversationIntent.activeQuestSupport
+          ? questChanges
+          : const [],
+      clarificationQuestions: intent == ArcConversationIntent.questIntent
+          ? clarificationQuestions
+          : const [],
+      intentType: intent,
+      intentConfidence: 1,
+      showQuestCta: intent == ArcConversationIntent.questIntent,
+      requiresClarification:
+          intent == ArcConversationIntent.questIntent &&
+          clarificationQuestions.isNotEmpty,
     );
   }
 }
@@ -212,12 +282,19 @@ class SupabaseArcChatService implements ArcChatService {
     Set<String> allowedMissionIds = const {},
   }) {
     final suggestionData = data['quest_suggestion'];
-    final suggestion = suggestionData is Map
+    final intent = arcConversationIntentFromStorage(data['intent_type']);
+    final ctaData = data['quest_cta'];
+    final showQuestCta =
+        intent == ArcConversationIntent.questIntent &&
+        ctaData is Map &&
+        ctaData['show'] == true &&
+        data['safety_status'] == 'allowed';
+    final suggestion = showQuestCta && suggestionData is Map
         ? _suggestionFromData(
             Map<String, dynamic>.from(suggestionData),
             sourceInput: sourceInput,
           )
-        : inferArcQuestSuggestion(sourceInput);
+        : null;
     final clarificationQuestions = suggestion == null
         ? const <QuestClarificationQuestion>[]
         : QuestClarificationService.resolve(
@@ -233,11 +310,29 @@ class SupabaseArcChatService implements ArcChatService {
           const [],
       questSuggestion: suggestion,
       clarificationQuestions: clarificationQuestions,
-      questChanges: _questChangesFromData(
-        data,
-        allowedQuestIds: allowedQuestIds,
-        allowedMissionIds: allowedMissionIds,
-      ),
+      questChanges: intent == ArcConversationIntent.activeQuestSupport
+          ? _questChangesFromData(
+              data,
+              allowedQuestIds: allowedQuestIds,
+              allowedMissionIds: allowedMissionIds,
+            )
+          : const [],
+      intentType: intent,
+      intentConfidence: ((data['intent_confidence'] as num?)?.toDouble() ?? 0)
+          .clamp(0.0, 1.0)
+          .toDouble(),
+      showQuestCta: showQuestCta,
+      relatedQuestIds: data['safety_status'] == 'allowed'
+          ? (data['related_quest_ids'] as List? ?? const [])
+                .whereType<String>()
+                .where(allowedQuestIds.contains)
+                .take(3)
+                .toList(growable: false)
+          : const [],
+      requiresClarification:
+          showQuestCta &&
+          suggestion != null &&
+          data['requires_clarification'] == true,
     );
   }
 
@@ -336,7 +431,10 @@ class SupabaseArcChatService implements ArcChatService {
     Map<String, dynamic> data, {
     required String sourceInput,
   }) {
-    final title = (data['title'] as String?)?.trim() ?? '';
+    final title = QuestTitleService.normalize(
+      (data['title'] as String?)?.trim() ?? '',
+      fallback: sourceInput,
+    );
     if (title.isEmpty) return inferArcQuestSuggestion(sourceInput);
     final difficultyValue = data['difficulty'] as String?;
     return ArcQuestSuggestion(
@@ -494,13 +592,8 @@ bool _looksLikeQuestIntent(String input) {
 }
 
 String _questTitleFromInput(String input) {
-  final firstSentence = input.split(RegExp(r'[\n。！？!?]')).first.trim();
-  return firstSentence
-      .replaceFirst(RegExp(r'に行きたい$'), 'へ行く')
-      .replaceFirst(RegExp(r'を始めたい$'), 'を始める')
-      .replaceFirst(RegExp(r'できるようになりたい$'), 'できるようになる')
-      .replaceFirst(RegExp(r'になりたい$'), 'になる')
-      .replaceFirst(RegExp(r'したい$'), 'する');
+  final firstSentence = input.split(RegExp(r'[。！？!?]')).first.trim();
+  return QuestTitleService.normalize(firstSentence, fallback: input);
 }
 
 String _categoryFromInput(String input) {

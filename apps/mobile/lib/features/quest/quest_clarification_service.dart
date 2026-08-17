@@ -9,11 +9,15 @@ enum QuestClarificationType {
   targetLevel,
   duration,
   frequency,
+  travelActivity,
+  travelStyle,
 }
 
 extension QuestClarificationTypeStorage on QuestClarificationType {
   String get storageKey => switch (this) {
     QuestClarificationType.targetLevel => 'target_level',
+    QuestClarificationType.travelStyle => 'travel_style',
+    QuestClarificationType.travelActivity => 'travel_activity',
     _ => name,
   };
 }
@@ -102,13 +106,23 @@ abstract final class QuestClarificationService {
           label: '無理なく続けられそうな頻度は？',
           hint: '例: 週3日、平日の朝20分',
         ),
+        QuestClarificationType.travelStyle: QuestClarificationQuestion(
+          type: QuestClarificationType.travelStyle,
+          label: 'どんな旅行スタイルにしたい？',
+          hint: '例: ゆったり、効率重視、ローカル体験中心、子ども優先',
+        ),
+        QuestClarificationType.travelActivity: QuestClarificationQuestion(
+          type: QuestClarificationType.travelActivity,
+          label: '旅で重視したいアクティビティや体験は？',
+          hint: '例: 食文化、自然、買い物、テーマパーク、現地交流',
+        ),
       };
 
   static List<QuestClarificationQuestion> resolve({
     required String input,
     required String category,
     required DateTime? targetDate,
-    int maxQuestions = 3,
+    int maxQuestions = 5,
   }) {
     final source = '$category $input'.toLowerCase();
     final candidates = <QuestClarificationType>[];
@@ -124,7 +138,15 @@ abstract final class QuestClarificationService {
       if (!_hasParty(source)) {
         candidates.add(QuestClarificationType.party);
       }
-      if (!_hasPurpose(source)) candidates.add(QuestClarificationType.purpose);
+      if (!_hasBudget(source)) {
+        candidates.add(QuestClarificationType.budget);
+      }
+      if (!_hasTravelActivity(source)) {
+        candidates.add(QuestClarificationType.travelActivity);
+      }
+      if (!_hasTravelStyle(source)) {
+        candidates.add(QuestClarificationType.travelStyle);
+      }
     } else if (_isLearning(source)) {
       if (!_hasPurpose(source)) candidates.add(QuestClarificationType.purpose);
       if (!_hasTargetLevel(source)) {
@@ -159,7 +181,7 @@ abstract final class QuestClarificationService {
 
     return candidates
         .toSet()
-        .take(maxQuestions.clamp(0, 3))
+        .take(maxQuestions.clamp(0, 5))
         .map((type) => _questions[type]!)
         .toList(growable: false);
   }
@@ -172,6 +194,26 @@ abstract final class QuestClarificationService {
     final lines = answerLines(targetDate: targetDate, answers: answers);
     if (lines.isEmpty) return description.trim();
     return '${description.trim()}\n\n航路条件:\n${lines.map((line) => '- $line').join('\n')}';
+  }
+
+  static DateTime? targetDateFromText(String source) {
+    final slashDate = RegExp(
+      r'(20\d{2})\s*[/.-]\s*(\d{1,2})(?:\s*[/.-]\s*(\d{1,2}))?',
+    ).firstMatch(source);
+    final japaneseDate = RegExp(
+      r'(20\d{2})\s*年\s*(\d{1,2})\s*月(?:\s*(\d{1,2})\s*日)?',
+    ).firstMatch(source);
+    final match = slashDate ?? japaneseDate;
+    if (match == null) return null;
+    final year = int.tryParse(match.group(1) ?? '');
+    final month = int.tryParse(match.group(2) ?? '');
+    final day = int.tryParse(match.group(3) ?? '') ?? 1;
+    if (year == null || month == null || month < 1 || month > 12) return null;
+    final result = DateTime(year, month, day);
+    if (result.year != year || result.month != month || result.day != day) {
+      return null;
+    }
+    return result;
   }
 
   static List<String> answerLines({
@@ -212,6 +254,7 @@ abstract final class QuestClarificationService {
       RegExp(r'(\d+\s*(点|級|冊|回|km|kg|万円)|合格|完成|公開|取得)').hasMatch(source);
 
   static bool _hasDate(String source) =>
+      targetDateFromText(source) != null ||
       RegExp(r'(20\d{2}\s*年|\d{1,2}\s*月|までに|来年|今年|今月)').hasMatch(source);
 
   static bool _hasLocation(String input) =>
@@ -241,6 +284,34 @@ abstract final class QuestClarificationService {
     '体験',
     '将来',
     '目指',
+  ]);
+
+  static bool _hasBudget(String source) =>
+      RegExp(r'(予算|費用|\d+\s*(円|万円)|無料|節約)').hasMatch(source);
+
+  static bool _hasTravelStyle(String source) => _containsAny(source, const [
+    'ゆったり',
+    '効率',
+    'ローカル',
+    '高級',
+    '節約',
+    '子ども優先',
+    '観光中心',
+    '食事中心',
+    'アクティブ',
+  ]);
+
+  static bool _hasTravelActivity(String source) => _containsAny(source, const [
+    '文化',
+    '食事',
+    'グルメ',
+    '自然',
+    '買い物',
+    'ショッピング',
+    'テーマパーク',
+    'アクティビティ',
+    '現地交流',
+    '観光',
   ]);
 
   static bool _hasTargetLevel(String source) =>
@@ -279,5 +350,7 @@ abstract final class QuestClarificationService {
     QuestClarificationType.targetLevel => '目指す状態',
     QuestClarificationType.duration => '継続期間',
     QuestClarificationType.frequency => '頻度',
+    QuestClarificationType.travelStyle => '旅行スタイル',
+    QuestClarificationType.travelActivity => '重視するアクティビティ・体験',
   };
 }

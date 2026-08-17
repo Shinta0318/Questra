@@ -18,7 +18,7 @@ void main() {
     final profile = File(
       'lib/features/profile/profile_screen.dart',
     ).readAsStringSync();
-    expect(home, contains('AppSpacing.xl,\n            120,'));
+    expect(home, matches(RegExp(r'AppSpacing\.xl,\s*120,', multiLine: true)));
     expect(profile, contains('EdgeInsets.fromLTRB(20, 20, 20, 120)'));
   });
 

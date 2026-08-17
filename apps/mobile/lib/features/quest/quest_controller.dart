@@ -189,7 +189,7 @@ class QuestController extends Notifier<List<Quest>> {
       ];
       if (recordJourney) {
         unawaited(_tagQuest(userId, savedQuest));
-        _growBond(sourceType);
+        _growBond(sourceType, savedQuest);
         unawaited(_rememberQuest(userId, savedQuest, sourceType));
       }
       sync.saved('Questを保存しました。');
@@ -234,7 +234,7 @@ class QuestController extends Notifier<List<Quest>> {
     }
   }
 
-  void _growBond(ArcMemorySourceType sourceType) {
+  void _growBond(ArcMemorySourceType sourceType, Quest quest) {
     final growth = ref.read(arcBondGrowthServiceProvider).forQuest(sourceType);
     final award = ref.read(stardustServiceProvider).forQuest(sourceType);
     unawaited(
@@ -242,11 +242,13 @@ class QuestController extends Notifier<List<Quest>> {
           .read(authControllerProvider.notifier)
           .addBondScore(delta: growth.delta, reason: growth.reason),
     );
-    unawaited(
-      ref
-          .read(authControllerProvider.notifier)
-          .addStardust(amount: award.amount, reason: award.reason),
-    );
+    if (award.amount > 0) {
+      unawaited(
+        ref
+            .read(authControllerProvider.notifier)
+            .awardStardust(event: award.event, sourceId: quest.id),
+      );
+    }
   }
 
   Future<void> _rememberQuest(

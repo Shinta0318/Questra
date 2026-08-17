@@ -24,6 +24,7 @@ import '../../features/trail/trail_screen.dart';
 import '../../features/trail/trail_model.dart';
 import '../../features/task/task_detail_screen.dart';
 import '../../features/task/task_screen.dart';
+import '../../features/quest_journey/quest_journey_contract.dart';
 import '../../widgets/layout/questra_coming_soon_screen.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
@@ -101,6 +102,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: ':questId',
                     builder: (context, state) => QuestDetailScreen(
                       questId: state.pathParameters['questId']!,
+                      initialJourneyMode:
+                          state.uri.queryParameters['mode'] == 'plan'
+                              ? QuestJourneyMode.plan
+                              : QuestJourneyMode.focus,
+                      focusMissionId: state.uri.queryParameters['mission'],
+                      focusTaskId: state.uri.queryParameters['task'],
                     ),
                     routes: [
                       GoRoute(
