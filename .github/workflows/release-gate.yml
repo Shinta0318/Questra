@@ -109,4 +109,8 @@ jobs:
           api-level: 35
           arch: x86_64
           profile: pixel_6
+          emulator-boot-timeout: 900
+          # The hosted emulator can briefly drop ADB immediately after boot.
+          # Let Flutter handle animations instead of failing in runner setup.
+          disable-animations: false
           script: cd apps/mobile && flutter test integration_test/qst_283_candidate_journey_test.dart -d emulator-5554 --no-pub

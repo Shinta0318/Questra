@@ -402,7 +402,7 @@ class TrailController extends Notifier<List<Trail>> {
     unawaited(
       ref
           .read(authControllerProvider.notifier)
-          .addStardust(amount: award.amount, reason: award.reason),
+          .awardStardust(event: award.event, sourceId: trail.id),
     );
   }
 

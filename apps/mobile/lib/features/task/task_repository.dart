@@ -4,9 +4,10 @@ import '../../core/performance/performance_limits.dart';
 import 'task_model.dart';
 
 const _taskColumns =
-    'id,quest_id,mission_id,title,action,purpose,done_condition,expected_output,estimated_effort_minutes,status,required,order_index,dependency_ids,scheduled_date,due_date,completed_at,verification_type,generated_by,generation_version,created_at,updated_at,missions!inner(title,quests!inner(title))';
+    'id,quest_id,mission_id,title,action,purpose,done_condition,expected_output,estimated_effort_minutes,status,required,order_index,dependency_ids,scheduled_date,due_date,completed_at,verification_type,generated_by,origin,version,generation_version,created_at,updated_at,missions!inner(title,quests!inner(title))';
 
 abstract interface class TaskRepository {
+  bool get supportsAtomicCompletion;
   Future<List<QuestraTask>> findByQuestIds(
     List<String> questIds, {
     int limit = QuestraPerformanceLimits.taskListLimit,
@@ -17,11 +18,23 @@ abstract interface class TaskRepository {
   });
   Future<QuestraTask> save(QuestraTask task);
   Future<List<QuestraTask>> saveAll(List<QuestraTask> tasks);
+  Future<QuestraTask> completeAtomically(
+    QuestraTask task, {
+    required String operationId,
+  });
+  Future<List<QuestraTask>> reorderMissionTasks(
+    String missionId,
+    List<QuestraTask> ordered, {
+    required String operationId,
+  });
   Future<void> delete(String taskId);
 }
 
 class InMemoryTaskRepository implements TaskRepository {
   final List<QuestraTask> _tasks = [];
+
+  @override
+  bool get supportsAtomicCompletion => false;
 
   @override
   Future<List<QuestraTask>> findByQuestIds(
@@ -62,6 +75,25 @@ class InMemoryTaskRepository implements TaskRepository {
   }
 
   @override
+  Future<QuestraTask> completeAtomically(
+    QuestraTask task, {
+    required String operationId,
+  }) => save(
+    task.copyWith(
+      status: TaskStatus.completed,
+      completedAt: task.completedAt ?? DateTime.now(),
+      version: task.version + 1,
+    ),
+  );
+
+  @override
+  Future<List<QuestraTask>> reorderMissionTasks(
+    String missionId,
+    List<QuestraTask> ordered, {
+    required String operationId,
+  }) => saveAll(ordered);
+
+  @override
   Future<void> delete(String taskId) async =>
       _tasks.removeWhere((task) => task.id == taskId);
 }
@@ -69,6 +101,9 @@ class InMemoryTaskRepository implements TaskRepository {
 class SupabaseTaskRepository implements TaskRepository {
   const SupabaseTaskRepository(this.client);
   final SupabaseClient client;
+
+  @override
+  bool get supportsAtomicCompletion => true;
 
   @override
   Future<List<QuestraTask>> findByQuestIds(
@@ -129,6 +164,64 @@ class SupabaseTaskRepository implements TaskRepository {
   }
 
   @override
+  Future<QuestraTask> completeAtomically(
+    QuestraTask task, {
+    required String operationId,
+  }) async {
+    final response = await client.rpc(
+      'complete_task_journey',
+      params: {
+        'p_task_id': task.id,
+        'p_operation_id': operationId,
+        'p_expected_version': task.version,
+      },
+    );
+    final payload = response is Map
+        ? Map<String, dynamic>.from(response)
+        : const <String, dynamic>{};
+    if (payload['status'] != 'completed') {
+      throw StateError('Taskを完了できませんでした。');
+    }
+    return task.copyWith(
+      status: TaskStatus.completed,
+      completedAt:
+          DateTime.tryParse(payload['completed_at'] as String? ?? '') ??
+          task.completedAt ??
+          DateTime.now(),
+      version: payload['version'] as int? ?? task.version + 1,
+    );
+  }
+
+  @override
+  Future<List<QuestraTask>> reorderMissionTasks(
+    String missionId,
+    List<QuestraTask> ordered, {
+    required String operationId,
+  }) async {
+    final response = await client.rpc(
+      'reorder_mission_tasks',
+      params: {
+        'p_mission_id': missionId,
+        'p_task_ids': ordered.map((task) => task.id).toList(growable: false),
+        'p_operation_id': operationId,
+      },
+    );
+    final payload = response is Map
+        ? Map<String, dynamic>.from(response)
+        : const <String, dynamic>{};
+    if (payload['updated_count'] != ordered.length) {
+      throw StateError('Taskの並び順を保存できませんでした。');
+    }
+    return [
+      for (var index = 0; index < ordered.length; index++)
+        ordered[index].copyWith(
+          orderIndex: index,
+          version: ordered[index].version + 1,
+        ),
+    ];
+  }
+
+  @override
   Future<void> delete(String taskId) async =>
       client.from('tasks').delete().eq('id', taskId);
 
@@ -139,6 +232,11 @@ class SupabaseTaskRepository implements TaskRepository {
     final quest = mission['quests'] is Map
         ? Map<String, dynamic>.from(mission['quests'] as Map)
         : const <String, dynamic>{};
+    final generatedBy = enumFromStorage(
+      TaskGeneratedBy.values,
+      row['generated_by'] as String? ?? 'user',
+      TaskGeneratedBy.user,
+    );
     return QuestraTask(
       id: row['id'] as String,
       questId: row['quest_id'] as String,
@@ -163,11 +261,12 @@ class SupabaseTaskRepository implements TaskRepository {
       verificationType: taskVerificationTypeFromStorage(
         row['verification_type'] as String? ?? 'self',
       ),
-      generatedBy: enumFromStorage(
-        TaskGeneratedBy.values,
-        row['generated_by'] as String? ?? 'user',
-        TaskGeneratedBy.user,
+      generatedBy: generatedBy,
+      origin: taskOriginFromStorage(
+        row['origin'] as String? ?? '',
+        generatedBy,
       ),
+      version: row['version'] as int? ?? 1,
       generationVersion: row['generation_version'] as String?,
       createdAt: DateTime.parse(row['created_at'] as String),
       updatedAt:
@@ -196,6 +295,8 @@ class SupabaseTaskRepository implements TaskRepository {
     'completed_at': task.completedAt?.toIso8601String(),
     'verification_type': task.verificationType.storageKey,
     'generated_by': task.generatedBy.name,
+    'origin': task.origin.storageKey,
+    'version': task.version,
     'generation_version': task.generationVersion,
     'updated_at': DateTime.now().toIso8601String(),
   };

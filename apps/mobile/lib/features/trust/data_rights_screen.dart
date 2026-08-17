@@ -19,6 +19,14 @@ class DataRightsScreen extends ConsumerStatefulWidget {
 class _DataRightsScreenState extends ConsumerState<DataRightsScreen> {
   String? _busyTaskId;
   bool _exporting = false;
+  bool _requestBusy = false;
+  List<DataRightsRequest> _requests = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.microtask(_loadRequests);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +78,13 @@ class _DataRightsScreenState extends ConsumerState<DataRightsScreen> {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          _AccountDeletionCard(
+            requests: _requests,
+            busy: _requestBusy,
+            onRequest: _requestAccountDeletion,
+            onCancel: _cancelRequest,
           ),
           const SizedBox(height: AppSpacing.xl),
           Text(
@@ -130,6 +145,71 @@ class _DataRightsScreenState extends ConsumerState<DataRightsScreen> {
     }
   }
 
+  Future<void> _loadRequests() async {
+    try {
+      final requests = await ref
+          .read(dataRightsRepositoryProvider)
+          .listRequests();
+      if (mounted) setState(() => _requests = requests);
+    } catch (_) {
+      // The local preview intentionally keeps remote-only controls unavailable.
+    }
+  }
+
+  Future<void> _requestAccountDeletion() async {
+    final passwordController = TextEditingController();
+    final password = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('本人確認'),
+        content: TextField(
+          controller: passwordController,
+          obscureText: true,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: '現在のパスワード',
+            helperText: '削除予約には直近の再認証が必要です。',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('戻る'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, passwordController.text),
+            child: const Text('72時間後に削除予約'),
+          ),
+        ],
+      ),
+    );
+    passwordController.dispose();
+    if (password == null || password.isEmpty || !mounted) return;
+    setState(() => _requestBusy = true);
+    try {
+      await ref
+          .read(dataRightsRepositoryProvider)
+          .requestAccountDeletion(password: password);
+      await _loadRequests();
+    } catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) setState(() => _requestBusy = false);
+    }
+  }
+
+  Future<void> _cancelRequest(DataRightsRequest request) async {
+    setState(() => _requestBusy = true);
+    try {
+      await ref.read(dataRightsRepositoryProvider).cancelRequest(request.id);
+      await _loadRequests();
+    } catch (error) {
+      _showError(error);
+    } finally {
+      if (mounted) setState(() => _requestBusy = false);
+    }
+  }
+
   Future<void> _previewDeletion(QuestraTask task) async {
     setState(() => _busyTaskId = task.id);
     try {
@@ -176,6 +256,75 @@ class _DataRightsScreenState extends ConsumerState<DataRightsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(error.toString().replaceFirst('Bad state: ', ''))),
+    );
+  }
+}
+
+class _AccountDeletionCard extends StatelessWidget {
+  const _AccountDeletionCard({
+    required this.requests,
+    required this.busy,
+    required this.onRequest,
+    required this.onCancel,
+  });
+
+  final List<DataRightsRequest> requests;
+  final bool busy;
+  final VoidCallback onRequest;
+  final ValueChanged<DataRightsRequest> onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final deletionRequests = requests
+        .where((request) => request.type == 'account_deletion')
+        .toList(growable: false);
+    final cancellable = deletionRequests
+        .where((request) => request.canCancel)
+        .firstOrNull;
+    return QuestraCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.person_remove_outlined),
+              SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'アカウント削除',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          const Text('本人確認後に削除を予約します。予約後72時間は取り消せます。'),
+          if (deletionRequests.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              cancellable != null
+                  ? '削除予約中（取消可能）'
+                  : '最新状態: ${deletionRequests.first.status}',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: cancellable == null
+                ? OutlinedButton.icon(
+                    onPressed: busy ? null : onRequest,
+                    icon: const Icon(Icons.schedule_outlined),
+                    label: Text(busy ? '確認中' : '削除を予約'),
+                  )
+                : FilledButton.tonalIcon(
+                    onPressed: busy ? null : () => onCancel(cancellable),
+                    icon: const Icon(Icons.undo),
+                    label: const Text('削除予約を取り消す'),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }

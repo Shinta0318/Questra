@@ -29,6 +29,7 @@ import '../quest/quest_model.dart';
 import '../quest/planning_preferences_controller.dart';
 import '../quest/weekly_availability.dart';
 import '../quest/quest_progress_service.dart';
+import '../quest_journey/quest_journey_contract.dart';
 import '../signal/mission_signal_model.dart';
 import '../signal/signal_providers.dart';
 import '../signal/task_signal_card.dart';
@@ -60,16 +61,8 @@ class HomeScreen extends ConsumerWidget {
     final trails = ref.watch(trailControllerProvider);
     final navigatorRank = ref
         .watch(navigatorRankServiceProvider)
-        .resolve(
-          quests: quests,
-          missions: missions,
-          trails: trails,
-          bondScore: profile?.bondScore ?? 0,
-          stardustBalance: profile?.stardustBalance ?? 0,
-        );
-    final greeting = ref
-        .watch(arcDailyGreetingServiceProvider)
-        .resolve(
+        .resolve(stardustBalance: profile?.stardustBalance ?? 0);
+    final greeting = ref.watch(arcDailyGreetingServiceProvider).resolve(
           quests: quests,
           missions: missions,
           trails: trails,
@@ -78,9 +71,10 @@ class HomeScreen extends ConsumerWidget {
           arcName: profile?.arcName,
           questInterest: profile?.questInterest ?? QuestInterest.adventure,
         );
-    final activeQuests =
-        quests.where((quest) => quest.status == QuestStatus.active).toList()
-          ..sort((a, b) => b.progress.compareTo(a.progress));
+    final activeQuests = quests
+        .where((quest) => quest.status == QuestStatus.active)
+        .toList()
+      ..sort((a, b) => b.progress.compareTo(a.progress));
     final today = WeekdayLabel.fromDateTime(DateTime.now());
     final todayMinutes = planningPreferences.context.consentGranted
         ? planningPreferences.availability.minutesFor(today)
@@ -108,9 +102,15 @@ class HomeScreen extends ConsumerWidget {
       hasActiveJourney: activeQuests.isNotEmpty || missions.isNotEmpty,
       isSignedIn: profile != null,
     );
-    final taskSignals = ref
-        .watch(taskSignalServiceProvider)
-        .generate(
+    final focusTasks = const QuestFocusSelectionService().select(
+      tasks: tasks,
+      missions: missions,
+    );
+    final additionalFocusTasks = focusTasks
+        .where((task) => task.id != todayJourney.task?.id)
+        .take(2)
+        .toList(growable: false);
+    final taskSignals = ref.watch(taskSignalServiceProvider).generate(
           tasks: tasks,
           now: now,
           frequency: profile?.signalFrequency ?? SignalFrequency.balanced,
@@ -161,11 +161,16 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             _HomeTodayTaskCard(
               journey: todayJourney,
+              additionalTasks: additionalFocusTasks,
               suggestedMission: todayMissions.firstOrNull,
               recommendationReason: todayRecommendation?.reason,
               isResting: activeTodayPreference.isResting,
               onOpenTask: (task) => context.push(
-                AppRoutes.taskDetail(task.questId, task.missionId, task.id),
+                AppRoutes.questJourneyFocus(
+                  questId: task.questId,
+                  missionId: task.missionId,
+                  taskId: task.id,
+                ),
               ),
               onStartTask: (task) async {
                 final started = await ref
@@ -173,7 +178,11 @@ class HomeScreen extends ConsumerWidget {
                     .start(task.id);
                 if (started && context.mounted) {
                   context.push(
-                    AppRoutes.taskDetail(task.questId, task.missionId, task.id),
+                    AppRoutes.questJourneyFocus(
+                      questId: task.questId,
+                      missionId: task.missionId,
+                      taskId: task.id,
+                    ),
                   );
                 }
               },
@@ -228,7 +237,23 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.xl),
             const _SimpleSectionTitle(title: '次の航路'),
             const SizedBox(height: AppSpacing.md),
-            HomeHorizonCard(challenge: horizon),
+            HomeHorizonCard(
+              challenge: horizon,
+              onAction: () {
+                switch (horizon.destination) {
+                  case HorizonDestination.arc:
+                    context.go(AppRoutes.arc);
+                  case HorizonDestination.mission:
+                    final questId = horizon.questId;
+                    final missionId = horizon.missionId;
+                    if (questId != null && missionId != null) {
+                      context.push(AppRoutes.missionDetail(questId, missionId));
+                    }
+                  case HorizonDestination.trail:
+                    context.go(AppRoutes.trail);
+                }
+              },
+            ),
           ],
         ),
       ),
@@ -270,26 +295,26 @@ class _MissionSignalCard extends StatelessWidget {
                 Text(
                   signal.severity.label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w900,
-                  ),
+                        color: color,
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   signal.title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   signal.message,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.parchment,
-                    height: 1.45,
-                    fontWeight: FontWeight.w700,
-                  ),
+                        color: AppColors.parchment,
+                        height: 1.45,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ],
             ),
@@ -334,18 +359,18 @@ class _ArcSignalCard extends StatelessWidget {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.gold,
-                    fontWeight: FontWeight.w900,
-                  ),
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   message,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.white,
-                    height: 1.45,
-                    fontWeight: FontWeight.w700,
-                  ),
+                        color: AppColors.white,
+                        height: 1.45,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ],
             ),
@@ -388,10 +413,10 @@ class _CaptainStatusBar extends StatelessWidget {
               Text(
                 'キャプテン\nLv.24',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w800,
-                  height: 1.15,
-                ),
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
+                    ),
               ),
             ],
           ),
@@ -425,9 +450,9 @@ class _MetricPill extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.white,
-              fontWeight: FontWeight.w900,
-            ),
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
           ),
         ],
       ),
@@ -464,9 +489,9 @@ class _SimplifiedArcHero extends StatelessWidget {
                     Text(
                       'Arc',
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppColors.gold,
-                        fontWeight: FontWeight.w800,
-                      ),
+                            color: AppColors.gold,
+                            fontWeight: FontWeight.w800,
+                          ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
@@ -474,17 +499,17 @@ class _SimplifiedArcHero extends StatelessWidget {
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.white,
-                        height: 1.35,
-                        fontWeight: FontWeight.w700,
-                      ),
+                            color: AppColors.white,
+                            height: 1.35,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       'タップして話す',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.parchment,
-                      ),
+                            color: AppColors.parchment,
+                          ),
                     ),
                   ],
                 ),
@@ -509,9 +534,9 @@ class _SimpleSectionTitle extends StatelessWidget {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        color: AppColors.white,
-        fontWeight: FontWeight.w900,
-      ),
+            color: AppColors.white,
+            fontWeight: FontWeight.w900,
+          ),
     );
   }
 }
@@ -519,6 +544,7 @@ class _SimpleSectionTitle extends StatelessWidget {
 class _HomeTodayTaskCard extends ConsumerWidget {
   const _HomeTodayTaskCard({
     required this.journey,
+    required this.additionalTasks,
     required this.suggestedMission,
     required this.recommendationReason,
     required this.isResting,
@@ -532,6 +558,7 @@ class _HomeTodayTaskCard extends ConsumerWidget {
   });
 
   final HomeTodayTaskJourney journey;
+  final List<QuestraTask> additionalTasks;
   final Mission? suggestedMission;
   final String? recommendationReason;
   final bool isResting;
@@ -621,17 +648,17 @@ class _HomeTodayTaskCard extends ConsumerWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.skyBlue,
-                fontWeight: FontWeight.w800,
-              ),
+                    color: AppColors.skyBlue,
+                    fontWeight: FontWeight.w800,
+                  ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               task.title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.white,
-                fontWeight: FontWeight.w900,
-              ),
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
@@ -639,9 +666,9 @@ class _HomeTodayTaskCard extends ConsumerWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.parchment,
-                height: 1.45,
-              ),
+                    color: AppColors.parchment,
+                    height: 1.45,
+                  ),
             ),
             const SizedBox(height: AppSpacing.md),
             Wrap(
@@ -661,8 +688,8 @@ class _HomeTodayTaskCard extends ConsumerWidget {
                 onPressed: () => canStart
                     ? onStartTask(task)
                     : availability.isDependencyBlocked
-                    ? onOpenMission(task.questId, task.missionId)
-                    : onOpenTask(task),
+                        ? onOpenMission(task.questId, task.missionId)
+                        : onOpenTask(task),
                 icon: Icon(
                   canStart ? Icons.play_arrow_rounded : Icons.arrow_forward,
                 ),
@@ -673,6 +700,45 @@ class _HomeTodayTaskCard extends ConsumerWidget {
                 ),
               ),
             ),
+            if (additionalTasks.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
+              const Divider(color: Colors.white12),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'このあと',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: AppColors.parchment,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              for (final next in additionalTasks)
+                ListTile(
+                  minTileHeight: 48,
+                  contentPadding: EdgeInsets.zero,
+                  onTap: () => onOpenTask(next),
+                  leading: const Icon(
+                    Icons.circle_outlined,
+                    color: AppColors.skyBlue,
+                    size: 20,
+                  ),
+                  title: Text(
+                    next.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppColors.white),
+                  ),
+                  subtitle: Text(
+                    _parentContext(next),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppColors.parchment),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: Colors.white54,
+                  ),
+                ),
+            ],
           ],
         ),
       ),
@@ -723,26 +789,26 @@ class _HomeTaskStateCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.skyBlue,
-                  fontWeight: FontWeight.w800,
-                ),
+                      color: AppColors.skyBlue,
+                      fontWeight: FontWeight.w800,
+                    ),
               ),
             ],
             const SizedBox(height: AppSpacing.sm),
             Text(
               title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.white,
-                fontWeight: FontWeight.w900,
-              ),
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               message,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.parchment,
-                height: 1.45,
-              ),
+                    color: AppColors.parchment,
+                    height: 1.45,
+                  ),
             ),
             if (showProgress) ...[
               const SizedBox(height: AppSpacing.md),
@@ -794,9 +860,9 @@ class _ArcHero extends StatelessWidget {
                 Text(
                   greeting.message,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.white,
-                    height: 1.55,
-                  ),
+                        color: AppColors.white,
+                        height: 1.55,
+                      ),
                 ),
               ],
             ),
@@ -834,9 +900,9 @@ class _HomeSectionHeader extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: AppColors.white,
-              fontWeight: FontWeight.w900,
-            ),
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
           ),
         ),
         TextButton(onPressed: onAction, child: Text(actionLabel)),
@@ -888,18 +954,18 @@ class _JourneyFlowCard extends StatelessWidget {
           Text(
             'Home → Arc → Quest',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.gold,
-              fontWeight: FontWeight.w900,
-            ),
+                  color: AppColors.gold,
+                  fontWeight: FontWeight.w900,
+                ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Arcと一緒に今日の一歩を進める',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: AppColors.white,
-              fontWeight: FontWeight.w900,
-              height: 1.25,
-            ),
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                  height: 1.25,
+                ),
           ),
           const SizedBox(height: AppSpacing.md),
           Wrap(
@@ -980,18 +1046,18 @@ class _FlowStepPill extends StatelessWidget {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.parchment,
-                    fontWeight: FontWeight.w700,
-                  ),
+                        color: AppColors.parchment,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
                 Text(
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
               ],
             ),
@@ -1042,18 +1108,18 @@ class _TodayMissionCard extends StatelessWidget {
                 Text(
                   mission!.title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   mission!.description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.parchment,
-                    height: 1.45,
-                    fontWeight: FontWeight.w700,
-                  ),
+                        color: AppColors.parchment,
+                        height: 1.45,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Align(
@@ -1128,9 +1194,8 @@ class _HomeQuestDeckState extends State<_HomeQuestDeck> {
         }
 
         final textScale = MediaQuery.textScalerOf(context).scale(1);
-        final compactTextAllowance = ((500 - constraints.maxWidth) * 0.9)
-            .clamp(0, 160)
-            .toDouble();
+        final compactTextAllowance =
+            ((500 - constraints.maxWidth) * 0.9).clamp(0, 160).toDouble();
         final deckHeight =
             178 + compactTextAllowance * (textScale - 1).clamp(0, 1);
         return Column(
@@ -1220,9 +1285,9 @@ class _ActiveQuestCard extends StatelessWidget {
               Text(
                 quest.title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w900,
-                ),
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
               ),
               if (nextMission != null) ...[
                 const SizedBox(height: AppSpacing.xs),
@@ -1231,9 +1296,9 @@ class _ActiveQuestCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.parchment,
-                    fontWeight: FontWeight.w700,
-                  ),
+                        color: AppColors.parchment,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
               ],
               const SizedBox(height: AppSpacing.sm),
@@ -1261,16 +1326,16 @@ class _ActiveQuestCard extends StatelessWidget {
                   Text(
                     '${progress.percent}%',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w900,
-                    ),
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w900,
+                        ),
                   ),
                   Text(
                     'Mission ${progress.missionCountLabel}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.parchment,
-                      fontWeight: FontWeight.w800,
-                    ),
+                          color: AppColors.parchment,
+                          fontWeight: FontWeight.w800,
+                        ),
                   ),
                 ],
               ),
@@ -1317,26 +1382,26 @@ class _RecentTrailsCard extends StatelessWidget {
                       Text(
                         trail.title,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w900,
-                        ),
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w900,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         trail.summary,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.parchment,
-                          height: 1.35,
-                          fontWeight: FontWeight.w700,
-                        ),
+                              color: AppColors.parchment,
+                              height: 1.35,
+                              fontWeight: FontWeight.w700,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         trail.trailType.label,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.skyBlue,
-                          fontWeight: FontWeight.w800,
-                        ),
+                              color: AppColors.skyBlue,
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                     ],
                   ),
@@ -1380,9 +1445,9 @@ class _GuildActivitySummary extends StatelessWidget {
                 Text(
                   'Guildの動き',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -1390,10 +1455,10 @@ class _GuildActivitySummary extends StatelessWidget {
                       ? 'Quest、Mission、Task、TrailからGuildへ持ち寄れる相談の種が$countText件あります。'
                       : 'QuestやTrailが増えると、Guildで相談しやすい問いがここに浮かびます。',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.parchment,
-                    height: 1.45,
-                    fontWeight: FontWeight.w700,
-                  ),
+                        color: AppColors.parchment,
+                        height: 1.45,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Align(
@@ -1453,9 +1518,9 @@ class _HomeEmptyActionCard extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -1463,9 +1528,9 @@ class _HomeEmptyActionCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.parchment,
-                        fontWeight: FontWeight.w700,
-                      ),
+                            color: AppColors.parchment,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
                   ],
                 ),
@@ -1536,9 +1601,9 @@ class _QuestTag extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: AppColors.white,
-          fontWeight: FontWeight.w800,
-        ),
+              color: AppColors.white,
+              fontWeight: FontWeight.w800,
+            ),
       ),
     );
   }
@@ -1571,9 +1636,9 @@ class _StarMapPreview extends StatelessWidget {
                 Text(
                   'Star Map',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.deepNavy,
-                    fontWeight: FontWeight.w900,
-                  ),
+                        color: AppColors.deepNavy,
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -1581,19 +1646,19 @@ class _StarMapPreview extends StatelessWidget {
                       ? 'Quest、Mission、Task、Trailをつないで、次の一歩を見つけよう。'
                       : recommendation!.title,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.deepNavy,
-                    fontWeight: FontWeight.w800,
-                  ),
+                        color: AppColors.deepNavy,
+                        fontWeight: FontWeight.w800,
+                      ),
                 ),
                 if (recommendation != null) ...[
                   const SizedBox(height: 4),
                   Text(
                     recommendation!.reason,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.midnightNavy,
-                      height: 1.35,
-                      fontWeight: FontWeight.w700,
-                    ),
+                          color: AppColors.midnightNavy,
+                          height: 1.35,
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                 ],
               ],

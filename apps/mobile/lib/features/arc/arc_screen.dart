@@ -43,6 +43,7 @@ import '../quest/quest_feasibility_service.dart';
 import '../quest/quest_intent_model.dart';
 import '../quest/quest_intent_service.dart';
 import '../quest/quest_intent_resolution_service.dart';
+import '../quest/quest_title_service.dart';
 import '../quest/quest_model.dart';
 import '../quest/planning_preferences_controller.dart';
 import '../quest/quest_guide_model.dart';
@@ -54,6 +55,7 @@ import '../signal/signal_providers.dart';
 import '../signal/task_signal_card.dart';
 import 'arc_bond_growth_service.dart';
 import 'arc_chat_service.dart';
+import 'arc_journey_draft_repository.dart';
 import 'arc_quest_change_proposal.dart';
 import 'arc_quest_clarification_session.dart';
 import 'arc_quick_action.dart';
@@ -61,7 +63,6 @@ import 'arc_emotion_timeline_controller.dart';
 import 'arc_emotion_timeline_model.dart';
 import 'arc_guidance_providers.dart';
 import 'arc_action_trigger_service.dart';
-import 'stardust_service.dart';
 
 const _missionUuid = Uuid();
 
@@ -106,6 +107,11 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
   ArcQuestClarificationSession? _clarificationSession;
   List<ArcQuestChangeProposal> _pendingQuestChanges = const [];
   String? _appliedLaunchKey;
+  String? _draftOwnerId;
+  bool _draftRestored = false;
+  int _draftLoadGeneration = 0;
+  Future<void> _draftWriteChain = Future.value();
+  final Set<String> _declinedQuestInputs = {};
 
   @override
   void initState() {
@@ -133,6 +139,14 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     final trails = ref.watch(trailControllerProvider);
     final tasks = ref.watch(taskControllerProvider);
     final profile = ref.watch(authControllerProvider).profile;
+    if (_draftOwnerId != profile?.id) {
+      final ownerId = profile?.id;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _draftOwnerId != ownerId) {
+          unawaited(_restoreDraft(ownerId));
+        }
+      });
+    }
     final memories = ref.watch(visibleArcMemoriesProvider);
     final emotionEvents = ref.watch(arcEmotionTimelineControllerProvider);
     final focusQuest = quests
@@ -159,6 +173,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
               onBack: returnLocation == null
                   ? null
                   : () => context.go(returnLocation),
+              onDiscard: _hasDraftContent ? _confirmDiscardDraft : null,
             ),
             Expanded(
               child: QuestraResponsiveListView(
@@ -172,6 +187,10 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                   AppSpacing.xl,
                 ),
                 children: [
+                  if (_draftRestored) ...[
+                    _ArcDraftRestoredCard(onDiscard: _confirmDiscardDraft),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
                   if (focusMission != null) ...[
                     _ArcMissionContextCard(
                       questTitle: focusQuest?.title ?? focusMission.questTitle,
@@ -232,8 +251,15 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                     _ArcQuestSuggestionCard(
                       suggestion: suggestion,
                       onPlan: () => _openQuestCreation(suggestion: suggestion),
-                      onDismiss: () =>
-                          setState(() => _pendingQuestSuggestion = null),
+                      onDismiss: () {
+                        setState(() {
+                          _declinedQuestInputs.add(
+                            _normalizeQuestInput(suggestion.sourceInput),
+                          );
+                          _pendingQuestSuggestion = null;
+                        });
+                        _saveDraft();
+                      },
                     ),
                   ],
                   if (_clarificationSession case final session?) ...[
@@ -319,6 +345,112 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     return value;
   }
 
+  bool get _hasDraftContent =>
+      _messages.length > 1 ||
+      _clarificationSession != null ||
+      _pendingQuestSuggestion != null;
+
+  Future<void> _restoreDraft(String? ownerId) async {
+    final generation = ++_draftLoadGeneration;
+    _draftOwnerId = ownerId;
+    if (ownerId == null || ownerId.isEmpty) {
+      if (mounted) _resetDraftState(restored: false);
+      return;
+    }
+    final draft = await ref
+        .read(arcJourneyDraftRepositoryProvider)
+        .load(ownerId);
+    if (!mounted ||
+        generation != _draftLoadGeneration ||
+        _draftOwnerId != ownerId) {
+      return;
+    }
+    if (draft == null) {
+      _resetDraftState(restored: false);
+      return;
+    }
+    setState(() {
+      _messages
+        ..clear()
+        ..addAll(draft.messages.isEmpty ? [_welcomeMessage()] : draft.messages);
+      _clarificationSession = draft.clarificationSession;
+      _pendingQuestSuggestion = draft.questSuggestion;
+      _pendingQuestChanges = const [];
+      _draftRestored = _hasDraftContent;
+      _isThinking = false;
+    });
+    _scrollToLatest();
+  }
+
+  void _resetDraftState({required bool restored}) {
+    if (!mounted) return;
+    setState(() {
+      _messages
+        ..clear()
+        ..add(_welcomeMessage());
+      _clarificationSession = null;
+      _pendingQuestSuggestion = null;
+      _pendingQuestChanges = const [];
+      _draftRestored = restored;
+      _isThinking = false;
+    });
+  }
+
+  ArcChatMessage _welcomeMessage() => ArcChatMessage(
+    text: 'おかえり。今日は、どんなことが気になってる？',
+    fromArc: true,
+    createdAt: DateTime.now(),
+  );
+
+  void _saveDraft() {
+    final ownerId = _draftOwnerId;
+    if (ownerId == null || ownerId.isEmpty || !_hasDraftContent) return;
+    final draft = ArcJourneyDraft(
+      messages: List<ArcChatMessage>.of(_messages),
+      updatedAt: DateTime.now(),
+      clarificationSession: _clarificationSession,
+      questSuggestion: _pendingQuestSuggestion,
+    );
+    final repository = ref.read(arcJourneyDraftRepositoryProvider);
+    _draftWriteChain = _draftWriteChain
+        .catchError((_) {})
+        .then((_) => repository.save(ownerId, draft));
+  }
+
+  Future<void> _clearDraft() async {
+    final ownerId = _draftOwnerId;
+    if (ownerId != null && ownerId.isNotEmpty) {
+      final repository = ref.read(arcJourneyDraftRepositoryProvider);
+      _draftWriteChain = _draftWriteChain
+          .catchError((_) {})
+          .then((_) => repository.clear(ownerId));
+      await _draftWriteChain;
+    }
+  }
+
+  Future<void> _confirmDiscardDraft() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('相談の続きを破棄しますか？'),
+        content: const Text('Arcとの会話と、途中のQuest案をこの端末から削除します。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('戻る'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('破棄する'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await _clearDraft();
+    _resetDraftState(restored: false);
+  }
+
   Future<void> _openQuestCreation({ArcQuestSuggestion? suggestion}) async {
     final result = await showModalBottomSheet<_ArcQuestConfirmation>(
       context: context,
@@ -382,6 +514,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         ),
       );
     });
+    await _clearDraft();
     _scrollToLatest();
     if (mounted) {
       context.go('${AppRoutes.quest}/${quest.id}');
@@ -415,6 +548,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       _messages.add(userMessage);
       _isThinking = true;
     });
+    _saveDraft();
     _scrollToLatest();
     unawaited(
       ref
@@ -498,6 +632,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
               : [safety.safeAlternative!, '別の相談をする'];
           _isThinking = false;
         });
+        _saveDraft();
         unawaited(
           ref
               .read(safetySignalRecorderProvider)
@@ -529,6 +664,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
           _pendingQuestChanges = const [];
           _isThinking = false;
         });
+        _saveDraft();
         _scrollToLatest();
         await _rememberChat(userMessage, arcMessage, context);
         return;
@@ -553,15 +689,23 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       setState(() {
         _messages.add(arcMessage);
         final suggestion = response.questSuggestion;
-        if (suggestion != null && response.clarificationQuestions.isNotEmpty) {
+        final acceptedSuggestion =
+            suggestion != null &&
+                !_declinedQuestInputs.contains(
+                  _normalizeQuestInput(suggestion.sourceInput),
+                )
+            ? suggestion
+            : null;
+        if (acceptedSuggestion != null &&
+            response.clarificationQuestions.isNotEmpty) {
           _clarificationSession = ArcQuestClarificationSession(
-            suggestion: suggestion,
-            questions: response.clarificationQuestions.take(3).toList(),
+            suggestion: acceptedSuggestion,
+            questions: response.clarificationQuestions.take(5).toList(),
           );
           _pendingQuestSuggestion = null;
         } else {
           _clarificationSession = null;
-          _pendingQuestSuggestion = suggestion;
+          _pendingQuestSuggestion = acceptedSuggestion;
         }
         _pendingQuestChanges = response.questChanges;
         _quickActions = response.quickActions.isEmpty
@@ -569,6 +713,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
             : response.quickActions.take(5).toList(growable: false);
         _isThinking = false;
       });
+      _saveDraft();
       _scrollToLatest();
       _recordChatAction(ArcActionTrigger.arcChatResponded);
       await _rememberChat(userMessage, arcMessage, context);
@@ -586,6 +731,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         );
         _isThinking = false;
       });
+      _saveDraft();
       _recordChatAction(ArcActionTrigger.saveFailure);
       _scrollToLatest();
     }
@@ -684,6 +830,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         );
       }
     });
+    _saveDraft();
   }
 
   void _showQuestChangeMessage(String message) {
@@ -693,6 +840,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         ArcChatMessage(text: message, fromArc: true, createdAt: DateTime.now()),
       );
     });
+    _saveDraft();
     _scrollToLatest();
   }
 
@@ -755,19 +903,18 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       final growth = ref
           .read(arcBondGrowthServiceProvider)
           .forArcConversation();
-      final award = ref.read(stardustServiceProvider).forArcConversation();
       await ref
           .read(authControllerProvider.notifier)
           .addBondScore(delta: growth.delta, reason: growth.reason);
-      await ref
-          .read(authControllerProvider.notifier)
-          .addStardust(amount: award.amount, reason: award.reason);
       ref.invalidate(visibleArcMemoriesProvider);
     } catch (_) {
       // Chat memory is helpful context, but the visible chat should not break.
     }
   }
 }
+
+String _normalizeQuestInput(String value) =>
+    value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
 
 int _arcTaskStatusRank(TaskStatus status) => switch (status) {
   TaskStatus.inProgress => 0,
@@ -837,9 +984,10 @@ class _ArcMissionContextCard extends StatelessWidget {
 }
 
 class _ArcHeader extends StatelessWidget {
-  const _ArcHeader({this.onBack});
+  const _ArcHeader({this.onBack, this.onDiscard});
 
   final VoidCallback? onBack;
+  final VoidCallback? onDiscard;
 
   @override
   Widget build(BuildContext context) {
@@ -879,6 +1027,12 @@ class _ArcHeader extends StatelessWidget {
               ],
             ),
           ),
+          if (onDiscard != null)
+            IconButton(
+              onPressed: onDiscard,
+              tooltip: '相談の続きを破棄',
+              icon: const Icon(Icons.delete_outline),
+            ),
           Container(
             width: 52,
             height: 52,
@@ -890,6 +1044,34 @@ class _ArcHeader extends StatelessWidget {
             ),
             child: const Center(child: ArcApprovedPortrait(size: 44)),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArcDraftRestoredCard extends StatelessWidget {
+  const _ArcDraftRestoredCard({required this.onDiscard});
+
+  final VoidCallback onDiscard;
+
+  @override
+  Widget build(BuildContext context) {
+    return QuestraCard(
+      child: Row(
+        children: [
+          const Icon(Icons.history, color: AppColors.skyBlue),
+          const SizedBox(width: AppSpacing.sm),
+          const Expanded(
+            child: Text(
+              '前回の相談の続きから再開しました',
+              style: TextStyle(
+                color: AppColors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          TextButton(onPressed: onDiscard, child: const Text('破棄')),
         ],
       ),
     );
@@ -1531,6 +1713,7 @@ class _ArcQuestCreationSheetState
   bool _isIntentConfirmed = false;
   bool _isGenerating = false;
   String? _error;
+  String _suggestionPlanningContext = '';
 
   @override
   void initState() {
@@ -1538,23 +1721,37 @@ class _ArcQuestCreationSheetState
     final suggestion = widget.suggestion;
     if (suggestion != null) {
       _inputController.text = suggestion.sourceInput;
-      _titleController.text = suggestion.title;
+      _titleController.text = QuestTitleService.normalize(
+        suggestion.title,
+        fallback: suggestion.sourceInput,
+      );
       _categoryController.text = suggestion.category;
       _motivationController.text = suggestion.motivation;
       _successConditionController.text = suggestion.successCondition;
       _difficulty = suggestion.difficulty;
-      final questType = classifyQuestType(suggestion.sourceInput);
+      _suggestionPlanningContext = suggestion.description.trim();
+      _targetDate = QuestClarificationService.targetDateFromText(
+        suggestion.description,
+      );
+      final planningInput = [
+        suggestion.sourceInput,
+        suggestion.description,
+      ].where((value) => value.trim().isNotEmpty).join('\n');
+      final questType = classifyQuestType(planningInput);
       _intentResolution = QuestIntentResolution(
         originalWish: suggestion.sourceInput,
         questType: questType,
         clarity: QuestIntentClarity.clear,
-        optimizedTitle: suggestion.title,
+        optimizedTitle: QuestTitleService.normalize(
+          suggestion.title,
+          fallback: suggestion.sourceInput,
+        ),
         summary: '相談内容から、最初に目指す状態を整理しました。',
         successCondition: suggestion.successCondition,
         clarificationQuestions: QuestClarificationService.resolve(
-          input: suggestion.sourceInput,
+          input: planningInput,
           category: questType.storageKey,
-          targetDate: null,
+          targetDate: _targetDate,
         ),
         directions: const [],
         sourceType: 'arc_chat_intent',
@@ -1632,7 +1829,10 @@ class _ArcQuestCreationSheetState
   void _acceptIntent([QuestDirection? direction]) {
     final resolution = _intentResolution;
     if (resolution == null) return;
-    _titleController.text = direction?.title ?? resolution.optimizedTitle;
+    _titleController.text = QuestTitleService.normalize(
+      direction?.title ?? resolution.optimizedTitle,
+      fallback: resolution.originalWish,
+    );
     _successConditionController.text =
         direction?.successCondition ?? resolution.successCondition;
     _categoryController.text = resolution.questType.displayLabel;
@@ -1650,8 +1850,11 @@ class _ArcQuestCreationSheetState
   }
 
   String get _planningDescription {
+    final description = _suggestionPlanningContext.isNotEmpty
+        ? _suggestionPlanningContext
+        : _inputController.text;
     final base = QuestClarificationService.appendAnsweredContext(
-      description: _inputController.text,
+      description: description,
       targetDate: _targetDate,
       answers: _clarificationAnswers,
     );
@@ -1794,10 +1997,12 @@ class _ArcQuestCreationSheetState
         };
         _firstMissionIndex = guide.missionCandidates.isEmpty ? null : 0;
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = '航路を描けませんでした。入力内容を確認して、もう一度試してください。';
+        _error = error is StateError
+            ? error.message.toString()
+            : '航路を描けませんでした。入力内容は保持されています。接続を確認して、もう一度試してください。';
       });
     } finally {
       if (mounted) setState(() => _isGenerating = false);
@@ -2807,7 +3012,15 @@ class _ArcQuestSuggestionCard extends StatelessWidget {
           FilledButton.icon(
             onPressed: onPlan,
             icon: const Icon(Icons.auto_awesome_outlined),
-            label: const Text('この航路をQuestにする'),
+            label: const Text('Questとして始める'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: onDismiss,
+              child: const Text('相談として続ける'),
+            ),
           ),
         ],
       ),

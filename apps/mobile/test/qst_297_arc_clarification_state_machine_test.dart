@@ -21,7 +21,7 @@ void main() {
       );
 
       expect(response.questSuggestion, isNotNull);
-      expect(response.clarificationQuestions, hasLength(3));
+      expect(response.clarificationQuestions, hasLength(5));
       var session = ArcQuestClarificationSession(
         suggestion: response.questSuggestion!,
         questions: response.clarificationQuestions,
@@ -33,12 +33,23 @@ void main() {
       expect(session.isComplete, isFalse);
       expect(session.currentQuestion?.type, QuestClarificationType.party);
       session = session.answer('家族と');
-      expect(session.currentQuestion?.type, QuestClarificationType.purpose);
+      expect(session.currentQuestion?.type, QuestClarificationType.budget);
+      session = session.answer('30万円まで');
+      expect(
+        session.currentQuestion?.type,
+        QuestClarificationType.travelActivity,
+      );
       session = session.answer('文化と食事を楽しみたい');
+      expect(session.currentQuestion?.type, QuestClarificationType.travelStyle);
+      session = session.answer('ゆったりローカル体験中心');
 
       expect(session.isComplete, isTrue);
-      expect(session.resolvedSuggestion.sourceInput, contains('2027年3月'));
+      expect(session.resolvedSuggestion.sourceInput, 'シンガポールに行きたい');
+      expect(session.resolvedSuggestion.title, 'シンガポールへ行く');
+      expect(session.resolvedSuggestion.description, contains('2027年3月'));
       expect(session.resolvedSuggestion.description, contains('家族と'));
+      expect(session.resolvedSuggestion.description, contains('30万円まで'));
+      expect(session.resolvedSuggestion.description, contains('ゆったりローカル体験中心'));
     },
   );
 

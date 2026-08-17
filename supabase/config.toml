@@ -97,3 +97,6 @@ verify_jwt = true
 
 [functions.research-mission-resources]
 verify_jwt = true
+
+[functions.process-data-rights-requests]
+verify_jwt = false

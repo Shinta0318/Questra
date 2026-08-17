@@ -12,6 +12,17 @@ abstract final class AppRoutes {
   static String missionDetail(String questId, String missionId) =>
       '/quest/$questId/mission/$missionId';
   static String questRoute(String questId) => '/quest/$questId/route';
+  static String questJourneyFocus({
+    required String questId,
+    String? missionId,
+    String? taskId,
+  }) {
+    final query = <String, String>{'mode': 'focus'};
+    if (missionId case final value?) query['mission'] = value;
+    if (taskId case final value?) query['task'] = value;
+    return Uri(path: '/quest/$questId', queryParameters: query).toString();
+  }
+
   static String taskDetail(String questId, String missionId, String taskId) =>
       '/quest/$questId/mission/$missionId/task/$taskId';
   static String missionSupport(String questId, String missionId) =>
@@ -24,33 +35,35 @@ abstract final class AppRoutes {
     required String missionTitle,
     required String taskId,
     required String taskTitle,
-  }) => Uri(
-    path: trail,
-    queryParameters: {
-      'questId': questId,
-      'questTitle': questTitle,
-      'missionId': missionId,
-      'missionTitle': missionTitle,
-      'taskId': taskId,
-      'taskTitle': taskTitle,
-      'create': '1',
-    },
-  ).toString();
+  }) =>
+      Uri(
+        path: trail,
+        queryParameters: {
+          'questId': questId,
+          'questTitle': questTitle,
+          'missionId': missionId,
+          'missionTitle': missionTitle,
+          'taskId': taskId,
+          'taskTitle': taskTitle,
+          'create': '1',
+        },
+      ).toString();
   static const arc = '/arc';
   static String arcForMission({
     required String questId,
     required String missionId,
     required String prompt,
     required String returnTo,
-  }) => Uri(
-    path: arc,
-    queryParameters: {
-      'questId': questId,
-      'missionId': missionId,
-      'prompt': prompt,
-      'returnTo': returnTo,
-    },
-  ).toString();
+  }) =>
+      Uri(
+        path: arc,
+        queryParameters: {
+          'questId': questId,
+          'missionId': missionId,
+          'prompt': prompt,
+          'returnTo': returnTo,
+        },
+      ).toString();
   static const guild = '/guild';
   static const profile = '/profile';
   static const settings = '/settings';

@@ -9,11 +9,24 @@ final stardustServiceProvider = Provider<StardustService>(
 
 enum StardustEvent {
   questCreated,
-  missionCreated,
+  missionStarted,
   missionCompleted,
+  taskCompleted,
   trailPosted,
   trailReflection,
-  arcConversation,
+  questCompleted,
+}
+
+extension StardustEventStorage on StardustEvent {
+  String get storageKey => switch (this) {
+    StardustEvent.questCreated => 'quest_created',
+    StardustEvent.missionStarted => 'mission_started',
+    StardustEvent.missionCompleted => 'mission_completed',
+    StardustEvent.taskCompleted => 'task_completed',
+    StardustEvent.trailPosted => 'trail_recorded',
+    StardustEvent.trailReflection => 'trail_reflection_recorded',
+    StardustEvent.questCompleted => 'quest_completed',
+  };
 }
 
 class StardustAward {
@@ -58,7 +71,7 @@ class StardustService {
     if (sourceType == ArcMemorySourceType.questCreated) {
       return const StardustAward(
         event: StardustEvent.questCreated,
-        amount: 10,
+        amount: 5,
         reason: 'Questを始めた',
       );
     }
@@ -72,17 +85,17 @@ class StardustService {
   StardustAward forMission(ArcMemorySourceType sourceType) {
     return switch (sourceType) {
       ArcMemorySourceType.missionCreated => const StardustAward(
-        event: StardustEvent.missionCreated,
-        amount: 3,
-        reason: 'Missionを作った',
+        event: StardustEvent.missionStarted,
+        amount: 0,
+        reason: 'Mission作成だけではStardustを増やさない',
       ),
       ArcMemorySourceType.missionCompleted => const StardustAward(
         event: StardustEvent.missionCompleted,
-        amount: 8,
+        amount: 10,
         reason: 'Missionを完了した',
       ),
       _ => const StardustAward(
-        event: StardustEvent.missionCreated,
+        event: StardustEvent.missionStarted,
         amount: 0,
         reason: 'Mission外のイベント',
       ),
@@ -93,22 +106,22 @@ class StardustService {
     if (trail.trailType == TrailType.arcReflection) {
       return const StardustAward(
         event: StardustEvent.trailReflection,
-        amount: 10,
+        amount: 3,
         reason: 'Trailを振り返った',
       );
     }
     return const StardustAward(
       event: StardustEvent.trailPosted,
-      amount: 6,
+      amount: 3,
       reason: 'Trailを残した',
     );
   }
 
-  StardustAward forArcConversation() {
+  StardustAward forTaskCompletion() {
     return const StardustAward(
-      event: StardustEvent.arcConversation,
-      amount: 1,
-      reason: 'Arcと相談した',
+      event: StardustEvent.taskCompleted,
+      amount: 2,
+      reason: 'Taskを完了した',
     );
   }
 }

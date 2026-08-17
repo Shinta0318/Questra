@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/layout/questra_journey_scaffold.dart';
 import '../../widgets/questra_card.dart';
 import '../quest/quest_controller.dart';
 import 'task_availability_service.dart';
@@ -26,49 +27,44 @@ class TaskScreen extends ConsumerWidget {
       ?today,
       ...tasks.where((task) => task.id != today?.id && task.isOpen),
     ];
-    return Scaffold(
-      appBar: AppBar(title: const Text('Task')),
-      body: SafeArea(
-        child: QuestraResponsiveListView(
-          padding: const EdgeInsets.all(20),
-          onRefresh: () => ref
-              .read(taskControllerProvider.notifier)
-              .loadForQuestIds(quests.map((quest) => quest.id).toList()),
-          children: [
-            TaskMutationBanner(
-              state: mutation,
-              onRetry: () async {
-                await ref.read(taskControllerProvider.notifier).retryPending();
-              },
-              onDiscard: () =>
-                  ref.read(taskControllerProvider.notifier).discardPending(),
-              onDismiss: () =>
-                  ref.read(taskMutationControllerProvider.notifier).clear(),
-            ),
-            if (mutation.isActive) const SizedBox(height: 12),
-            Text('今日の一歩', style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 6),
-            const Text('TaskはMissionを進めるための、今すぐ実行できる具体的な行動です。'),
-            const SizedBox(height: 18),
-            if (ordered.isEmpty)
-              ArcEmptyState(
-                title: '実行できるTaskはまだありません',
-                message: 'Questの航路からMissionを開き、最初のTaskを準備しよう。',
-                actionLabel: 'Missionを見る',
-                icon: Icons.check_circle_outline,
-                onAction: () => context.go(AppRoutes.mission),
-              )
-            else
-              for (final task in ordered)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _TaskCard(
-                    task: task,
-                    recommended: task.id == today?.id,
-                  ),
-                ),
-          ],
-        ),
+    return QuestraJourneyScaffold(
+      title: 'Task',
+      child: QuestraResponsiveListView(
+        padding: const EdgeInsets.all(20),
+        onRefresh: () => ref
+            .read(taskControllerProvider.notifier)
+            .loadForQuestIds(quests.map((quest) => quest.id).toList()),
+        children: [
+          TaskMutationBanner(
+            state: mutation,
+            onRetry: () async {
+              await ref.read(taskControllerProvider.notifier).retryPending();
+            },
+            onDiscard: () =>
+                ref.read(taskControllerProvider.notifier).discardPending(),
+            onDismiss: () =>
+                ref.read(taskMutationControllerProvider.notifier).clear(),
+          ),
+          if (mutation.isActive) const SizedBox(height: 12),
+          Text('今日の一歩', style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 6),
+          const Text('TaskはMissionを進めるための、今すぐ実行できる具体的な行動です。'),
+          const SizedBox(height: 18),
+          if (ordered.isEmpty)
+            ArcEmptyState(
+              title: '実行できるTaskはまだありません',
+              message: 'Questの航路からMissionを開き、最初のTaskを準備しよう。',
+              actionLabel: 'Missionを見る',
+              icon: Icons.check_circle_outline,
+              onAction: () => context.go(AppRoutes.mission),
+            )
+          else
+            for (final task in ordered)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _TaskCard(task: task, recommended: task.id == today?.id),
+              ),
+        ],
       ),
     );
   }

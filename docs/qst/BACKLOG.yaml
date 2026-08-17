@@ -1,5 +1,5 @@
 version: 1
-updated: 2026-07-24
+updated: 2026-08-09
 source: docs/product/qst_backlog.md
 notes:
   - QST-037 through QST-043 already exist in the current backlog as completed MVP/beta work.
@@ -7,6 +7,8 @@ notes:
   - Existing QST-044 and QST-045 are deferred while Arc Experience work is promoted to MVP priority.
   - QST-073 through QST-090 are planned in docs/qst/FEATURE_EXPANSION_BACKLOG.yaml.
   - QST-178 through QST-187 form the Quest Planning and Safety expansion requested after QST-177.
+  - The 2026-08-09 fixed 100-point UI/UX audit scored the current candidate 61/100 and registered QST-319 through QST-327.
+  - QST-299 and QST-300 were reopened after current-screen navigation and responsive regressions were visually confirmed.
 rules:
   selection:
     - Pick the first Ready item by numeric order.
@@ -2479,6 +2481,7 @@ items:
     acceptance:
       - Arc, today's Mission, and active Quest remain above secondary discovery sections.
       - Every restored section has real data, empty, loading, error, and hidden states.
+      - Horizon never presents a hardcoded fallback as a personalized recommendation and clearly identifies unavailable or insufficient-data states.
       - Home query count and initial rendering remain within the performance budget.
       - Deferred features do not leave dead shortcuts or explanatory clutter.
   - id: QST-208
@@ -3020,14 +3023,14 @@ items:
     acceptance: [Core architecture and cloud deployment pass; formal completion remains gated by provider-backed corpus quality, candidate-level regenerate/split/merge/Task conversion, Android/Web E2E, and executable dual-account SQL proof.]
   - id: QST-260
     title: Mission Card UX Redesign and Quest Mission Task Visual Separation
-    status: ImplementedE2EVisualProofPending
+    status: AutomatedWebAndroidPassPhysicalAccessibilityPending
     priority: P0
     epic: QUEST-HIERARCHY-V2
     depends_on: [QST-258, QST-259]
     goal: Questを最終目的、Missionを中間成果、Taskを具体行動として、説明なしでも理解できるMission操作体験へ刷新する。
     scope: Add a shared Task-derived Mission card, state-based primary CTA, compact metadata, next Task preview, overflow actions, outcome-focused Mission editing, distinct Mission and Task details, accessibility semantics, analytics, and regression tests.
     likely_files: [apps/mobile/lib/features/mission/widgets, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/lib/features/mission/mission_detail_screen.dart, apps/mobile/lib/features/task/task_detail_screen.dart, apps/mobile/lib/core/analytics/analytics_event.dart, reports/qst/QST-260.md]
-    acceptance: [Task-derived progress and next action are implemented; vertical action icons and normal-user confidence are removed; full Flutter analyze and tests pass; formal completion remains gated by Android/Web E2E and before-after screenshots.]
+    acceptance: [Task-derived progress and next action are implemented; vertical action icons and normal-user confidence are removed; automated Web and Android emulator gates pass; formal completion remains gated by physical-device accessibility, Japanese glyph, 200 percent text, and current-SHA visual evidence.]
   - id: QST-261
     title: Task Creation and Generation Completion Path
     status: ImplementedDeploymentE2EPending
@@ -3110,7 +3113,7 @@ items:
     acceptance: [One primary CTA is visible above the fold, save updates Timeline, and empty/create/error/keyboard tests pass.]
   - id: QST-269
     title: QST-260 Visual Accessibility and E2E Release Gate
-    status: ImplementedWebAndroidEvidencePending
+    status: AutomatedWebAndroidPassPhysicalAccessibilityPending
     priority: P1
     epic: QUEST-HIERARCHY-V2
     depends_on: [QST-261, QST-262, QST-263, QST-264, QST-265, QST-266, QST-267, QST-268]
@@ -3160,7 +3163,7 @@ items:
     acceptance: [Hosted expand_tasks succeeds, owner data reloads, another account cannot read or mutate it, and deployed versions and rollback point are recorded.]
   - id: QST-274
     title: Android and Web Core Journey Evidence Closure
-    status: ImplementedExternalDeviceEvidencePending
+    status: AutomatedWebAndroidPassPhysicalDevicePending
     priority: P0
     epic: RELEASE-EVIDENCE
     depends_on: [QST-269, QST-272, QST-273]
@@ -3410,24 +3413,24 @@ items:
     acceptance: [A draft survives route changes and restart, another account cannot read it, stale drafts expire, user can discard it, and no duplicate Quest is created.]
   - id: QST-299
     title: Settings and Beta Feedback Reachability
-    status: Completed
+    status: ReopenedReturnAffordanceRegression
     priority: P1
     epic: BETA-OPERATIONS
     depends_on: [QST-124, QST-296]
     goal: ProfileからSettings、Privacy、Data Rights、Beta Feedbackへ迷わず到達できる通常導線を完成する。
     scope: Add Profile actions, coherent return routes, feedback persistence boundary, loading and error states, and navigation accessibility tests.
     likely_files: [apps/mobile/lib/features/profile, apps/mobile/lib/features/settings, apps/mobile/lib/features/feedback, apps/mobile/lib/core/router, apps/mobile/test, reports/qst/QST-299.md]
-    acceptance: [Settings and Feedback are reachable without direct URLs, back navigation is stable, feedback state is honest, and Data Rights is no more than two actions from Profile.]
+    acceptance: [Settings and Feedback are reachable without direct URLs, Settings Feedback and Data Rights expose a visible and semantic return action, deep links have a stable fallback destination, feedback state is honest, and Data Rights is no more than two actions from Profile.]
   - id: QST-300
     title: Mobile Home Readability and Safe Insets
-    status: Completed
+    status: ReopenedResponsiveRegression
     priority: P1
     epic: HOME-UX
     depends_on: [QST-266, QST-280, QST-296]
     goal: 小型端末と大文字表示でHomeの次の一歩が省略・Bottom Navigation重なりなく読めるようにする。
     scope: Shorten copy, revise max lines, add bottom safe padding, compact empty sections, and update 320/390/large-text goldens.
     likely_files: [apps/mobile/lib/features/home, apps/mobile/lib/widgets/navigation, apps/mobile/test/goldens, reports/qst/QST-300.md]
-    acceptance: [Primary Task and Arc guidance remain readable at 320 and 390 widths, content clears navigation insets, large text has no overflow, and one primary CTA remains visible.]
+    acceptance: [Primary Task and Arc guidance remain readable without critical ellipsis at 320 and 390 widths, content clears navigation insets, the 768px Navigation Rail does not clip Profile, large text has no overflow, and one primary CTA remains visible.]
   - id: QST-301
     title: Hosted Candidate Evidence Closure
     status: ImplementedExternalEvidencePending
@@ -3500,7 +3503,7 @@ items:
     acceptance: [All ten QSTs are rechecked, unresolved Critical and High findings are registered, candidate evidence is current, and the next review boundary exists.]
   - id: QST-308
     title: Arc Draft Screen Integration
-    status: Planned
+    status: Completed
     priority: P0
     epic: ARC-RELIABILITY
     depends_on: [QST-298]
@@ -3510,7 +3513,7 @@ items:
     acceptance: [Draft restores after restart, answers survive, owner isolation passes, and discard is available.]
   - id: QST-309
     title: Data Rights Reauthentication and Worker
-    status: Planned
+    status: ImplementedDeploymentPending
     priority: P0
     epic: TRUST-PRIVACY
     depends_on: [QST-306]
@@ -3520,7 +3523,7 @@ items:
     acceptance: [Destructive work requires recent auth, can be cancelled in window, is idempotent, and is auditable.]
   - id: QST-310
     title: Unified Journey Surface Migration
-    status: Planned
+    status: Completed
     priority: P1
     epic: DESIGN-SYSTEM
     depends_on: [QST-302, QST-305]
@@ -3543,7 +3546,7 @@ items:
     status: PlannedExternalExecution
     priority: P0
     epic: RELEASE-MANAGEMENT
-    depends_on: [QST-301, QST-304, QST-309]
+    depends_on: [QST-301, QST-304, QST-309, QST-319]
     goal: 最新SHAでmigration、RLS、Gemini、Web/Android、TalkBack、artifactを実証する。
     scope: Deploy, strict two-account run, hosted E2E, physical device matrix and checksums.
     likely_files: [docs/qst, reports/qst/evidence, reports/qst/QST-312.md]
@@ -3608,6 +3611,525 @@ items:
     scope: Re-score all product and release gates and register the next evidence-driven cycle.
     likely_files: [docs/qst/BACKLOG.yaml, reports/qst/QST-318.md]
     acceptance: [All ten items are rechecked, blockers are carried forward, and the next review boundary exists.]
+  - id: QST-319
+    title: Authenticated Release Entry and Persistent Mode Guard
+    status: Planned
+    priority: P0
+    epic: BETA-TRUST
+    background: 現行Routerはprotected routeへのdirect URLを遮断せず、必須Backend設定がない場合はInMemoryへ静かに切り替わる。
+    problem: 未認証利用と非永続状態を正常な製品体験に見せ、保存済みと誤認させる可能性がある。
+    user_impact: 認証、所有者分離、再ログイン復元への信頼を失い、データ消失につながる。
+    goal: 配布candidateを認証必須かつ永続化fail-closedにし、開発用Demo Modeを明確に分離する。
+    target_screens: [Splash, Login, Signup, Home, Arc, Quest, Mission, Task, Trail, Profile]
+    target_routes: ['/', /login, /signup, /home, /arc, /quest, /mission, /task, /trail, /profile]
+    likely_files: [apps/mobile/lib/main.dart, apps/mobile/lib/core/router, apps/mobile/lib/core/config, apps/mobile/lib/features/auth, apps/mobile/test, apps/mobile/integration_test, reports/qst/QST-319.md]
+    scope: Add auth redirect and restoration state, production configuration validation, explicit Demo Mode badge and isolated storage namespace, startup loading/error/retry, and guarded deep-link tests.
+    out_of_scope: [Authentication provider expansion, paid account tiers, Supabase deployment execution]
+    ux: Unauthenticated protected routes return to Login and then resume the intended safe destination; configuration failure never looks like successful local persistence.
+    data_state: Demo data cannot share keys or repositories with authenticated production data and must be disposable.
+    error_states: [Auth loading, Session expired, Backend configuration missing, Network unavailable, Retry, Permission denied]
+    accessibility: Startup and redirect states expose semantic status, focus target, and keyboard-operable retry.
+    responsive: Auth and configuration failure screens must pass 320, 390, 768, and 1280 widths with 200 percent text.
+    acceptance:
+      - Every protected route redirects unauthenticated direct, reload, and deep-link access to Login.
+      - Successful authentication resumes only a validated internal destination.
+      - Production builds fail closed when required Supabase configuration is absent.
+      - Demo Mode is explicit, visually persistent, isolated from production storage, and excluded from release artifacts by default.
+      - Saving in Demo Mode cannot be reported as cloud persistence.
+    tests: [Router redirect widget tests, Startup configuration tests, Web deep-link E2E, Android restart E2E]
+    regression: [Password reset remains reachable, Web reload login policy remains intact, Auth callback destinations reject external URLs]
+    depends_on: [QST-301]
+    blocks: [QST-312, QST-327]
+    severity: Critical
+    difficulty: High
+    order: Beta pre-release 1
+    rollback: Feature-flag the guard only in internal builds while retaining the prior router snapshot; never relax production fail-closed behavior.
+    findings: [UX-001, UX-002]
+    master_spec_ref: [8.6 Product Experience Constitution, Phase Gate common conditions, 22 Trust Privacy and Transparency]
+    score_gain: 6
+    evidence: [Authenticated route matrix, Production config negative test, Demo storage isolation log, QST Report]
+  - id: QST-320
+    title: Truthful Home and Horizon State Model
+    status: Planned
+    priority: P0
+    epic: HOME-EXPERIENCE
+    background: Homeには今日のTaskという強い核がある一方、実履歴がない場合でも固定Horizonが個別推薦のように表示される。
+    problem: 架空のreadinessと提案がTrustを損ない、複数CTAと説明が次の一歩を弱める。
+    user_impact: ユーザーはArcが自分を理解していると誤認するか、提案を信用しなくなる。
+    goal: Homeを実データだけで構成し、今日の一歩を一意にし、Horizonの根拠不足を正直に表示する。
+    target_screens: [Home, Quest empty, Mission empty]
+    target_routes: [/home, /quest, /mission]
+    likely_files: [apps/mobile/lib/features/home, apps/mobile/lib/features/horizon, apps/mobile/lib/features/quest, apps/mobile/lib/features/mission, apps/mobile/test, reports/qst/QST-320.md]
+    scope: Remove fabricated personalized fallback, add typed real/loading/empty/error/hidden states, consolidate Primary CTA, shorten compact Arc copy, and preserve parent context.
+    out_of_scope: [New recommendation algorithm, Guild ranking, sponsor placements]
+    ux: Today Task is first; secondary sections cannot compete and unavailable recommendations explain the next data-producing action without invented readiness.
+    data_state: Every metric and recommendation carries source, freshness, and availability state.
+    error_states: [Partial section failure, Empty history, Recommendation unavailable, Offline cache stale, Retry]
+    accessibility: Section headings, source status, and Primary CTA have deterministic semantics and focus order.
+    responsive: No critical ellipsis or Navigation overlap at 320 / 390; medium Rail content remains readable.
+    acceptance:
+      - Home never displays hardcoded content as personalized data.
+      - One Primary CTA is visible above the fold for every state.
+      - Horizon supports real, loading, empty, error, hidden, and stale states.
+      - Quest and Mission empty states do not duplicate large explanatory cards and actions.
+      - 320 and 390 screenshots show readable Arc guidance and Today Task context.
+    tests: [Provider state tests, Home widget matrix, Golden 320 390 768 1280, Analytics source assertions]
+    regression: [Today Task parent context, Home query bounds, Deferred Guild remains hidden]
+    depends_on: [QST-207, QST-300]
+    blocks: [QST-324, QST-327]
+    severity: High
+    difficulty: Medium
+    order: Beta pre-release 4
+    rollback: Keep each restored section feature-flagged and revert to a truthful empty or hidden state.
+    findings: [UX-006, UX-007, UX-013]
+    master_spec_ref: [8.6 Product Experience Constitution, 21 Horizon, Phase Gate common conditions]
+    score_gain: 5
+    evidence: [State matrix screenshots, Fixture absence test, Query profile, QST Report]
+  - id: QST-321
+    title: Canonical Navigation and Return Contract
+    status: Planned
+    priority: P1
+    epic: INFORMATION-ARCHITECTURE
+    background: QST-197のBeta Navigationと古いarchitecture文書が競合し、Settings系画面には見える戻る操作がない。
+    problem: routeの到達と復帰が画面ごとの実装に依存し、medium RailでもProfile labelが欠ける。
+    user_impact: ユーザーが現在地と戻り先を予測できず、設定や権利画面で迷う。
+    goal: BetaのPrimary Navigation、direct route、push route、戻るfallbackを一つの契約へ統一する。
+    target_screens: [Home, Quest, Arc, Trail, Profile, Settings, Feedback, Data Rights, Guild Coming Soon]
+    target_routes: [/home, /quest, /arc, /trail, /profile, /settings, /feedback, /settings/data-rights, /guild]
+    likely_files: [docs/architecture/mvp-navigation.md, apps/mobile/lib/core/router, apps/mobile/lib/widgets/navigation, apps/mobile/lib/features/settings, apps/mobile/lib/features/feedback, apps/mobile/lib/features/trust, apps/mobile/test, reports/qst/QST-321.md]
+    scope: Synchronize active specification, define protected/direct/push destinations, visible back actions, deep-link fallback, selected state, Rail widths and route inventory tests.
+    out_of_scope: [Guild release, new tabs, universal links beyond current routes]
+    ux: Primary Navigation is Home Quest Arc Trail Profile; Settings descendants always show where they return; Guild remains honest Coming Soon outside Primary Navigation.
+    data_state: Navigation restoration must not switch account-owned draft or selected entity across users.
+    error_states: [Unknown route, Deleted entity, Permission denied, Empty back stack]
+    accessibility: Nav item labels, selected state, back action, tooltips, and focus order are explicit.
+    responsive: Bottom Navigation and Rail preserve all labels without overlap at 320 through expanded widths.
+    acceptance:
+      - Active architecture documentation and Router list the same Beta Navigation.
+      - Settings Feedback and Data Rights expose visible and semantic return actions.
+      - Direct links have deterministic safe fallback destinations.
+      - The 768px Rail renders Profile without clipping.
+      - Route inventory tests identify unreachable and future-only screens.
+    tests: [Router matrix, Back stack widget tests, Deep-link E2E, 320 and 768 navigation goldens]
+    regression: [Arc central emphasis, Trail primary route, Guild remains deferred, Password reset back behavior]
+    depends_on: [QST-197, QST-299]
+    blocks: [QST-323, QST-326, QST-327]
+    severity: High
+    difficulty: Medium
+    order: Beta pre-release 5
+    rollback: Retain the QST-197 five-destination list and revert individual shell changes independently.
+    findings: [UX-005, UX-006, UX-009]
+    master_spec_ref: [8.6 Product Experience Constitution]
+    score_gain: 4
+    evidence: [Route inventory, Back behavior recording, Responsive navigation screenshots, QST Report]
+  - id: QST-322
+    title: Arc-First Quest Entry Consolidation
+    status: Planned
+    priority: P1
+    epic: QUEST-CREATION-UX
+    background: Quest作成面はArc相談、manual form、category templateを同時に強く表示し、入口の優先順位が不明瞭である。
+    problem: 願いをArcと具体化するQuestra固有価値が、一般的な作成Formとtemplate galleryに埋もれる。
+    user_impact: 初回ユーザーがどの入口を選ぶべきか迷い、Quest確定前に離脱する。
+    goal: Arc相談をPrimary、manual作成を明示的fallback、templateを独立secondary pathとして整理する。
+    target_screens: [Arc, Quest empty, Quest create, Quest edit]
+    target_routes: [/arc, /quest, /quest/create, '/quest/:questId/edit']
+    likely_files: [apps/mobile/lib/features/arc, apps/mobile/lib/features/quest, apps/mobile/lib/core/router, apps/mobile/test, reports/qst/QST-322.md]
+    scope: Define entry modes, single Primary CTA, intent transfer, draft restoration, manual accessibility, source labels, cancel and return behavior.
+    out_of_scope: [New templates, Mission generation quality, Quest DNA model changes]
+    ux: New users begin with Arc; experienced users can choose manual creation; category inspiration never masquerades as personalized Quest planning.
+    data_state: Arc draft and manual form use typed separate states and convert only through explicit user action.
+    error_states: [Arc unavailable, Draft restore failed, Validation failed, Save failed, Cancel with unsaved input]
+    accessibility: Every entry mode has text labels, keyboard operation, predictable focus, and Japanese IME safety.
+    responsive: Primary choice remains above the fold on 320 and the form keeps its one-column max width on desktop.
+    acceptance:
+      - Quest entry presents exactly one visually Primary action.
+      - Arc is the default new-user path and manual creation remains available without obstruction.
+      - Category templates are not shown as competing personalized proposals on the initial form.
+      - Arc intent and target month transfer without duplicated or lost input.
+      - Back cancel retry and reload behavior is covered with QST-308 draft persistence.
+    tests: [Entry state unit tests, Quest empty widget test, Arc-to-form integration, Japanese IME E2E]
+    regression: [QST-294 long-form accessibility, QST-295 no suffix variants, Existing Quest edit]
+    depends_on: [QST-155, QST-294, QST-295, QST-308]
+    blocks: [QST-327]
+    severity: High
+    difficulty: Medium
+    order: Beta pre-release 6
+    rollback: Feature-flag the consolidated entry while retaining typed manual and Arc draft states.
+    findings: [UX-008]
+    master_spec_ref: [8.6 Product Experience Constitution, 9 Arc Constitution, 10 Quest System]
+    score_gain: 3
+    evidence: [Entry screenshots, CTA hierarchy golden, Intent transfer test, QST Report]
+  - id: QST-323
+    title: Onboarding Journey Controls and Resume
+    status: Planned
+    priority: P1
+    epic: ONBOARDING
+    background: Onboardingの言葉とArc表現は良いが、進捗、戻る、Skip、resumeが初期画面から理解できない。
+    problem: 線形なNextだけでは心理的負荷と離脱時の復帰不安が高い。
+    user_impact: 初回Questへ到達する前に離脱し、再開位置を失う。
+    goal: 3から5 stepの短いArc案内へprogress、Back、Skip、resume、Settings replayを追加する。
+    target_screens: [Onboarding, Settings, Arc]
+    target_routes: [/onboarding, /settings, /arc]
+    likely_files: [apps/mobile/lib/features/onboarding, apps/mobile/lib/features/settings, apps/mobile/lib/core/router, apps/mobile/test, reports/qst/QST-323.md]
+    scope: Step model, progress indicator, Back Skip resume replay, persisted owner-safe state, final Arc handoff, analytics and accessibility.
+    out_of_scope: [Profile personalization expansion, marketing carousel, remote experiment platform]
+    ux: Each step teaches one concept and ends at Arc consultation; Skip never traps the user and replay never destroys current data.
+    data_state: Persist only step and completion state, partitioned by installation or authenticated owner according to lifecycle.
+    error_states: [State read failure, State write failure, Interrupted onboarding, Account switch]
+    accessibility: Progress has semantic position, buttons are 44px, focus is stable, animation honors reduced motion.
+    responsive: One-column at mobile and tablet, no clipped controls with keyboard or 200 percent text.
+    acceptance:
+      - Onboarding has 3 to 5 steps with visible progress Back and Skip.
+      - Interrupted onboarding resumes at a valid step.
+      - Settings can replay the tour without resetting Quest data.
+      - Completion hands off to Arc with one Primary CTA.
+      - Web and Android tests cover skip resume back and Japanese labels.
+    tests: [State unit tests, Step widget tests, Restart integration, 320 and 200 percent golden]
+    regression: [Existing has-seen tutorial flag migration, Auth redirect, Settings reachability]
+    depends_on: [QST-132, QST-321]
+    blocks: [QST-327]
+    severity: High
+    difficulty: Medium
+    order: Beta pre-release 7
+    rollback: Preserve the previous completion flag and allow server-independent replay.
+    findings: [UX-012]
+    master_spec_ref: [8.6 Product Experience Constitution, Phase 1 MVP and Phase 2 Beta]
+    score_gain: 3
+    evidence: [Journey recording, Restart proof, Responsive screenshots, QST Report]
+  - id: QST-324
+    title: Achievement Loop UX Closure
+    status: Planned
+    priority: P1
+    epic: CORE-JOURNEY
+    background: Mission完了、Quest達成、Trail記録、Horizonは個別に存在するが一続きの候補SHA証跡がない。
+    problem: 行動完了後の達成感と次の行動が分断され、記録や次Questへ自然に進めない。
+    user_impact: 継続動機が弱まり、Questra固有の挑戦循環がToDo完了で終わる。
+    goal: Task完了からMission確認、Quest達成、Trail、Arc祝福、Horizonまでを一つの承認制loopにする。
+    target_screens: [Task detail, Mission detail, Quest detail, Trail create, Home, Horizon]
+    target_routes: ['/quest/:questId/mission/:missionId/task/:taskId', '/quest/:questId/mission/:missionId', '/quest/:questId', /trail, /home]
+    likely_files: [apps/mobile/lib/features/task, apps/mobile/lib/features/mission, apps/mobile/lib/features/quest, apps/mobile/lib/features/trail, apps/mobile/lib/features/home, apps/mobile/lib/features/horizon, apps/mobile/test, apps/mobile/integration_test, reports/qst/QST-324.md]
+    scope: Completion confirmation, idempotent transition, optional Trail capture, context transfer, Arc celebration, real-data Horizon, skip and later paths.
+    out_of_scope: [Public sharing, Guild ranking, monetary rewards]
+    ux: Completion celebrates effort without forcing posting; one next action is shown and users can safely defer Trail or Horizon.
+    data_state: Completion and Trail creation are idempotent, hierarchy-linked, reloadable, and owner-scoped.
+    error_states: [Completion save failed, Trail upload failed, Horizon unavailable, Partial success, Retry]
+    accessibility: Celebration does not rely on motion or color and reduced-motion users receive equivalent feedback.
+    responsive: The full loop passes mobile portrait, tablet, desktop, large text and keyboard.
+    acceptance:
+      - Required Tasks and explicit outcome confirmation gate Mission completion.
+      - Quest completion never occurs from progress percentage alone.
+      - Trail can be created or deferred without losing completion context.
+      - Arc celebration is non-blocking and Horizon uses only real eligible data.
+      - The full loop survives retry and reload without duplicates.
+    tests: [Domain transition tests, Idempotency tests, Web and Android E2E, Reduced-motion widget test]
+    regression: [QST-260 card states, QST-272 integrity, QST-285 Trail hierarchy, QST-320 truthful Horizon]
+    depends_on: [QST-272, QST-285, QST-312, QST-320]
+    blocks: [QST-327]
+    severity: High
+    difficulty: High
+    order: Beta pre-release 8
+    rollback: Keep completion records immutable and feature-flag only the orchestration and presentation layer.
+    findings: [UX-015]
+    master_spec_ref: [8.6 Product Experience Constitution, 11 Mission System, 12 Trail System, 21 Horizon]
+    score_gain: 4
+    evidence: [Hosted journey recording, Event audit, Retry proof, QST Report]
+  - id: QST-325
+    title: Cross-Screen Mutation and Recovery Contract
+    status: Planned
+    priority: P1
+    epic: CORE-JOURNEY-RELIABILITY
+    background: 保存・offline・retry・二重送信対策が機能ごとに実装され、ユーザー向け状態が統一されていない。
+    problem: 同じ失敗でも画面ごとに入力保持や再試行結果が異なり、信頼と保守性を損なう。
+    user_impact: 通信不安定時に入力や進捗を失う、または二重保存する不安が生じる。
+    goal: Quest Mission Task Trail Arc draft Feedbackへ共通のmutation stateと回復契約を適用する。
+    target_screens: [Quest create, Quest edit, Mission detail, Task detail, Trail create, Arc, Feedback]
+    target_routes: ['/quest/create', '/quest/:questId/edit', '/quest/:questId/mission/:missionId', '/quest/:questId/mission/:missionId/task/:taskId', /trail, /arc, /feedback]
+    likely_files: [apps/mobile/lib/core/persistence, apps/mobile/lib/widgets/status, apps/mobile/lib/features/quest, apps/mobile/lib/features/mission, apps/mobile/lib/features/task, apps/mobile/lib/features/trail, apps/mobile/lib/features/arc, apps/mobile/lib/features/feedback, apps/mobile/test, reports/qst/QST-325.md]
+    scope: Typed mutation phases, idempotency keys, input preservation, optimistic rollback boundary, offline queue visibility, retry discard and ownership rules.
+    out_of_scope: [Full offline-first synchronization, background media upload redesign, conflict-free replicated data]
+    ux: Saving saved failed queued and retry are understandable, non-blocking where safe, and never imply cloud success prematurely.
+    data_state: Every write has owner, operation ID, current phase, retry policy and duplicate prevention.
+    error_states: [Validation failed, Offline queued, Timeout, Rate limited, Permission denied, Conflict, Retry exhausted]
+    accessibility: Status changes use live regions without repeated announcements; retry and discard are keyboard and screen-reader operable.
+    responsive: Status does not cover input or Primary CTA at 320px or with keyboard open.
+    acceptance:
+      - Covered writes expose the same typed saving saved failed queued and retry semantics.
+      - User input survives recoverable failure and app restart where promised.
+      - Retry cannot create duplicate domain records.
+      - Account switching never replays another owner's pending mutation.
+      - Permission denied and conflict fail closed with a safe next action.
+    tests: [Shared contract tests, Feature adapter tests, Restart and owner-switch integration, Offline E2E]
+    regression: [Task durable queue, Arc draft expiry, Feedback receipt, Media upload boundaries]
+    depends_on: [QST-255, QST-277, QST-287, QST-313]
+    blocks: [QST-327]
+    severity: High
+    difficulty: High
+    order: Beta pre-release 9
+    rollback: Migrate one feature at a time behind adapters and retain previous repository behavior until contract tests pass.
+    findings: [UX-011, UX-019]
+    master_spec_ref: [8.6 Product Experience Constitution, Phase Gate common conditions, 29 Technical Constitution]
+    score_gain: 3
+    evidence: [State matrix, Fault injection results, Duplicate audit, QST Report]
+  - id: QST-326
+    title: Screen Bible and UI State Matrix V1
+    status: Planned
+    priority: P1
+    epic: PRODUCT-DESIGN-SYSTEM
+    background: Master SpecとDesign Bibleはあるが、画面責務、route、CTA、状態、戻る、証跡を結ぶ正式なScreen Bibleがない。
+    problem: 画面ごとに状態とNavigationが局所判断され、同じ回帰が繰り返される。
+    user_impact: 不統一な画面遷移、空状態、失敗復帰、CTA優先度として現れる。
+    goal: Beta主要画面の責務と全状態を、実装とGoldenへ追跡可能な唯一のScreen Bibleとして定義する。
+    target_screens: [Splash, Auth, Onboarding, Home, Arc, Quest, Mission, Task, Trail, Profile, Settings, Feedback, Data Rights, Coming Soon]
+    target_routes: [All Beta routes]
+    likely_files: [docs/product/SCREEN_BIBLE_V1.md, docs/product/DESIGN_BIBLE_V2.md, docs/architecture/mvp-navigation.md, reports/qst/UI_UX_100_POINT_TRACEABILITY_20260809.md, reports/qst/QST-326.md]
+    scope: Screen purpose, source data, Primary CTA, secondary and dangerous actions, state matrix, route entry/exit, responsive and accessibility evidence IDs.
+    out_of_scope: [Pixel-perfect mock for every future screen, app code changes, Guild future experience]
+    ux: Each screen has one purpose and a deterministic next action for every supported state.
+    data_state: Documentation identifies source of truth, freshness, mock prohibition and owner boundary for each screen.
+    error_states: [Initial, Loading, Empty, Content, Saving, Success, Error, Offline, Retry, Permission denied]
+    accessibility: Every screen contract includes semantics, focus, tap target, text scale and reduced-motion requirements.
+    responsive: Contracts cover compact, medium, expanded and 200 percent text baselines.
+    acceptance:
+      - Every Beta route maps to one screen responsibility and owner.
+      - Every major screen defines all required states or an explicit not-applicable reason.
+      - Primary secondary and dangerous actions are ranked.
+      - Design Bible and Navigation spec link to the Screen Bible without contradiction.
+      - Traceability maps each Critical and High finding to a screen contract and test.
+    tests: [Markdown link verifier, Route-to-screen completeness verifier, State matrix linter, Terminology verifier]
+    regression: [Master Spec priority, QST-197 Beta Navigation, QST-260 hierarchy]
+    depends_on: [QST-208, QST-321]
+    blocks: [QST-327]
+    severity: Medium
+    difficulty: Medium
+    order: 90-point foundation
+    rollback: Version the document and retain superseded contracts with explicit status rather than deleting history.
+    findings: [UX-005, UX-013, UX-018]
+    master_spec_ref: [8.6 Product Experience Constitution, 31.6 Product Definition of Done]
+    score_gain: 2
+    evidence: [Screen coverage verifier, Review approval, QST Report]
+  - id: QST-327
+    title: UI UX 90-Point Candidate Evidence Gate
+    status: PlannedExternalExecution
+    priority: P0
+    epic: CONTINUOUS-QUALITY
+    background: QST完了数や個別test成功だけでは、実ユーザーが一続きの旅を完走できることを証明できない。
+    problem: 未確認項目をPassとして扱うと、Criticalを残したまま見かけの点数だけが上がる。
+    user_impact: Betaで認証、保存、復元、IME、読み上げ、次の行動が破綻する危険が残る。
+    goal: 固定100点基準で現行candidateを再監査し、90点以上かつCritical 0をBeta配布Gateにする。
+    target_screens: [All Beta screens]
+    target_routes: [All Beta routes]
+    likely_files: [reports/qst, reports/qst/evidence, docs/qst/BETA_CANDIDATE.yaml, docs/qst/BETA_DEVICE_VALIDATION.yaml, docs/qst/BACKLOG.yaml, reports/qst/QST-327.md]
+    scope: Current-SHA screen audit, hosted Supabase and Gemini, dual-account RLS, core journey, failure injection, physical accessibility, responsive matrix, score and Go No-Go.
+    out_of_scope: [Feature implementation, score rubric relaxation, future Guild Dream Board Premium]
+    ux: First-use and returning journeys are evaluated by evidence and representative users, not implementation presence alone.
+    data_state: Candidate identity, migration head, model prompt schema versions and artifacts are immutable in the report.
+    error_states: [Every state required by Master Spec Section 8.6]
+    accessibility: Physical TalkBack and Japanese IME are mandatory; iOS is required before iOS distribution.
+    responsive: 320, 390, 768, 1280, landscape where applicable, and 200 percent text are mandatory.
+    acceptance:
+      - Fixed score is at least 90 and no Critical finding remains.
+      - All external evidence is bound to one candidate SHA.
+      - Authentication persistence reload RLS Gemini and the full achievement loop pass.
+      - Core screens have no critical overflow and pass physical accessibility requirements.
+      - Every residual High has an owner due date mitigation and explicit Beta acceptance.
+      - Go or No-Go is recorded without treating Unverified as Pass.
+    tests: [Hosted Web E2E, Android physical E2E, Dual-account SQL, Failure injection, Accessibility device matrix, Human usability script]
+    regression: [All QST-260 gates, Master Spec terminology, Arc neutrality, no fabricated user data]
+    depends_on: [QST-308, QST-309, QST-310, QST-311, QST-312, QST-313, QST-314, QST-315, QST-316, QST-317, QST-319, QST-320, QST-321, QST-322, QST-323, QST-324, QST-325, QST-326]
+    blocks: [External Beta distribution]
+    severity: Critical
+    difficulty: High
+    order: Final Beta gate
+    rollback: A failed gate keeps distribution disabled and preserves the last verified candidate and evidence set.
+    findings: [UX-001, UX-002, UX-003, UX-004, UX-006, UX-007, UX-008, UX-009, UX-010, UX-011, UX-012, UX-014, UX-015, UX-016, UX-019, UX-020]
+    master_spec_ref: [8.6 Product Experience Constitution, Phase Gate common conditions, 31.6 Product Definition of Done]
+    score_gain: Re-score only
+    evidence: [100-point audit, Hosted logs, Device recordings, Artifact checksums, Human review notes, QST Report]
+  - id: QST-328
+    title: Arc General Conversation and Consent-based Quest Routing
+    status: ImplementedDeploymentPending
+    priority: P0
+    epic: ARC-EXPERIENCE
+    goal: Arcが一般質問や気持ちの整理へ直接応答し、明示的な同意なしに会話をQuest化しない境界を確立する。
+    scope: Intent classification, structured response contract, context minimization, consent CTA, decline suppression, safety and ownership validation.
+    out_of_scope: [Automatic Quest persistence, New custom web search, Clinical diagnosis, Hosted Edge Function deployment]
+    acceptance:
+      - General questions and conversation support do not expose Quest operations.
+      - A safe multi-step wish may expose one consent CTA without saving data.
+      - Quest and journey context is supplied only for the required intent.
+      - Unknown malformed or unsafe structured output fails closed.
+      - Related Quest IDs are filtered to the authenticated user's supplied context.
+      - Declining the CTA suppresses the same suggestion during the current Arc session.
+    tests: [Arc routing unit tests, Structured response validation, Ownership filtering, Safety regression]
+    depends_on: [QST-064, QST-155, QST-160, QST-179, QST-180]
+    blocks: [Hosted Arc consent-routing verification]
+    rollback: Disable the consent CTA while preserving general conversation; never restore automatic Quest conversion.
+    master_spec_ref: [9.4 General Conversation and Quest Consent, 22 Trust Privacy and Transparency]
+    evidence: [reports/qst/QST-328.md]
+  - id: QST-329
+    title: Context-bound Gemini Mission Generation
+    status: ImplementedDeploymentPending
+    priority: P0
+    epic: QUEST-PLANNING
+    goal: ユーザーが回答した航路条件に直接対応するMissionだけをGeminiで設計し、内部Planning工程や固定FallbackをMissionとして表示しない。
+    scope: Travel clarification dimensions, approved answer propagation, prompt versioning, semantic rejection, non-template failure behavior.
+    out_of_scope: [Singapore-specific templates, Automatic booking, Hosted function deployment, New recommendation marketplace]
+    acceptance:
+      - Travel planning can collect schedule companions budget desired activities and travel style.
+      - Clarification answers are included in the Quest planning input supplied to Gemini.
+      - Internal planning artifacts are rejected before preview persistence.
+      - Gemini failure never returns fixed Mission candidates.
+      - Non-travel wishes do not receive travel-only clarification questions.
+      - Mission and repair prompts require direct alignment with explicit user context.
+    tests: [Clarification dimension tests, Local fallback regression, Prompt contract test, Semantic validator contract]
+    depends_on: [QST-252, QST-255, QST-258, QST-259, QST-328]
+    blocks: [Hosted contextual Mission generation verification]
+    rollback: Revert prompt version only; retain the no-template fallback and internal-artifact rejection rules.
+    master_spec_ref: [11.1 Mission Design Principles, 11.2 Mission Generation]
+    evidence: [reports/qst/QST-329.md]
+  - id: QST-330
+    title: Progression and Premium Boundary Foundation
+    status: ImplementedDeploymentPending
+    priority: P0
+    epic: PROGRESSION-MONETIZATION-BOUNDARY
+    goal: Stardustを唯一の進捗値としてNavigator Rankを決定し、進捗を販売しないPremium境界とサーバー管理の利用ポリシー基盤を確立する。
+    scope: Stardust award RPC, idempotent event ledger, deterministic Rank thresholds, unified Profile progression UI, entitlement and usage policy foundation.
+    out_of_scope: [Payment SDK, Pricing UI, Hard paywall, Paid Stardust, Paid Rank, Hosted migration deployment]
+    acceptance:
+      - Navigator Rank is derived only from cumulative Stardust.
+      - Arc conversation and Mission creation do not award Stardust.
+      - The client never supplies an award amount to the server.
+      - Repeated or cross-account award requests cannot increase the balance.
+      - Profile shows Rank Stardust progress and the remaining amount without internal score labels.
+      - Basic Arc consultation Quest planning and initial Mission planning remain Free core capabilities.
+      - Server-verified quota exhaustion cannot be overridden by a client flag.
+      - No payment or pricing integration is introduced.
+    tests: [Progression unit tests, Premium policy tests, SQL contract tests, Flutter analyze, Flutter test]
+    depends_on: [QST-057, QST-058, QST-087, QST-329]
+    blocks: [Hosted progression RLS verification, Future billing decision]
+    rollback: Disable award RPC calls and retain the append-only event ledger; do not restore client-side balance mutation or Rank Score.
+    master_spec_ref: [Core Terminology, Revenue Engine, Non-Negotiable Principles]
+    evidence: [reports/qst/QST-330.md]
+  - id: QST-331
+    title: Quest Journey Information Architecture and Progress Contract
+    status: Implemented
+    priority: P0
+    epic: QUEST-JOURNEY-WORKSPACE
+    goal: Quest詳細を次の一歩と航路編集へ集中させ、Quest Mission Task Trailの責務と進捗契約を統一する。
+    scope: Focus/Plan responsibility, hierarchy terminology, Task state compatibility, outcome-weighted Quest progress.
+    acceptance:
+      - Quest進捗はTask件数ではなくrequired active outcome Missionから算出される。
+      - FocusとPlanの画面責務が正式仕様として追跡できる。
+      - 既存QST-261〜267を上書きしない。
+    tests: [Outcome progress unit test]
+    depends_on: [QST-258, QST-260, QST-330]
+    blocks: [QST-332, QST-333]
+    rollback: 契約文書をversion管理し、旧Mission一覧のデータを変更しない。
+    master_spec_ref: [Quest System, Mission System, Trail System, Technical Constitution]
+    evidence: [docs/product/QUEST_JOURNEY_WORKSPACE.md, reports/qst/QST-331.md]
+  - id: QST-332
+    title: Quest Journey Hierarchy Integrity and Atomic Operations
+    status: ImplementedDeploymentPending
+    priority: P0
+    epic: QUEST-JOURNEY-WORKSPACE
+    goal: Task完了と並べ替えを所有権・親階層・version検証付きtransactionにする。
+    scope: Task origin/version/deferred, hierarchy trigger, atomic completion RPC, reorder RPC, idempotent progression.
+    acceptance:
+      - Task完了と進捗再計算とStardustが同一transactionで実行される。
+      - 他人のTask、親不一致、依存未完了、stale versionを拒否する。
+      - 企業支援由来Taskは承認proposalなしに保存できない。
+    tests: [Local contract test, Hosted two-account RLS pending]
+    depends_on: [QST-331, QST-330]
+    blocks: [QST-333, Hosted Beta evidence]
+    rollback: RPC利用を停止しmigrationを保持する。client-side progression mutationへ戻さない。
+    master_spec_ref: [Trust Privacy and Transparency, Technical Constitution]
+    evidence: [supabase/migrations/202608170003_quest_journey_workspace.sql, reports/qst/QST-332.md]
+  - id: QST-333
+    title: Quest Journey Plan Workspace
+    status: Implemented
+    priority: P0
+    epic: QUEST-JOURNEY-WORKSPACE
+    goal: Quest詳細をMission accordionと直下Taskによる実行可能なPlan Workspaceへ刷新する。
+    scope: Focus/Plan switch, multi-expand Mission accordion, inline Task complete/undo/add/reorder, completed collapse, detail disclosure.
+    acceptance:
+      - 現在Missionが初期展開され複数Missionを任意に展開できる。
+      - TaskをMission直下で完了、Undo、追加、並べ替えできる。
+      - 完了TaskとMissionは初期状態で折りたたまれる。
+      - 詳細情報が次の一歩より先に表示されない。
+    tests: [Widget smoke, Workspace compile]
+    depends_on: [QST-331, QST-332]
+    blocks: [QST-334, QST-337]
+    rollback: QUEST_JOURNEY_WORKSPACE=falseでLegacy Mission一覧へ戻す。
+    master_spec_ref: [Product Experience Constitution, Design Bible V2]
+    evidence: [apps/mobile/lib/features/quest_journey, reports/qst/QST-333.md]
+  - id: QST-334
+    title: Today Focus and Cross-Quest Execution
+    status: Implemented
+    priority: P0
+    epic: QUEST-JOURNEY-WORKSPACE
+    goal: HomeとQuest詳細で共通の最大3件Focusを提示し、親階層を保持して行動へ遷移する。
+    scope: Focus selector, Home next two Tasks, Quest/Mission/Task deep link.
+    acceptance:
+      - Focusは依存関係を満たすTaskを最大3件表示する。
+      - HomeとWorkspaceは同じ選定規則を利用する。
+      - deep linkがQuest Mission Task contextを保持する。
+    tests: [Focus selection unit test]
+    depends_on: [QST-333]
+    blocks: [QST-337]
+    rollback: Home追加Taskを非表示にし、primary Task導線を維持する。
+    master_spec_ref: [Home Experience, Quest System]
+    evidence: [reports/qst/QST-334.md]
+  - id: QST-335
+    title: Mission and Task Semantic Quality with Partial Replanning
+    status: ImplementedFoundation
+    priority: P1
+    epic: QUEST-JOURNEY-WORKSPACE
+    goal: Mission成果とTask行動の意味境界を検証し、低品質な未完了Taskだけを部分再計画する。
+    scope: Duplicate/cycle/outcome/granularity checks, partial repair scope, Mission-context Arc consultation.
+    acceptance:
+      - duplicateとdependency cycleを検出する。
+      - 完了Taskと兄弟Missionは部分再計画で変更されない。
+      - MissionからArcへ対象文脈付きで相談できる。
+    tests: [Semantic quality unit tests, Partial repair boundary test]
+    depends_on: [QST-252, QST-259, QST-333]
+    blocks: [Hosted partial replan integration]
+    rollback: 品質Serviceをadvisoryへ戻し、既存Mission/Taskを自動変更しない。
+    master_spec_ref: [Mission System, Arc Constitution, AI Development Constitution]
+    evidence: [reports/qst/QST-335.md]
+  - id: QST-336
+    title: Task Origin Arc Suggestion and Enterprise Support Separation
+    status: ImplementedDeploymentPending
+    priority: P0
+    epic: QUEST-JOURNEY-WORKSPACE
+    goal: ユーザー、Arc、copy、企業支援由来のTaskを追跡し、提案と確定行動を分離する。
+    scope: Task origin contract, origin badge, enterprise support boundary, accepted proposal DB guard.
+    acceptance:
+      - Task起源がDBとUIで追跡できる。
+      - Arc提案と企業支援が承認なしにTaskへ変換されない。
+      - 企業支援が中立的な航路とは別領域に表示される。
+    tests: [Task origin mapping test, Hosted proposal guard pending]
+    depends_on: [QST-332, QST-333]
+    blocks: [Enterprise hosted verification]
+    rollback: origin表示を隠してもDB監査情報と承認境界は保持する。
+    master_spec_ref: [Enterprise Platform, Quest Support Model, Arc Constitution]
+    evidence: [reports/qst/QST-336.md]
+  - id: QST-337
+    title: Quest Journey Quality Accessibility and Staged Rollout Gate
+    status: ImplementedExternalValidationPending
+    priority: P0
+    epic: QUEST-JOURNEY-WORKSPACE
+    goal: Workspaceを安全に段階配布できる性能・アクセシビリティ・rollback gateを確立する。
+    scope: Semantics, 48dp targets, responsive layout, feature kill switch, unit/smoke tests, external evidence checklist.
+    acceptance:
+      - Workspaceをdart-defineで即時停止できる。
+      - 小画面とtext scaleで主要操作がoverflowしない。
+      - Hosted RLS、Android/Web、TalkBack、IME、large dataは未検証をPass扱いしない。
+    tests: [QST-331-337 focused tests, App widget smoke, Full analyze/test]
+    depends_on: [QST-331, QST-332, QST-333, QST-334, QST-335, QST-336]
+    blocks: [Quest Journey Beta rollout]
+    rollback: QUEST_JOURNEY_WORKSPACE=falseで旧表示へ戻し、DB整合性migrationは維持する。
+    master_spec_ref: [Product Definition of Done, Accessibility, Technical Constitution]
+    evidence: [reports/qst/QST-337.md]
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

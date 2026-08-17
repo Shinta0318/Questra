@@ -44,13 +44,7 @@ class ProfileScreen extends ConsumerWidget {
         .resolve(profile?.stardustBalance ?? 0);
     final navigatorRank = ref
         .watch(navigatorRankServiceProvider)
-        .resolve(
-          quests: quests,
-          missions: missions,
-          trails: trails,
-          bondScore: profile?.bondScore ?? 0,
-          stardustBalance: profile?.stardustBalance ?? 0,
-        );
+        .resolve(stardustBalance: profile?.stardustBalance ?? 0);
 
     return Scaffold(
       appBar: AppBar(
@@ -85,9 +79,7 @@ class ProfileScreen extends ConsumerWidget {
                   Text(profile?.email ?? 'ログインしていません'),
                   const SizedBox(height: 8),
                   Text(
-                    profile == null
-                        ? 'この端末だけのゲスト航路です'
-                        : '航路の所有者ID: ${profile.id}',
+                    profile == null ? 'この端末だけのゲスト航路です' : 'ログイン中の航路です',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 12),
@@ -118,15 +110,7 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _ArcBondCard(bond: bond, profileAvailable: profile != null),
             const SizedBox(height: 16),
-            _StardustCard(
-              stardust: stardust,
-              profileAvailable: profile != null,
-            ),
-            const SizedBox(height: 16),
-            _NavigatorRankCard(
-              rank: navigatorRank,
-              storedRank: profile?.navigatorRank,
-            ),
+            _NavigatorRankCard(rank: navigatorRank, stardust: stardust),
             const SizedBox(height: 16),
             QuestraCard(
               child: Column(
@@ -168,62 +152,11 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-class _StardustCard extends StatelessWidget {
-  const _StardustCard({required this.stardust, required this.profileAvailable});
-
-  final StardustState stardust;
-  final bool profileAvailable;
-
-  @override
-  Widget build(BuildContext context) {
-    return QuestraCard(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: QuestraColors.gold.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(Icons.auto_awesome, color: QuestraColors.gold),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Stardust', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 4),
-                Text(
-                  profileAvailable
-                      ? stardust.description
-                      : 'ログインすると活動のしるしをプロフィールに保存できます。',
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '${stardust.balance}',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: QuestraColors.deepNavy,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Text(stardust.label),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _NavigatorRankCard extends StatelessWidget {
-  const _NavigatorRankCard({required this.rank, required this.storedRank});
+  const _NavigatorRankCard({required this.rank, required this.stardust});
 
   final NavigatorRankState rank;
-  final String? storedRank;
+  final StardustState stardust;
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +184,7 @@ class _NavigatorRankCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Navigator Rank',
+                      'Stardust / Navigator Rank',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 4),
@@ -270,6 +203,14 @@ class _NavigatorRankCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
+          Text(
+            '${stardust.balance} Stardust',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: QuestraColors.gold,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
@@ -282,13 +223,10 @@ class _NavigatorRankCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              Chip(label: Text('ランクスコア ${rank.score}')),
-              if (storedRank != null) Chip(label: Text('保存済み: $storedRank')),
-            ],
+          Text(
+            rank.isMaxRank
+                ? '最高ランクに到達しています'
+                : '次のランクまで ${rank.remainingToNext} Stardust',
           ),
         ],
       ),

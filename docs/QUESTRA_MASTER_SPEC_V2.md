@@ -1,9 +1,9 @@
-# Questra Master Spec v2.0
+# Questra Master Spec v2.1
 
 > Status: Ratified / Active
-> Version: 2.0
+> Version: 2.1
 > Effective date: 2026-07-25
-> Last reviewed: 2026-07-25
+> Last reviewed: 2026-08-09
 > Scope: Product, experience, data, AI, technology, business, and operations
 > Authority: Highest-level product constitution
 
@@ -174,8 +174,8 @@ Quest、Mission、Task、Trailは明確なプロダクト構造でありなが�
 | Task | 1つのMissionに属する、今すぐ実行できる最小の具体行動。 |
 | Trail | 挑戦の記録、進捗、学び、感情、軌跡。 |
 | Guild | 同じQuest、関心、経験を持つユーザーが助け合うコミュニティ。 |
-| Stardust | 挑戦、継続、記録によって得る経験値。金銭ではない。 |
-| Navigator Rank | 旅路全体の経験を表すユーザーレベル。優劣を断定する指標ではない。 |
+| Stardust | 意味のある行動の完了によって得る、唯一のユーザー向け進捗経験値。金銭ではなく、購入・譲渡できない。 |
+| Navigator Rank | 累計Stardustのしきい値だけから決定的に算出する旅路の段階。別のRank Scoreを持たず、優劣を断定しない。 |
 | Bond | Arcとの親密度および関係性の成熟度。 |
 | Star Map | ユーザーに合うQuest、Guild、知識、支援を発見する面。 |
 | Constellation | 挑戦の節目や多様な実績を表すバッジ・実績群。 |
@@ -215,6 +215,37 @@ Quest DNA、Challenge Graph、Quest Passportなどを通じて、挑戦を本人
 信用・実績・機会へ変える。ただし個人評価や企業利用は、本人の明示的な
 同意と透明性を前提とする。
 
+### 8.6 Product Experience Constitution
+
+QuestraのDesign North Starは、**迷いを減らし、次の一歩を自然に選べること**である。
+世界観や情報量は、この理解を妨げない範囲でのみ価値を持つ。
+
+- 中心導線は、`Arc相談 → Quest確認 → Mission生成 → Task・今日の一歩 → 進捗 → 達成 → Trail → Horizon` とする。
+- 主要画面は、ユーザーが3秒以内に現在地、現在の状態、次の行動、最重要CTAを判断できなければならない。
+- 主要画面のPrimary CTAは原則1つとし、補助操作と危険操作を同じ視覚優先度にしない。
+- Homeまたは主要な再訪面は、今すぐ実行できる最小のTaskを、親MissionとQuestの文脈付きで示す。
+- 延期、未着手、期限超過は失敗として責めず、Arcが状況確認、Route調整、再開を提案する。
+- AI生成、Arc提案、ユーザー入力、企業支援、モックまたは開発用データは、由来と確定状態を視覚的・意味的に区別する。
+- 実データがない場合に、架空の進捗、個別推薦、成功、保存完了を表示してはならない。
+
+主要画面は `Initial / Loading / Empty / Content / Saving / Success / Error / Offline / Retry / Permission denied` を設計対象とする。未保存入力は、画面遷移、再試行、認証復帰、アプリ再起動の各境界で、ユーザーへ明示した方針に従って保持または破棄する。通信失敗を成功表示へ置き換えてはならない。
+
+画面責務は次の通りとする。
+
+- Home: 現在地、今日の一歩、進行中Quest、直近Trail、次の提案を集約する再訪面。
+- Arc: 願いの言語化、Quest確認、航路相談、振り返りを行う伴走面。単なるチャット一覧にしない。
+- Quest: 到達状態、期限、全体進捗、Mission階層、航路変更を管理する。
+- Mission: Quest達成に必要な主要行動、成果条件、関連Taskと参考情報を管理する。
+- Task: 今実行できる具体行動、状態、期限、依存関係を扱う。
+- Trail: 行動、学び、感情、証拠を旅の記録として残す。
+- Profile / Settings: 本人情報、体験設定、Privacy、Data Rights、Feedbackへの予測可能な入口を提供する。
+
+BetaのPrimary Navigationは、正式なRelease Decisionで採用した面だけを表示する。未完成機能は完成を装わず、価値と復帰導線が明確なComing Soonとして公開するか、Navigationから隠すか、Beta対象外とする。主要導線から外れた画面も、到達方法と戻る方法をScreen Bibleで定義する。
+
+AccessibilityとResponsiveは後工程の装飾ではない。主要導線は少なくともスマートフォン縦幅320pxから、タブレット、デスクトップ、200%文字拡大、日本語IME、キーボード操作、44px以上の操作領域、意味のあるSemanticsとfocus順を満たす。色、動き、触覚だけで状態を伝えない。
+
+Master Specは恒久原則と画面責務、Design Bibleは視覚・操作TokenとComponent規則、Screen Bibleは画面別の状態・CTA・Navigation契約、QSTは実装差分、監査レポートは時点証跡を管理する。いずれかを変更したときは、影響する下位文書と回帰テストを同じDecision RecordまたはQSTで追跡する。
+
 ## 9. Arc Constitution
 
 Arcは単なるAIではなく、ユーザーの人生の挑戦に伴走する存在である。
@@ -245,7 +276,19 @@ Arcは企業案件を隠して推薦してはいけない。企業支援が含�
 支援企業、支援内容、選定理由、対価や提携関係、代替案を分かりやすく示す。
 企業の都合ではなく、ユーザーのQuestとの適合性を優先する。
 
-### 9.4 禁止事項
+### 9.4 一般対話とQuest化の同意
+
+Arcは一般的な質問、気持ちの整理、雑談にもまず直接応答する。すべての会話を
+Questへ変換してはならない。複数段階の挑戦として扱う価値がある願いを検出した
+場合も、Arcが示せるのは「Questとして始める」という提案までであり、生成・保存・
+既存Questの変更はユーザーの明示的な承認後にのみ行う。ユーザーが相談として
+続けることを選んだ場合、同じ入力に対するQuest化提案を直ちに繰り返さない。
+
+会話文脈は意図に応じて最小化する。一般質問と気持ちの整理には既存のQuest、
+Mission、Task、Trail、Arc Memoryを自動投入せず、進行中Questへの支援であると
+判定できた場合だけ、所有権を確認した関連情報を必要最小限参照する。
+
+### 9.5 禁止事項
 
 - 不安、罪悪感、孤独を利用して継続や購入を迫る。
 - 企業案件を自然な助言に偽装する。
@@ -309,6 +352,8 @@ Missionは具体行動の一覧ではなく、「何ができた状態になれ�
 - AI生成結果は候補であり、ユーザーが採用・編集・削除できる。
 - 実行は必ず1件以上のTaskへ分解し、完了時はTrailへ自然に接続する。
 - 停滞時はSignalやArcの心配として扱い、叱責しない。
+- 成功条件の定義、既知条件と不明点の整理、計画方法の決定はPlanning Engineの内部工程として扱い、それ自体をユーザー向けMissionにしない。
+- 日程、同行者、予算、重視する体験、利用可能時間、スタイルなど、ユーザーが明示した条件をMission設計へ反映する。入力済みの条件を再収集するだけのMissionを作らない。
 
 ### 11.2 生成
 
@@ -320,6 +365,8 @@ Mission数を製品都合の固定数へ合わせて水増ししてはならな�
 複雑さに応じて必要最小限の完全な航路を設計し、実装上の安全な上下限内で
 件数を決める。Missionは依存関係、優先度、期間、成功条件を持てる。
 グラフは循環せず、すべて同一Questと正しい所有者境界に属さなければならない。
+GeminiまたはPlanning APIが利用できない場合、固定テンプレートMissionへ置き換えず、
+入力を保持した再試行または手動作成を案内する。
 
 ### 11.3 Task
 
@@ -732,6 +779,14 @@ Questraの収益は、挑戦を支援した価値の対価として得る。
 
 MVP/Betaでは課金機能を複雑化せず、将来のFeature Flagと計測境界のみ準備する。
 
+### 23.4 Premium境界
+
+- FreeでもArcとの基本相談、Quest設計、最初のMission設計を利用できる。
+- Premium候補は、Missionの再設計、詳細な進捗レビュー、長期記憶など「伴走の深さ」で検討する。
+- Stardust、Navigator Rank、Bond、達成確率、推薦順位、安全機能を課金で優遇しない。
+- 利用回数やFair Useはサーバー側の設定と監査可能な利用記録で判定し、クライアントのフラグだけで解除できない。
+- MVP/Betaでは決済を導入せず、無料範囲と将来候補を検証可能な境界だけを設ける。
+
 ## 24. Growth Strategy
 
 成長は利用時間の最大化ではなく、価値ある挑戦の循環を増やすことで実現する。
@@ -919,6 +974,10 @@ Mission、Trail、Arcの単一ユーザー価値を成立させ、その後Guild
 - CriticalなSecurity、Privacy、Data loss、Safety blockerが0件である。
 - 未解決HighリスクにOwner、期限、回避策がある。
 - AI失敗、通信断、空状態、保存失敗でユーザーの操作が破綻しない。
+- 認証が必要なrouteは直接URL、再読み込み、deep linkでも保護され、未認証ユーザーは認証フローへ戻る。
+- 配布構成では、必須Backend設定の欠落を開発用ローカルデータへ黙ってFallbackせず、起動を安全に停止するか明示的なDemo Modeとして区別する。
+- 主要画面が3秒ルール、1画面1主要CTA、状態完全性を満たし、実データと開発用表示を混同しない。
+- スマートフォン縦画面、200%文字、日本語IME、キーボード、Screen readerの対象証跡がcandidate SHAへ結び付いている。
 - RLS、認証、Backup、Rollback、監視、問い合わせ導線の証跡がある。
 - Legal、Store、Accessibility、Performanceの対象Gateを通過している。
 - Go / No-Goの根拠と残余リスクをRelease Reportへ残す。
@@ -1145,6 +1204,7 @@ Arcはその旅路の中心でユーザーの味方であり続ける。企業�
 
 ### Ratification Record
 
+- 2026-08-09: v2.1としてProduct Experience Constitution、画面責務、状態完全性、認証・Demo Mode・UI/UXのBeta Gateを追加。Decision Recordは `docs/decisions/ADR-002-ui-ux-constitution.md` を参照。
 - 2026-07-25: v2.0をQuestraの正式な最上位Product Constitutionとして発効。
 - 適用範囲: MVP、Beta、v1、Enterprise、Marketplace、Global Platform。
 - 次回必須レビュー: Beta Go / No-Go判定前、または重大な原則変更・インシデント時。

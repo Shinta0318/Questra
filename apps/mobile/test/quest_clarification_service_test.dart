@@ -2,18 +2,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/features/quest/quest_clarification_service.dart';
 
 void main() {
-  test('travel asks only missing route-changing questions up to three', () {
+  test('travel collects five route-changing dimensions', () {
     final questions = QuestClarificationService.resolve(
       input: 'シンガポールへ行きたい',
       category: '冒険',
       targetDate: null,
     );
 
-    expect(questions, hasLength(3));
+    expect(questions, hasLength(5));
     expect(questions.map((question) => question.type), [
       QuestClarificationType.deadline,
       QuestClarificationType.party,
-      QuestClarificationType.purpose,
+      QuestClarificationType.budget,
+      QuestClarificationType.travelActivity,
+      QuestClarificationType.travelStyle,
     ]);
   });
 
@@ -35,6 +37,10 @@ void main() {
     expect(
       questions.map((question) => question.type),
       isNot(contains(QuestClarificationType.experience)),
+    );
+    expect(
+      questions.map((question) => question.type),
+      isNot(contains(QuestClarificationType.budget)),
     );
   });
 
@@ -58,12 +64,33 @@ void main() {
       targetDate: DateTime(2027, 4, 1),
       answers: const {
         QuestClarificationType.budget: '20万円まで',
+        QuestClarificationType.travelActivity: '食文化と現地交流',
+        QuestClarificationType.travelStyle: 'ゆったり食文化を楽しむ',
         QuestClarificationType.experience: '',
       },
     );
 
     expect(description, contains('期限: 2027年4月1日'));
     expect(description, contains('予算: 20万円まで'));
+    expect(description, contains('重視するアクティビティ・体験: 食文化と現地交流'));
+    expect(description, contains('旅行スタイル: ゆったり食文化を楽しむ'));
     expect(description, isNot(contains('現在地:')));
+  });
+
+  test('non-travel wishes do not receive travel-only questions', () {
+    final questions = QuestClarificationService.resolve(
+      input: '英語を話せるようになりたい',
+      category: '学習',
+      targetDate: null,
+    );
+
+    expect(
+      questions.map((question) => question.type),
+      isNot(contains(QuestClarificationType.travelStyle)),
+    );
+    expect(
+      questions.map((question) => question.type),
+      isNot(contains(QuestClarificationType.party)),
+    );
   });
 }

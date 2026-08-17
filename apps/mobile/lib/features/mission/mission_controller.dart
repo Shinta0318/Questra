@@ -553,7 +553,7 @@ class MissionController extends Notifier<List<Mission>> {
       if (recordJourney) {
         unawaited(_saveSupportProfile(savedMission));
         unawaited(_tagMission(userId, savedMission));
-        _growBond(sourceType);
+        _growBond(sourceType, savedMission);
         await _rememberMission(savedMission, sourceType);
       }
       sync.saved('Missionを保存しました。');
@@ -618,7 +618,7 @@ class MissionController extends Notifier<List<Mission>> {
         );
   }
 
-  void _growBond(ArcMemorySourceType sourceType) {
+  void _growBond(ArcMemorySourceType sourceType, Mission mission) {
     final growth = ref
         .read(arcBondGrowthServiceProvider)
         .forMission(sourceType);
@@ -628,11 +628,13 @@ class MissionController extends Notifier<List<Mission>> {
           .read(authControllerProvider.notifier)
           .addBondScore(delta: growth.delta, reason: growth.reason),
     );
-    unawaited(
-      ref
-          .read(authControllerProvider.notifier)
-          .addStardust(amount: award.amount, reason: award.reason),
-    );
+    if (award.amount > 0) {
+      unawaited(
+        ref
+            .read(authControllerProvider.notifier)
+            .awardStardust(event: award.event, sourceId: mission.id),
+      );
+    }
   }
 
   Future<void> _tagMission(String userId, Mission mission) async {

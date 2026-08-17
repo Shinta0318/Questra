@@ -151,6 +151,7 @@ references where they do not conflict with v2.
 | QST-165 | Planned | Legal and Privacy Sign-Off Closure | Close external Beta legal blockers. | Versioned legal copy matches providers and has dated approval. |
 | QST-166 | Planned | Beta Candidate Build and Distribution | Produce and distribute the approved limited candidate. | Candidate, artifact, rollback, and sign-offs match. |
 | QST-167 | Planned | Beta Go-Live Review | Re-audit every completion gate. | Final GO requires complete evidence, zero S0, and all sign-offs. |
+| QST-330 | ImplementedDeploymentPending | Progression and Premium Boundary Foundation | Make Stardust the single progression source and prepare server-controlled Arc depth entitlements without billing. | Rank is derived only from Stardust, awards are server-authoritative and idempotent, and Premium cannot buy progression. |
 
 ## Selection Rules
 

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/persistence/persistence_sync_state.dart';
-import '../core/theme/app_colors.dart';
-import '../core/theme/app_radius.dart';
+import 'feedback/questra_notification.dart';
 
 class PersistenceSyncBanner extends StatelessWidget {
   const PersistenceSyncBanner({
@@ -20,42 +19,18 @@ class PersistenceSyncBanner extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final isFailed = state.status == PersistenceSyncStatus.failed;
     final isLoading = state.status == PersistenceSyncStatus.loading;
-    final color = isFailed ? Colors.redAccent : AppColors.cosmicBlue;
-    final icon = isFailed
-        ? Icons.error_outline
-        : isLoading
-        ? Icons.sync
-        : Icons.check_circle_outline;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: AppRadius.card,
-        border: Border.all(color: color.withValues(alpha: 0.36)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              state.message!,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isFailed ? Colors.redAccent : AppColors.deepNavy,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: onDismiss,
-            icon: const Icon(Icons.close),
-            tooltip: '閉じる',
-          ),
-        ],
-      ),
+    final type = switch (state.status) {
+      PersistenceSyncStatus.saved => QuestraNotificationType.success,
+      PersistenceSyncStatus.failed => QuestraNotificationType.error,
+      PersistenceSyncStatus.loading ||
+      PersistenceSyncStatus.idle => QuestraNotificationType.info,
+    };
+    return QuestraNotification(
+      message: state.message!,
+      type: type,
+      onDismiss: onDismiss,
+      isBusy: isLoading,
     );
   }
 }

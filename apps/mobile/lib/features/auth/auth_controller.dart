@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart'
 import 'package:uuid/uuid.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../arc/stardust_service.dart';
 import 'auth_redirects.dart';
 import 'auth_state.dart';
 
@@ -329,33 +330,32 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  Future<void> addStardust({
-    required int amount,
-    required String reason,
+  Future<void> awardStardust({
+    required StardustEvent event,
+    required String sourceId,
   }) async {
     final profile = state.profile;
-    if (profile == null || amount <= 0) {
-      return;
-    }
-
-    final nextBalance = profile.stardustBalance + amount;
-    final updated = profile.copyWith(stardustBalance: nextBalance);
-    state = state.copyWith(profile: updated);
-
-    if (!SupabaseConfig.isConfigured) {
+    if (profile == null || !SupabaseConfig.isConfigured) {
       return;
     }
 
     try {
-      await Supabase.instance.client
-          .from('user_profiles')
-          .update({
-            'stardust_balance': nextBalance,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', profile.id);
+      final response = await Supabase.instance.client.rpc(
+        'award_stardust',
+        params: {'p_event_type': event.storageKey, 'p_source_id': sourceId},
+      );
+      if (state.profile?.id != profile.id || response is! Map) return;
+      final balance = (response['stardust_balance'] as num?)?.toInt();
+      final rank = response['navigator_rank'] as String?;
+      if (balance == null || rank == null) return;
+      state = state.copyWith(
+        profile: state.profile!.copyWith(
+          stardustBalance: balance,
+          navigatorRank: rank,
+        ),
+      );
     } catch (_) {
-      state = state.copyWith(profile: profile);
+      // Progress rewards are server-authoritative and can be retried safely.
     }
   }
 

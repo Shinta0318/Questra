@@ -39,14 +39,14 @@ class PersistedTaskOfflineQueueRepository
       final encoded = await _storage.read(key: storageKey);
       if (encoded == null || encoded.length > _maxEncodedBytes) return null;
       final value = jsonDecode(encoded);
-      if (value is! Map) return _failClosed(storageKey);
+      if (value is! Map) return await _failClosed(storageKey);
       final row = Map<String, dynamic>.from(value);
       final storedAt = _date(row['storedAt']);
       if (row['version'] != 2 ||
           row['ownerId'] != ownerId ||
           storedAt == null ||
           _clock().toUtc().difference(storedAt.toUtc()) > _maxAge) {
-        return _failClosed(storageKey);
+        return await _failClosed(storageKey);
       }
       final desired = _taskList(row['desired']);
       final previous = _taskList(row['previous']);
@@ -55,7 +55,7 @@ class PersistedTaskOfflineQueueRepository
           key.isEmpty ||
           desired.isEmpty ||
           desired.length > 50) {
-        return _failClosed(storageKey);
+        return await _failClosed(storageKey);
       }
       return PendingTaskMutation(
         ownerId: ownerId,

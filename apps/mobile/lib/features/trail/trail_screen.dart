@@ -9,6 +9,7 @@ import '../../core/validation/input_validators.dart';
 import '../../widgets/forms/questra_field_label.dart';
 import '../../widgets/arc/arc_presence.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/layout/questra_journey_scaffold.dart';
 import '../../widgets/menu/questra_action_menu.dart';
 import '../../widgets/questra_card.dart';
 import '../arc/arc_celebration_service.dart';
@@ -79,96 +80,93 @@ class _TrailScreenState extends ConsumerState<TrailScreen> {
       });
     }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Trail')),
-      body: SafeArea(
-        child: QuestraResponsiveListView(
-          showScrollbar: true,
-          onRefresh: profile == null
-              ? null
-              : () => controller.loadForUser(profile.id),
-          padding: const EdgeInsets.all(20),
-          children: [
-            ArcPresence(
-              surface: ArcPresenceSurface.trail,
-              emotion: arcExpression.emotion,
-              message: 'TrailはQuestとMissionの足あとを、あとで戻れる航路として残してくれるよ。',
+    return QuestraJourneyScaffold(
+      title: 'Trail',
+      child: QuestraResponsiveListView(
+        showScrollbar: true,
+        onRefresh: profile == null
+            ? null
+            : () => controller.loadForUser(profile.id),
+        padding: const EdgeInsets.all(20),
+        children: [
+          ArcPresence(
+            surface: ArcPresenceSurface.trail,
+            emotion: arcExpression.emotion,
+            message: 'TrailはQuestとMissionの足あとを、あとで戻れる航路として残してくれるよ。',
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            key: const ValueKey('trail-primary-create'),
+            onPressed: () => _showCreateTrailSheet(
+              context,
+              controller,
+              parent: widget.initialParent,
+            ),
+            icon: const Icon(Icons.add),
+            label: Text(trails.isEmpty ? '最初のTrailを残す' : 'Trailを残す'),
+          ),
+          const SizedBox(height: 16),
+          if (syncState.status != TrailSyncStatus.idle) ...[
+            _TrailSyncBanner(
+              state: syncState,
+              onRetry: profile == null
+                  ? null
+                  : () => controller.loadForUser(profile.id),
+              onDismiss: () =>
+                  ref.read(trailSyncControllerProvider.notifier).clear(),
             ),
             const SizedBox(height: 12),
-            FilledButton.icon(
-              key: const ValueKey('trail-primary-create'),
-              onPressed: () => _showCreateTrailSheet(
-                context,
-                controller,
-                parent: widget.initialParent,
-              ),
-              icon: const Icon(Icons.add),
-              label: Text(trails.isEmpty ? '最初のTrailを残す' : 'Trailを残す'),
-            ),
-            const SizedBox(height: 16),
-            if (syncState.status != TrailSyncStatus.idle) ...[
-              _TrailSyncBanner(
-                state: syncState,
-                onRetry: profile == null
-                    ? null
-                    : () => controller.loadForUser(profile.id),
-                onDismiss: () =>
-                    ref.read(trailSyncControllerProvider.notifier).clear(),
-              ),
-              const SizedBox(height: 12),
-            ],
-            _TrailOverview(trails: trails),
-            const SizedBox(height: 16),
-            TrailTimelineWidget(
-              trails: trails,
-              attachments: trailMedia,
-              highlights: {
-                for (final highlight in trailHighlights)
-                  highlight.trailId: highlight,
-              },
-              hierarchyByTrailId: hierarchyByTrailId,
-            ),
-            const SizedBox(height: 16),
-            ...trails.map(
-              (trail) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _TrailCard(
-                  trail: trail,
-                  parent: hierarchyByTrailId[trail.id],
-                  attachment: trailMedia[trail.id],
-                  onEdit: () => _showEditTrailSheet(context, controller, trail),
-                  onReflect: () => _showReflectTrailSheet(
-                    context,
-                    ref,
-                    controller,
-                    trail,
-                    _missionForTrail(trail, missions),
-                  ),
-                  onAttachImage: () =>
-                      _attachTrailImage(context, controller, trail),
-                  onReplaceImage: trailMedia[trail.id] == null
-                      ? null
-                      : () => _replaceTrailImage(
-                          context,
-                          controller,
-                          trail,
-                          trailMedia[trail.id]!,
-                        ),
-                  onRemoveImage: trailMedia[trail.id] == null
-                      ? null
-                      : () => _confirmRemoveTrailImage(
-                          context,
-                          controller,
-                          trail,
-                          trailMedia[trail.id]!,
-                        ),
-                  onDelete: () =>
-                      _confirmDeleteTrail(context, controller, trail),
-                ),
-              ),
-            ),
           ],
-        ),
+          _TrailOverview(trails: trails),
+          const SizedBox(height: 16),
+          TrailTimelineWidget(
+            trails: trails,
+            attachments: trailMedia,
+            highlights: {
+              for (final highlight in trailHighlights)
+                highlight.trailId: highlight,
+            },
+            hierarchyByTrailId: hierarchyByTrailId,
+          ),
+          const SizedBox(height: 16),
+          ...trails.map(
+            (trail) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _TrailCard(
+                trail: trail,
+                parent: hierarchyByTrailId[trail.id],
+                attachment: trailMedia[trail.id],
+                onEdit: () => _showEditTrailSheet(context, controller, trail),
+                onReflect: () => _showReflectTrailSheet(
+                  context,
+                  ref,
+                  controller,
+                  trail,
+                  _missionForTrail(trail, missions),
+                ),
+                onAttachImage: () =>
+                    _attachTrailImage(context, controller, trail),
+                onReplaceImage: trailMedia[trail.id] == null
+                    ? null
+                    : () => _replaceTrailImage(
+                        context,
+                        controller,
+                        trail,
+                        trailMedia[trail.id]!,
+                      ),
+                onRemoveImage: trailMedia[trail.id] == null
+                    ? null
+                    : () => _confirmRemoveTrailImage(
+                        context,
+                        controller,
+                        trail,
+                        trailMedia[trail.id]!,
+                      ),
+                onDelete: () => _confirmDeleteTrail(context, controller, trail),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

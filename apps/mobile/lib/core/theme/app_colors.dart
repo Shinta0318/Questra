@@ -14,6 +14,10 @@ abstract final class AppColors {
   static const glass = Color(0xEFFFFFFF);
   static const slate = Color(0xFF50647C);
   static const white = Color(0xFFFFFFFF);
+  static const notificationSurface = Color(0xFF102A4C);
+  static const notificationText = Color(0xFFF8FAFC);
+  static const notificationMuted = Color(0xFFCBD5E1);
+  static const notificationError = Color(0xFFFF8FA3);
 
   static const adventureGradient = LinearGradient(
     colors: [deepNavy, midnightNavy, cosmicBlue],
