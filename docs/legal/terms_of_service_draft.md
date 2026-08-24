@@ -1,5 +1,8 @@
 # Questra Terms of Service Draft
 
+**Document version:** `2026-08-18-beta.1`
+**Release status:** Draft / human legal approval required
+
 ## Draft Status
 
 This is a product draft for internal beta planning. It requires human legal

@@ -2,18 +2,36 @@ import 'arc_memory_model.dart';
 import 'arc_memory_repository.dart';
 import '../tagging/tagging_service.dart';
 
+bool requestsNoArcMemory(String text) {
+  final normalized = text.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+  return const [
+    '覚えないで',
+    '記憶しないで',
+    '保存しないで',
+    'donotremember',
+    "don'tremember",
+  ].any(normalized.contains);
+}
+
 class MemoryExtractionService {
   const MemoryExtractionService({
     required this.repository,
     this.taggingService,
+    this.canRemember,
   });
 
   final ArcMemoryRepository repository;
   final TaggingService? taggingService;
+  final Future<bool> Function(String userId)? canRemember;
 
   Future<List<ArcMemory>> extractAndSave(MemoryExtractionEvent event) async {
+    if (requestsNoArcMemory(event.text)) return const [];
+    if (canRemember != null && !await canRemember!(event.userId)) {
+      return const [];
+    }
     final candidate = extractCandidate(event);
-    if (candidate == null) {
+    if (candidate == null ||
+        candidate.sensitivityLevel == SensitivityLevel.sensitive) {
       return const [];
     }
 
@@ -41,6 +59,7 @@ class MemoryExtractionService {
     final sensitivity = _classifySensitivity(event.text);
     final importance = _scoreImportance(cleaned, event, memoryType, tone);
 
+    final now = DateTime.now();
     return ArcMemory(
       userId: event.userId,
       questId: event.questId,
@@ -59,8 +78,18 @@ class MemoryExtractionService {
         'extraction_version': 'rules_v1',
         'llm_ready': true,
       },
+      provenance: {
+        'origin': event.sourceType.storageKey,
+        'source_id': event.sourceId,
+        'extracted_by': 'rules_v1',
+      },
       sensitivityLevel: sensitivity,
       userVisible: sensitivity != SensitivityLevel.sensitive,
+      retentionUntil: now.add(
+        Duration(days: sensitivity == SensitivityLevel.personal ? 90 : 365),
+      ),
+      createdAt: now,
+      updatedAt: now,
     );
   }
 

@@ -8,7 +8,7 @@ void main() {
   test('builds Arc Memory management preview without mutating data', () {
     final preview = service.buildPreview();
 
-    expect(preview.heading, 'Arc Memory管理プレビュー');
+    expect(preview.heading, 'Arc Memory');
     expect(
       preview.typePreviews.map((type) => type.type),
       containsAll([
@@ -29,7 +29,7 @@ void main() {
             (action) => action.action == ArcMemoryManagementAction.delete,
           )
           .statusLabel,
-      '準備中',
+      '利用可能',
     );
   });
 }

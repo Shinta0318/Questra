@@ -3,7 +3,7 @@
 > Status: Ratified / Active
 > Version: 2.1
 > Effective date: 2026-07-25
-> Last reviewed: 2026-08-09
+> Last reviewed: 2026-08-18
 > Scope: Product, experience, data, AI, technology, business, and operations
 > Authority: Highest-level product constitution
 
@@ -246,6 +246,16 @@ AccessibilityとResponsiveは後工程の装飾ではない。主要導線は少
 
 Master Specは恒久原則と画面責務、Design Bibleは視覚・操作TokenとComponent規則、Screen Bibleは画面別の状態・CTA・Navigation契約、QSTは実装差分、監査レポートは時点証跡を管理する。いずれかを変更したときは、影響する下位文書と回帰テストを同じDecision RecordまたはQSTで追跡する。
 
+### 8.7 Release Truth and First Value
+
+ユーザーが見る状態は、実際の認証、保存先、配備済み機能、権限、AI接続状態と
+一致しなければならない。Mock、In-memory、未配備Migration、Coming Soon、過去SHAの
+試験成功を、実運用の成功として表示または宣伝してはならない。
+
+最初の体験は世界観や用語の網羅ではなく、**何ができるかを理解し、必要な同意を行い、
+自分のQuestを確認し、実行可能な最初の一歩を始めること**を優先する。初回に導入する
+固有語は必要最小限とし、平易な言葉を併記できるようにする。
+
 ## 9. Arc Constitution
 
 Arcは単なるAIではなく、ユーザーの人生の挑戦に伴走する存在である。
@@ -294,6 +304,10 @@ Mission、Task、Trail、Arc Memoryを自動投入せず、進行中Questへの�
 - 企業案件を自然な助言に偽装する。
 - ユーザーの価値を完了率や課金額だけで評価する。
 - 許可されていない記憶やデータを会話に持ち込む。
+
+Arcは不在、未完了、通知未開封を理由に、寂しさ、見捨てられた感情、関係の損失、
+Rankの喪失をほのめかして再訪や購入を促してはならない。ユーザーはArc、Memory、
+Signalを無効にしても、自分のQuestを管理し続けられなければならない。
 - 人間関係を代替すると誤認させる。
 - 自己を万能、絶対、中立であるかのように表現する。
 
@@ -742,6 +756,17 @@ Quest ScoreはPhase 5以降であり、十分な倫理・法務・公平性検�
 - Password reset、Token失効、端末紛失、退会、アカウント復旧を設計する。
 - Login試行制限は固定回数だけに依存せず、Rate limit、段階的待機、通知、
   安全な復旧を組み合わせ、正当なユーザーを永久に締め出さない。
+
+### 22.7 Arc Memoryの目的拘束
+
+Arc Memoryは、作成、検索、要約、AI Context投入、訂正、削除のすべてを、
+ユーザーが理解できる目的別同意へ拘束する。同意状態をクライアント表示だけに依存せず、
+Serverまたは権限境界で検証する。同意不明、撤回、期限切れの場合はMemoryを利用せず、
+会話やQuest管理を安全に継続する。
+
+ユーザーは、Arcが何を覚え、どの発言や記録から作られ、いつ利用され、いつ削除されるかを
+確認できる。AI生成文をユーザーの事実として保存せず、Memory単位の訂正、削除、
+「覚えないで」、一括停止を提供する。
 - 認証・認可エラーは情報を過剰開示せず、列挙攻撃とSession fixationを防ぐ。
 - XSS、CSRF、Injection、SSRF、悪意あるUpload、Dependency攻撃をThreat Modelと
   Security Testの対象にする。Flutter Webもブラウザ境界を免除されない。
@@ -884,6 +909,17 @@ Mission、Trail、Arcの単一ユーザー価値を成立させ、その後Guild
 指標は年齢、言語、端末、アクセシビリティ条件などで不当な格差がないか、
 収集可能かつ適法な範囲で分解して確認する。改善指標がTrust指標を悪化させる
 場合、成長施策を停止して原因をレビューする。
+
+### 26.4 Meaningful Progress North Star
+
+主要North Starは、週に一度以上、本人が承認したQuestに対して意味のある前進を行った
+ユニークユーザーを示す `Weekly Meaningful Progress Users` とする。意味のある前進には、
+Mission成果の完了、親Missionを前進させるTask完了、学びや証拠を残すTrail、承認済みの
+航路改善を含める。
+
+チャット回数、滞在時間、通知開封、連続利用日数、Stardust獲得だけを意味のある前進と
+みなしてはならない。Activation、D7/D30継続、Trust、Wellbeing、AI原価をGuardrailとして
+同時に確認し、North Star向上のために圧力、依存、Privacy侵害を許容しない。
 
 ## 27. Roadmap
 
@@ -1046,6 +1082,16 @@ UI開発とテスト用途に限定し、Beta永続化の証拠として扱わ�
 Challenge Graph、Vector Search、Data Warehouseなどは、現在の価値を証明し、
 データ量と運用要件が発生してから導入する。将来性を理由にMVPを複雑化しない。
 
+### 29.6 Candidate Identity and Runtime Control
+
+Release証拠は、Git SHA、artifact checksum、Migration head、Edge Function version、
+AI model、Prompt、Schema、Feature Flag、検証環境を一つのcandidate manifestへ固定する。
+別SHA、Mock、静的文字列検査、未配備コードの成功をcandidateのPassとして転用しない。
+
+外部Providerを使う処理は、呼出し前の利用許可と予算確保、呼出し後の実使用量確定、
+idempotency、timeout、停止スイッチを持つ。上限を設計文書だけに置かず、競合requestでも
+超過しない権限境界で強制する。
+
 ## 30. AI Development Constitution
 
 ### 30.1 Provider Strategy
@@ -1204,6 +1250,7 @@ Arcはその旅路の中心でユーザーの味方であり続ける。企業�
 
 ### Ratification Record
 
+- 2026-08-18: 1,000万人プロダクト監査を受け、Release Truth、First Value、Arc非強制性、Memory目的拘束、Meaningful Progress、Candidate Identity、AI予算強制を恒久原則として追加。時点評価と実装差分は `reports/qst/QUESTRA_10M_PRODUCT_AUDIT_20260818.md` と `docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md` を参照。
 - 2026-08-09: v2.1としてProduct Experience Constitution、画面責務、状態完全性、認証・Demo Mode・UI/UXのBeta Gateを追加。Decision Recordは `docs/decisions/ADR-002-ui-ux-constitution.md` を参照。
 - 2026-07-25: v2.0をQuestraの正式な最上位Product Constitutionとして発効。
 - 適用範囲: MVP、Beta、v1、Enterprise、Marketplace、Global Platform。

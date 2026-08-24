@@ -168,15 +168,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           identifier: _identifierController.text.trim(),
           password: _passwordController.text,
         );
-
-    if (mounted && ref.read(authControllerProvider).isAuthenticated) {
-      final profile = ref.read(authControllerProvider).profile;
-      context.go(
-        profile?.onboardingCompleted == true
-            ? AppRoutes.home
-            : AppRoutes.onboarding,
-      );
-    }
   }
 }
 

@@ -218,13 +218,14 @@ void main() {
     expect(find.text('Arc Memory'), findsWidgets);
     expect(find.text('Betaでは未接続'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('Arc Memory管理プレビュー'),
+      find.text('記憶を管理'),
       180,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Arc Memory管理プレビュー'), findsOneWidget);
+    expect(find.text('Arc Memory'), findsWidgets);
     expect(find.text('記憶を確認'), findsOneWidget);
     expect(find.text('記憶を削除'), findsOneWidget);
+    expect(find.text('記憶を管理'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('データリクエスト'),
       180,

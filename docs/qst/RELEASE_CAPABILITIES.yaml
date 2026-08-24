@@ -1,0 +1,50 @@
+version: 1
+updated_at: "2026-08-18"
+source_of_truth: "Release-facing capabilities and data-source policy"
+environment_policy:
+  production:
+    persistence: supabase_required
+    local_or_mock_persistence: prohibited
+    release_truth_guard: required
+  development:
+    persistence: supabase_or_disclosed_local
+    local_data_disclosure: required_on_every_authenticated_screen
+capabilities:
+  authentication:
+    status: shipped
+    production_data_source: supabase
+  quest_mission_task:
+    status: shipped_beta
+    production_data_source: supabase
+  trail:
+    status: shipped_beta
+    production_data_source: supabase
+  arc_chat:
+    status: guarded_beta
+    requirements: [supabase, server_side_gemini]
+  guild:
+    status: hidden_not_shipped
+    store_claim_allowed: false
+  premium:
+    status: not_shipped
+    store_claim_allowed: false
+routes:
+  protected:
+    - /legal-consent
+    - /home
+    - /quest
+    - /mission
+    - /task
+    - /arc
+    - /trail
+    - /profile
+    - /settings
+    - /settings/arc-memory
+    - /feedback
+    - /guild
+  public:
+    - /splash
+    - /login
+    - /signup
+    - /forgot-password
+    - /reset-password

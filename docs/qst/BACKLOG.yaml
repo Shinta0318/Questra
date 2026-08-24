@@ -4130,6 +4130,186 @@ items:
     rollback: QUEST_JOURNEY_WORKSPACE=falseで旧表示へ戻し、DB整合性migrationは維持する。
     master_spec_ref: [Product Definition of Done, Accessibility, Technical Constitution]
     evidence: [reports/qst/QST-337.md]
+  - id: QST-338
+    title: External Release Truth and Authenticated Router Guard
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: TEN-MILLION-READINESS
+    goal: 認証、mock、出荷capability、candidate SHAを実際の利用状態と一致させる。
+    depends_on: []
+    blocks: [QST-339, QST-340, QST-341, QST-342, QST-343, External Beta]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, docs/qst/RELEASE_CAPABILITIES.yaml, reports/qst/QUESTRA_10M_PRODUCT_AUDIT_20260818.md, reports/qst/QST-338.md]
+  - id: QST-339
+    title: Age AI Disclosure and Regional Legal Gate
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: TEN-MILLION-READINESS
+    goal: 18歳以上、規約version、AI透明性、地域法務を個人入力前のrelease gateにする。
+    depends_on: [QST-338]
+    blocks: [QST-340, QST-343, Japan External Beta, International Beta]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, docs/qst/BETA_LEGAL_SIGNOFF.yaml, supabase/migrations/202608180001_versioned_legal_eligibility_gate.sql, reports/qst/QST-339.md]
+  - id: QST-340
+    title: Arc Memory Consent and User Control Center
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: TEN-MILLION-READINESS
+    goal: Arc Memoryの全read writeを目的別同意へ拘束し、確認、訂正、削除、無効化を提供する。
+    depends_on: [QST-339]
+    blocks: [QST-341, QST-346, External Beta]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, supabase/migrations/202608180002_arc_memory_consent_control.sql, reports/qst/QST-340.md]
+  - id: QST-341
+    title: Gemini Fail-Closed Planning and Semantic Evaluation
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: TEN-MILLION-READINESS
+    goal: schema、semantic、critic、groundingを通過しない計画を確定しない。
+    depends_on: [QST-338, QST-340]
+    blocks: [QST-342, QST-343, QST-344]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, supabase/migrations/202608240001_ai_planning_fail_closed_gate.sql, reports/qst/QST-341.md]
+  - id: QST-342
+    title: Atomic AI Budget Admission and Cost Ledger
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: TEN-MILLION-READINESS
+    goal: AI call前後のatomic reserve settleでquotaと実原価を強制し監査する。
+    depends_on: [QST-341]
+    blocks: [QST-343, QST-355]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, supabase/migrations/202608240002_atomic_ai_budget_ledger.sql, supabase/tests/qst_342_ai_budget_concurrency.sql, reports/qst/QST-342.md]
+  - id: QST-343
+    title: Exact-SHA Supabase Deployment and RLS Evidence Gate
+    status: Planned
+    priority: P0
+    epic: TEN-MILLION-READINESS
+    goal: app、migration、Edge Function、RLS、Geminiの証拠を一つのcandidate SHAへ固定する。
+    depends_on: [QST-338, QST-339, QST-340, QST-341, QST-342]
+    blocks: [QST-344, External Beta]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-344
+    title: First Ten Minutes Activation Journey
+    status: Planned
+    priority: P0
+    epic: TEN-MILLION-READINESS
+    goal: 理解、同意、Quest確認、最初のTask開始を10分以内の一続きの体験にする。
+    depends_on: [QST-338, QST-339, QST-341, QST-343]
+    blocks: [QST-345, QST-347]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-345
+    title: Unified Today Focus and Completion Loop
+    status: Planned
+    priority: P1
+    epic: TEN-MILLION-READINESS
+    goal: Home、Quest、Taskで同じToday FocusとTask Trail Horizon完了ループを共有する。
+    depends_on: [QST-344]
+    blocks: [QST-346, QST-347]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-346
+    title: Gentle Recovery and Non-Coercive Arc Policy
+    status: Planned
+    priority: P1
+    epic: TEN-MILLION-READINESS
+    goal: 停滞を航路調整として扱い、罪悪感、依存、通知圧力を防ぐ。
+    depends_on: [QST-340, QST-345]
+    blocks: [QST-347]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-347
+    title: Meaningful Progress Metrics and Experimentation
+    status: Planned
+    priority: P0
+    epic: TEN-MILLION-READINESS
+    goal: WMPU、Activation、D7 D30、Trust、Wellbeing、AI原価を計測する。
+    depends_on: [QST-344, QST-345, QST-346]
+    blocks: [QST-348, QST-351, QST-353, QST-354, QST-355]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-348
+    title: Cursor-Paginated Journey Data Plane
+    status: Planned
+    priority: P1
+    epic: TEN-MILLION-READINESS
+    goal: core journey dataを欠落させないcursor paginationとbatch mediaへ移行する。
+    depends_on: [QST-343, QST-347]
+    blocks: [QST-349, QST-357]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-349
+    title: Unified Durable Mutation and Conflict Recovery
+    status: Planned
+    priority: P1
+    epic: TEN-MILLION-READINESS
+    goal: Quest Mission Trail Mediaへdurable outbox、version、conflict recoveryを適用する。
+    depends_on: [QST-343, QST-348]
+    blocks: [QST-350, QST-357]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-350
+    title: Quest Branch IA and Accessibility Closure
+    status: Planned
+    priority: P1
+    epic: TEN-MILLION-READINESS
+    goal: shipped routeのIA、responsive、TalkBack、IME、focus、motion、hapticを物理端末で閉じる。
+    depends_on: [QST-344, QST-345, QST-346, QST-348, QST-349]
+    blocks: [QST-351, External Android Beta]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-351
+    title: Japan Wedge Plain Language and Pricing Validation
+    status: PlannedValidation
+    priority: P1
+    epic: TEN-MILLION-READINESS
+    goal: 日本の最初のcohort、平易な表現、Arc tone、価格仮説をユーザー証拠で選ぶ。
+    depends_on: [QST-344, QST-347, QST-350]
+    blocks: [QST-352, QST-355]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-352
+    title: English Productization and International Format Matrix
+    status: Planned
+    priority: P1
+    epic: TEN-MILLION-READINESS
+    goal: en-US en-GBを完全なUI AI journeyとして成立させ、地域format基盤を作る。
+    depends_on: [QST-351]
+    blocks: [International Beta]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-353
+    title: Consentful Trail Sharing and Ethical Referral
+    status: PlannedValidation
+    priority: P2
+    epic: TEN-MILLION-READINESS
+    goal: revocable snapshot共有と紹介の増分効果をprivacy firstで検証する。
+    depends_on: [QST-339, QST-347, QST-350]
+    blocks: [QST-354]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-354
+    title: Guild Quest Library Controlled Pilot
+    status: PlannedValidation
+    priority: P2
+    epic: TEN-MILLION-READINESS
+    goal: curated cohortでdiscover copy adapt first progressの閉ループと安全運用を検証する。
+    depends_on: [QST-347, QST-353]
+    blocks: [Public Guild]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-355
+    title: Premium Boundary and Unit Economics Validation
+    status: PlannedValidation
+    priority: P2
+    epic: TEN-MILLION-READINESS
+    goal: 無料Coreを守る一つのPremium packageと価格、原価、継続意図を検証する。
+    depends_on: [QST-342, QST-347, QST-351]
+    blocks: [Billing Implementation]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-356
+    title: IP Data Rights and M&A Proof Pack
+    status: Planned
+    priority: P1
+    epic: TEN-MILLION-READINESS
+    goal: asset、data、model、Quest DNA、Graphの権利とclaims-to-evidenceを譲渡可能な形で整理する。
+    depends_on: [QST-339, QST-340, QST-347]
+    blocks: [Enterprise Partnership, M&A Diligence]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+  - id: QST-357
+    title: 10M Scale Observability Backlog SSOT and Phase Gate Review
+    status: Planned
+    priority: P0
+    epic: TEN-MILLION-READINESS
+    goal: runtime observability、scale stage、唯一のBacklog、固定100点再監査で次phaseを判定する。
+    depends_on: [QST-338, QST-339, QST-340, QST-341, QST-342, QST-343, QST-344, QST-345, QST-346, QST-347, QST-348, QST-349, QST-350, QST-351, QST-352, QST-353, QST-354, QST-355, QST-356]
+    blocks: [Ten Million Scale Phase]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QUESTRA_10M_PRODUCT_AUDIT_20260818.md]
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

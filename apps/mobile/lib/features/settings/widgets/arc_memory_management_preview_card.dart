@@ -6,9 +6,14 @@ import '../../../core/theme/app_spacing.dart';
 import '../../arc_memory/arc_memory_management_preview_service.dart';
 
 class ArcMemoryManagementPreviewCard extends StatelessWidget {
-  const ArcMemoryManagementPreviewCard({required this.preview, super.key});
+  const ArcMemoryManagementPreviewCard({
+    required this.preview,
+    this.onOpen,
+    super.key,
+  });
 
   final ArcMemoryManagementPreview preview;
+  final VoidCallback? onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +87,14 @@ class ArcMemoryManagementPreviewCard extends StatelessWidget {
               child: _ArcMemoryActionTile(action: action),
             ),
           ),
+          if (onOpen != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            FilledButton.icon(
+              onPressed: onOpen,
+              icon: const Icon(Icons.manage_accounts_outlined),
+              label: const Text('記憶を管理'),
+            ),
+          ],
         ],
       ),
     );

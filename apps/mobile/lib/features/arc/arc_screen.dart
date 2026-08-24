@@ -30,6 +30,7 @@ import '../../widgets/layout/questra_screen_surface.dart';
 import '../../widgets/questra_card.dart';
 import '../arc_memory/arc_memory_model.dart';
 import '../arc_memory/arc_memory_providers.dart';
+import '../arc_memory/memory_extraction_service.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_state.dart';
 import '../mission/mission_controller.dart';
@@ -873,6 +874,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     ArcChatMessage arcMessage,
     ArcChatContext context,
   ) async {
+    if (requestsNoArcMemory(userMessage.text)) {
+      return;
+    }
     final profile = ref.read(authControllerProvider).profile;
     if (profile == null) {
       return;

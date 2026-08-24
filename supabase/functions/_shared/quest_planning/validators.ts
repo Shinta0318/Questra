@@ -94,6 +94,8 @@ export function validateRouteMissionPlan(value: unknown, expectedQuestId: string
     if (id) ids.add(id);
     for (const key of ["title", "objective", "successCondition", "expectedOutcome", "reasonRequired"] as const) if (!text(raw[key])) issues.push(issue(`$.missions[${index}].${key}`, "required", `${key} is required`, id ?? undefined));
     if (!Array.isArray(raw.coveredSuccessConditions) || raw.coveredSuccessConditions.length < 1) issues.push(issue(`$.missions[${index}].coveredSuccessConditions`, "required", "A Mission must cover a success condition", id ?? undefined));
+    if (typeof raw.requiresCurrentFacts !== "boolean") issues.push(issue(`$.missions[${index}].requiresCurrentFacts`, "type", "requiresCurrentFacts must be boolean", id ?? undefined));
+    if (!Array.isArray(raw.groundedFactRefs) || raw.groundedFactRefs.some((item) => typeof item !== "string")) issues.push(issue(`$.missions[${index}].groundedFactRefs`, "type", "Grounded fact references must be an array of source IDs", id ?? undefined));
     if (!integerBetween(raw.childTaskEstimate, 1, 30)) issues.push(issue(`$.missions[${index}].childTaskEstimate`, "range", "childTaskEstimate is invalid", id ?? undefined));
     if (!Array.isArray(raw.dependencies)) issues.push(issue(`$.missions[${index}].dependencies`, "type", "Dependencies must be an array", id ?? undefined));
   }

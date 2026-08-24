@@ -56,8 +56,10 @@ class ArcMemory {
     this.sourceId,
     this.embedding,
     this.metadata = const {},
+    this.provenance = const {},
     this.sensitivityLevel = SensitivityLevel.standard,
     this.userVisible = true,
+    this.retentionUntil,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : id = id ?? _uuid.v4(),
@@ -79,8 +81,10 @@ class ArcMemory {
   final String? sourceId;
   final List<double>? embedding;
   final Map<String, Object?> metadata;
+  final Map<String, Object?> provenance;
   final SensitivityLevel sensitivityLevel;
   final bool userVisible;
+  final DateTime? retentionUntil;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -91,6 +95,41 @@ class ArcMemory {
         .replaceAll(RegExp(r'[、。,.!?！？:;「」『』（）()\[\]{}]'), '')
         .trim();
     return '${userId}_${memoryType.name}_${sourceId ?? sourceType.name}_$normalized';
+  }
+
+  bool get isExpired =>
+      retentionUntil != null && !retentionUntil!.isAfter(DateTime.now());
+
+  ArcMemory copyWith({
+    String? title,
+    String? content,
+    SensitivityLevel? sensitivityLevel,
+    bool? userVisible,
+    DateTime? updatedAt,
+  }) {
+    return ArcMemory(
+      id: id,
+      userId: userId,
+      questId: questId,
+      missionId: missionId,
+      taskId: taskId,
+      trailId: trailId,
+      memoryType: memoryType,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      importanceScore: importanceScore,
+      emotionalTone: emotionalTone,
+      sourceType: sourceType,
+      sourceId: sourceId,
+      embedding: embedding,
+      metadata: metadata,
+      provenance: provenance,
+      sensitivityLevel: sensitivityLevel ?? this.sensitivityLevel,
+      userVisible: userVisible ?? this.userVisible,
+      retentionUntil: retentionUntil,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
+    );
   }
 }
 

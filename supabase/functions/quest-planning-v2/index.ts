@@ -1,5 +1,5 @@
 import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
-import { runQuestPlanningPipeline, runTaskExpansionPipeline } from "../_shared/quest_planning/pipeline.ts";
+import { revalidateApprovedMissionPlan, runQuestPlanningPipeline, runTaskExpansionPipeline } from "../_shared/quest_planning/pipeline.ts";
 import { validateRouteMissionPlan } from "../_shared/quest_planning/validators.ts";
 
 type RequestBody = {
@@ -27,10 +27,11 @@ Deno.serve(async (req) => {
   const auth = req.headers.get("Authorization");
   const userId = await authenticatedUserId(auth);
   if (!auth || !userId) return jsonResponse({ error: "authentication_required" }, { status: 401 });
+  const abuseKeyHash = await hashedAbuseKey(req);
   const payload = await readJson<RequestBody>(req);
   if (!payload) return jsonResponse({ error: "invalid_json" }, { status: 400 });
   if (payload.mode === "approve") return approvePreview(auth, userId, payload);
-  if (payload.mode === "expand_tasks") return expandTasks(auth, userId, payload);
+  if (payload.mode === "expand_tasks") return expandTasks(auth, userId, abuseKeyHash, payload);
 
   const questId = uuid(payload.quest_id);
   const wish = text(payload.wish, 1_200);
@@ -49,6 +50,7 @@ Deno.serve(async (req) => {
     constraints: Array.isArray(payload.constraints) ? payload.constraints.filter((item): item is string => typeof item === "string").slice(0, 12) : [],
     approvedContext: payload.approved_context,
     userId,
+    abuseKeyHash,
     idempotencyKey,
   });
   if (pipeline.status !== "preview_ready" || !pipeline.preview) {
@@ -61,7 +63,12 @@ Deno.serve(async (req) => {
   return jsonResponse({ ...pipeline, preview_id: stored.id, approval_token: stored.approvalToken, draft_id: stored.draftId });
 });
 
-async function expandTasks(auth: string, userId: string, payload: RequestBody) {
+async function expandTasks(
+  auth: string,
+  userId: string,
+  abuseKeyHash: string | null,
+  payload: RequestBody,
+) {
   const questId = uuid(payload.quest_id);
   const missionId = uuid(payload.mission_id);
   const idempotencyKey = text(payload.idempotency_key, 160);
@@ -88,6 +95,7 @@ async function expandTasks(auth: string, userId: string, payload: RequestBody) {
     wish: String(quest.title ?? ""),
     targetDate: typeof quest.target_date === "string" ? quest.target_date : null,
     userId,
+    abuseKeyHash,
     idempotencyKey,
     questContext: quest,
     mission: {
@@ -114,6 +122,19 @@ async function expandTasks(auth: string, userId: string, payload: RequestBody) {
     passes: pipeline.passes,
     versions: pipeline.versions,
   });
+}
+
+async function hashedAbuseKey(req: Request) {
+  const value = req.headers.get("cf-connecting-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const salt = Deno.env.get("AI_ABUSE_HASH_SALT") ??
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!value || !salt) return null;
+  const bytes = new TextEncoder().encode(`${salt}:${value}`);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 async function authenticatedUserId(auth: string | null) {
@@ -173,7 +194,13 @@ async function recordMissionDraft(userId: string, questId: string, runId: string
   if (!plan || !Array.isArray(plan.missions)) return null;
   const critic = payload.missionCritic && typeof payload.missionCritic === "object" ? payload.missionCritic as Record<string, unknown> : {};
   const results = Array.isArray(critic.missionResults) ? critic.missionResults as Array<Record<string, unknown>> : [];
+  if (critic.passed !== true || results.length !== plan.missions.length) return null;
   const resultById = new Map(results.map((item) => [String(item.clientId ?? ""), item]));
+  if (plan.missions.some((item) => {
+    const mission = item as Record<string, unknown>;
+    const review = resultById.get(String(mission.clientId ?? ""));
+    return !review || review.passed !== true || review.verdict !== "pass";
+  })) return null;
   const providerPass = [...pipeline.passes].reverse().find((item) => item.name === "mission_critic" && item.provider)?.provider;
   const draftResponse = await serviceFetch("/rest/v1/mission_plan_drafts", {
     method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({
@@ -197,7 +224,7 @@ async function recordMissionDraft(userId: string, questId: string, runId: string
       success_condition: mission.successCondition, expected_outcome: mission.expectedOutcome, reason_required: mission.reasonRequired,
       covered_success_conditions: mission.coveredSuccessConditions ?? [], dependency_client_ids: mission.dependencies ?? [],
       required: mission.required, parallelizable: mission.parallelizable, child_task_estimate: mission.childTaskEstimate,
-      confidence: mission.confidence, critic_scores: review.scores ?? {}, verdict: review.verdict ?? "pass", order_index: index, original_payload: mission,
+      confidence: mission.confidence, critic_scores: review.scores ?? {}, verdict: review.verdict, order_index: index, original_payload: mission,
     };
   });
   const candidateResponse = await serviceFetch("/rest/v1/mission_candidates", { method: "POST", body: JSON.stringify(candidates) });
@@ -233,13 +260,51 @@ async function prepareApprovedPreview(userId: string, previewId: string, approva
   const payload = row.plan_payload as Record<string, unknown>;
   const originalPlan = payload.routeMissionPlan && typeof payload.routeMissionPlan === "object" ? payload.routeMissionPlan as Record<string, unknown> : null;
   if (!originalPlan) return { ok: false, error: "route_plan_missing" };
+  const originalMissions = Array.isArray(originalPlan.missions) ? originalPlan.missions : [];
+  const originalIds = new Set(originalMissions.map((mission) => mission && typeof mission === "object" ? (mission as Record<string, unknown>).clientId : null).filter((id): id is string => typeof id === "string"));
+  const selectedIds = missions.map((mission) => mission && typeof mission === "object" ? (mission as Record<string, unknown>).clientId : null);
+  if (selectedIds.some((id) => typeof id !== "string" || !originalIds.has(id))) return { ok: false, error: "approved_selection_contains_unknown_mission" };
   const routeMissionPlan = { ...originalPlan, missions };
   const validation = validateRouteMissionPlan(routeMissionPlan, row.quest_id);
   if (!validation.valid) return { ok: false, error: validation.issues[0]?.code ?? "approved_plan_invalid" };
-  const currentMissionId = payload.currentTaskPlan && typeof payload.currentTaskPlan === "object" ? (payload.currentTaskPlan as Record<string, unknown>).missionClientId : null;
-  if (typeof currentMissionId !== "string" || !missions.some((mission) => mission && typeof mission === "object" && (mission as Record<string, unknown>).clientId === currentMissionId)) return { ok: false, error: "current_mission_cannot_be_removed" };
+  const questResponse = await serviceFetch(`/rest/v1/quests?id=eq.${row.quest_id}&owner_id=eq.${userId}&select=id,title,description,target_date&limit=1`);
+  if (!questResponse?.ok) return { ok: false, error: "quest_context_unavailable" };
+  const quests = await questResponse.json() as Array<Record<string, unknown>>;
+  const quest = quests[0];
+  if (!quest) return { ok: false, error: "quest_context_unavailable" };
+  const wish = [quest.title, quest.description].filter((item): item is string => typeof item === "string" && item.trim().length > 0).join("\n");
+  const revalidation = await revalidateApprovedMissionPlan(
+    {
+      questId: row.quest_id,
+      wish,
+      targetDate: typeof quest.target_date === "string" ? quest.target_date : null,
+      userId,
+      idempotencyKey: `approval:${previewId}`,
+    },
+    routeMissionPlan,
+    payload.successContract,
+    payload.achievementDomains,
+    quest,
+    payload.groundingMetadata,
+  );
+  if (revalidation.status !== "preview_ready" || !revalidation.preview || typeof revalidation.preview !== "object") {
+    return { ok: false, error: revalidation.issues[0]?.code ?? "approved_selection_quality_gate_failed" };
+  }
+  const validated = revalidation.preview as Record<string, unknown>;
   const update = await serviceFetch(`/rest/v1/quest_plan_previews?id=eq.${previewId}&owner_id=eq.${userId}&status=eq.pending`, {
-    method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ plan_payload: { ...payload, routeMissionPlan } }),
+    method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({
+      plan_payload: {
+        ...payload,
+        routeMissionPlan: validated.routeMissionPlan,
+        granularityClassification: validated.granularityClassification,
+        coverageAnalysis: validated.coverageAnalysis,
+        missionCritic: validated.missionCritic,
+        currentTaskPlan: validated.currentTaskPlan,
+        currentTaskCritic: validated.currentTaskCritic,
+        qualityGate: validated.qualityGate,
+        selectionRevalidationTraceId: revalidation.traceId,
+      },
+    }),
   });
   return update?.ok ? { ok: true } : { ok: false, error: "preview_update_failed" };
 }

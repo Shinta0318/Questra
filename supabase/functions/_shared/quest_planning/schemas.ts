@@ -105,7 +105,7 @@ export const routeMissionPlanSchema = {
       type: "array", minItems: 1, maxItems: 20,
       items: {
         type: "object", additionalProperties: false,
-        required: ["clientId", "title", "objective", "successCondition", "expectedOutcome", "reasonRequired", "coveredSuccessConditions", "calendarDurationDays", "dependencies", "required", "parallelizable", "childTaskEstimate", "weight", "confidence"],
+        required: ["clientId", "title", "objective", "successCondition", "expectedOutcome", "reasonRequired", "coveredSuccessConditions", "requiresCurrentFacts", "groundedFactRefs", "calendarDurationDays", "dependencies", "required", "parallelizable", "childTaskEstimate", "weight", "confidence"],
         properties: {
           clientId: nonEmptyString(1, 80),
           title: nonEmptyString(3, 100),
@@ -114,6 +114,8 @@ export const routeMissionPlanSchema = {
           expectedOutcome: nonEmptyString(3, 300),
           reasonRequired: nonEmptyString(5, 300),
           coveredSuccessConditions: { type: "array", minItems: 1, maxItems: 8, items: nonEmptyString(3, 300) },
+          requiresCurrentFacts: { type: "boolean" },
+          groundedFactRefs: { type: "array", maxItems: 12, uniqueItems: true, items: nonEmptyString(1, 80) },
           calendarDurationDays: { type: "integer", minimum: 0, maximum: 3650 },
           dependencies: { type: "array", maxItems: 20, items: nonEmptyString(1, 80) },
           required: { type: "boolean" },

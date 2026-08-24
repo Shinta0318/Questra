@@ -47,9 +47,8 @@ class ArcMemoryManagementPreviewService {
 
   ArcMemoryManagementPreview buildPreview() {
     return const ArcMemoryManagementPreview(
-      heading: 'Arc Memory管理プレビュー',
-      summary:
-          'Arc Memoryは、Arcが君の旅路を覚えておくための記憶です。Betaでは確認できる範囲を広げ、削除や感度管理へつながる導線を段階的に整えます。',
+      heading: 'Arc Memory',
+      summary: 'Arcが旅路に使う記憶を確認し、いつでも訂正・削除・無効化できます。',
       typePreviews: [
         ArcMemoryTypePreview(
           type: ArcMemoryType.questMemory,
@@ -93,13 +92,13 @@ class ArcMemoryManagementPreviewService {
           action: ArcMemoryManagementAction.delete,
           title: '記憶を削除',
           summary: '不要な記憶を本人の操作で消せるようにする。',
-          statusLabel: '準備中',
+          statusLabel: '利用可能',
         ),
         ArcMemoryManagementItem(
           action: ArcMemoryManagementAction.sensitivity,
           title: '感度を見直す',
-          summary: 'Personal / Sensitiveな記憶を区別して扱う。',
-          statusLabel: '準備中',
+          summary: '個人情報を含む記憶を区別し、機微情報は保存しない。',
+          statusLabel: '確認可能',
         ),
         ArcMemoryManagementItem(
           action: ArcMemoryManagementAction.export,

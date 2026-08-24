@@ -4,6 +4,7 @@ abstract final class AppRoutes {
   static const signup = '/signup';
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
+  static const legalConsent = '/legal-consent';
   static const onboarding = '/onboarding';
   static const home = '/home';
   static const quest = '/quest';
@@ -35,38 +36,37 @@ abstract final class AppRoutes {
     required String missionTitle,
     required String taskId,
     required String taskTitle,
-  }) =>
-      Uri(
-        path: trail,
-        queryParameters: {
-          'questId': questId,
-          'questTitle': questTitle,
-          'missionId': missionId,
-          'missionTitle': missionTitle,
-          'taskId': taskId,
-          'taskTitle': taskTitle,
-          'create': '1',
-        },
-      ).toString();
+  }) => Uri(
+    path: trail,
+    queryParameters: {
+      'questId': questId,
+      'questTitle': questTitle,
+      'missionId': missionId,
+      'missionTitle': missionTitle,
+      'taskId': taskId,
+      'taskTitle': taskTitle,
+      'create': '1',
+    },
+  ).toString();
   static const arc = '/arc';
   static String arcForMission({
     required String questId,
     required String missionId,
     required String prompt,
     required String returnTo,
-  }) =>
-      Uri(
-        path: arc,
-        queryParameters: {
-          'questId': questId,
-          'missionId': missionId,
-          'prompt': prompt,
-          'returnTo': returnTo,
-        },
-      ).toString();
+  }) => Uri(
+    path: arc,
+    queryParameters: {
+      'questId': questId,
+      'missionId': missionId,
+      'prompt': prompt,
+      'returnTo': returnTo,
+    },
+  ).toString();
   static const guild = '/guild';
   static const profile = '/profile';
   static const settings = '/settings';
   static const dataRights = '/settings/data-rights';
+  static const arcMemory = '/settings/arc-memory';
   static const feedback = '/feedback';
 }

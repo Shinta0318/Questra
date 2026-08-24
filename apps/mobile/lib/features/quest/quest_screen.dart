@@ -101,8 +101,9 @@ class QuestScreen extends ConsumerWidget {
                 dashboardMissions,
                 dashboardTrails,
               ),
+              actionLabel: focusQuest == null ? 'ArcとQuestを考える' : 'Quest詳細へ',
               onOpenQuest: focusQuest == null
-                  ? () => context.go(AppRoutes.quest)
+                  ? () => context.go(AppRoutes.arc)
                   : () => context.go('${AppRoutes.quest}/${focusQuest.id}'),
             ),
             const SizedBox(height: 22),
@@ -304,6 +305,7 @@ class _QuestProgressDashboard extends StatelessWidget {
     required this.missions,
     required this.trailCount,
     required this.latestActivity,
+    required this.actionLabel,
     required this.onOpenQuest,
   });
 
@@ -311,6 +313,7 @@ class _QuestProgressDashboard extends StatelessWidget {
   final List<Mission> missions;
   final int trailCount;
   final String latestActivity;
+  final String actionLabel;
   final VoidCallback onOpenQuest;
 
   @override
@@ -365,7 +368,7 @@ class _QuestProgressDashboard extends StatelessWidget {
           QuestraActionButton(
             onPressed: onOpenQuest,
             icon: const Icon(Icons.open_in_new),
-            label: const Text('Quest詳細へ'),
+            label: Text(actionLabel),
           ),
         ],
       ),

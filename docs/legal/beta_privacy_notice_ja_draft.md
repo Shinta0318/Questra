@@ -1,5 +1,8 @@
 # Questra Beta データ利用説明 Draft
 
+**文書バージョン:** `2026-08-18-beta.1`
+**公開状態:** Draft / 人による法務承認が必要
+
 ## Draft Status
 
 この文書は内部Beta参加者向けの説明Draftです。正式なPrivacy Policyや利用規約ではなく、

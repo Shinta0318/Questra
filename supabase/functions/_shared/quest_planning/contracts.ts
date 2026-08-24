@@ -35,6 +35,8 @@ export type ProviderRequest = {
   idempotencyKey: string;
   traceId: string;
   userId?: string | null;
+  // SHA-256 of a short-lived network abuse key. Never pass or persist a raw IP.
+  abuseKeyHash?: string | null;
 };
 
 export type ProviderToolCall = {
@@ -76,6 +78,9 @@ export type ProviderErrorCode =
   | "tool_failed"
   | "context_too_large"
   | "cancelled"
+  | "budget_exhausted"
+  | "budget_unavailable"
+  | "ai_disabled"
   | "unknown";
 
 export type ProviderError = {
