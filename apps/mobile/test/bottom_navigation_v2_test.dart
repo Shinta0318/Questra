@@ -5,6 +5,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:questra/core/router/app_router.dart';
 import 'package:questra/core/router/app_routes.dart';
 import 'package:questra/features/arc/arc_screen.dart';
+import 'package:questra/features/auth/auth_controller.dart';
+import 'package:questra/features/auth/auth_state.dart';
 import 'package:questra/features/mission/mission_screen.dart';
 import 'package:questra/features/trail/trail_screen.dart';
 import 'package:questra/features/task/task_screen.dart';
@@ -58,7 +60,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final container = ProviderContainer();
+    final container = _authenticatedContainer();
     addTearDown(container.dispose);
     final router = container.read(appRouterProvider);
     addTearDown(router.dispose);
@@ -88,7 +90,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final container = ProviderContainer();
+    final container = _authenticatedContainer();
     addTearDown(container.dispose);
     final router = container.read(appRouterProvider);
     addTearDown(router.dispose);
@@ -119,7 +121,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final container = ProviderContainer();
+    final container = _authenticatedContainer();
     addTearDown(container.dispose);
     final router = container.read(appRouterProvider);
     addTearDown(router.dispose);
@@ -149,7 +151,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final container = ProviderContainer();
+    final container = _authenticatedContainer();
     addTearDown(container.dispose);
     final router = container.read(appRouterProvider);
     addTearDown(router.dispose);
@@ -178,7 +180,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final container = ProviderContainer();
+    final container = _authenticatedContainer();
     addTearDown(container.dispose);
     final router = container.read(appRouterProvider);
     addTearDown(router.dispose);
@@ -210,7 +212,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final container = ProviderContainer();
+    final container = _authenticatedContainer();
     addTearDown(container.dispose);
     final router = container.read(appRouterProvider);
     addTearDown(router.dispose);
@@ -240,7 +242,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final container = ProviderContainer();
+    final container = _authenticatedContainer();
     addTearDown(container.dispose);
     final router = container.read(appRouterProvider);
     addTearDown(router.dispose);
@@ -273,7 +275,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final container = ProviderContainer();
+    final container = _authenticatedContainer();
     addTearDown(container.dispose);
     final router = container.read(appRouterProvider);
     addTearDown(router.dispose);
@@ -294,4 +296,23 @@ void main() {
 
     expect(find.byType(ArcScreen), findsOneWidget);
   });
+}
+
+ProviderContainer _authenticatedContainer() => ProviderContainer(
+  overrides: [
+    authControllerProvider.overrideWith(_AuthenticatedController.new),
+  ],
+);
+
+class _AuthenticatedController extends AuthController {
+  @override
+  AuthState build() => const AuthState(
+    profile: UserProfile(
+      id: 'navigation-test-user',
+      email: 'navigation@example.invalid',
+      nickname: 'Navigator',
+      onboardingCompleted: true,
+      legalAcceptanceCurrent: true,
+    ),
+  );
 }

@@ -14,6 +14,7 @@ import 'package:questra/features/trail/trail_controller.dart';
 import 'package:questra/features/trail/trail_model.dart';
 import 'package:questra/features/trail/trail_providers.dart';
 import 'package:questra/features/trail/trail_repository.dart';
+import 'package:questra/features/trust/legal_policy.dart';
 
 void main() {
   test(
@@ -32,6 +33,7 @@ void main() {
             email: 'fresh@example.com',
             password: 'password',
             nickname: 'Fresh Navigator',
+            legalAcceptance: QuestraLegalPolicy.acceptance(),
           );
       await _settleProviders();
 
@@ -61,6 +63,7 @@ void main() {
             password: 'password',
             nickname: 'Navigator A',
             loginId: 'owner-a',
+            legalAcceptance: QuestraLegalPolicy.acceptance(),
           );
       await container
           .read(authControllerProvider.notifier)
@@ -119,6 +122,7 @@ void main() {
             password: 'password',
             nickname: 'Navigator B',
             loginId: 'owner-b',
+            legalAcceptance: QuestraLegalPolicy.acceptance(),
           );
       await container
           .read(authControllerProvider.notifier)

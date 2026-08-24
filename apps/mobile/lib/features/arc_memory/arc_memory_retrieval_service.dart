@@ -21,6 +21,7 @@ class ArcMemoryRetrievalService {
     final ranked =
         memories
             .where((memory) => memory.userVisible)
+            .where((memory) => !memory.isExpired)
             .where(
               (memory) =>
                   includeSensitive ||

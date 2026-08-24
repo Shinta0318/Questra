@@ -26,9 +26,29 @@ void main() {
   testWidgets('Signup screen explains first Quest persistence setup', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       const ProviderScope(child: MaterialApp(home: SignupScreen())),
     );
+
+    expect(find.text('安心して始めるために'), findsOneWidget);
+    expect(find.text('最初のQuestを灯そう'), findsNothing);
+    expect(find.text('Arcからの呼び名'), findsNothing);
+
+    for (var index = 0; index < 4; index++) {
+      final checkbox = find.byType(Checkbox).at(index);
+      await tester.ensureVisible(checkbox);
+      await tester.tap(checkbox);
+      await tester.pump();
+    }
+    final continueButton = find.text('アカウント情報を入力');
+    await tester.ensureVisible(continueButton);
+    await tester.tap(continueButton);
+    await tester.pumpAndSettle();
 
     expect(find.text('最初のQuestを灯そう'), findsOneWidget);
     expect(find.text('Arcからの呼び名'), findsOneWidget);

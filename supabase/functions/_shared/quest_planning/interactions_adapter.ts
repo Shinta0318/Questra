@@ -2,6 +2,8 @@ import { classifyProviderError, shouldRetry } from "./errors.ts";
 import { resolveModel } from "./model_registry.ts";
 import { ProviderErrorCode, ProviderRequest, ProviderResponse, ProviderToolCall } from "./contracts.ts";
 import { resolveThinkingLevel } from "./thinking_policy.ts";
+import { validateJsonSchema } from "./json_schema_validator.ts";
+import { releaseAiBudget, reserveAiBudget, settleAiBudget } from "./ai_budget_admission.ts";
 
 const INTERACTIONS_URL = "https://generativelanguage.googleapis.com/v1/interactions";
 
@@ -10,6 +12,16 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
   const apiKey = Deno.env.get("GEMINI_API_KEY");
   if (!apiKey) return failure(request, startedAt, "unknown", "GEMINI_API_KEY is not configured");
   const allowPreview = Deno.env.get("AI_ALLOW_PREVIEW_MODELS") === "true";
+  const primaryModel = resolveModel(request.modelRole, { allowPreview });
+  const reservation = await reserveAiBudget(request, primaryModel.name);
+  if (!reservation.allowed || !reservation.reservationId) {
+    return failure(
+      request,
+      startedAt,
+      budgetErrorCode(reservation.reason),
+      `AI budget admission denied: ${reservation.reason}`,
+    );
+  }
   let lastError = classifyProviderError();
   for (let attempt = 1; attempt <= 2; attempt++) {
     const model = resolveModel(request.modelRole, { fallback: attempt > 1, allowPreview });
@@ -54,9 +66,10 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           await delay(attempt * 400);
           continue;
         }
-        return failure(
+        return await releaseAndFail(
           request,
           startedAt,
+          reservation.reservationId,
           lastError.code,
           providerMessage ?? lastError.message,
           response.status,
@@ -75,10 +88,26 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
             await delay(400);
             continue;
           }
-          return failure(request, startedAt, "malformed_output", "Structured output was not valid JSON", undefined, model.name);
+          return await releaseAndFail(request, startedAt, reservation.reservationId, "malformed_output", "Structured output was not valid JSON", undefined, model.name);
+        }
+        const schemaIssues = validateJsonSchema(output, request.responseSchema);
+        if (schemaIssues.length > 0) {
+          if (attempt === 1) {
+            await delay(400);
+            continue;
+          }
+          return await releaseAndFail(
+            request,
+            startedAt,
+            reservation.reservationId,
+            "schema_invalid",
+            `Structured output failed schema validation at ${schemaIssues[0].path}`,
+            undefined,
+            model.name,
+          );
         }
       }
-      return {
+      const result: ProviderResponse = {
         provider: "gemini",
         model: model.name,
         modelVersion: model.family,
@@ -92,15 +121,61 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
         traceId: request.traceId,
         error: null,
       };
+      if (!await settleAiBudget(reservation.reservationId, result)) {
+        return failure(
+          request,
+          startedAt,
+          "budget_unavailable",
+          "AI usage settlement failed",
+          undefined,
+          model.name,
+        );
+      }
+      return result;
     } catch (error) {
       lastError = classifyProviderError(undefined, error);
-      if (!shouldRetry(lastError, attempt)) return failure(request, startedAt, lastError.code, lastError.message);
+      if (!shouldRetry(lastError, attempt)) {
+        return await releaseAndFail(
+          request,
+          startedAt,
+          reservation.reservationId,
+          lastError.code,
+          lastError.message,
+        );
+      }
       await delay(attempt * 400);
     } finally {
       clearTimeout(timeout);
     }
   }
-  return failure(request, startedAt, lastError.code, lastError.message);
+  return await releaseAndFail(
+    request,
+    startedAt,
+    reservation.reservationId,
+    lastError.code,
+    lastError.message,
+  );
+}
+
+async function releaseAndFail(
+  request: ProviderRequest,
+  startedAt: number,
+  reservationId: string,
+  code: ProviderErrorCode,
+  message: string,
+  status?: number,
+  model = "unresolved",
+) {
+  await releaseAiBudget(reservationId, code);
+  return failure(request, startedAt, code, message, status, model);
+}
+
+function budgetErrorCode(reason: string): ProviderErrorCode {
+  if (reason === "ai_disabled") return "ai_disabled";
+  if (reason.includes("limit") || reason.includes("quota")) {
+    return "budget_exhausted";
+  }
+  return "budget_unavailable";
 }
 
 function failure(request: ProviderRequest, startedAt: number, code: ProviderErrorCode, message: string, status?: number, model = "unresolved"): ProviderResponse {
@@ -116,7 +191,17 @@ function failure(request: ProviderRequest, startedAt: number, code: ProviderErro
     latencyMs: Date.now() - startedAt,
     finishReason: "error",
     traceId: request.traceId,
-    error: { code, retryable: ["timeout", "rate_limited", "unavailable"].includes(code), status, message },
+    error: {
+      code,
+      retryable: [
+        "timeout",
+        "rate_limited",
+        "unavailable",
+        "budget_unavailable",
+      ].includes(code),
+      status,
+      message,
+    },
   };
 }
 
@@ -146,18 +231,74 @@ function extractToolCalls(data: Record<string, unknown>) {
 
 function extractGroundingMetadata(data: Record<string, unknown>) {
   const searches: Record<string, unknown>[] = [];
+  const queries = new Set<string>();
+  const sourceByUri = new Map<string, { id: string; title: string; uri: string }>();
   visit(data.steps, (item) => {
-    if (item.type === "google_search_call" || item.type === "google_search_result") searches.push(item);
+    if (item.type !== "google_search_call" && item.type !== "google_search_result") return;
+    searches.push({ type: item.type, id: stringValue(item.id), status: stringValue(item.status) });
+    for (const key of ["query", "search_query", "searchQuery"] as const) {
+      const query = stringValue(item[key]);
+      if (query) queries.add(query.slice(0, 500));
+    }
+    collectGroundingSources(item, sourceByUri);
   });
-  return searches.length ? { steps: searches } : null;
+  return searches.length
+    ? {
+      steps: searches,
+      queries: [...queries],
+      sources: [...sourceByUri.values()],
+      retrievedAt: new Date().toISOString(),
+    }
+    : null;
+}
+
+function collectGroundingSources(
+  value: unknown,
+  output: Map<string, { id: string; title: string; uri: string }>,
+) {
+  if (Array.isArray(value)) {
+    for (const item of value) collectGroundingSources(item, output);
+    return;
+  }
+  if (!isRecord(value)) return;
+  const uri = stringValue(value.uri) ?? stringValue(value.url);
+  if (uri && isSafeGroundingUri(uri) && !output.has(uri)) {
+    output.set(uri, {
+      id: `source-${output.size + 1}`,
+      title: stringValue(value.title) ?? safeDomain(uri),
+      uri,
+    });
+  }
+  for (const nested of Object.values(value)) collectGroundingSources(nested, output);
+}
+
+function isSafeGroundingUri(value: string) {
+  try {
+    const uri = new URL(value);
+    return uri.protocol === "https:" && !uri.username && !uri.password;
+  } catch (_) {
+    return false;
+  }
+}
+
+function safeDomain(value: string) {
+  try {
+    return new URL(value).hostname;
+  } catch (_) {
+    return "Web source";
+  }
 }
 
 function extractUsage(data: Record<string, unknown>) {
-  const usage = isRecord(data.usage) ? data.usage : {};
+  const usage = isRecord(data.usage)
+    ? data.usage
+    : isRecord(data.usage_metadata)
+    ? data.usage_metadata
+    : {};
   return {
-    inputTokens: numberValue(usage.input_tokens),
-    outputTokens: numberValue(usage.output_tokens),
-    totalTokens: numberValue(usage.total_tokens),
+    inputTokens: numberValue(usage.input_tokens) ?? numberValue(usage.prompt_token_count),
+    outputTokens: numberValue(usage.output_tokens) ?? numberValue(usage.candidates_token_count),
+    totalTokens: numberValue(usage.total_tokens) ?? numberValue(usage.total_token_count),
   };
 }
 

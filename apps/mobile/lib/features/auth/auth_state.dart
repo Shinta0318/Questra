@@ -58,6 +58,7 @@ class UserProfile {
     this.bondScore = 0,
     this.stardustBalance = 0,
     this.navigatorRank = 'novice',
+    this.legalAcceptanceCurrent = false,
   });
 
   final String id;
@@ -73,6 +74,7 @@ class UserProfile {
   final int bondScore;
   final int stardustBalance;
   final String navigatorRank;
+  final bool legalAcceptanceCurrent;
 
   UserProfile copyWith({
     String? id,
@@ -88,6 +90,7 @@ class UserProfile {
     int? bondScore,
     int? stardustBalance,
     String? navigatorRank,
+    bool? legalAcceptanceCurrent,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -104,6 +107,8 @@ class UserProfile {
       bondScore: bondScore ?? this.bondScore,
       stardustBalance: stardustBalance ?? this.stardustBalance,
       navigatorRank: navigatorRank ?? this.navigatorRank,
+      legalAcceptanceCurrent:
+          legalAcceptanceCurrent ?? this.legalAcceptanceCurrent,
     );
   }
 }

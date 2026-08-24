@@ -297,13 +297,33 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
         );
       }
       if (data['status'] != 'preview_ready' || data['preview'] is! Map) {
-        throw StateError('Mission候補の品質確認を完了できませんでした。入力を保ったまま再試行できます。');
+        throw StateError(_planningFailureMessage(data));
       }
       return _guideFromPlanningPreview(quest, data);
     } catch (error) {
       if (error is StateError) rethrow;
       throw StateError('ArcがMission構造を確認できませんでした。固定候補には置き換えず、もう一度試せます。');
     }
+  }
+
+  String _planningFailureMessage(Map<String, dynamic> data) {
+    final passes = data['passes'] as List? ?? const [];
+    for (final rawPass in passes.reversed) {
+      if (rawPass is! Map) continue;
+      final provider = rawPass['provider'];
+      if (provider is! Map) continue;
+      final error = provider['error'];
+      if (error is! Map) continue;
+      switch (error['code']) {
+        case 'budget_exhausted':
+          return '今月の航路づくり枠を使い切りました。入力は残っています。時間をおくか、Missionを手動で追加できます。';
+        case 'ai_disabled':
+          return '航路づくりを一時停止しています。入力は残っています。時間をおいて再試行してください。';
+        case 'budget_unavailable':
+          return '航路づくりの利用状況を確認できませんでした。入力を保ったまま再試行できます。';
+      }
+    }
+    return 'Mission候補の品質確認を完了できませんでした。入力を保ったまま再試行できます。';
   }
 
   @override
@@ -387,6 +407,22 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
     final critic = Map<String, dynamic>.from(
       preview['missionCritic'] as Map? ?? const {},
     );
+    final taskCritic = Map<String, dynamic>.from(
+      preview['currentTaskCritic'] as Map? ?? const {},
+    );
+    final qualityGate = Map<String, dynamic>.from(
+      preview['qualityGate'] as Map? ?? const {},
+    );
+    if (data['preview_id'] is! String ||
+        data['approval_token'] is! String ||
+        qualityGate['status'] != 'passed' ||
+        qualityGate['version'] != 'qst-341-v1' ||
+        critic['passed'] != true ||
+        (critic['overallScore'] as num? ?? 0) < 85 ||
+        taskCritic['passed'] != true ||
+        (taskCritic['overallScore'] as num? ?? 0) < 85) {
+      throw StateError('Mission候補の品質確認が完了していません。入力を保ったまま再試行できます。');
+    }
     final criticById = <String, Map<String, dynamic>>{
       for (final raw in (critic['missionResults'] as List? ?? const []))
         if (raw is Map && raw['clientId'] is String)
@@ -400,7 +436,24 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
             criticById[(raw['clientId'] ?? '').toString()],
           ),
     ];
-    if (candidates.isEmpty) {
+    final taskCandidates = <ArcTaskCandidate>[
+      for (final raw in (taskPlan['tasks'] as List? ?? const []))
+        if (raw is Map)
+          _taskCandidateFromPlanningData(Map<String, dynamic>.from(raw)),
+    ];
+    final taskReviewIds = {
+      for (final raw in (taskCritic['taskResults'] as List? ?? const []))
+        if (raw is Map && raw['clientId'] is String && raw['passed'] == true)
+          raw['clientId'] as String,
+    };
+    if (candidates.isEmpty ||
+        criticById.length != candidates.length ||
+        candidates.any(
+          (candidate) => !_criticReviewPassed(criticById[candidate.planKey]),
+        ) ||
+        taskCandidates.isEmpty ||
+        taskReviewIds.length != taskCandidates.length ||
+        taskCandidates.any((task) => !taskReviewIds.contains(task.planKey))) {
       throw StateError('合格したMission候補がありません。Questの条件を追加して再試行してください。');
     }
     final evidence = _stringList(contract['successEvidence'], 8);
@@ -438,11 +491,34 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
       approvalToken: data['approval_token'] as String?,
       draftId: data['draft_id'] as String?,
       currentMissionClientId: taskPlan['missionClientId'] as String?,
-      currentTaskCandidates: [
-        for (final raw in (taskPlan['tasks'] as List? ?? const []))
-          if (raw is Map)
-            _taskCandidateFromPlanningData(Map<String, dynamic>.from(raw)),
-      ],
+      currentTaskCandidates: taskCandidates,
+    );
+  }
+
+  bool _criticReviewPassed(Map<String, dynamic>? review) {
+    if (review == null ||
+        review['passed'] != true ||
+        review['verdict'] != 'pass') {
+      return false;
+    }
+    final scores = Map<String, dynamic>.from(
+      review['scores'] as Map? ?? const {},
+    );
+    const minimums = <String, int>{
+      'questRelevance': 90,
+      'outcomeQuality': 85,
+      'missionGranularity': 90,
+      'successConditionQuality': 90,
+      'personalization': 80,
+      'nonTemplateQuality': 90,
+      'uniqueness': 90,
+      'sequencing': 80,
+      'completenessContribution': 85,
+      'taskSeparation': 95,
+    };
+    return minimums.entries.every(
+      (entry) =>
+          scores[entry.key] is num && (scores[entry.key] as num) >= entry.value,
     );
   }
 
@@ -498,8 +574,12 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
       parallelizable: data['parallelizable'] == true,
       childTaskEstimate:
           (data['childTaskEstimate'] as num?)?.round().clamp(1, 30) ?? 2,
+      referenceHints: _stringList(data['groundedFactRefs'], 12),
+      sourceRequirement: data['requiresCurrentFacts'] == true
+          ? 'grounded'
+          : 'none',
       criticScores: scores,
-      criticVerdict: review?['verdict'] as String? ?? 'pass',
+      criticVerdict: review?['verdict'] as String? ?? 'reject',
     );
   }
 
@@ -513,6 +593,8 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
     'expectedOutcome': candidate.expectedOutput.trim(),
     'reasonRequired': candidate.reasonRequired.trim(),
     'coveredSuccessConditions': candidate.coveredSuccessConditions,
+    'groundedFactRefs': candidate.referenceHints,
+    'requiresCurrentFacts': candidate.sourceRequirement == 'grounded',
     'calendarDurationDays': candidate.estimatedDurationDays ?? 0,
     'dependencies': candidate.dependencyPlanKeys,
     'required': !candidate.isOptional,

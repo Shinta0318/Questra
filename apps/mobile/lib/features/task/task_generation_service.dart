@@ -104,12 +104,33 @@ class SupabaseTaskGenerationService implements TaskGenerationService {
       throw StateError('Task候補を準備できませんでした。入力内容は失われていません。');
     }
     final plan = Map<String, dynamic>.from(data['task_plan'] as Map);
+    final qualityGate = Map<String, dynamic>.from(
+      plan['qualityGate'] as Map? ?? const {},
+    );
+    final critic = Map<String, dynamic>.from(
+      plan['taskCritic'] as Map? ?? const {},
+    );
+    if (qualityGate['status'] != 'passed' ||
+        qualityGate['version'] != 'qst-341-v1' ||
+        critic['passed'] != true ||
+        (critic['overallScore'] as num? ?? 0) < 85) {
+      throw StateError('Task候補の品質確認が完了していません。Missionを保ったまま再試行できます。');
+    }
     final suggestions = <TaskSuggestion>[
       for (final raw in (plan['tasks'] as List? ?? const []))
         if (raw is Map) _fromJson(Map<String, dynamic>.from(raw)),
     ];
     if (suggestions.isEmpty) {
       throw StateError('追加できるTask候補がありませんでした。');
+    }
+    final passedIds = {
+      for (final raw in (critic['taskResults'] as List? ?? const []))
+        if (raw is Map && raw['clientId'] is String && raw['passed'] == true)
+          raw['clientId'] as String,
+    };
+    if (passedIds.length != suggestions.length ||
+        suggestions.any((item) => !passedIds.contains(item.clientId))) {
+      throw StateError('Task候補の評価結果が不足しています。Missionを保ったまま再試行できます。');
     }
     return suggestions;
   }

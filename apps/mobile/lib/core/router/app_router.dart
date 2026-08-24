@@ -1,7 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/config/supabase_config.dart';
 import '../../features/arc/arc_screen.dart';
+import '../../features/arc_memory/arc_memory_control_screen.dart';
+import '../../features/auth/auth_controller.dart';
+import '../../features/auth/auth_state.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/reset_password_screen.dart';
@@ -19,6 +24,7 @@ import '../../features/quest/quest_screen.dart';
 import '../../features/quest/quest_route_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/trust/data_rights_screen.dart';
+import '../../features/trust/legal_eligibility_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/trail/trail_screen.dart';
 import '../../features/trail/trail_model.dart';
@@ -28,10 +34,24 @@ import '../../features/quest_journey/quest_journey_contract.dart';
 import '../../widgets/layout/questra_coming_soon_screen.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
+import 'auth_route_guard.dart';
+
+final _authRouterRefreshProvider = Provider<_AuthRouterRefresh>((ref) {
+  final refresh = _AuthRouterRefresh();
+  ref.listen<AuthState>(authControllerProvider, (_, _) => refresh.notify());
+  ref.onDispose(refresh.dispose);
+  return refresh;
+});
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  return GoRouter(
+  final router = GoRouter(
     initialLocation: AppRoutes.splash,
+    refreshListenable: ref.watch(_authRouterRefreshProvider),
+    redirect: (context, state) => AuthRouteGuard.redirect(
+      auth: ref.read(authControllerProvider),
+      location: state.uri,
+      persistenceAvailable: SupabaseConfig.persistenceAvailable,
+    ),
     routes: [
       GoRoute(
         path: AppRoutes.splash,
@@ -54,6 +74,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ResetPasswordScreen(),
       ),
       GoRoute(
+        path: AppRoutes.legalConsent,
+        builder: (context, state) => const LegalEligibilityScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
       ),
@@ -64,6 +88,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.dataRights,
         builder: (context, state) => const DataRightsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.arcMemory,
+        builder: (context, state) => const ArcMemoryControlScreen(),
       ),
       GoRoute(
         path: AppRoutes.feedback,
@@ -104,8 +132,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       questId: state.pathParameters['questId']!,
                       initialJourneyMode:
                           state.uri.queryParameters['mode'] == 'plan'
-                              ? QuestJourneyMode.plan
-                              : QuestJourneyMode.focus,
+                          ? QuestJourneyMode.plan
+                          : QuestJourneyMode.focus,
                       focusMissionId: state.uri.queryParameters['mission'],
                       focusTaskId: state.uri.queryParameters['task'],
                     ),
@@ -218,4 +246,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  return router;
 });
+
+class _AuthRouterRefresh extends ChangeNotifier {
+  void notify() => notifyListeners();
+}

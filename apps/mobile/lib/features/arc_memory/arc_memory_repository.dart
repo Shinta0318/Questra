@@ -8,8 +8,12 @@ abstract interface class ArcMemoryRepository {
     String userId, {
     int limit = QuestraPerformanceLimits.arcMemoryVisibleLimit,
   });
+  Future<List<ArcMemory>> findForControl(String userId, {int limit = 100});
   Future<bool> existsByDedupeKey(String dedupeKey);
   Future<void> save(ArcMemory memory);
+  Future<void> update(ArcMemory memory);
+  Future<void> deleteById(String userId, String memoryId);
+  Future<void> deleteAllForUser(String userId);
   Future<void> deleteByTaskId(String userId, String taskId);
 }
 
@@ -25,6 +29,7 @@ class InMemoryArcMemoryRepository implements ArcMemoryRepository {
         _memories
             .where((memory) => memory.userId == userId)
             .where((memory) => memory.userVisible)
+            .where((memory) => !memory.isExpired)
             .toList()
           ..sort((a, b) {
             final importance = b.importanceScore.compareTo(a.importanceScore);
@@ -38,6 +43,17 @@ class InMemoryArcMemoryRepository implements ArcMemoryRepository {
   }
 
   @override
+  Future<List<ArcMemory>> findForControl(
+    String userId, {
+    int limit = 100,
+  }) async {
+    final memories =
+        _memories.where((memory) => memory.userId == userId).toList()
+          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return memories.take(limit).toList(growable: false);
+  }
+
+  @override
   Future<bool> existsByDedupeKey(String dedupeKey) async {
     return _memories.any((memory) => memory.dedupeKey == dedupeKey);
   }
@@ -45,6 +61,27 @@ class InMemoryArcMemoryRepository implements ArcMemoryRepository {
   @override
   Future<void> save(ArcMemory memory) async {
     _memories.add(memory);
+  }
+
+  @override
+  Future<void> update(ArcMemory memory) async {
+    final index = _memories.indexWhere(
+      (item) => item.id == memory.id && item.userId == memory.userId,
+    );
+    if (index < 0) throw StateError('Memoryが見つかりません。');
+    _memories[index] = memory;
+  }
+
+  @override
+  Future<void> deleteById(String userId, String memoryId) async {
+    _memories.removeWhere(
+      (memory) => memory.userId == userId && memory.id == memoryId,
+    );
+  }
+
+  @override
+  Future<void> deleteAllForUser(String userId) async {
+    _memories.removeWhere((memory) => memory.userId == userId);
   }
 
   @override
@@ -68,14 +105,35 @@ class SupabaseArcMemoryRepository implements ArcMemoryRepository {
     final rows = await client
         .from('arc_memories')
         .select(
-          'id,user_id,quest_id,mission_id,task_id,trail_id,memory_type,title,content,importance_score,emotional_tone,source_type,source_id,metadata,sensitivity_level,user_visible,created_at,updated_at',
+          'id,user_id,quest_id,mission_id,task_id,trail_id,memory_type,title,content,importance_score,emotional_tone,source_type,source_id,metadata,provenance,sensitivity_level,user_visible,retention_until,created_at,updated_at',
         )
         .eq('user_id', userId)
         .eq('user_visible', true)
+        .or(
+          'retention_until.is.null,retention_until.gt.${DateTime.now().toUtc().toIso8601String()}',
+        )
         .order('importance_score', ascending: false)
         .order('created_at', ascending: false)
         .limit(limit);
 
+    return rows
+        .map((row) => _memoryFromRow(Map<String, dynamic>.from(row)))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<ArcMemory>> findForControl(
+    String userId, {
+    int limit = 100,
+  }) async {
+    final rows = await client
+        .from('arc_memories')
+        .select(
+          'id,user_id,quest_id,mission_id,task_id,trail_id,memory_type,title,content,importance_score,emotional_tone,source_type,source_id,metadata,provenance,sensitivity_level,user_visible,retention_until,created_at,updated_at',
+        )
+        .eq('user_id', userId)
+        .order('updated_at', ascending: false)
+        .limit(limit);
     return rows
         .map((row) => _memoryFromRow(Map<String, dynamic>.from(row)))
         .toList(growable: false);
@@ -94,6 +152,35 @@ class SupabaseArcMemoryRepository implements ArcMemoryRepository {
   @override
   Future<void> save(ArcMemory memory) async {
     await client.from('arc_memories').insert(_memoryToRow(memory));
+  }
+
+  @override
+  Future<void> update(ArcMemory memory) async {
+    await client
+        .from('arc_memories')
+        .update({
+          'title': memory.title,
+          'content': memory.content,
+          'sensitivity_level': memory.sensitivityLevel.storageKey,
+          'user_visible': memory.userVisible,
+          'updated_at': memory.updatedAt.toUtc().toIso8601String(),
+        })
+        .eq('id', memory.id)
+        .eq('user_id', memory.userId);
+  }
+
+  @override
+  Future<void> deleteById(String userId, String memoryId) async {
+    await client
+        .from('arc_memories')
+        .delete()
+        .eq('id', memoryId)
+        .eq('user_id', userId);
+  }
+
+  @override
+  Future<void> deleteAllForUser(String userId) async {
+    await client.from('arc_memories').delete().eq('user_id', userId);
   }
 
   @override
@@ -122,8 +209,10 @@ class SupabaseArcMemoryRepository implements ArcMemoryRepository {
       'source_id': memory.sourceId,
       'embedding': memory.embedding,
       'metadata': {...memory.metadata, 'dedupe_key': memory.dedupeKey},
+      'provenance': memory.provenance,
       'sensitivity_level': memory.sensitivityLevel.storageKey,
       'user_visible': memory.userVisible,
+      'retention_until': memory.retentionUntil?.toUtc().toIso8601String(),
       'created_at': memory.createdAt.toIso8601String(),
       'updated_at': memory.updatedAt.toIso8601String(),
     };
@@ -146,10 +235,14 @@ class SupabaseArcMemoryRepository implements ArcMemoryRepository {
       sourceId: row['source_id'] as String?,
       embedding: (row['embedding'] as List?)?.cast<double>(),
       metadata: Map<String, Object?>.from(row['metadata'] as Map? ?? {}),
+      provenance: Map<String, Object?>.from(row['provenance'] as Map? ?? {}),
       sensitivityLevel: _sensitivityFromStorage(
         row['sensitivity_level'] as String,
       ),
       userVisible: row['user_visible'] as bool? ?? true,
+      retentionUntil: DateTime.tryParse(
+        row['retention_until'] as String? ?? '',
+      ),
       createdAt: DateTime.parse(row['created_at'] as String),
       updatedAt: DateTime.parse(row['updated_at'] as String),
     );

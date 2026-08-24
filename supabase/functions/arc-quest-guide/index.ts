@@ -446,7 +446,7 @@ async function critiqueAndRepairGuide(
       maxOutputTokens: 5_000,
       temperature: 0.2,
     });
-    if (!result) return initialGuide;
+    if (!result) return null;
     const parsed = JSON.parse(stripJsonFence(result.text));
     const rawCandidates = Array.isArray(parsed.mission_candidates)
       ? parsed.mission_candidates
@@ -456,7 +456,7 @@ async function critiqueAndRepairGuide(
         .map(normalizeCandidate)
         .filter((item): item is MissionCandidate => item !== null),
     ).slice(0, 20);
-    if (repaired.length < 3) return initialGuide;
+    if (repaired.length < 3) return null;
     const deterministicScore = scoreMissionCandidates(repaired);
     const providerScore = Number(parsed.overall_score);
     const score = Number.isFinite(providerScore)
@@ -481,7 +481,7 @@ async function critiqueAndRepairGuide(
       source_type: `${result.provider}_critic_repaired`,
     };
   } catch (_error) {
-    return initialGuide;
+    return null;
   }
 }
 

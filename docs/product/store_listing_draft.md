@@ -25,9 +25,8 @@ Trails. Start with a Quest, define the outcome Missions along its route, choose
 an executable Task, and leave Trails that show what you tried and learned.
 
 Arc helps you keep your journey in view by reflecting on your recent Quest,
-Mission, Task, Trail, and Reflection context. Guild spaces support lightweight
-questions and shared progress without pulling the experience away from your own
-path.
+Mission, Task, Trail, and Reflection context. Your private journey remains the
+center of the experience while Arc helps you identify a practical next step.
 
 Use Questra to:
 
@@ -36,7 +35,7 @@ Use Questra to:
 - Record Trails and Reflections.
 - Review progress from Home and Quest Dashboard.
 - Keep Arc Memory aligned with your journey.
-- Prepare thoughtful Guild questions from your current context.
+- Revisit the next Task without losing the wider Quest context.
 
 ## Keywords
 
@@ -45,8 +44,7 @@ personal growth
 
 ## Screenshot Plan
 
-1. Home with Arc Welcome, today's Task, its parent Mission, Active Quest, and
-   Guild activity.
+1. Home with Arc Welcome, today's Task, its parent Mission, and Active Quest.
 2. Quest Dashboard with Mission and Task progress, Trail count, and Arc comment.
 3. Trail screen with private image attachment and Reflection flow.
 4. Arc Chat with contextual guidance.
@@ -58,3 +56,5 @@ personal growth
 - Do not use `Story` as a product concept.
 - Do not describe Arc as an AI Assistant.
 - Avoid launch claims until beta evidence exists.
+- Do not claim Guild availability until the capability manifest marks it as
+  shipped.

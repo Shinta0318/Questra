@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/config/supabase_config.dart';
 import '../arc/stardust_service.dart';
+import '../trust/legal_policy.dart';
 import 'auth_redirects.dart';
 import 'auth_state.dart';
 
@@ -30,6 +31,12 @@ class AuthController extends Notifier<AuthState> {
                 isLoading: false,
                 clearError: true,
               );
+            } else if (event.event == AuthChangeEvent.signedOut) {
+              state = state.copyWith(
+                clearProfile: true,
+                isPasswordRecovery: false,
+                isLoading: false,
+              );
             }
           });
       ref.onDispose(() => _authSubscription?.cancel());
@@ -44,19 +51,28 @@ class AuthController extends Notifier<AuthState> {
       return;
     }
 
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
-      state = state.copyWith(isLoading: false, clearProfile: true);
-      return;
-    }
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        state = state.copyWith(isLoading: false, clearProfile: true);
+        return;
+      }
 
-    final profile = await _loadProfile(
-      user.id,
-      user.email ?? '',
-      user.userMetadata?['nickname'] as String?,
-      user.userMetadata?['login_id'] as String?,
-    );
-    state = state.copyWith(profile: profile, isLoading: false);
+      final profile = await _loadProfile(
+        user.id,
+        user.email ?? '',
+        user.userMetadata?['nickname'] as String?,
+        user.userMetadata?['login_id'] as String?,
+      );
+      state = state.copyWith(profile: profile, isLoading: false);
+    } catch (_) {
+      state = state.copyWith(
+        clearProfile: true,
+        isLoading: false,
+        errorMessage: 'セッションを確認できませんでした。通信状態を確認して、もう一度お試しください。',
+      );
+    }
   }
 
   Future<void> signUp({
@@ -64,16 +80,24 @@ class AuthController extends Notifier<AuthState> {
     required String password,
     required String nickname,
     String? loginId,
+    required LegalAcceptance legalAcceptance,
   }) async {
     final normalizedLoginId = (loginId?.trim().isNotEmpty ?? false)
         ? loginId!.trim().toLowerCase()
         : email.trim().toLowerCase();
     await _runAuthAction(() async {
+      if (!legalAcceptance.isCurrent) {
+        throw const AuthException('legal_acceptance_required');
+      }
       if (SupabaseConfig.isConfigured) {
         final response = await Supabase.instance.client.auth.signUp(
           email: email,
           password: password,
-          data: {'nickname': nickname, 'login_id': normalizedLoginId},
+          data: {
+            'nickname': nickname,
+            'login_id': normalizedLoginId,
+            ...legalAcceptance.toAuthMetadata(),
+          },
         );
         final user = response.user;
         if (user == null) {
@@ -90,11 +114,14 @@ class AuthController extends Notifier<AuthState> {
         return;
       }
 
+      _ensureLocalPersistenceAllowed();
+
       _localAccount = _LocalAccount(
         email: email,
         loginId: normalizedLoginId,
         password: password,
         nickname: nickname,
+        legalAcceptanceCurrent: true,
       );
       state = state.copyWith(
         clearProfile: true,
@@ -152,6 +179,8 @@ class AuthController extends Notifier<AuthState> {
         return;
       }
 
+      _ensureLocalPersistenceAllowed();
+
       final localAccount = _localAccount;
       if (localAccount != null &&
           identifier.trim().toLowerCase() != localAccount.loginId &&
@@ -167,6 +196,7 @@ class AuthController extends Notifier<AuthState> {
           email: localAccount?.email ?? identifier,
           loginId: localAccount?.loginId,
           nickname: localAccount?.nickname ?? identifier.split('@').first,
+          legalAcceptanceCurrent: localAccount?.legalAcceptanceCurrent ?? false,
         ),
         registrationCompleted: false,
         passwordResetCompleted: false,
@@ -190,6 +220,8 @@ class AuthController extends Notifier<AuthState> {
           email.trim(),
           redirectTo: AuthRedirects.passwordRecovery,
         );
+      } else {
+        _ensureLocalPersistenceAllowed();
       }
       state = state.copyWith(
         passwordResetRequested: true,
@@ -209,8 +241,11 @@ class AuthController extends Notifier<AuthState> {
         }
         await Supabase.instance.client.rpc('clear_my_login_lock');
         await Supabase.instance.client.auth.signOut();
-      } else if (_localAccount != null) {
-        _localAccount = _localAccount!.copyWith(password: newPassword);
+      } else {
+        _ensureLocalPersistenceAllowed();
+        if (_localAccount != null) {
+          _localAccount = _localAccount!.copyWith(password: newPassword);
+        }
       }
 
       state = state.copyWith(
@@ -229,6 +264,37 @@ class AuthController extends Notifier<AuthState> {
       passwordResetCompleted: false,
       clearError: true,
     );
+  }
+
+  Future<void> acceptCurrentLegalPolicy(LegalAcceptance acceptance) async {
+    final profile = state.profile;
+    if (profile == null) return;
+    await _runAuthAction(() async {
+      if (!acceptance.isCurrent) {
+        throw const AuthException('legal_acceptance_required');
+      }
+      if (SupabaseConfig.isConfigured) {
+        await Supabase.instance.client.rpc<Object?>(
+          'accept_current_legal_policy',
+          params: {
+            'p_eligibility_version': acceptance.eligibilityVersion,
+            'p_terms_version': acceptance.termsVersion,
+            'p_privacy_version': acceptance.privacyVersion,
+            'p_ai_disclosure_version': acceptance.aiDisclosureVersion,
+            'p_region_code': acceptance.regionCode,
+            'p_minimum_age_confirmed': acceptance.minimumAgeConfirmed,
+            'p_accepted_at_client': acceptance.acceptedAt
+                .toUtc()
+                .toIso8601String(),
+          },
+        );
+      } else {
+        _ensureLocalPersistenceAllowed();
+      }
+      state = state.copyWith(
+        profile: profile.copyWith(legalAcceptanceCurrent: true),
+      );
+    });
   }
 
   Future<void> completeOnboarding({
@@ -377,6 +443,12 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
+  void _ensureLocalPersistenceAllowed() {
+    if (!SupabaseConfig.localPersistenceAllowed) {
+      throw const AuthException('Supabaseの接続設定が必要です。');
+    }
+  }
+
   String _friendlyAuthMessage(String rawMessage) {
     final message = rawMessage.toLowerCase();
     if (message.contains('rate') ||
@@ -391,6 +463,9 @@ class AuthController extends Notifier<AuthState> {
     }
     if (message.contains('session') || message.contains('recovery')) {
       return '再設定リンクが無効または期限切れです。もう一度メールを送信してください。';
+    }
+    if (message.contains('legal_acceptance')) {
+      return '年齢条件、利用規約、プライバシー説明、AI処理の内容を確認してください。';
     }
     if (message.contains('signup') ||
         message.contains('already') ||
@@ -429,6 +504,7 @@ class AuthController extends Notifier<AuthState> {
     String? fallbackLoginId,
   ) async {
     final row = await _loadProfileRow(userId);
+    final legalAcceptanceCurrent = await _hasCurrentLegalAcceptance(userId);
 
     if (row == null) {
       return UserProfile(
@@ -436,6 +512,7 @@ class AuthController extends Notifier<AuthState> {
         email: email,
         nickname: fallbackNickname ?? 'キャプテン',
         loginId: fallbackLoginId,
+        legalAcceptanceCurrent: legalAcceptanceCurrent,
       );
     }
 
@@ -455,6 +532,7 @@ class AuthController extends Notifier<AuthState> {
       bondScore: row['bond_score'] as int? ?? 0,
       stardustBalance: row['stardust_balance'] as int? ?? 0,
       navigatorRank: row['navigator_rank'] as String? ?? 'novice',
+      legalAcceptanceCurrent: legalAcceptanceCurrent,
     );
   }
 
@@ -479,6 +557,25 @@ class AuthController extends Notifier<AuthState> {
       return row == null ? null : Map<String, dynamic>.from(row);
     }
   }
+
+  Future<bool> _hasCurrentLegalAcceptance(String userId) async {
+    try {
+      final row = await Supabase.instance.client
+          .from('legal_acceptances')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('eligibility_version', QuestraLegalPolicy.eligibilityVersion)
+          .eq('terms_version', QuestraLegalPolicy.termsVersion)
+          .eq('privacy_version', QuestraLegalPolicy.privacyVersion)
+          .eq('ai_disclosure_version', QuestraLegalPolicy.aiDisclosureVersion)
+          .eq('region_code', QuestraLegalPolicy.regionCode)
+          .eq('minimum_age_confirmed', true)
+          .maybeSingle();
+      return row != null;
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 class _LocalAccount {
@@ -487,17 +584,20 @@ class _LocalAccount {
     required this.loginId,
     required this.password,
     required this.nickname,
+    required this.legalAcceptanceCurrent,
   });
 
   final String email;
   final String loginId;
   final String password;
   final String nickname;
+  final bool legalAcceptanceCurrent;
 
   _LocalAccount copyWith({String? password}) => _LocalAccount(
     email: email,
     loginId: loginId,
     password: password ?? this.password,
     nickname: nickname,
+    legalAcceptanceCurrent: legalAcceptanceCurrent,
   );
 }

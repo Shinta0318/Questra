@@ -27,7 +27,8 @@ void main() {
     expect(architecture, lessThan(granularity));
     expect(granularity, lessThan(coverage));
     expect(coverage, lessThan(critic));
-    expect(pipeline, contains('repairPass <= 2'));
+    expect(pipeline, contains('repairPass <= 1'));
+    expect(pipeline, contains('maxRepairPasses: 1'));
     expect(pipeline, contains('belowMissionThreshold'));
   });
 

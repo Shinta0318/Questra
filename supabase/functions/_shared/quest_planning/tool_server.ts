@@ -36,7 +36,15 @@ export async function executeQuestraTool(name: string, args: Record<string, unkn
         data = await select(`/rest/v1/quest_dna_profiles?quest_id=eq.${questId}&select=*&order=version.desc&limit=1`);
         break;
       case "get_relevant_arc_memory":
-        data = await select(`/rest/v1/arc_memories?quest_id=eq.${questId}&select=id,memory_type,title,importance,created_at&order=importance.desc,created_at.desc&limit=${Math.min(5, Math.max(1, Number(args.limit) || 3))}`);
+        if (!await hasArcMemoryConsent(context.userId)) {
+          data = [];
+          break;
+        }
+        data = await rpc("get_relevant_arc_memories", {
+          p_user_id: context.userId,
+          p_quest_id: questId,
+          p_limit: Math.min(5, Math.max(1, Number(args.limit) || 3)),
+        });
         break;
       case "get_user_planning_preferences":
         data = await select(`/rest/v1/planning_context_preferences?owner_id=eq.${context.userId}&select=weekly_minutes,budget_label,location,experience,consent_granted&limit=1`);
@@ -60,8 +68,20 @@ async function ownsQuest(questId: string, userId: string) {
   const rows = await select(`/rest/v1/quests?id=eq.${questId}&owner_id=eq.${userId}&select=id&limit=1`);
   return Array.isArray(rows) && rows.length === 1;
 }
+async function hasArcMemoryConsent(userId: string) {
+  const rows = await select(`/rest/v1/user_consents?user_id=eq.${userId}&purpose_code=eq.arc_personalization&status=eq.granted&select=id&limit=1`);
+  return Array.isArray(rows) && rows.length === 1;
+}
 async function select(path: string) {
   const response = await serviceFetch(path);
+  if (!response.ok) throw new Error("tool_failed");
+  return response.json();
+}
+async function rpc(name: string, body: Record<string, unknown>) {
+  const response = await serviceFetch(`/rest/v1/rpc/${name}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
   if (!response.ok) throw new Error("tool_failed");
   return response.json();
 }

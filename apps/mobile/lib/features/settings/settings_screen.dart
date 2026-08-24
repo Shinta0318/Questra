@@ -70,7 +70,10 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.lg),
               TrustPrivacyCard(review: trustReview),
               const SizedBox(height: AppSpacing.lg),
-              ArcMemoryManagementPreviewCard(preview: memoryPreview),
+              ArcMemoryManagementPreviewCard(
+                preview: memoryPreview,
+                onOpen: () => context.push(AppRoutes.arcMemory),
+              ),
               const SizedBox(height: AppSpacing.lg),
               _DataRequestCopyCard(
                 review: dataRequests,

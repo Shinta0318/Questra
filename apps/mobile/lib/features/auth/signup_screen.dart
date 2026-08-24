@@ -7,6 +7,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/validation/input_validators.dart';
 import '../../widgets/forms/questra_field_label.dart';
+import '../trust/legal_eligibility_form.dart';
+import '../trust/legal_policy.dart';
 import 'auth_journey_scaffold.dart';
 import 'auth_controller.dart';
 
@@ -24,6 +26,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _nicknameController = TextEditingController();
   final _loginIdController = TextEditingController();
   bool _passwordVisible = false;
+  LegalAcceptance? _legalAcceptance;
 
   @override
   void dispose() {
@@ -38,6 +41,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
 
+    if (_legalAcceptance == null) {
+      return AuthJourneyScaffold(
+        eyebrow: '新しい航海を始める',
+        title: '安心して始めるために',
+        message: '君の願いを預かる前に、\n大切な約束を一緒に確認しよう。',
+        child: LegalEligibilityForm(
+          dark: true,
+          submitLabel: 'アカウント情報を入力',
+          onAccepted: (acceptance) =>
+              setState(() => _legalAcceptance = acceptance),
+        ),
+      );
+    }
+
     return AuthJourneyScaffold(
       eyebrow: '新しい航海を始める',
       title: '最初のQuestを灯そう',
@@ -49,6 +66,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              _LegalConfirmation(
+                onReview: auth.isLoading
+                    ? null
+                    : () => setState(() => _legalAcceptance = null),
+              ),
+              const SizedBox(height: AppSpacing.lg),
               QuestraFieldLabel(
                 label: 'Arcからの呼び名',
                 foregroundColor: AppColors.white,
@@ -189,11 +212,43 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           password: _passwordController.text,
           nickname: _nicknameController.text.trim(),
           loginId: _loginIdController.text.trim().toLowerCase(),
+          legalAcceptance: _legalAcceptance!,
         );
 
     if (mounted && ref.read(authControllerProvider).registrationCompleted) {
       context.go(AppRoutes.login);
     }
+  }
+}
+
+class _LegalConfirmation extends StatelessWidget {
+  const _LegalConfirmation({required this.onReview});
+
+  final VoidCallback? onReview;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.cosmicBlue.withValues(alpha: 0.18),
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.36)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.verified_user_outlined, color: AppColors.skyBlue),
+          const SizedBox(width: AppSpacing.sm),
+          const Expanded(
+            child: Text(
+              '年齢条件・利用規約・Privacy・AI処理を確認済み',
+              style: TextStyle(color: AppColors.white),
+            ),
+          ),
+          TextButton(onPressed: onReview, child: const Text('見直す')),
+        ],
+      ),
+    );
   }
 }
 

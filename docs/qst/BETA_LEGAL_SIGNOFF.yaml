@@ -1,7 +1,19 @@
-version: 1
+version: 2
 status: signoff_pending
-document_version: "2026-07-18-draft.1"
-updated_at_utc: null
+document_version: "2026-08-18-beta.1"
+updated_at_utc: "2026-08-18T00:00:00Z"
+implementation:
+  eligibility_gate: implemented_local
+  minimum_age_confirmation: 18
+  region_code: JP
+  terms_version: "2026-08-18-beta.1"
+  privacy_version: "2026-08-18-beta.1"
+  ai_disclosure_version: "2026-08-18-beta.1"
+  server_version_validation: migration_pending_deployment
+  append_only_acceptance_evidence: migration_pending_deployment
+  evidence:
+    - supabase/migrations/202608180001_versioned_legal_eligibility_gate.sql
+    - reports/qst/QST-339.md
 operator:
   legal_name: null
   service_address: null
@@ -39,5 +51,7 @@ signoffs:
   product_owner: pending
 guardrails:
   external_distribution_before_approval: false
+  legal_gate_bypass_allowed: false
+  unapproved_region_access_allowed: false
   credential_values_recorded: false
   signatures_recorded_in_repository: false
