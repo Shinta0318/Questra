@@ -106,11 +106,18 @@ jobs:
       - name: Run candidate Android journey
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 34
           arch: x86_64
           profile: pixel_6
           emulator-boot-timeout: 900
-          # The hosted emulator can briefly drop ADB immediately after boot.
-          # Let Flutter handle animations instead of failing in runner setup.
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          # API 35 hosted images have intermittently failed APK installs inside
+          # PackageInstallerService before Dart tests start. Keep this gate on a
+          # stable API image and wait for package/storage services to settle.
           disable-animations: false
-          script: cd apps/mobile && flutter test integration_test/qst_283_candidate_journey_test.dart -d emulator-5554 --no-pub
+          script: |
+            adb wait-for-device
+            adb shell cmd package list packages >/dev/null
+            adb shell df /data
+            cd apps/mobile
+            flutter test integration_test/qst_283_candidate_journey_test.dart -d emulator-5554 --no-pub
