@@ -97,8 +97,15 @@ void main(List<String> arguments) {
   final branchResult = Process.runSync('git', ['branch', '--show-current']);
   if (branchResult.exitCode != 0) {
     failures.add('Unable to resolve current branch.');
-  } else if (branchResult.stdout.toString().trim() != expectedBranch) {
-    failures.add('Candidate work must stay on $expectedBranch.');
+  } else {
+    final branch = resolveCandidateBranch(
+      gitBranch: branchResult.stdout.toString(),
+    );
+    if (branch != expectedBranch) {
+      failures.add(
+        'Candidate work must stay on $expectedBranch (resolved: ${branch.isEmpty ? 'unknown' : branch}).',
+      );
+    }
   }
 
   final changedPaths = candidateChangedPaths();

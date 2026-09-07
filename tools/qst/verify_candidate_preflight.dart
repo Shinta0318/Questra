@@ -58,14 +58,20 @@ void main(List<String> args) {
   if (status.exitCode != 0) {
     failures.add('Unable to inspect git worktree.');
   }
-  final changes = status.stdout
+  final changedEntries = status.stdout
       .toString()
       .split(RegExp(r'\r?\n'))
       .where((line) => line.trim().isNotEmpty)
-      .length;
+      .toList(growable: false);
+  final changes = changedEntries.length;
   final requireClean = args.contains('--require-clean');
   if (requireClean && changes > 0) {
     failures.add('Candidate worktree is dirty ($changes entries).');
+    for (final entry in changedEntries) {
+      failures.add(
+        'Dirty path: ${entry.length > 3 ? entry.substring(3) : entry}',
+      );
+    }
   }
 
   if (failures.isNotEmpty) {

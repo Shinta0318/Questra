@@ -3,6 +3,24 @@ import 'dart:io';
 import 'candidate_git_state.dart';
 
 void main() {
+  if (resolveCandidateBranch(
+        gitBranch: '',
+        environment: const {
+          'GITHUB_HEAD_REF': 'codex/initial-questra-structure-pr',
+          'GITHUB_REF_NAME': '19/merge',
+        },
+      ) !=
+      'codex/initial-questra-structure-pr') {
+    throw StateError('Pull request head branch was not resolved.');
+  }
+  if (resolveCandidateBranch(
+        gitBranch: 'codex/initial-questra-structure-pr',
+        environment: const {'GITHUB_HEAD_REF': 'unexpected'},
+      ) !=
+      'codex/initial-questra-structure-pr') {
+    throw StateError('Local branch must take precedence over CI metadata.');
+  }
+
   final verifier = File(
     'tools/qst/verify_clean_candidate_evidence.dart',
   ).absolute.path;

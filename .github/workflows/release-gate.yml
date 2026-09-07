@@ -3,8 +3,6 @@ name: Questra Release Gate
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [codex/initial-questra-structure-pr]
   workflow_dispatch:
 
 permissions:
@@ -19,6 +17,11 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Candidate source preflight
+        run: |
+          dart run tools/qst/verify_backlog_ssot.dart
+          dart run tools/qst/verify_candidate_preflight.dart --require-clean
+          dart run tools/qst/verify_candidate_scope_partition.dart --require-clean
       - name: Resolve Flutter dependencies
         working-directory: apps/mobile
         run: flutter pub get
@@ -33,9 +36,6 @@ jobs:
         run: flutter test test/qst_269_core_journey_test.dart --no-pub
       - name: Supabase release contracts
         run: |
-          dart run tools/qst/verify_backlog_ssot.dart
-          dart run tools/qst/verify_candidate_preflight.dart --require-clean
-          dart run tools/qst/verify_candidate_scope_partition.dart --require-clean
           dart run tools/qst/verify_migration_drift.dart
           dart run tools/qst/verify_hosted_migration_deployment.dart
           dart run tools/qst/verify_dynamic_rls_coverage.dart

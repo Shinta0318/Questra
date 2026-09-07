@@ -24,14 +24,37 @@ void main() {
     }
   });
 
-  test('cross-evidence verifier rejects source changes and stale SHA evidence', () {
-    final verifier = File(
-      '${repo.path}/tools/qst/verify_clean_candidate_evidence.dart',
+  test(
+    'cross-evidence verifier rejects source changes and stale SHA evidence',
+    () {
+      final verifier = File(
+        '${repo.path}/tools/qst/verify_clean_candidate_evidence.dart',
+      ).readAsStringSync();
+      expect(verifier, contains('nonEvidenceChanges'));
+      expect(verifier, contains('candidate_source_commit'));
+      expect(verifier, contains('candidate_sha'));
+      expect(verifier, contains('Candidate artifact checksum is missing'));
+      expect(verifier, contains("aiReport['passed'] != true"));
+    },
+  );
+
+  test('candidate cleanliness is checked before Flutter generates files', () {
+    final workflow = File(
+      '${repo.path}/.github/workflows/release-gate.yml',
     ).readAsStringSync();
-    expect(verifier, contains('nonEvidenceChanges'));
-    expect(verifier, contains('candidate_source_commit'));
-    expect(verifier, contains('candidate_sha'));
-    expect(verifier, contains('Candidate artifact checksum is missing'));
-    expect(verifier, contains("aiReport['passed'] != true"));
+    final preflight = workflow.indexOf('name: Candidate source preflight');
+    final dependencyResolution = workflow.indexOf(
+      'name: Resolve Flutter dependencies',
+    );
+    final releaseContracts = workflow.indexOf(
+      'name: Supabase release contracts',
+    );
+
+    expect(preflight, greaterThanOrEqualTo(0));
+    expect(preflight, lessThan(dependencyResolution));
+    expect(
+      workflow.substring(releaseContracts),
+      isNot(contains('verify_candidate_preflight.dart --require-clean')),
+    );
   });
 }

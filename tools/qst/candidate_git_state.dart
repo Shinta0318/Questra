@@ -1,6 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
 
+String resolveCandidateBranch({
+  required String gitBranch,
+  Map<String, String>? environment,
+}) {
+  final resolvedEnvironment = environment ?? Platform.environment;
+  final values = [
+    gitBranch,
+    resolvedEnvironment['GITHUB_HEAD_REF'] ?? '',
+    resolvedEnvironment['GITHUB_REF_NAME'] ?? '',
+  ];
+  return values
+      .map((value) => value.trim())
+      .firstWhere((value) => value.isNotEmpty, orElse: () => '');
+}
+
 // Inspect the index and working tree separately: opposite edits can cancel in
 // `git diff HEAD` while the staged candidate still contains different code.
 Set<String> candidateChangedPaths({String? workingDirectory}) {
