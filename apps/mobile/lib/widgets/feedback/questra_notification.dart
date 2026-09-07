@@ -35,6 +35,7 @@ class QuestraNotification extends StatelessWidget {
     required this.message,
     required this.type,
     this.onDismiss,
+    this.onRetry,
     this.isBusy = false,
     super.key,
   });
@@ -42,6 +43,7 @@ class QuestraNotification extends StatelessWidget {
   final String message;
   final QuestraNotificationType type;
   final VoidCallback? onDismiss;
+  final VoidCallback? onRetry;
   final bool isBusy;
 
   @override
@@ -96,6 +98,17 @@ class QuestraNotification extends StatelessWidget {
                 ),
               ),
             ),
+            if (onRetry != null) ...[
+              const SizedBox(width: AppSpacing.xs),
+              IconButton(
+                onPressed: onRetry,
+                tooltip: 'もう一度試す',
+                constraints: QuestraAccessibility.minTapTargetConstraints,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                color: accent,
+                icon: const Icon(Icons.refresh_rounded, size: 20),
+              ),
+            ],
             if (onDismiss != null) ...[
               const SizedBox(width: AppSpacing.xs),
               IconButton(

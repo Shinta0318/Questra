@@ -33,9 +33,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return AuthJourneyScaffold(
-      eyebrow: 'パスワード再設定',
-      title: '航路を取り戻す',
-      message: '登録したメールアドレスへ、パスワード再設定の案内を送ります。',
+      eyebrow: 'ログインできない方へ',
+      title: 'パスワードを再設定',
+      message: '登録したメールアドレスが必要です。再設定用のリンクを送ります。',
       child: auth.passwordResetRequested
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -69,6 +69,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 children: [
                   QuestraFieldLabel(
                     label: '登録メールアドレス',
+                    helper: 'アカウント作成時に登録したメールアドレスを入力してください。',
                     foregroundColor: AppColors.white,
                     required: true,
                     child: TextFormField(

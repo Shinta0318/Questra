@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/feature_flags/auth_feature_flags.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
@@ -26,6 +27,7 @@ class AuthJourneyScaffold extends StatelessWidget {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= 840;
+          final compactHero = const AuthFeatureFlags().plainLanguageV2Enabled;
 
           if (wide) {
             return Row(
@@ -47,7 +49,7 @@ class AuthJourneyScaffold extends StatelessWidget {
             slivers: [
               SliverToBoxAdapter(
                 child: SizedBox(
-                  height: 270,
+                  height: compactHero ? 196 : 270,
                   child: _ArcVoyagePanel(message: message, compact: true),
                 ),
               ),
@@ -97,15 +99,35 @@ class _ArcVoyagePanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const _QuestraWordmark(),
-                const Spacer(),
-                Text(
-                  message,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AppColors.white,
-                    height: 1.45,
-                    fontWeight: FontWeight.w700,
+                if (compact) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Text(
+                        message,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: AppColors.white,
+                              height: 1.35,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                    ),
                   ),
-                ),
+                ] else ...[
+                  const Spacer(),
+                  Text(
+                    message,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: AppColors.white,
+                      height: 1.4,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -172,7 +194,6 @@ class _QuestraWordmark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 40,
@@ -185,12 +206,17 @@ class _QuestraWordmark extends StatelessWidget {
           child: const Icon(Icons.explore_rounded, color: AppColors.gold),
         ),
         const SizedBox(width: AppSpacing.md),
-        const Text(
-          'Questra',
-          style: TextStyle(
-            color: AppColors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
+        const Expanded(
+          child: Text(
+            'Questra',
+            maxLines: 1,
+            overflow: TextOverflow.fade,
+            softWrap: false,
+            style: TextStyle(
+              color: AppColors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ],

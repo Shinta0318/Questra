@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/feature_flags/locale_feature_flags.dart';
 import '../../core/theme/questra_colors.dart';
+import '../../l10n/app_localizations.dart';
 import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/questra_card.dart';
@@ -9,6 +11,9 @@ import '../media/media_model.dart';
 import 'trail_highlight_service.dart';
 import 'trail_model.dart';
 import 'trail_timeline_service.dart';
+
+typedef TrailTimelineItemBuilder =
+    Widget Function(BuildContext context, Trail trail);
 
 class TrailTimelineWidget extends StatelessWidget {
   const TrailTimelineWidget({
@@ -19,6 +24,7 @@ class TrailTimelineWidget extends StatelessWidget {
     this.hierarchyByTrailId = const {},
     this.service = const TrailTimelineService(),
     this.onCreateTrail,
+    this.itemBuilder,
   });
 
   final List<Trail> trails;
@@ -27,15 +33,24 @@ class TrailTimelineWidget extends StatelessWidget {
   final Map<String, TrailParentContext> hierarchyByTrailId;
   final TrailTimelineService service;
   final VoidCallback? onCreateTrail;
+  final TrailTimelineItemBuilder? itemBuilder;
 
   @override
   Widget build(BuildContext context) {
+    final localizedCopyEnabled =
+        const LocaleFeatureFlags().localizedJourneyCopyV2Enabled;
+    final copy = localizedCopyEnabled ? AppLocalizations.of(context) : null;
     if (trails.isEmpty) {
       return ArcEmptyState(
-        title: 'Timelineはまだ静かです',
+        title: copy?.trailEmptyTitle ?? 'まだTrailはありません',
         emotion: ArcEmotion.normal,
-        message: 'Trailを残すと、日付ごとの航路としてここに並びます。',
-        icon: Icons.timeline_outlined,
+        message: copy?.trailEmptyMessage ?? '今日進んだことを、短い言葉から残してみよう。',
+        actionLabel: onCreateTrail == null
+            ? null
+            : copy?.createFirstTrail ?? '最初のTrailを残す',
+        actionKey: const ValueKey('trail-primary-create'),
+        onAction: onCreateTrail,
+        icon: Icons.add,
       );
     }
 
@@ -48,51 +63,53 @@ class TrailTimelineWidget extends StatelessWidget {
         .length;
     final mediaCount = attachments.length;
 
-    return QuestraCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Trail Timeline',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              if (onCreateTrail != null)
-                OutlinedButton.icon(
-                  onPressed: onCreateTrail,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Trailを残す'),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text('QuestとMissionの足あとを、日付ごとに戻れる航路として見返せます。'),
-          const SizedBox(height: 14),
-          _TimelineSummary(
-            trailCount: trails.length,
-            reflectionCount: reflectionCount,
-            starCandidateCount: starCandidateCount,
-            mediaCount: mediaCount,
-          ),
-          const SizedBox(height: 16),
-          ...days.map(
-            (day) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _TimelineDaySection(
-                day: day,
-                attachments: attachments,
-                highlights: highlights,
-                hierarchyByTrailId: hierarchyByTrailId,
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                copy?.trailHistoryTitle ?? 'これまでのTrail',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
+            if (onCreateTrail != null)
+              OutlinedButton.icon(
+                key: const ValueKey('trail-primary-create'),
+                onPressed: onCreateTrail,
+                icon: const Icon(Icons.add),
+                label: Text(copy?.createTrail ?? 'Trailを残す'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(copy?.trailHistoryDescription ?? '進んだ日ごとに、旅の記録を振り返れます。'),
+        const SizedBox(height: 14),
+        _TimelineSummary(
+          trailCount: trails.length,
+          reflectionCount: reflectionCount,
+          starCandidateCount: starCandidateCount,
+          mediaCount: mediaCount,
+        ),
+        const SizedBox(height: 16),
+        ...days.map(
+          (day) => Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _TimelineDaySection(
+              day: day,
+              attachments: attachments,
+              highlights: highlights,
+              hierarchyByTrailId: hierarchyByTrailId,
+              itemBuilder: itemBuilder,
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
+
+    if (itemBuilder != null) return content;
+    return QuestraCard(padding: const EdgeInsets.all(16), child: content);
   }
 }
 
@@ -102,12 +119,14 @@ class _TimelineDaySection extends StatelessWidget {
     required this.attachments,
     required this.highlights,
     required this.hierarchyByTrailId,
+    required this.itemBuilder,
   });
 
   final TrailTimelineDay day;
   final Map<String, MediaAttachment> attachments;
   final Map<String, TrailHighlight> highlights;
   final Map<String, TrailParentContext> hierarchyByTrailId;
+  final TrailTimelineItemBuilder? itemBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -125,18 +144,24 @@ class _TimelineDaySection extends StatelessWidget {
                 ),
               ),
             ),
-            _TimelinePill(label: 'Trail ${day.trails.length}件'),
+            _TimelinePill(
+              label:
+                  AppLocalizations.of(context)?.trailCount(day.trails.length) ??
+                  'Trail ${day.trails.length}件',
+            ),
           ],
         ),
         const SizedBox(height: 10),
-        ...day.trails.map(
-          (trail) => _TimelineTrailTile(
+        ...day.trails.map((trail) {
+          final builder = itemBuilder;
+          if (builder != null) return builder(context, trail);
+          return _TimelineTrailTile(
             trail: trail,
             attachment: attachments[trail.id],
             highlight: highlights[trail.id],
             parent: hierarchyByTrailId[trail.id],
-          ),
-        ),
+          );
+        }),
       ],
     );
   }
@@ -157,6 +182,7 @@ class _TimelineSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = AppLocalizations.of(context);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -166,21 +192,24 @@ class _TimelineSummary extends StatelessWidget {
           label: 'Trail',
           value: trailCount.toString(),
         ),
-        _TimelineSummaryChip(
-          icon: Icons.auto_awesome_outlined,
-          label: '振り返り',
-          value: reflectionCount.toString(),
-        ),
-        _TimelineSummaryChip(
-          icon: Icons.star_border,
-          label: 'Star候補',
-          value: starCandidateCount.toString(),
-        ),
-        _TimelineSummaryChip(
-          icon: Icons.image_outlined,
-          label: '画像',
-          value: mediaCount.toString(),
-        ),
+        if (reflectionCount > 0)
+          _TimelineSummaryChip(
+            icon: Icons.auto_awesome_outlined,
+            label: copy?.reflection ?? '振り返り',
+            value: reflectionCount.toString(),
+          ),
+        if (starCandidateCount > 0)
+          _TimelineSummaryChip(
+            icon: Icons.star_border,
+            label: copy?.starCandidate ?? '大切な記録の候補',
+            value: starCandidateCount.toString(),
+          ),
+        if (mediaCount > 0)
+          _TimelineSummaryChip(
+            icon: Icons.image_outlined,
+            label: copy?.image ?? '画像',
+            value: mediaCount.toString(),
+          ),
       ],
     );
   }
@@ -262,7 +291,9 @@ class _TimelineTrailTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasReflection = trail.trailType == TrailType.arcReflection;
     final hasMedia = attachment != null;
-    final timeLabel = DateFormat.Hm('ja').format(trail.createdAt);
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final timeLabel = DateFormat.Hm(locale).format(trail.createdAt);
+    final copy = AppLocalizations.of(context);
 
     return IntrinsicHeight(
       child: Row(
@@ -311,7 +342,9 @@ class _TimelineTrailTile extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        _TimelinePill(label: trail.trailType.label),
+                        _TimelinePill(
+                          label: _localizedTrailType(copy, trail.trailType),
+                        ),
                         if (hasReflection) const _TimelinePill(label: 'Arc'),
                         if (hasMedia)
                           const Icon(
@@ -364,15 +397,22 @@ class _TimelineHierarchy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = AppLocalizations.of(context);
     return Wrap(
       spacing: 6,
       runSpacing: 6,
       children: [
-        _TimelinePill(label: 'Quest: ${parent.questTitle}'),
+        _TimelinePill(
+          label:
+              copy?.questContext(parent.questTitle) ??
+              'Quest: ${parent.questTitle}',
+        ),
         if (parent.missionTitle case final title?)
-          _TimelinePill(label: 'Mission: $title'),
+          _TimelinePill(
+            label: copy?.missionContext(title) ?? 'Mission: $title',
+          ),
         if (parent.taskTitle case final title?)
-          _TimelinePill(label: 'Task: $title'),
+          _TimelinePill(label: copy?.taskContext(title) ?? 'Task: $title'),
       ],
     );
   }
@@ -385,6 +425,7 @@ class _TimelineHighlightHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -406,7 +447,8 @@ class _TimelineHighlightHint extends StatelessWidget {
           Expanded(
             child: Text(
               highlight.isStarMemoryCandidate
-                  ? 'Star Memory候補: ${highlight.reason}'
+                  ? copy?.starMemoryCandidate(highlight.reason) ??
+                        '大切な記録の候補：${highlight.reason}'
                   : highlight.reason,
               style: const TextStyle(
                 color: QuestraColors.deepNavy,
@@ -418,6 +460,16 @@ class _TimelineHighlightHint extends StatelessWidget {
       ),
     );
   }
+}
+
+String _localizedTrailType(AppLocalizations? copy, TrailType type) {
+  if (copy == null) return type.label;
+  return switch (type) {
+    TrailType.questRecord => copy.trailTypeQuest,
+    TrailType.missionRecord => copy.trailTypeMission,
+    TrailType.arcReflection => copy.trailTypeArcReflection,
+    TrailType.manualNote => copy.trailTypeManual,
+  };
 }
 
 class _TimelinePill extends StatelessWidget {

@@ -72,6 +72,54 @@ if (-not $migrationList.Contains($latestMigrationId)) {
   throw "Remote migration evidence does not contain $latestMigrationId."
 }
 
+$inventoryFile = 'supabase/tests/hosted_rls_inventory.sql'
+$inventoryRunnerArguments = @{
+  TestFile = $inventoryFile
+}
+if ($LinkedCli) {
+  $inventoryRunnerArguments.LinkedCli = $true
+  $inventoryRunnerArguments.SupabaseCommand = $SupabaseCommand
+} else {
+  $inventoryRunnerArguments.DatabaseUrl = $DatabaseUrl
+}
+$inventoryOutput = & "$PSScriptRoot/run_rls_behavior_tests.ps1" `
+  @inventoryRunnerArguments 2>&1
+$inventoryText = $inventoryOutput -join [Environment]::NewLine
+$inventoryOutput | ForEach-Object { Write-Host $_ }
+if (-not $inventoryText.Contains('QST-395 hosted dynamic RLS inventory passed')) {
+  throw 'Hosted dynamic RLS inventory did not contain the pass marker.'
+}
+$remoteTables = @(
+  [regex]::Matches($inventoryText, 'QST395_TABLE\|([a-z0-9_]+)') |
+    ForEach-Object { $_.Groups[1].Value } |
+    Sort-Object -Unique
+)
+$migrationSql = (
+  Get-ChildItem 'supabase/migrations/*.sql' |
+    Sort-Object Name |
+    ForEach-Object { Get-Content -Raw -Encoding UTF8 $_.FullName }
+) -join [Environment]::NewLine
+$localTables = @(
+  [regex]::Matches(
+    $migrationSql,
+    'create\s+table\s+(?:if\s+not\s+exists\s+)?public\.([a-z0-9_]+)',
+    [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
+  ) |
+    ForEach-Object { $_.Groups[1].Value.ToLowerInvariant() } |
+    Sort-Object -Unique
+)
+$inventoryDifference = @(Compare-Object $localTables $remoteTables)
+if ($inventoryDifference.Count -gt 0) {
+  throw 'Hosted public table inventory does not match local migrations.'
+}
+$inventoryBytes = [Text.Encoding]::UTF8.GetBytes($remoteTables -join "`n")
+$inventorySha256 = [Convert]::ToHexString(
+  [Security.Cryptography.SHA256]::HashData($inventoryBytes)
+).ToLowerInvariant()
+$inventoryTestSha256 = (
+  Get-FileHash -Algorithm SHA256 -LiteralPath $inventoryFile
+).Hash.ToLowerInvariant()
+
 $testFile = 'supabase/tests/rls_behavior.sql'
 $runnerArguments = @{
   TestFile = $testFile
@@ -146,6 +194,15 @@ $lines = @(
   '  transaction_rolled_back: true',
   "  executed_at_utc: $(Quote-Yaml $updatedAt)",
   "  psql_version: $(Quote-Yaml $databaseClientVersion)",
+  'dynamic_inventory:',
+  '  status: passed',
+  "  table_count: $($remoteTables.Count)",
+  "  inventory_sha256: $(Quote-Yaml $inventorySha256)",
+  "  test_file: $(Quote-Yaml $inventoryFile)",
+  "  inventory_test_sha256: $(Quote-Yaml $inventoryTestSha256)",
+  '  local_remote_sets_equal: true',
+  '  policy_free_client_access: 0',
+  '  transaction_rolled_back: true',
   'guardrails:',
   '  database_url_recorded: false',
   '  database_password_recorded: false',

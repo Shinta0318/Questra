@@ -1,0 +1,21 @@
+version: 1
+status: pending_candidate_run
+run_id: null
+executed_at_utc: null
+candidate_source_commit: null
+working_tree_clean_at_start: false
+project_ref: "dhbmgwarnrtelrcrmmfk"
+latest_migration: "202609030001_explicit_server_only_table_grants.sql"
+gates:
+  migrations_and_functions: pending
+  rls_behavior: pending
+  dual_account_journey: pending
+  data_export_owner_scope: pending
+  correction_owner_scope: pending
+  consent_withdrawal: pending
+  ephemeral_accounts_removed: pending
+guardrails:
+  credential_values_recorded: false
+  account_identifiers_recorded: false
+  private_journey_content_recorded: false
+  local_fallback_is_cloud_evidence: false

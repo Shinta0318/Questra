@@ -1,0 +1,26 @@
+version: 2
+qst: QST-388
+status: versions_aligned_signoff_pending
+candidate_source_commit: null
+approved_at_utc: null
+region: JP
+minimum_age: 18
+active_version: "2026-08-18-beta.1"
+sources:
+  app_policy: apps/mobile/lib/features/trust/legal_policy.dart
+  database_policy: supabase/migrations/202608180001_versioned_legal_eligibility_gate.sql
+  terms: docs/legal/terms_of_service_draft.md
+  privacy_policy: docs/legal/privacy_policy_draft.md
+  beta_privacy_notice: docs/legal/beta_privacy_notice_ja_draft.md
+  signoff: docs/qst/BETA_LEGAL_SIGNOFF.yaml
+  signoff_intake: docs/qst/LEGAL_SIGNOFF_INTAKE.yaml
+approval:
+  product_owner: pending
+  legal_reviewer: pending
+  operator_identity: pending
+  privacy_contact: pending
+guardrails:
+  aligned_version_is_legal_approval: false
+  draft_is_public_policy: false
+  missing_contact_allows_distribution: false
+  stale_acceptance_remains_current: false

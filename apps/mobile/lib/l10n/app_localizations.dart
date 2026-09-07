@@ -139,6 +139,70 @@ abstract class AppLocalizations {
   /// In ja, this message translates to:
   /// **'Arc'**
   String get arc;
+
+  /// No description provided for @discardChangesTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'変更を破棄しますか？'**
+  String get discardChangesTitle;
+
+  /// No description provided for @discardChangesBody.
+  ///
+  /// In ja, this message translates to:
+  /// **'保存していない内容は失われます。'**
+  String get discardChangesBody;
+
+  /// No description provided for @continueEditing.
+  ///
+  /// In ja, this message translates to:
+  /// **'編集を続ける'**
+  String get continueEditing;
+
+  /// No description provided for @discardAndClose.
+  ///
+  /// In ja, this message translates to:
+  /// **'破棄して閉じる'**
+  String get discardAndClose;
+
+  String get requiredField;
+
+  String get profileCompact;
+
+  String get trailEmptyTitle;
+
+  String get trailEmptyMessage;
+
+  String get createFirstTrail;
+
+  String get createTrail;
+
+  String get trailHistoryTitle;
+
+  String get trailHistoryDescription;
+
+  String trailCount(int count);
+
+  String get reflection;
+
+  String get starCandidate;
+
+  String get image;
+
+  String questContext(String title);
+
+  String missionContext(String title);
+
+  String taskContext(String title);
+
+  String starMemoryCandidate(String reason);
+
+  String get trailTypeQuest;
+
+  String get trailTypeMission;
+
+  String get trailTypeArcReflection;
+
+  String get trailTypeManual;
 }
 
 class _AppLocalizationsDelegate

@@ -1,3 +1,5 @@
+import '../quest/gentle_recovery_service.dart';
+
 enum MissionSignalType {
   overdueQuest,
   dueSoonQuest,
@@ -7,6 +9,8 @@ enum MissionSignalType {
 
 enum MissionSignalSeverity { calm, focus, urgent }
 
+enum MissionSignalPressure { low, medium }
+
 class MissionSignal {
   const MissionSignal({
     required this.type,
@@ -15,6 +19,8 @@ class MissionSignal {
     required this.message,
     this.questId,
     this.missionId,
+    this.recoveryActions = const [],
+    this.pressure = MissionSignalPressure.low,
   });
 
   final MissionSignalType type;
@@ -23,6 +29,10 @@ class MissionSignal {
   final String message;
   final String? questId;
   final String? missionId;
+  final List<GentleRecoveryAction> recoveryActions;
+  final MissionSignalPressure pressure;
+
+  bool get offersRest => recoveryActions.contains(GentleRecoveryAction.pause);
 }
 
 extension MissionSignalSeverityLabel on MissionSignalSeverity {

@@ -204,6 +204,29 @@ class AuthController extends Notifier<AuthState> {
     });
   }
 
+  Future<void> enterLocalMockPreview() async {
+    await _runAuthAction(() async {
+      _ensureLocalPersistenceAllowed();
+      if (SupabaseConfig.isConfigured) {
+        throw const AuthException('Local mock preview is unavailable.');
+      }
+      state = state.copyWith(
+        profile: UserProfile(
+          id: _uuid.v4(),
+          email: 'preview@local.questra',
+          loginId: 'preview',
+          nickname: 'キャプテン',
+          onboardingCompleted: true,
+          hasSeenOnboardingTour: true,
+          legalAcceptanceCurrent: true,
+        ),
+        registrationCompleted: false,
+        passwordResetCompleted: false,
+        isPasswordRecovery: false,
+      );
+    });
+  }
+
   Future<void> logout() async {
     await _runAuthAction(() async {
       if (SupabaseConfig.isConfigured) {

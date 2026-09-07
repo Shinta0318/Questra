@@ -12,6 +12,7 @@ import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/reset_password_screen.dart';
 import '../../features/auth/signup_screen.dart';
 import '../../features/feedback/beta_feedback_screen.dart';
+import '../../features/guild/guild_discovery_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/mission/mission_detail_screen.dart';
 import '../../features/mission/mission_screen.dart';
@@ -27,14 +28,15 @@ import '../../features/trust/data_rights_screen.dart';
 import '../../features/trust/legal_eligibility_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/trail/trail_screen.dart';
+import '../../features/trail/trail_share_screen.dart';
 import '../../features/trail/trail_model.dart';
 import '../../features/task/task_detail_screen.dart';
 import '../../features/task/task_screen.dart';
 import '../../features/quest_journey/quest_journey_contract.dart';
-import '../../widgets/layout/questra_coming_soon_screen.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
 import 'auth_route_guard.dart';
+import 'route_recovery_screen.dart';
 
 final _authRouterRefreshProvider = Provider<_AuthRouterRefresh>((ref) {
   final refresh = _AuthRouterRefresh();
@@ -46,6 +48,7 @@ final _authRouterRefreshProvider = Provider<_AuthRouterRefresh>((ref) {
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: AppRoutes.splash,
+    errorBuilder: (context, state) => const RouteRecoveryScreen(),
     refreshListenable: ref.watch(_authRouterRefreshProvider),
     redirect: (context, state) => AuthRouteGuard.redirect(
       auth: ref.read(authControllerProvider),
@@ -86,6 +89,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
+        path: '${AppRoutes.settings}/section/:section',
+        builder: (context, state) =>
+            SettingsScreen(initialSection: state.pathParameters['section']),
+      ),
+      GoRoute(
         path: AppRoutes.dataRights,
         builder: (context, state) => const DataRightsScreen(),
       ),
@@ -99,10 +107,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.guild,
-        builder: (context, state) => const QuestraComingSoonScreen(
-          featureName: 'Guild',
-          message: '近いQuestを持つ仲間と、安心してつながれる航路を準備しています。',
-        ),
+        builder: (context, state) => const GuildDiscoveryScreen(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.trailShare}/:token',
+        builder: (context, state) =>
+            TrailShareScreen(token: state.pathParameters['token'] ?? ''),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

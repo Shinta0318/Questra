@@ -10,6 +10,23 @@ enum GuildDiscoverySection {
   missionLibrary,
 }
 
+class GuildPilotStatus {
+  const GuildPilotStatus({
+    required this.configured,
+    required this.enabled,
+    this.cohort,
+  });
+
+  const GuildPilotStatus.localPreview()
+    : configured = false,
+      enabled = false,
+      cohort = null;
+
+  final bool configured;
+  final bool enabled;
+  final String? cohort;
+}
+
 class GuildDiscoveryQuest {
   const GuildDiscoveryQuest({
     required this.id,
@@ -112,4 +129,18 @@ class GuildQuestCopyOptions {
   final bool includeMissions;
   final bool optimizeWithArc;
   final bool openEditorAfterCopy;
+}
+
+class GuildQuestCopyResult {
+  const GuildQuestCopyResult({
+    required this.questId,
+    required this.missionCount,
+    required this.firstTaskCreated,
+    required this.alreadyApplied,
+  });
+
+  final String questId;
+  final int missionCount;
+  final bool firstTaskCreated;
+  final bool alreadyApplied;
 }

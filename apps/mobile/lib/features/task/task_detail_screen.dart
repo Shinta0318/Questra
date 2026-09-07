@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../core/feature_flags/journey_action_hierarchy_feature_flags.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/questra_card.dart';
+import '../quest_journey/widgets/journey_hierarchy_breadcrumb.dart';
 import 'task_availability_service.dart';
 import 'task_controller.dart';
 import 'task_model.dart';
@@ -22,7 +24,22 @@ class TaskDetailScreen extends ConsumerWidget {
         .where((item) => item.id == taskId)
         .firstOrNull;
     if (task == null) {
-      return const Scaffold(body: Center(child: Text('Taskが見つかりません。')));
+      return Scaffold(
+        appBar: AppBar(title: const Text('Taskの詳細')),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Taskが見つかりません。'),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: () => context.go(AppRoutes.quest),
+                child: const Text('Questへ戻る'),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     final missionTasks = ref
         .watch(taskControllerProvider)
@@ -48,17 +65,27 @@ class TaskDetailScreen extends ConsumerWidget {
                 ref.read(taskMutationControllerProvider.notifier).clear(),
           ),
           if (mutation.isActive) const SizedBox(height: 12),
-          Text(
-            'QUEST  ${task.questTitle}',
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'MISSION  ${task.missionTitle}',
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
+          if (const JourneyActionHierarchyFeatureFlags().enabled)
+            JourneyHierarchyBreadcrumb(
+              questId: task.questId,
+              questTitle: task.questTitle,
+              missionId: task.missionId,
+              missionTitle: task.missionTitle,
+              currentLevel: 'Task',
+            )
+          else ...[
+            Text(
+              'QUEST  ${task.questTitle}',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'MISSION  ${task.missionTitle}',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ],
           const SizedBox(height: 12),
-          const Text('TASK', style: TextStyle(fontWeight: FontWeight.w900)),
+          const Text('具体的な行動', style: TextStyle(fontWeight: FontWeight.w900)),
           Text(task.title, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 6),
           Text(task.status.label),

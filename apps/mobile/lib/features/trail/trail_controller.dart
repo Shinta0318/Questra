@@ -57,12 +57,14 @@ class TrailController extends Notifier<List<Trail>> {
   Future<void> loadForUser(String userId) async {
     if (ref.read(authControllerProvider).profile?.id != userId) return;
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Trailを読み込んでいます...');
+    sync.loading('Trailを読み込んでいます...', TrailSyncOperation.load);
     try {
       final trails = await ref.read(trailRepositoryProvider).findByUser(userId);
       if (ref.read(authControllerProvider).profile?.id != userId) return;
       state = trails;
-      sync.saved('Trailを読み込みました。');
+      // Routine reads do not need a success banner. Empty and loaded states are
+      // already visible in the Trail screen, while failures stay actionable.
+      sync.clear();
     } catch (error) {
       if (ref.read(authControllerProvider).profile?.id != userId) return;
       sync.failed(error);
@@ -170,6 +172,28 @@ class TrailController extends Notifier<List<Trail>> {
     unawaited(_persistTrail(updatedTrail));
   }
 
+  Future<bool> updateTrailAndWait(Trail updatedTrail) async {
+    final previous = state
+        .where((trail) => trail.id == updatedTrail.id)
+        .firstOrNull;
+    if (previous == null) return false;
+    state = [
+      for (final trail in state)
+        if (trail.id == updatedTrail.id) updatedTrail else trail,
+    ];
+    final saved = await _persistTrailWithResult(updatedTrail);
+    if (saved) {
+      _recordTrailEmotion(updatedTrail);
+    } else {
+      // Do not overwrite a newer local change or restore a removed Trail.
+      state = [
+        for (final trail in state)
+          if (identical(trail, updatedTrail)) previous else trail,
+      ];
+    }
+    return saved;
+  }
+
   void removeTrail(String trailId) {
     final removedTrail = state
         .where((trail) => trail.id == trailId)
@@ -191,7 +215,7 @@ class TrailController extends Notifier<List<Trail>> {
     }
 
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Trail画像をアップロードしています...');
+    sync.loading('Trail画像をアップロードしています...', TrailSyncOperation.media);
     try {
       final attachment = await ref
           .read(mediaRepositoryProvider)
@@ -236,7 +260,7 @@ class TrailController extends Notifier<List<Trail>> {
     }
 
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Trail画像を差し替えています...');
+    sync.loading('Trail画像を差し替えています...', TrailSyncOperation.media);
     try {
       final attachment = await ref
           .read(mediaRepositoryProvider)
@@ -272,7 +296,7 @@ class TrailController extends Notifier<List<Trail>> {
     }
 
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Trail画像を削除しています...');
+    sync.loading('Trail画像を削除しています...', TrailSyncOperation.media);
     try {
       await ref
           .read(mediaRepositoryProvider)
@@ -315,7 +339,7 @@ class TrailController extends Notifier<List<Trail>> {
     }
 
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Trailを保存しています...');
+    sync.loading('Trailを保存しています...', TrailSyncOperation.save);
 
     try {
       final savedTrail = await ref
@@ -446,7 +470,7 @@ class TrailController extends Notifier<List<Trail>> {
     }
 
     final sync = ref.read(trailSyncControllerProvider.notifier);
-    sync.loading('Trailを削除しています...');
+    sync.loading('Trailを削除しています...', TrailSyncOperation.delete);
 
     try {
       await ref

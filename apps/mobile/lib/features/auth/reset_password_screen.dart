@@ -36,9 +36,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return AuthJourneyScaffold(
-      eyebrow: '新しいパスワードを設定',
-      title: '新しい鍵を決める',
-      message: 'これからの航路を守る、新しいパスワードを設定してください。',
+      eyebrow: 'パスワード再設定',
+      title: '新しいパスワードを設定',
+      message: '再設定リンクを開いた方は、新しいパスワードを2回入力してください。',
       child: Form(
         key: _formKey,
         autovalidateMode: AutovalidateMode.onUserInteraction,

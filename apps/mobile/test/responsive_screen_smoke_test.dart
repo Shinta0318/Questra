@@ -100,21 +100,21 @@ void main() {
     await tester.pump();
 
     expect(find.text('Arc'), findsOneWidget);
-    expect(find.text('タップして話す'), findsOneWidget);
-    expect(find.byIcon(Icons.chevron_right_rounded), findsWidgets);
-    expect(find.text('今日のTask'), findsOneWidget);
+    expect(find.text('タップして話す'), findsNothing);
+    expect(find.text('今日の一歩'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('進行中のQuest'),
       180,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('進行中のQuest'), findsOneWidget);
-    expect(find.text('Mission 0/0'), findsWidgets);
+    expect(find.text('Mission 0/0'), findsNothing);
+    expect(find.text('Missionを準備中'), findsOneWidget);
     expect(find.byType(PageView), findsOneWidget);
-    expect(find.text('最近のTrail'), findsOneWidget);
+    expect(find.text('最近のTrail'), findsNothing);
     expect(find.text('Guildの動き'), findsNothing);
     expect(find.text('Star Map'), findsNothing);
-    expect(find.text('次の航路'), findsOneWidget);
+    expect(find.text('次の航路'), findsNothing);
   });
 
   testWidgets('Home opens Mission instead of completing it directly', (
@@ -187,9 +187,7 @@ void main() {
     expect(find.text('Dream Board'), findsNothing);
   });
 
-  testWidgets('Settings exposes trust and privacy review surface', (
-    tester,
-  ) async {
+  testWidgets('Settings exposes an actionable compact index', (tester) async {
     tester.view.physicalSize = const Size(390, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -201,47 +199,18 @@ void main() {
     await tester.pump();
 
     expect(find.text('設定'), findsOneWidget);
-    expect(find.text('設定ガイド'), findsOneWidget);
-    expect(find.text('Arcチュートリアル'), findsWidgets);
-    await tester.scrollUntilVisible(
-      find.text('信頼とプライバシー'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('信頼とプライバシー'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Quest / Mission / Task / Trail'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Quest / Mission / Task / Trail'), findsOneWidget);
-    expect(find.text('Arc Memory'), findsWidgets);
-    expect(find.text('Betaでは未接続'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('記憶を管理'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Arc Memory'), findsWidgets);
-    expect(find.text('記憶を確認'), findsOneWidget);
-    expect(find.text('記憶を削除'), findsOneWidget);
-    expect(find.text('記憶を管理'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('データリクエスト'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('データリクエスト'), findsOneWidget);
-    expect(find.text('データエクスポート'), findsOneWidget);
-    expect(find.text('データ削除リクエスト'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('データ利用の設定'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('データ利用の設定'), findsOneWidget);
-    expect(find.text('支援情報'), findsOneWidget);
-    expect(find.text('品質改善'), findsOneWidget);
+    expect(find.text('設定メニュー'), findsOneWidget);
+    expect(find.text('操作と演出'), findsOneWidget);
+    expect(find.text('航路の条件'), findsOneWidget);
+    expect(find.text('Arcチュートリアル'), findsOneWidget);
+    expect(find.text('データとプライバシー'), findsOneWidget);
+    expect(find.text('Arc Memory'), findsOneWidget);
+    expect(find.text('自分のデータ'), findsOneWidget);
+    expect(find.text('目的別の同意'), findsOneWidget);
+    expect(find.text('フィードバック'), findsOneWidget);
+    expect(find.text('端末内のみ'), findsOneWidget);
+    expect(find.text('準備中'), findsNothing);
+    expect(find.textContaining('RLS'), findsNothing);
   });
 
   testWidgets('Quest cards expose accessible labels and progress values', (

@@ -6,7 +6,7 @@ working_tree_clean_at_execution: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
 migrations:
   status: local_pending_deployment
-  latest_local: "202608090003_data_rights_request_lifecycle.sql"
+  latest_local: "202609030001_explicit_server_only_table_grants.sql"
   remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   command: "supabase migration list --linked"
 rls_behavior:
@@ -41,6 +41,15 @@ live_dual_account:
   stale_route_conflict_rejected: passed
   stale_route_task_unchanged: passed
   ephemeral_accounts_removed: true
+dynamic_inventory:
+  status: local_pending_hosted_replay
+  table_count: 98
+  inventory_sha256: null
+  test_file: "supabase/tests/hosted_rls_inventory.sql"
+  inventory_test_sha256: null
+  local_remote_sets_equal: false
+  policy_free_client_access: null
+  transaction_rolled_back: false
 guardrails:
   database_url_recorded: false
   database_password_recorded: false

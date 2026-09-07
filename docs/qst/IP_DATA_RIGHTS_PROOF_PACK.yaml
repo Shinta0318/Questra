@@ -1,0 +1,60 @@
+version: 1
+qst: QST-356
+status: evidence_collection_pending
+updated_at: "2026-08-25"
+scope:
+  contains_personal_data: false
+  legal_advice: false
+  external_distribution_approved: false
+owners:
+  product_owner: pending
+  legal_reviewer: pending
+  security_reviewer: pending
+registers:
+  source_code:
+    status: authorship_observed_assignment_unverified
+    evidence: [.git, apps/mobile, supabase]
+    blocker: signed contributor assignment or employment evidence
+  arc_assets:
+    status: source_files_present_chain_of_title_unverified
+    evidence: [apps/mobile/assets/characters/arc, apps/mobile/assets/mockups, docs/qst/ARC_ASSET_PROVENANCE.yaml]
+    blocker: generator source terms prompts dates and signed ownership approval
+  third_party_dependencies:
+    status: flutter_notices_generated_server_dependency_and_approval_pending
+    evidence: [apps/mobile/pubspec.yaml, apps/mobile/pubspec.lock, docs/legal/THIRD_PARTY_NOTICES.md, docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml]
+    blocker: exact Edge Function npm version, registry license review, and Product/Legal approval
+  quest_dna:
+    status: implementation_evidence_present_claim_unverified
+    evidence: [docs/QUESTRA_MASTER_SPEC_V2.md, supabase/migrations]
+    blocker: measured recommendation value and permitted-use review
+  challenge_graph:
+    status: specification_present_moat_unverified
+    evidence: [docs/QUESTRA_MASTER_SPEC_V2.md]
+    blocker: production implementation and measured differentiated value
+  prompts_and_models:
+    status: registry_present_provider_rights_pending
+    evidence: [supabase/functions, docs/product/beta_privacy_legal_copy_review.md]
+    blocker: provider tier retention logging and permitted-use verification
+  user_data:
+    status: user_rights_implemented_hosted_operations_unverified
+    evidence: [docs/legal/privacy_policy_draft.md, docs/qst/BETA_LEGAL_SIGNOFF.yaml]
+    blocker: hosted owner isolation deletion worker retention and legal approval
+claims:
+  - key: arc_visual_chain_of_title
+    permitted_public_claim: false
+    status: blocked
+  - key: proprietary_challenge_graph_moat
+    permitted_public_claim: false
+    status: unproven
+  - key: user_data_is_transferable_company_asset
+    permitted_public_claim: false
+    status: prohibited_without_consent_and_legal_basis
+  - key: external_beta_legal_readiness
+    permitted_public_claim: false
+    status: blocked
+guardrails:
+  unknown_asset_release_allowed: false
+  user_content_assignment_assumed: false
+  consent_scope_expansion_allowed: false
+  legal_signoff_inferred_from_code: false
+  secrets_or_signatures_stored: false

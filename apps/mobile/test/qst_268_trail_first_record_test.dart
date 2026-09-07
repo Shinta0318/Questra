@@ -26,7 +26,7 @@ void main() {
     expect(tester.getTopLeft(primaryAction).dy, lessThan(500));
   });
 
-  testWidgets('保存した最初のTrailがすぐTimelineへ反映される', (tester) async {
+  testWidgets('短い記録だけで保存し、単一の時系列へすぐ反映される', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     await tester.pumpWidget(
@@ -42,22 +42,20 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     final fields = find.byType(TextFormField);
-    expect(fields, findsNWidgets(3));
-    await tester.enterText(fields.at(0), '最初の記録');
-    await tester.enterText(fields.at(1), '今日の一歩を残した');
-    await tester.enterText(fields.at(2), '小さく始められたので、明日も続けたい。');
+    expect(fields, findsOneWidget);
+    await tester.enterText(fields.at(0), '今日の一歩を残した。小さく始められたので、明日も続けたい。');
     await tester.tap(find.text('Trailを保存'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.byType(BottomSheet), findsNothing);
-    expect(container.read(trailControllerProvider).single.title, '最初の記録');
+    expect(container.read(trailControllerProvider).single.title, '今日の一歩を残した');
     await tester.scrollUntilVisible(
-      find.text('最初の記録'),
+      find.text('今日の一歩を残した'),
       250,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('最初の記録'), findsWidgets);
+    expect(find.text('今日の一歩を残した'), findsOneWidget);
     expect(find.text('Trail 1件'), findsOneWidget);
     expect(find.text('Trailを残す'), findsOneWidget);
   });
@@ -77,16 +75,18 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     final fields = find.byType(TextFormField);
-    await tester.enterText(fields.at(0), '消えない入力');
-    await tester.enterText(fields.at(1), '失敗時の確認');
-    await tester.enterText(fields.at(2), '入力内容を保持したまま再試行する。');
+    expect(fields, findsOneWidget);
+    await tester.enterText(fields.at(0), '消えない入力。失敗時も保持する。');
     await tester.tap(find.text('Trailを保存'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.textContaining('再試行できます'), findsOneWidget);
     expect(find.text('Trailを保存'), findsOneWidget);
-    expect(find.widgetWithText(TextFormField, '消えない入力'), findsOneWidget);
+    expect(
+      find.widgetWithText(TextFormField, '消えない入力。失敗時も保持する。'),
+      findsOneWidget,
+    );
   });
 }
 

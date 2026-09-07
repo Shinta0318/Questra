@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import { groundedMissionSearch } from "../_shared/grounded_search_provider.ts";
 import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
 

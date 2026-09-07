@@ -2,31 +2,51 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
-rollback_commit: "1334712618716cbd0c5ce7d0f7dfa890bcf8200b"
+source_commit: "4d316c6b47604664293b4176b0a54d12e4564c1e"
+rollback_commit: "61e75cf483393ce51067bff92d28e45e99ead48a"
 branch: "codex/initial-questra-structure-pr"
-generated_at_utc: "2026-08-09T06:18:23.048998Z"
+generated_at_utc: "2026-09-03T04:36:59.305668Z"
 worktree_clean_before_manifest: false
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
-  latest_local_migration: "202608090003_data_rights_request_lifecycle.sql"
+  latest_local_migration: "202609030001_explicit_server_only_table_grants.sql"
   remote_migration_head: "202608080006_route_proposal_stale_conflict_guard.sql"
-  edge_function_count: 11
-  flutter_test_file_count: 158
+  edge_function_count: 12
+  edge_functions:
+    - "arc-chat"
+    - "arc-quest-guide"
+    - "auth-login"
+    - "generate-arc-advice"
+    - "generate-mission"
+    - "generate-quest-guides"
+    - "generate-star-map"
+    - "moderate-quest-intent"
+    - "process-data-rights-requests"
+    - "quest-planning-tools"
+    - "quest-planning-v2"
+    - "research-mission-resources"
+  flutter_test_file_count: 202
   supabase_evidence_status: "local_migration_pending_deployment"
+  supabase_evidence_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
+  rls_evidence_status: "local_migration_pending_deployment"
+  rls_evidence_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
   device_evidence_status: "evidence_partial"
+  asset_provenance_status: "provenance_unverified_release_blocked"
+  candidate_asset_package_status: "blocked_ownership_review_pending"
+  dependency_license_status: "generated_review_pending"
 automated_gates:
-  dependency_resolution: "passed"
-  static_analysis: "passed"
-  flutter_tests: "focused_pass_full_pending"
-  rls_static_readiness: "full_pending_after_202608090003"
-  performance_readiness: "passed"
-  feedback_readiness: "passed"
-  error_capture_contract: "passed"
-  privacy_copy_contract: "passed"
-  release_notes_contract: "passed"
+  dependency_resolution: "not_run"
+  static_analysis: "not_run"
+  flutter_tests: "not_run"
+  rls_static_readiness: "not_run"
+  performance_readiness: "not_run"
+  feedback_readiness: "not_run"
+  error_capture_contract: "not_run"
+  privacy_copy_contract: "not_run"
+  release_notes_contract: "not_run"
 external_evidence:
   complete: false
+  matches_candidate_sha: false
   status: "evidence_missing"
   required_groups:
     - supabase_project_and_migrations
@@ -34,6 +54,9 @@ external_evidence:
     - real_device_validation
     - support_operations
     - legal_sign_off
+    - arc_asset_provenance
+    - candidate_asset_package
+    - dependency_license_notices
 artifacts:
   - status: not_built
     path: null

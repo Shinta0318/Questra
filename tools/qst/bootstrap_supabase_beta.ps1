@@ -38,12 +38,15 @@ if ($DashboardEvidence -match '[\r\n"]') {
 $requiredFunctions = @(
   'arc-chat',
   'arc-quest-guide',
+  'quest-planning-v2',
+  'quest-planning-tools',
   'generate-arc-advice',
   'generate-mission',
   'generate-quest-guides',
   'generate-star-map',
   'auth-login',
   'moderate-quest-intent',
+  'process-data-rights-requests',
   'research-mission-resources'
 )
 $latestMigrationFile = Get-ChildItem 'supabase/migrations/*.sql' |
@@ -80,6 +83,24 @@ foreach ($functionName in $requiredFunctions) {
   if (-not (Test-Path "supabase/functions/$functionName/index.ts")) {
     throw "Missing Edge Function: $functionName"
   }
+  $configSnippet = "[functions.$functionName]"
+  if (-not (Select-String -Path 'supabase/config.toml' -SimpleMatch $configSnippet -Quiet)) {
+    throw "Missing Supabase function config block: $configSnippet"
+  }
+}
+$functionDirs = Get-ChildItem 'supabase/functions' -Directory |
+  Where-Object {
+    $_.Name -ne '_shared' -and
+    (Test-Path (Join-Path $_.FullName 'index.ts'))
+  } |
+  Sort-Object Name
+$unexpectedFunctions = @(
+  $functionDirs |
+    Where-Object { $requiredFunctions -notcontains $_.Name } |
+    ForEach-Object { $_.Name }
+)
+if ($unexpectedFunctions.Count -gt 0) {
+  throw "Edge Function inventory is missing from bootstrap requiredFunctions: $($unexpectedFunctions -join ', ')"
 }
 
 $secretPath = if ([System.IO.Path]::IsPathRooted($SecretEnvFile)) {
@@ -111,6 +132,18 @@ Write-Host "Functions: $($requiredFunctions -join ', ')"
 if (-not $Apply) {
   Write-Host 'Preflight passed. Re-run with -Apply to change the linked Beta project.'
   exit 0
+}
+
+$sourceCommit = (& git rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') {
+  throw 'Unable to resolve candidate source commit.'
+}
+$workingTreeStatus = (& git status --porcelain)
+if ($LASTEXITCODE -ne 0) {
+  throw 'Unable to verify working tree cleanliness.'
+}
+if ($workingTreeStatus) {
+  throw 'Working tree must be clean before applying hosted Supabase Beta deployment evidence.'
 }
 
 $projectsList = Invoke-SupabaseCommand @('projects', 'list')
@@ -146,17 +179,14 @@ foreach ($functionName in $requiredFunctions) {
   ) | Out-Null
 }
 
-$sourceCommit = (& git rev-parse HEAD).Trim()
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($sourceCommit)) {
-  throw 'Unable to resolve candidate source commit.'
-}
 $updatedAt = [DateTime]::UtcNow.ToString('o')
 $evidencePath = 'docs/qst/BETA_SUPABASE_PROJECT.yaml'
 $lines = [System.Collections.Generic.List[string]]::new()
-$lines.Add('version: 1')
+$lines.Add('version: 3')
 $lines.Add('status: verified')
 $lines.Add("updated_at_utc: $(Quote-Yaml $updatedAt)")
 $lines.Add("candidate_source_commit: $(Quote-Yaml $sourceCommit)")
+$lines.Add('working_tree_clean_at_deploy: true')
 $lines.Add('project:')
 $lines.Add("  ref: $(Quote-Yaml $ProjectRef)")
 $lines.Add("  region: $(Quote-Yaml $Region)")

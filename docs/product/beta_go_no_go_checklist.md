@@ -9,9 +9,18 @@ Public release、Store審査、外部一般公開の承認には使用しない�
 
 **NO-GO: evidence incomplete**
 
-自動testは通過しているが、real Supabase project、cross-account RLS、real-device、Legal Reviewer、
-operator/contact、candidate build identityの配布証跡が未確定である。Release Managerは全P0 gateが
-揃うまでGOへ変更してはならない。
+QST-367の再判定では、candidate identity、hosted Supabase、cross-account RLS、real-device、
+accessibility、日本語IME、Legal/Data Rights、Arc asset、dependency license、operations、runtime SLO、
+provider-backed AI qualityの12 gateが未充足である。正本は
+`docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml`とし、Release Managerは同一candidate SHAに紐づく全gateが
+`passed`になるまでGOへ変更してはならない。
+
+再生成と検証:
+
+```bash
+dart run tools/qst/generate_external_beta_go_no_go.dart
+dart run tools/qst/verify_external_beta_go_no_go.dart
+```
 
 ## Decision Rules
 
@@ -68,7 +77,7 @@ operator/contact、candidate build identityの配布証跡が未確定である�
 | D4 | Arc Chat thinking/fallback | P1 | remote successとforced fallback | UXが壊れない |
 | D5 | Empty account state | P0 | fresh account screenshot | demo dataなし |
 | D6 | Logout / owner switch | P0 | A logout -> B login recording | A data残留なし |
-| D7 | Trail included / Guild deferred state | P1 | Trail primary navigation + Guild Coming Soon screenshots | scopeを誤認しない |
+| D7 | Trail included / Guild controlled pilot | P1 | Trail primary navigation + Guild pilot eligibility / stopped state screenshots | 無審査公開と誤認しない |
 
 ## E. Device and Accessibility
 

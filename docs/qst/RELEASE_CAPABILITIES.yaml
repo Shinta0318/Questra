@@ -23,7 +23,8 @@ capabilities:
     status: guarded_beta
     requirements: [supabase, server_side_gemini]
   guild:
-    status: hidden_not_shipped
+    status: controlled_pilot
+    requirements: [approved_snapshots_only, eligible_members_only, moderation, kill_switch]
     store_claim_allowed: false
   premium:
     status: not_shipped

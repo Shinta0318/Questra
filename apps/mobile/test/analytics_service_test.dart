@@ -11,6 +11,10 @@ void main() {
       AnalyticsEventName.onboardingCompleted.storageKey,
       'onboarding_completed',
     );
+    expect(
+      AnalyticsEventName.meaningfulProgressRecorded.storageKey,
+      'meaningful_progress_recorded',
+    );
   });
 
   test('payload sanitizer removes raw content fields', () {
@@ -84,6 +88,76 @@ void main() {
       completes,
     );
   });
+
+  test(
+    'meaningful progress helper stores metric data without raw text',
+    () async {
+      final repository = LocalSafeAnalyticsRepository();
+      final service = AnalyticsService(repository);
+
+      await service.meaningfulProgress(
+        questId: 'quest-id',
+        missionId: 'mission-id',
+        metricKey: 'weekly_meaningful_progress',
+        surface: 'home_focus',
+        progressBand: 'one_step',
+        outcome: 'task_completed',
+        hasTrail: true,
+      );
+
+      final event = repository.events.single;
+      expect(event.name, AnalyticsEventName.meaningfulProgressRecorded);
+      expect(event.properties, {
+        'metric_key': 'weekly_meaningful_progress',
+        'surface': 'home_focus',
+        'progress_band': 'one_step',
+        'outcome': 'task_completed',
+        'has_trail': true,
+      });
+    },
+  );
+
+  test(
+    'recovery and guardrail events remain allowlisted and bounded',
+    () async {
+      final repository = LocalSafeAnalyticsRepository();
+      final service = AnalyticsService(repository);
+
+      await service.recoveryActionSelected(
+        questId: 'quest-id',
+        missionId: 'mission-id',
+        source: 'signal',
+        outcome: 'rest_selected',
+        accepted: true,
+      );
+      await service.guardrail(
+        name: AnalyticsEventName.wellbeingGuardrailRecorded,
+        guardrail: 'non_coercive_recovery',
+        outcome: 'passed',
+        consentScope: 'product_improvement',
+      );
+      await service.progress(
+        name: AnalyticsEventName.trustFeedbackSubmitted,
+        properties: {
+          'outcome': 'positive',
+          'message': 'private feedback',
+          'email': 'captain@example.com',
+        },
+      );
+
+      expect(repository.events[0].properties, {
+        'source': 'signal',
+        'outcome': 'rest_selected',
+        'accepted': true,
+      });
+      expect(repository.events[1].properties, {
+        'guardrail': 'non_coercive_recovery',
+        'outcome': 'passed',
+        'consent_scope': 'product_improvement',
+      });
+      expect(repository.events[2].properties, {'outcome': 'positive'});
+    },
+  );
 }
 
 class _FailingAnalyticsRepository implements AnalyticsRepository {

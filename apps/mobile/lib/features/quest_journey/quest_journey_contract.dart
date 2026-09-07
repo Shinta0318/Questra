@@ -59,8 +59,39 @@ class QuestJourneyProgressService {
   }
 }
 
+class QuestFocusSelection {
+  const QuestFocusSelection({required this.tasks});
+
+  final List<QuestraTask> tasks;
+
+  QuestraTask? get primaryTask => tasks.firstOrNull;
+  List<QuestraTask> get secondaryTasks =>
+      tasks.skip(1).take(2).toList(growable: false);
+  bool get isEmpty => tasks.isEmpty;
+
+  String parentLabelFor(QuestraTask task) {
+    final quest = task.questTitle.isEmpty ? 'Quest' : task.questTitle;
+    final mission = task.missionTitle.isEmpty ? 'Mission' : task.missionTitle;
+    return '$quest  /  $mission';
+  }
+
+  String trailPromptFor(QuestraTask task) =>
+      '${task.title}を完了しました。この一歩をTrailに残せます。';
+
+  String horizonPromptFor(QuestraTask task) =>
+      '${parentLabelFor(task)}から、次の一歩へ進めます。';
+}
+
 class QuestFocusSelectionService {
   const QuestFocusSelectionService();
+
+  QuestFocusSelection selectTodayFocus({
+    required Iterable<QuestraTask> tasks,
+    required Iterable<Mission> missions,
+    DateTime? now,
+  }) => QuestFocusSelection(
+    tasks: select(tasks: tasks, missions: missions, now: now),
+  );
 
   List<QuestraTask> select({
     required Iterable<QuestraTask> tasks,
@@ -96,11 +127,11 @@ class QuestFocusSelectionService {
   }
 
   int _statusScore(TaskStatus status) => switch (status) {
-        TaskStatus.inProgress => 0,
-        TaskStatus.ready => 1,
-        TaskStatus.pending => 2,
-        _ => 3,
-      };
+    TaskStatus.inProgress => 0,
+    TaskStatus.ready => 1,
+    TaskStatus.pending => 2,
+    _ => 3,
+  };
 
   int _dateScore(QuestraTask task, DateTime today) {
     final date = task.scheduledDate ?? task.dueDate;

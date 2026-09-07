@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import { jsonResponse } from "../_shared/http.ts";
 
 type DeletionRequest = {
@@ -18,13 +18,21 @@ Deno.serve(async (req) => {
   }
 
   const client = adminClient();
+  const { data: withdrawalData, error: withdrawalError } = await client.rpc(
+    "fulfill_pending_consent_withdrawals",
+    { p_limit: 20 },
+  );
+  if (withdrawalError) {
+    return jsonResponse({ error: "Worker consent step failed" }, { status: 500 });
+  }
   const { data, error } = await client.rpc("claim_scheduled_account_deletions", {
     p_limit: 20,
   });
   if (error) return jsonResponse({ error: "Worker claim failed" }, { status: 500 });
 
   const requests = (data ?? []) as DeletionRequest[];
-  const results = [];
+  let completed = 0;
+  let retryScheduled = 0;
   for (const request of requests) {
     try {
       const { error: deletionError } = await client.auth.admin.deleteUser(
@@ -37,18 +45,37 @@ Deno.serve(async (req) => {
         p_completed: true,
         p_error: null,
       });
-      results.push({ request_id: request.id, status: "completed" });
+      completed += 1;
     } catch (error) {
       await client.rpc("resolve_account_deletion_worker", {
         p_request_id: request.id,
         p_completed: false,
-        p_error: String(error),
+        p_error: classifyWorkerError(error),
       });
-      results.push({ request_id: request.id, status: "retry_scheduled" });
+      retryScheduled += 1;
     }
   }
-  return jsonResponse({ claimed: requests.length, results });
+  return jsonResponse({
+    consent_withdrawals_completed: numericCount(withdrawalData),
+    account_deletions_claimed: requests.length,
+    account_deletions_completed: completed,
+    account_deletions_retry_scheduled: retryScheduled,
+  });
 });
+
+function numericCount(value: unknown) {
+  if (!value || typeof value !== "object") return 0;
+  const count = (value as Record<string, unknown>).processed_count;
+  return typeof count === "number" && Number.isFinite(count) ? count : 0;
+}
+
+function classifyWorkerError(error: unknown) {
+  const value = String(error).toLowerCase();
+  if (value.includes("rate") || value.includes("429")) return "rate_limited";
+  if (value.includes("timeout")) return "timeout";
+  if (value.includes("not found")) return "account_not_found";
+  return "provider_failure";
+}
 
 function adminClient() {
   const url = Deno.env.get("SUPABASE_URL");
@@ -64,7 +91,7 @@ function constantTimeEqual(left: string, right: string) {
   let difference = a.length ^ b.length;
   const length = Math.max(a.length, b.length);
   for (let index = 0; index < length; index++) {
-    difference |= (a[index % a.length] ?? 0) ^ (b[index % b.length] ?? 0);
+    difference |= (a[index] ?? 0) ^ (b[index] ?? 0);
   }
   return difference === 0;
 }

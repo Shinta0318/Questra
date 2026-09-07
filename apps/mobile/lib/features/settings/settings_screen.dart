@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/config/supabase_config.dart';
+import '../../core/feature_flags/settings_feature_flags.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
@@ -9,6 +11,7 @@ import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../arc_memory/arc_memory_management_preview_service.dart';
 import '../onboarding/onboarding_tour_controller.dart';
+import '../onboarding/onboarding_tour_feature_flags.dart';
 import '../trust/consent_purpose_registry_service.dart';
 import '../trust/consent_controller.dart';
 import '../trust/data_request_copy_service.dart';
@@ -22,7 +25,9 @@ import 'widgets/settings_tutorial_card.dart';
 import 'widgets/trust_privacy_card.dart';
 
 class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({this.initialSection, super.key});
+
+  final String? initialSection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,55 +38,283 @@ class SettingsScreen extends ConsumerWidget {
     final consentRegistry = const ConsentPurposeRegistryService()
         .buildRegistry();
     final settingsMap = const SettingsInformationArchitectureService()
-        .buildOverview();
+        .buildOverview(remotePersistenceConnected: SupabaseConfig.isConfigured);
+    const featureFlags = SettingsFeatureFlags();
+    final selected = _selectedSection(settingsMap, initialSection);
+
+    void openSection(SettingsSectionOverview section) {
+      final destination = section.destination;
+      context.push(
+        destination.startsWith('/')
+            ? destination
+            : AppRoutes.settingsSection(destination),
+      );
+    }
+
+    final tutorialCard = SettingsTutorialCard(
+      onReplay: () {
+        ref
+            .read(onboardingTourControllerProvider.notifier)
+            .replay(
+              enabled: const OnboardingTourFeatureFlags().replayV2Enabled,
+            );
+        context.go(AppRoutes.home);
+      },
+      onReturnToQuest: () => context.go(AppRoutes.quest),
+    );
+    final legacySections = <Widget>[
+      const ExperienceSettingsCard(),
+      const SizedBox(height: AppSpacing.lg),
+      const PlanningPreferencesCard(),
+      const SizedBox(height: AppSpacing.lg),
+      tutorialCard,
+      const SizedBox(height: AppSpacing.lg),
+      BetaFeedbackEntryCard(onOpen: () => context.push(AppRoutes.feedback)),
+      const SizedBox(height: AppSpacing.lg),
+      TrustPrivacyCard(review: trustReview),
+      const SizedBox(height: AppSpacing.lg),
+      ArcMemoryManagementPreviewCard(
+        preview: memoryPreview,
+        onOpen: () => context.push(AppRoutes.arcMemory),
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      _DataRequestCopyCard(
+        review: dataRequests,
+        onOpen: () => context.push(AppRoutes.dataRights),
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      _ConsentPurposeRegistryCard(registry: consentRegistry),
+    ];
+    final detail = switch (initialSection) {
+      'experience' => const <Widget>[ExperienceSettingsCard()],
+      'planning' => const <Widget>[PlanningPreferencesCard()],
+      'tutorial' => <Widget>[tutorialCard],
+      'privacy' => <Widget>[TrustPrivacyCard(review: trustReview)],
+      'consent' => <Widget>[
+        _ConsentPurposeRegistryCard(registry: consentRegistry),
+      ],
+      null => <Widget>[
+        _SettingsActionIndex(map: settingsMap, onOpen: openSection),
+      ],
+      _ => <Widget>[
+        _UnknownSettingsSection(
+          onOpenIndex: () => context.go(AppRoutes.settings),
+        ),
+      ],
+    };
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
+      appBar: AppBar(title: Text(selected?.title ?? '設定')),
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: AppGradients.adventure),
         child: SafeArea(
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.xl),
-            children: [
-              Text(
-                '設定',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w900,
+            children: featureFlags.actionIndexV2Enabled
+                ? detail
+                : <Widget>[
+                    _SettingsMapCard(map: settingsMap),
+                    const SizedBox(height: AppSpacing.lg),
+                    ...legacySections,
+                  ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+SettingsSectionOverview? _selectedSection(
+  SettingsInformationArchitecture map,
+  String? destination,
+) {
+  if (destination == null) return null;
+  for (final section in map.sections) {
+    if (section.destination == destination) return section;
+  }
+  return null;
+}
+
+class _UnknownSettingsSection extends StatelessWidget {
+  const _UnknownSettingsSection({required this.onOpenIndex});
+
+  final VoidCallback onOpenIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.84),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'この設定は見つかりません',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppColors.white,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          const Text(
+            '設定メニューから、利用できる項目を選び直してください。',
+            style: TextStyle(color: AppColors.parchment),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          FilledButton.icon(
+            onPressed: onOpenIndex,
+            icon: const Icon(Icons.settings_outlined),
+            label: const Text('設定メニューへ'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsActionIndex extends StatelessWidget {
+  const _SettingsActionIndex({required this.map, required this.onOpen});
+
+  final SettingsInformationArchitecture map;
+  final ValueChanged<SettingsSectionOverview> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.midnightNavy.withValues(alpha: 0.84),
+        borderRadius: AppRadius.glassCard,
+        border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.sm,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  map.heading,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  map.summary,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.parchment),
+                ),
+              ],
+            ),
+          ),
+          for (var index = 0; index < map.sections.length; index++) ...[
+            if (index > 0)
+              Divider(
+                height: 1,
+                color: AppColors.skyBlue.withValues(alpha: 0.14),
               ),
-              const SizedBox(height: AppSpacing.lg),
-              _SettingsMapCard(map: settingsMap),
-              const SizedBox(height: AppSpacing.lg),
-              const ExperienceSettingsCard(),
-              const SizedBox(height: AppSpacing.lg),
-              const PlanningPreferencesCard(),
-              const SizedBox(height: AppSpacing.lg),
-              SettingsTutorialCard(
-                onReplay: () => ref
-                    .read(onboardingTourControllerProvider.notifier)
-                    .replay(),
-                onReturnToQuest: () => context.go(AppRoutes.quest),
+            _SettingsActionTile(
+              section: map.sections[index],
+              onTap: () => onOpen(map.sections[index]),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsActionTile extends StatelessWidget {
+  const _SettingsActionTile({required this.section, required this.onTap});
+
+  final SettingsSectionOverview section;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: '${section.title}、${section.statusLabel}',
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          key: ValueKey('settings_action_${section.destination}'),
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 72),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.md,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              BetaFeedbackEntryCard(
-                onOpen: () => context.push(AppRoutes.feedback),
+              child: Row(
+                children: [
+                  Icon(
+                    _settingsSectionIcon(section.type),
+                    color: AppColors.gold,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          section.title,
+                          style: const TextStyle(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          section.summary,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppColors.parchment,
+                                height: 1.35,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 92),
+                    child: Text(
+                      section.statusLabel,
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        color: AppColors.skyBlue,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.skyBlue,
+                    semanticLabel: '開く',
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.lg),
-              TrustPrivacyCard(review: trustReview),
-              const SizedBox(height: AppSpacing.lg),
-              ArcMemoryManagementPreviewCard(
-                preview: memoryPreview,
-                onOpen: () => context.push(AppRoutes.arcMemory),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _DataRequestCopyCard(
-                review: dataRequests,
-                onOpen: () => context.push(AppRoutes.dataRights),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _ConsentPurposeRegistryCard(registry: consentRegistry),
-            ],
+            ),
           ),
         ),
       ),
@@ -298,7 +531,9 @@ class _ConsentPurposeRegistryCard extends ConsumerWidget {
               child: _ConsentPurposeTile(
                 purpose: purpose,
                 decision: decisions[purpose.purpose],
-                onChanged: purpose.requiresContextualConfirmation
+                onChanged:
+                    purpose.requiresContextualConfirmation &&
+                        decisions[purpose.purpose]?.isGranted != true
                     ? null
                     : (value) => ref
                           .read(consentControllerProvider.notifier)
@@ -373,7 +608,8 @@ class _ConsentPurposeTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              if (purpose.requiresContextualConfirmation)
+              if (purpose.requiresContextualConfirmation &&
+                  decision?.isGranted != true)
                 const Icon(Icons.lock_outline, color: AppColors.skyBlue)
               else
                 Switch.adaptive(
@@ -392,7 +628,8 @@ class _ConsentPurposeTile extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          if (purpose.requiresContextualConfirmation) ...[
+          if (purpose.requiresContextualConfirmation &&
+              decision?.isGranted != true) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
               purpose.defaultStateLabel,
@@ -681,10 +918,13 @@ IconData _consentPurposeIcon(ConsentPurpose purpose) {
 
 IconData _settingsSectionIcon(SettingsSectionType type) {
   return switch (type) {
+    SettingsSectionType.experience => Icons.tune_outlined,
+    SettingsSectionType.planning => Icons.calendar_month_outlined,
     SettingsSectionType.tutorial => Icons.auto_awesome_outlined,
     SettingsSectionType.trust => Icons.shield_outlined,
     SettingsSectionType.arcMemory => Icons.psychology_alt_outlined,
     SettingsSectionType.dataRequest => Icons.assignment_outlined,
     SettingsSectionType.consent => Icons.rule_outlined,
+    SettingsSectionType.feedback => Icons.rate_review_outlined,
   };
 }

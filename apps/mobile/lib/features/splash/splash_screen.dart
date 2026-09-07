@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/feature_flags/auth_feature_flags.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -25,6 +26,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final persistenceUnavailable = !SupabaseConfig.persistenceAvailable;
     final usesLocalData =
         SupabaseConfig.persistenceSource == PersistenceSource.localDevelopment;
+    final plainLanguage = const AuthFeatureFlags().plainLanguageV2Enabled;
     if (auth.isAuthenticated && !_navigationScheduled) {
       _navigationScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) => _continueJourney());
@@ -85,7 +87,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '挑戦が、\n君の星座になる。',
+                          plainLanguage
+                              ? 'やりたいことを、\n今日の一歩に。'
+                              : '挑戦が、\n君の星座になる。',
                           style: Theme.of(context).textTheme.displaySmall
                               ?.copyWith(
                                 color: AppColors.white,
@@ -95,7 +99,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         Text(
-                          'ArcとともにQuestを見つけ、Missionへ進み、Trailを残そう。',
+                          plainLanguage
+                              ? 'Arcと話しながら、叶えたいことを具体的な行動へ変えます。'
+                              : 'ArcとともにQuestを見つけ、Missionへ進み、Trailを残そう。',
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(
                                 color: AppColors.white.withValues(alpha: 0.82),
@@ -120,30 +126,62 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                           ),
                         ],
                         const SizedBox(height: AppSpacing.xxl),
-                        FilledButton.icon(
-                          onPressed: auth.isLoading || persistenceUnavailable
-                              ? null
-                              : auth.isAuthenticated
-                              ? _continueJourney
-                              : () => context.go(AppRoutes.login),
-                          icon: auth.isLoading
-                              ? const SizedBox.square(
-                                  dimension: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.arrow_forward_rounded),
-                          label: Text(
-                            auth.isLoading
-                                ? '航路を確認しています'
-                                : persistenceUnavailable
-                                ? '接続設定を確認してください'
-                                : auth.isAuthenticated
-                                ? '航海を続ける'
-                                : 'Arcとの航海を始める',
+                        if (plainLanguage && !auth.isAuthenticated) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed:
+                                  auth.isLoading || persistenceUnavailable
+                                  ? null
+                                  : () => context.go(AppRoutes.login),
+                              icon: auth.isLoading
+                                  ? const SizedBox.square(
+                                      dimension: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.login_rounded),
+                              label: Text(auth.isLoading ? '確認しています' : 'ログイン'),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: AppSpacing.sm),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed:
+                                  auth.isLoading || persistenceUnavailable
+                                  ? null
+                                  : () => context.go(AppRoutes.signup),
+                              icon: const Icon(Icons.person_add_alt_1_outlined),
+                              label: const Text('初めての方'),
+                            ),
+                          ),
+                        ] else
+                          FilledButton.icon(
+                            onPressed: auth.isLoading || persistenceUnavailable
+                                ? null
+                                : auth.isAuthenticated
+                                ? _continueJourney
+                                : () => context.go(AppRoutes.login),
+                            icon: auth.isLoading
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.arrow_forward_rounded),
+                            label: Text(
+                              auth.isLoading
+                                  ? '航路を確認しています'
+                                  : persistenceUnavailable
+                                  ? '接続設定を確認してください'
+                                  : auth.isAuthenticated
+                                  ? '続きから始める'
+                                  : 'Arcとの航海を始める',
+                            ),
+                          ),
                       ],
                     ),
                   ),

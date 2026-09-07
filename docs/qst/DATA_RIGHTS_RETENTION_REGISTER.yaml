@@ -1,0 +1,49 @@
+version: 1
+status: review_pending_external_beta_blocked
+updated_at: "2026-08-25"
+policy_version: "2026-08-25.v1"
+product_owner_approval: pending
+legal_reviewer_approval: pending
+security_reviewer_approval: pending
+systems:
+  - system: supabase_primary_database
+    data_class: account_and_journey_data
+    deletion_behavior: soft_delete_worker_then_policy_expiry
+    retention_duration_verified: false
+    backup_exclusion_verified: false
+    restoration_exclusion_verified: false
+    reviewer: pending
+  - system: supabase_storage
+    data_class: trail_media
+    deletion_behavior: owner_scoped_cleanup_required
+    retention_duration_verified: false
+    backup_exclusion_verified: false
+    restoration_exclusion_verified: false
+    reviewer: pending
+  - system: supabase_backups
+    data_class: encrypted_service_backup
+    deletion_behavior: expires_by_provider_retention_window
+    retention_duration_verified: false
+    backup_exclusion_verified: false
+    restoration_exclusion_verified: false
+    reviewer: pending
+  - system: gemini
+    data_class: consented_minimized_prompt_context
+    deletion_behavior: governed_by_provider_tier_and_project_settings
+    retention_duration_verified: false
+    backup_exclusion_verified: false
+    restoration_exclusion_verified: false
+    reviewer: pending
+  - system: local_device
+    data_class: session_and_non_authoritative_cache
+    deletion_behavior: sign_out_and_account_deletion_cleanup
+    retention_duration_verified: false
+    backup_exclusion_verified: false
+    restoration_exclusion_verified: false
+    reviewer: pending
+guardrails:
+  unknown_retention_treated_as_approved: false
+  backup_restore_repopulates_deleted_account: false
+  provider_claim_inferred_from_configuration: false
+  raw_request_content_recorded: false
+  credentials_recorded: false

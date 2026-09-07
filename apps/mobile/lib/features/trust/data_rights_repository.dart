@@ -71,6 +71,10 @@ class TaskDeletionPreview {
 
 abstract interface class DataRightsRepository {
   Future<DataExportManifest> exportMyData();
+  Future<DataRightsRequest> requestCorrection({
+    required String targetType,
+    required String requestedChange,
+  });
   Future<TaskDeletionPreview> previewTaskDeletion(String taskId);
   Future<void> deleteTask(TaskDeletionPreview preview);
   Future<List<DataRightsRequest>> listRequests();
@@ -96,6 +100,30 @@ class SupabaseDataRightsRepository implements DataRightsRepository {
       counts: _counts(row['counts']),
       payload: Map<String, Object?>.from(row),
     );
+  }
+
+  @override
+  Future<DataRightsRequest> requestCorrection({
+    required String targetType,
+    required String requestedChange,
+  }) async {
+    final user = client.auth.currentUser;
+    if (user == null) throw StateError('ログインが必要です。');
+    final row = Map<String, dynamic>.from(
+      await client.rpc<Map<String, dynamic>>(
+        'submit_data_rights_request',
+        params: {
+          'p_request_type': 'correction',
+          'p_scope': {
+            'target_type': targetType,
+            'requested_change': requestedChange.trim(),
+          },
+          'p_idempotency_key':
+              '${user.id}:correction:${DateTime.now().toUtc().microsecondsSinceEpoch}',
+        },
+      ),
+    );
+    return DataRightsRequest.fromJson(row);
   }
 
   @override
@@ -201,6 +229,12 @@ class UnavailableDataRightsRepository implements DataRightsRepository {
 
   @override
   Future<List<DataRightsRequest>> listRequests() async => _unavailable();
+
+  @override
+  Future<DataRightsRequest> requestCorrection({
+    required String targetType,
+    required String requestedChange,
+  }) async => _unavailable();
 
   @override
   Future<DataRightsRequest> requestAccountDeletion({

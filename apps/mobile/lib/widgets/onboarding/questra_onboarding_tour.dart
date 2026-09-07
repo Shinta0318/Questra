@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,7 +14,12 @@ import '../arc/arc_emotion.dart';
 import '../arc/arc_widget.dart';
 
 class QuestraOnboardingTour extends ConsumerStatefulWidget {
-  const QuestraOnboardingTour({super.key});
+  const QuestraOnboardingTour({
+    this.entryPoint = OnboardingTourEntryPoint.automatic,
+    super.key,
+  });
+
+  final OnboardingTourEntryPoint entryPoint;
 
   @override
   ConsumerState<QuestraOnboardingTour> createState() =>
@@ -21,6 +28,9 @@ class QuestraOnboardingTour extends ConsumerStatefulWidget {
 
 class _QuestraOnboardingTourState extends ConsumerState<QuestraOnboardingTour> {
   int _stepIndex = 0;
+  bool _isDismissing = false;
+  bool _isAdvancing = false;
+  FocusNode? _previousFocus;
 
   static const _steps = [
     _TourStep(
@@ -30,25 +40,40 @@ class _QuestraOnboardingTourState extends ConsumerState<QuestraOnboardingTour> {
     ),
     _TourStep(
       title: 'Questを灯す',
-      message: 'まずは叶えたいことをQuestとして登録してみよう。大きな夢も、まだ形のない願いも大丈夫。',
+      message: '叶えたいことをQuestとして言葉にしよう。大きな夢も、まだ形のない願いも大丈夫。',
       emotion: ArcEmotion.support,
     ),
     _TourStep(
-      title: 'Missionに分ける',
-      message: 'Questを進める小さな一歩がMissionだよ。迷ったらArcが次の航路を一緒に描くよ。',
+      title: 'Missionで航路を決める',
+      message: 'MissionはQuestへ近づく途中の到達点。Arcが順番と期限を整理し、進む航路を一緒に描くよ。',
       emotion: ArcEmotion.support,
     ),
     _TourStep(
-      title: 'Trailを残す',
-      message: '進んだ記録はTrailとして残していこう。続けた時間も、立ち止まった理由も、君の資産になる。',
+      title: 'Taskから始める',
+      message: 'Taskは今日から実行できる具体的な行動。終えた一歩はTrailとして残り、次の判断につながるよ。',
       emotion: ArcEmotion.normal,
     ),
     _TourStep(
       title: '迷ったらArcへ',
-      message: 'HomeからArcへ、そしてQuestへ。いつでも話しかけて。次の星を一緒に見つけよう。',
+      message: 'HomeからArcへ、そしてQuestへ。状況が変わったときも、次の航路を一緒に見直そう。',
       emotion: ArcEmotion.celebrate,
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _previousFocus = FocusManager.instance.primaryFocus;
+  }
+
+  @override
+  void dispose() {
+    final previousFocus = _previousFocus;
+    if (previousFocus?.canRequestFocus ?? false) {
+      scheduleMicrotask(previousFocus!.requestFocus);
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,95 +81,107 @@ class _QuestraOnboardingTourState extends ConsumerState<QuestraOnboardingTour> {
     final isLast = _stepIndex == _steps.length - 1;
 
     return Positioned.fill(
-      child: Material(
-        color: AppColors.deepNavy.withValues(alpha: 0.74),
-        child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 430),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  decoration: BoxDecoration(
-                    gradient: AppGradients.adventure,
-                    borderRadius: AppRadius.glassCard,
-                    border: Border.all(
-                      color: AppColors.gold.withValues(alpha: 0.30),
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) {
+            _dismiss();
+          }
+        },
+        child: Material(
+          color: AppColors.deepNavy.withValues(alpha: 0.86),
+          child: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final outerPadding = constraints.maxHeight < 520
+                    ? AppSpacing.sm
+                    : AppSpacing.lg;
+                return Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Semantics(
+                        button: true,
+                        label: 'チュートリアルを閉じる',
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: _dismiss,
+                        ),
+                      ),
                     ),
-                    boxShadow: AppShadows.goldGlow,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Align(
-                        alignment: Alignment.center,
-                        child: ArcWidget(
-                          emotion: step.emotion,
-                          size: 128,
-                          showSpeechBubble: false,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        step.title,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w900,
-                            ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        step.message,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppColors.parchment,
-                          height: 1.6,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Row(
-                        children: [
-                          for (var index = 0; index < _steps.length; index++)
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                              width: index == _stepIndex ? 24 : 8,
-                              height: 8,
-                              margin: const EdgeInsets.only(right: 6),
+                    Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(outerPadding),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 430),
+                          child: Material(
+                            key: const ValueKey('onboarding-tour-surface'),
+                            color: AppColors.midnightNavy,
+                            elevation: 12,
+                            shadowColor: AppColors.gold.withValues(alpha: 0.24),
+                            borderRadius: AppRadius.glassCard,
+                            clipBehavior: Clip.antiAlias,
+                            child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: index == _stepIndex
-                                    ? AppColors.gold
-                                    : AppColors.white.withValues(alpha: 0.22),
-                                borderRadius: BorderRadius.circular(
-                                  AppRadius.pill,
+                                gradient: AppGradients.adventure,
+                                borderRadius: AppRadius.glassCard,
+                                border: Border.all(
+                                  color: AppColors.gold.withValues(alpha: 0.34),
+                                ),
+                                boxShadow: AppShadows.goldGlow,
+                              ),
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxHeight:
+                                      constraints.maxHeight - outerPadding * 2,
+                                ),
+                                child: Semantics(
+                                  container: true,
+                                  scopesRoute: true,
+                                  namesRoute: true,
+                                  explicitChildNodes: true,
+                                  label:
+                                      'Questraの使い方 ${_stepIndex + 1}/${_steps.length}',
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _TourHeader(
+                                        currentStep: _stepIndex + 1,
+                                        totalSteps: _steps.length,
+                                        onClose: _dismiss,
+                                      ),
+                                      Flexible(
+                                        child: SingleChildScrollView(
+                                          key: const ValueKey(
+                                            'onboarding-tour-scroll',
+                                          ),
+                                          padding: const EdgeInsets.fromLTRB(
+                                            AppSpacing.xl,
+                                            AppSpacing.sm,
+                                            AppSpacing.xl,
+                                            AppSpacing.lg,
+                                          ),
+                                          child: _TourStepContent(step: step),
+                                        ),
+                                      ),
+                                      _TourFooter(
+                                        stepIndex: _stepIndex,
+                                        stepCount: _steps.length,
+                                        isLast: isLast,
+                                        onSkip: _dismiss,
+                                        onNext: _advance,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
-                          const Spacer(),
-                          TextButton(
-                            onPressed: _dismiss,
-                            child: const Text('スキップ'),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          FilledButton.icon(
-                            onPressed: isLast
-                                ? _dismiss
-                                : () => setState(() => _stepIndex += 1),
-                            icon: Icon(
-                              isLast
-                                  ? Icons.check_circle_outline
-                                  : Icons.arrow_forward,
-                            ),
-                            label: Text(isLast ? '始める' : '次へ'),
-                          ),
-                        ],
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -152,9 +189,192 @@ class _QuestraOnboardingTourState extends ConsumerState<QuestraOnboardingTour> {
     );
   }
 
+  void _advance() {
+    if (_isDismissing || _isAdvancing) {
+      return;
+    }
+    if (_stepIndex == _steps.length - 1) {
+      _dismiss();
+      return;
+    }
+    _isAdvancing = true;
+    setState(() => _stepIndex += 1);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _isAdvancing = false;
+      }
+    });
+  }
+
   void _dismiss() {
-    ref.read(onboardingTourControllerProvider.notifier).dismiss();
-    ref.read(authControllerProvider.notifier).markOnboardingTourSeen();
+    if (_isDismissing) {
+      return;
+    }
+    _isDismissing = true;
+    final tourController = ref.read(onboardingTourControllerProvider.notifier);
+    if (widget.entryPoint == OnboardingTourEntryPoint.automatic) {
+      final authController = ref.read(authControllerProvider.notifier);
+      unawaited(authController.markOnboardingTourSeen());
+    }
+    tourController.dismiss();
+  }
+}
+
+class _TourHeader extends StatelessWidget {
+  const _TourHeader({
+    required this.currentStep,
+    required this.totalSteps,
+    required this.onClose,
+  });
+
+  final int currentStep;
+  final int totalSteps;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.sm,
+        0,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '$currentStep / $totalSteps',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: AppColors.skyBlue,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          IconButton(
+            key: const ValueKey('onboarding-tour-close'),
+            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+            onPressed: onClose,
+            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+            icon: const Icon(Icons.close, color: AppColors.white),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TourStepContent extends StatelessWidget {
+  const _TourStepContent({required this.step});
+
+  final _TourStep step;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.center,
+          child: ArcWidget(
+            emotion: step.emotion,
+            size: 112,
+            showSpeechBubble: false,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          step.title,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: AppColors.white,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          step.message,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: AppColors.parchment,
+            height: 1.55,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TourFooter extends StatelessWidget {
+  const _TourFooter({
+    required this.stepIndex,
+    required this.stepCount,
+    required this.isLast,
+    required this.onSkip,
+    required this.onNext,
+  });
+
+  final int stepIndex;
+  final int stepCount;
+  final bool isLast;
+  final VoidCallback onSkip;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final animationDuration = MediaQuery.of(context).disableAnimations
+        ? Duration.zero
+        : const Duration(milliseconds: 180);
+    return Material(
+      color: AppColors.midnightNavy.withValues(alpha: 0.96),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var index = 0; index < stepCount; index++)
+                  AnimatedContainer(
+                    duration: animationDuration,
+                    width: index == stepIndex ? 24 : 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(right: 6),
+                    decoration: BoxDecoration(
+                      color: index == stepIndex
+                          ? AppColors.gold
+                          : AppColors.white.withValues(alpha: 0.28),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            OverflowBar(
+              alignment: MainAxisAlignment.end,
+              overflowAlignment: OverflowBarAlignment.end,
+              spacing: AppSpacing.sm,
+              overflowSpacing: AppSpacing.xs,
+              children: [
+                TextButton(onPressed: onSkip, child: const Text('スキップ')),
+                FilledButton.icon(
+                  onPressed: onNext,
+                  icon: Icon(
+                    isLast ? Icons.check_circle_outline : Icons.arrow_forward,
+                  ),
+                  label: Text(isLast ? '始める' : '次へ'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

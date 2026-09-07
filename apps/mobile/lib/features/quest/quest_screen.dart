@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
+import '../../core/feature_flags/quest_feature_flags.dart';
+import '../../core/persistence/persistence_sync_state.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../widgets/arc/arc_emotion.dart';
@@ -29,6 +30,7 @@ class QuestScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final compactHeader = const QuestFeatureFlags().compactHeaderEnabled;
     final quests = ref.watch(questControllerProvider);
     final profile = ref.watch(authControllerProvider).profile;
     final missions = ref.watch(missionControllerProvider);
@@ -58,7 +60,7 @@ class QuestScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: QuestraColors.deepNavy,
       appBar: AppBar(
-        title: const Text('Quest一覧'),
+        title: Text(compactHeader ? 'Quest' : 'Quest一覧'),
         actions: [
           IconButton(
             tooltip: 'ArcとQuestを考える',
@@ -79,36 +81,46 @@ class QuestScreen extends ConsumerWidget {
           children: [
             PersistenceSyncBanner(
               state: syncState,
+              onRetry:
+                  syncState.operation == PersistenceSyncOperation.load &&
+                      profile != null
+                  ? () => ref
+                        .read(questControllerProvider.notifier)
+                        .loadForUser(profile.id)
+                  : null,
               onDismiss: () =>
                   ref.read(questSyncControllerProvider.notifier).clear(),
             ),
             if (syncState.isActive) const SizedBox(height: 12),
-            _QuestHero(
-              activeCount: activeQuests.length,
-              emotion: arcExpression.emotion,
-              onCreateQuest: () => context.go(AppRoutes.arc),
-            ),
-            if (concern != null) ...[
+            if (!compactHeader)
+              _QuestHero(
+                activeCount: activeQuests.length,
+                emotion: arcExpression.emotion,
+                onCreateQuest: () => context.go(AppRoutes.arc),
+              ),
+            if (!compactHeader && concern != null) ...[
               const SizedBox(height: 16),
               _QuestConcernCard(concern: concern),
             ],
-            const SizedBox(height: 16),
-            _QuestProgressDashboard(
-              quest: focusQuest,
-              missions: dashboardMissions,
-              trailCount: dashboardTrails.length,
-              latestActivity: _latestActivity(
-                dashboardMissions,
-                dashboardTrails,
+            if (!compactHeader) ...[
+              const SizedBox(height: 16),
+              _QuestProgressDashboard(
+                quest: focusQuest,
+                missions: dashboardMissions,
+                trailCount: dashboardTrails.length,
+                latestActivity: _latestActivity(
+                  dashboardMissions,
+                  dashboardTrails,
+                ),
+                actionLabel: focusQuest == null ? 'ArcとQuestを考える' : 'Quest詳細へ',
+                onOpenQuest: focusQuest == null
+                    ? () => context.go(AppRoutes.arc)
+                    : () => context.go('${AppRoutes.quest}/${focusQuest.id}'),
               ),
-              actionLabel: focusQuest == null ? 'ArcとQuestを考える' : 'Quest詳細へ',
-              onOpenQuest: focusQuest == null
-                  ? () => context.go(AppRoutes.arc)
-                  : () => context.go('${AppRoutes.quest}/${focusQuest.id}'),
-            ),
-            const SizedBox(height: 22),
+            ],
+            SizedBox(height: compactHeader ? 4 : 22),
             Text(
-              '進行中のQuest',
+              compactHeader ? 'あなたのQuest' : '進行中のQuest',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: QuestraColors.white,
                 fontWeight: FontWeight.w800,
@@ -418,20 +430,25 @@ class _QuestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compactHeader = const QuestFeatureFlags().compactHeaderEnabled;
     final theme = const QuestThemeResolver().resolve(quest);
+    final progressDescription = progress.total == 0
+        ? '進捗は未評価、Missionを準備中'
+        : '進捗${progress.percent}パーセント、Mission ${progress.missionCountLabel}';
 
     return Semantics(
       button: true,
       label: '${quest.title}のQuestを開く',
-      value: '進捗${progress.percent}パーセント、Mission ${progress.missionCountLabel}',
+      value: progressDescription,
       child: InkWell(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(compactHeader ? 20 : 26),
         onTap: onTap,
         child: Ink(
-          padding: const EdgeInsets.all(20),
+          key: ValueKey('quest-card-${quest.id}'),
+          padding: EdgeInsets.all(compactHeader ? 16 : 20),
           decoration: BoxDecoration(
             gradient: theme.backgroundGradient,
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(compactHeader ? 20 : 26),
             border: Border.all(color: theme.accent.withValues(alpha: 0.28)),
             boxShadow: [
               BoxShadow(
@@ -448,11 +465,13 @@ class _QuestCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 58,
-                    height: 76,
+                    width: compactHeader ? 48 : 58,
+                    height: compactHeader ? 56 : 76,
                     decoration: BoxDecoration(
                       gradient: theme.posterGradient,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(
+                        compactHeader ? 12 : 18,
+                      ),
                     ),
                     child: Icon(theme.icon, color: QuestraColors.deepNavy),
                   ),
@@ -469,72 +488,97 @@ class _QuestCard extends StatelessWidget {
                                 fontWeight: FontWeight.w900,
                               ),
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          quest.description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: QuestraColors.parchment,
-                                height: 1.45,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
+                        if (quest.description.trim().isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            quest.description,
+                            maxLines: compactHeader ? 2 : 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: QuestraColors.parchment,
+                                  height: 1.45,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: ExcludeSemantics(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(999),
-                        child: LinearProgressIndicator(
-                          value: progress.value,
-                          minHeight: 9,
-                          backgroundColor: QuestraColors.deepNavy,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            QuestraColors.gold,
+              if (progress.total > 0) ...[
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ExcludeSemantics(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(999),
+                          child: LinearProgressIndicator(
+                            value: progress.value,
+                            minHeight: 9,
+                            backgroundColor: QuestraColors.deepNavy,
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              QuestraColors.gold,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${progress.percent}%',
-                    style: const TextStyle(
-                      color: QuestraColors.gold,
-                      fontWeight: FontWeight.w800,
+                    const SizedBox(width: 12),
+                    Text(
+                      '${progress.percent}%',
+                      style: const TextStyle(
+                        color: QuestraColors.gold,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Mission ${progress.missionCountLabel}',
+                  style: const TextStyle(
+                    color: QuestraColors.parchment,
+                    fontWeight: FontWeight.w800,
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Mission ${progress.missionCountLabel}',
-                style: const TextStyle(
-                  color: QuestraColors.parchment,
-                  fontWeight: FontWeight.w800,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                nextMission == null
-                    ? 'Arc: ${theme.arcHint}'
-                    : '次のMission: ${nextMission!.title}',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: QuestraColors.white,
-                  height: 1.45,
-                  fontWeight: FontWeight.w800,
+              ] else ...[
+                const SizedBox(height: 12),
+                const Text(
+                  'Missionを準備中',
+                  style: TextStyle(
+                    color: QuestraColors.parchment,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
+              ],
+              if (nextMission != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '次のMission: ${nextMission!.title}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: QuestraColors.white,
+                    height: 1.45,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ] else if (!compactHeader) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Arc: ${theme.arcHint}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: QuestraColors.white,
+                    height: 1.45,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
               const SizedBox(height: 14),
               Wrap(
                 spacing: 8,
@@ -545,19 +589,28 @@ class _QuestCard extends StatelessWidget {
                     label: quest.status.label,
                     emphasized: quest.status == QuestStatus.active,
                   ),
-                  _QuestPill(
-                    icon: Icons.fitness_center_outlined,
-                    label: quest.difficulty.label,
-                  ),
-                  _QuestPill(
-                    icon: Icons.category_outlined,
-                    label: theme.dnaLabel,
-                  ),
-                  _QuestPill(icon: Icons.palette_outlined, label: theme.name),
+                  if (!compactHeader)
+                    _QuestPill(
+                      icon: Icons.fitness_center_outlined,
+                      label: quest.difficulty.label,
+                    ),
+                  if (!compactHeader)
+                    _QuestPill(
+                      icon: Icons.category_outlined,
+                      label: theme.dnaLabel,
+                    ),
+                  if (!compactHeader)
+                    _QuestPill(icon: Icons.palette_outlined, label: theme.name),
+                  if (compactHeader && quest.evaluation != null)
+                    _QuestPill(
+                      icon: Icons.auto_awesome_outlined,
+                      label: '難易度 ${quest.evaluation!.difficultyStars}',
+                    ),
                   if (quest.targetDate != null)
                     _QuestPill(
                       icon: Icons.event_outlined,
-                      label: DateFormat.MMMd('ja').format(quest.targetDate!),
+                      label:
+                          '目標 ${quest.targetDate!.year}年${quest.targetDate!.month}月',
                     ),
                 ],
               ),

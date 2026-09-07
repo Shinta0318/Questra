@@ -1,0 +1,31 @@
+version: 1
+qst: QST-368
+status: local_contract_passed_hosted_pending
+generated_at_utc: "2026-08-25T07:19:38.116248Z"
+candidate_source_commit: "4d316c6b47604664293b4176b0a54d12e4564c1e"
+working_tree_clean_at_execution: false
+latest_migration: "202608250009_runtime_observability_exact_operator_drill.sql"
+local_checks:
+  correction_sla_contract: passed
+  correction_resolution_allowlist: passed
+  withdrawal_transaction_contract: passed
+  deletion_cancellation_window: passed
+  deletion_retry_classification: passed
+  content_free_fulfillment_receipt: passed
+  aggregate_metrics_only: passed
+  worker_response_has_no_request_id: passed
+hosted_checks:
+  two_account_owner_isolation: pending
+  correction_operator_resolution: pending
+  consent_withdrawal_worker: pending
+  deletion_worker_and_cancellation: pending
+  fulfillment_receipt: pending
+  provider_retention_review: pending
+  backup_expiry_and_restore_exclusion: pending
+guardrails:
+  request_content_recorded_in_evidence: false
+  account_identifier_recorded_in_evidence: false
+  credential_or_worker_secret_recorded: false
+  local_contract_is_hosted_evidence: false
+  code_implies_provider_retention_approval: false
+  deletion_bypasses_cancellation_window: false

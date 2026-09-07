@@ -1,0 +1,25 @@
+version: 1
+qst: QST-376
+status: pending_physical_execution
+candidate_sha: null
+working_tree_clean_at_execution: false
+executed_at_utc: null
+tester_role: null
+device_class: android_physical
+device_model: null
+os_version: null
+checks:
+  physical_android: pending
+  talkback: pending
+  japanese_ime: pending
+  large_text_200: pending
+  compact_layout: pending
+  reduced_motion_and_haptics: pending
+evidence: []
+guardrails:
+  privacy_reviewed: false
+  account_identifier_recorded: false
+  private_journey_content_recorded: false
+  credential_or_token_recorded: false
+  emulator_is_physical_evidence: false
+  automated_test_replaces_human_evidence: false

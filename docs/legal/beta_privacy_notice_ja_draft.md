@@ -48,10 +48,15 @@ local responseへ切り替わります。
 - 現在の内部Beta障害証跡は30日保持する運用です。Account、Quest、Mission、Task、Trail、Arc Memory、
   Supabase backup、Gemini provider側の最終保持期間は外部配布前に確定します。
 
-## 現在利用できない操作
+## データ管理操作
 
-このBeta buildでは、アプリ内からの全データexport、account全体のdelete、目的別consentの
-保存・withdrawalは未提供です。公開前に本人確認を含む受付手続と問い合わせ先を用意します。
+接続済みの内部Betaでは、本人用JSON export、Task削除、訂正依頼、目的別consentの保存・撤回、
+再認証と72時間の取消期間を伴うaccount削除予約を実装しています。未接続buildでは実行しません。
+本番相当Supabaseでの二account検証、削除worker、backup/外部providerを含む保持・削除手順、
+問い合わせ窓口は未確認のため、外部配布ではまだ利用可能と扱いません。
+
+JSONをクリップボードへコピーした後は端末上の他アプリから読み取られる可能性があります。
+共有端末では貼り付け後にクリップボードを消してください。
 
 ## 外部サービス
 

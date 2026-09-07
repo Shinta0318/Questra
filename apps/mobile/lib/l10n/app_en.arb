@@ -6,5 +6,34 @@
   "trail": "Trail",
   "guild": "Guild",
   "profile": "Profile",
-  "arc": "Arc"
+  "arc": "Arc",
+  "discardChangesTitle": "Discard changes?",
+  "discardChangesBody": "Your unsaved changes will be lost.",
+  "continueEditing": "Keep editing",
+  "discardAndClose": "Discard and close"
+  ,"requiredField": "Required"
+  ,"profileCompact": "You"
+  ,"trailEmptyTitle": "No Trails yet"
+  ,"trailEmptyMessage": "Capture today's progress, even if it is only a few words."
+  ,"createFirstTrail": "Create your first Trail"
+  ,"createTrail": "Create Trail"
+  ,"trailHistoryTitle": "Your Trails"
+  ,"trailHistoryDescription": "Look back on your journey one day at a time."
+  ,"trailCount": "{count} Trails"
+  ,"@trailCount": {"placeholders": {"count": {"type": "int"}}}
+  ,"reflection": "Reflections"
+  ,"starCandidate": "Memory candidates"
+  ,"image": "Images"
+  ,"questContext": "Quest: {title}"
+  ,"@questContext": {"placeholders": {"title": {"type": "String"}}}
+  ,"missionContext": "Mission: {title}"
+  ,"@missionContext": {"placeholders": {"title": {"type": "String"}}}
+  ,"taskContext": "Task: {title}"
+  ,"@taskContext": {"placeholders": {"title": {"type": "String"}}}
+  ,"starMemoryCandidate": "Memory candidate: {reason}"
+  ,"@starMemoryCandidate": {"placeholders": {"reason": {"type": "String"}}}
+  ,"trailTypeQuest": "Quest update"
+  ,"trailTypeMission": "Mission update"
+  ,"trailTypeArcReflection": "Reflection with Arc"
+  ,"trailTypeManual": "Personal note"
 }

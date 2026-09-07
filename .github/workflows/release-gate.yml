@@ -3,8 +3,6 @@ name: Questra Release Gate
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [codex/initial-questra-structure-pr]
   workflow_dispatch:
 
 permissions:
@@ -19,6 +17,11 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Candidate source preflight
+        run: |
+          dart run tools/qst/verify_backlog_ssot.dart
+          dart run tools/qst/verify_candidate_preflight.dart --require-clean
+          dart run tools/qst/verify_candidate_scope_partition.dart --require-clean
       - name: Resolve Flutter dependencies
         working-directory: apps/mobile
         run: flutter pub get
@@ -33,6 +36,36 @@ jobs:
         run: flutter test test/qst_269_core_journey_test.dart --no-pub
       - name: Supabase release contracts
         run: |
+          dart run tools/qst/verify_migration_drift.dart
+          dart run tools/qst/verify_hosted_migration_deployment.dart
+          dart run tools/qst/verify_dynamic_rls_coverage.dart
+          dart run tools/qst/verify_cloud_rls_evidence.dart
+          dart run tools/qst/verify_device_session_preflight.dart
+          dart run tools/qst/verify_web_candidate_evidence.dart
+          dart run tools/qst/verify_android_candidate_evidence.dart
+          dart run tools/qst/verify_legal_version_reconciliation.dart
+          dart run tools/qst/verify_legal_signoff_intake.dart
+          dart run tools/qst/verify_arc_asset_replacement_readiness.dart
+          dart run tools/qst/verify_arc_asset_release_workflow.dart
+          dart run tools/qst/verify_incident_tabletop.dart
+          dart run tools/qst/verify_incident_live_drill.dart
+          dart tools/qst/test_candidate_git_state.dart
+          pwsh -NoProfile -File tools/qst/test_incident_control_guard.ps1
+          pwsh -NoProfile -File tools/qst/test_provider_eval_material.ps1
+          dart tools/qst/test_provider_review_contract.dart
+          dart run tools/qst/verify_provider_eval_corpus.dart
+          dart run tools/qst/verify_provider_eval_run.dart
+          dart run tools/qst/verify_ip_data_rights_proof_pack.dart
+          dart run tools/qst/verify_arc_asset_provenance.dart
+          dart run tools/qst/verify_candidate_asset_package.dart
+          dart run tools/qst/verify_hosted_evidence_bundle.dart
+          dart run tools/qst/verify_hosted_evidence_runner_v2.dart
+          dart run tools/qst/verify_runtime_slo_drill.dart
+          dart run tools/qst/verify_privacy_safe_observability.dart
+          dart run tools/qst/verify_physical_accessibility_evidence.dart
+          dart run tools/qst/verify_dependency_notices.dart
+          dart run tools/qst/verify_external_beta_go_no_go.dart
+          dart run tools/qst/verify_data_rights_fulfillment_drill.dart
           dart run tools/qst/verify_rls_readiness.dart
           dart run tools/qst/verify_supabase_beta_bootstrap.dart
           dart run tools/qst/verify_beta_release_notes_readiness.dart
@@ -103,6 +136,9 @@ jobs:
       - name: Resolve Flutter dependencies
         working-directory: apps/mobile
         run: flutter pub get
+      - name: Build debug APK for Android journey
+        working-directory: apps/mobile
+        run: flutter build apk --debug --no-pub
       - name: Run candidate Android journey
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -115,5 +151,4 @@ jobs:
           # PackageInstallerService before Dart tests start. Keep this gate on a
           # stable API image and wait for package/storage services to settle.
           disable-animations: false
-          script: |
-            bash -lc 'adb wait-for-device && adb shell cmd package list packages >/dev/null && adb shell df /data && cd apps/mobile && flutter test integration_test/qst_283_candidate_journey_test.dart -d emulator-5554 --no-pub'
+          script: bash "$GITHUB_WORKSPACE/.github/scripts/run_android_e2e.sh"

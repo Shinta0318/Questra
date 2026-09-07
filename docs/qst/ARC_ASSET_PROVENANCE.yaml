@@ -1,0 +1,99 @@
+version: 1
+status: provenance_unverified_release_blocked
+updated_at: "2026-08-25"
+candidate_source_commit: "4d316c6b47604664293b4176b0a54d12e4564c1e"
+chain_of_title_record_directory: "docs/qst/arc_asset_chain_of_title"
+product_owner_approval: pending
+legal_reviewer_approval: pending
+chain_of_title_complete: false
+assets:
+  - path: "apps/mobile/assets/characters/arc/arc_celebrate.png"
+    bytes: 239806
+    sha256: "f0d54be6919b0222ce33f4e92f8262e08a2f7338003fb86636281702269e8cdb"
+    usage: runtime
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_excited.png"
+    bytes: 220542
+    sha256: "62c24bea374c8c0560927a57980e182118c203aec6d28478c237edb6c2ad00ff"
+    usage: runtime
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_lonely.png"
+    bytes: 200513
+    sha256: "7ccc6407d3a120b2f8329b6bba14d63a6456e534f679ecab6fa5c5e9e503286c"
+    usage: runtime
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_normal.png"
+    bytes: 217074
+    sha256: "28299e676f1ecc7419ee15d26f399143cfd0b5e5c6138b015b0626d75644e900"
+    usage: runtime
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_serious.png"
+    bytes: 216916
+    sha256: "3d88b80c2b81130ea02e8f0a0c7e0f0b9f40fa754ccbae7c804c1d4ac15bbafe"
+    usage: runtime
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_support.png"
+    bytes: 212318
+    sha256: "d352e73e4bbb4aae3e6be6099b0b951e4f3f39288c66a41592dc996ad30c252d"
+    usage: runtime
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_worried.png"
+    bytes: 191981
+    sha256: "c5fa64550694fc73c560552a9ff9350da352de4992abe77b0338860963adc39b"
+    usage: runtime
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/mockups/01_Arc_Official.png"
+    bytes: 453228
+    sha256: "2b97d707a1c7eaadc56bab5dddf319b4ea0d9c221256368183cdd9745250fbd7"
+    usage: repository_reference
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/mockups/02_Arc_Expressions.png"
+    bytes: 447648
+    sha256: "276aa418e254f511b9fa3d39be988b12751d1756a8bde3987ef1835dcdab952f"
+    usage: repository_reference
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/mockups/03_Questra_Home_Mock.png"
+    bytes: 427132
+    sha256: "5eed35af2867f908e17089610c513791356c1fb07a916c4d108291cca7a49a7a"
+    usage: repository_reference
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/mockups/04_Arc_Chat_Mock.png"
+    bytes: 399100
+    sha256: "5a254bcdc0ddd64f5118a489e17e5d8cc9c7aaa231aa9d04f28bccaa01facc19"
+    usage: repository_reference
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/mockups/arc_approved_reference.jpg"
+    bytes: 306211
+    sha256: "b71eb0f3ffc10aed11ce826b0af7bf0cfccdadf78444f34bc41e3335fffc6397"
+    usage: repository_reference
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/mockups/arc_approved_style_sheet.jpg"
+    bytes: 286081
+    sha256: "61d13076b578a2e89b2c0bf55fea155b1eb51caaaf7442c0da637e58e3101fe5"
+    usage: repository_reference
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+guardrails:
+  missing_asset_allowed: false
+  hash_mismatch_allowed: false
+  untracked_bundled_asset_allowed: false
+  unverified_asset_public_release_allowed: false
+  repository_presence_proves_ownership: false
+  reference_asset_in_candidate_allowed: false
+  hash_change_preserves_approval: false
+  approval_without_source_record_allowed: false
+  unreviewed_chain_record_release_allowed: false
+  record_asset_hash_mismatch_allowed: false
+  secret_or_raw_signature_in_record_allowed: false

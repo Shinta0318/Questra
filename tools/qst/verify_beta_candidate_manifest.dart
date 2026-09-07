@@ -8,6 +8,9 @@ const requiredGeneratorSnippets = [
   'latestLocalMigration',
   'flutterTestFileCount',
   'externalEvidenceComplete',
+  'assetProvenanceStatus',
+  'candidateAssetPackageStatus',
+  'dependencyLicenseStatus',
   'approved_requires_artifact_checksum',
   'certutil',
   'sha256sum',
@@ -23,10 +26,15 @@ const requiredManifestSnippets = [
   'latest_local_migration:',
   'remote_migration_head:',
   'edge_function_count:',
+  'edge_functions:',
   'flutter_test_file_count:',
+  'asset_provenance_status:',
+  'candidate_asset_package_status:',
+  'dependency_license_status:',
   'automated_gates:',
   'flutter_tests:',
   'external_evidence:',
+  'matches_candidate_sha:',
   'status: "evidence_missing"',
   'artifacts:',
   'status: not_built',
@@ -65,6 +73,24 @@ void _checkInventory(List<String> failures) {
       .whereType<File>()
       .where((file) => file.path.endsWith('_test.dart'))
       .length;
+  final edgeFunctionNames =
+      Directory('supabase/functions')
+          .listSync()
+          .whereType<Directory>()
+          .where((directory) {
+            final name = directory.uri.pathSegments
+                .where((segment) => segment.isNotEmpty)
+                .last;
+            return name != '_shared' &&
+                File('${directory.path}/index.ts').existsSync();
+          })
+          .map(
+            (directory) => directory.uri.pathSegments
+                .where((segment) => segment.isNotEmpty)
+                .last,
+          )
+          .toList()
+        ..sort();
   final content = File(manifestPath).readAsStringSync();
   final approved =
       content.contains('candidate_status: "approved"') ||
@@ -78,6 +104,32 @@ void _checkInventory(List<String> failures) {
   }
   if (!content.contains('flutter_test_file_count: $testCount')) {
     failures.add('Manifest flutter_test_file_count is stale.');
+  }
+  if (!content.contains('edge_function_count: ${edgeFunctionNames.length}')) {
+    failures.add('Manifest edge_function_count is stale.');
+  }
+  for (final functionName in edgeFunctionNames) {
+    if (!content.contains('    - "$functionName"')) {
+      failures.add('Manifest edge_functions is missing $functionName.');
+    }
+  }
+  if (approved &&
+      !content.contains(
+        'external_evidence:\n  complete: true\n  matches_candidate_sha: true',
+      )) {
+    failures.add(
+      'Approved candidate requires complete external evidence bound to the same SHA.',
+    );
+  }
+  if (approved && !content.contains('asset_provenance_status: "approved"')) {
+    failures.add('Approved candidate requires approved Arc asset provenance.');
+  }
+  if (approved &&
+      !content.contains('candidate_asset_package_status: "approved"')) {
+    failures.add('Approved candidate requires an approved asset package.');
+  }
+  if (approved && !content.contains('dependency_license_status: "approved"')) {
+    failures.add('Approved candidate requires approved dependency notices.');
   }
 }
 

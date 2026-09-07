@@ -11,6 +11,7 @@ import '../trust/legal_eligibility_form.dart';
 import '../trust/legal_policy.dart';
 import 'auth_journey_scaffold.dart';
 import 'auth_controller.dart';
+import 'auth_entry_switcher.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -43,22 +44,33 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
     if (_legalAcceptance == null) {
       return AuthJourneyScaffold(
-        eyebrow: '新しい航海を始める',
-        title: '安心して始めるために',
-        message: '君の願いを預かる前に、\n大切な約束を一緒に確認しよう。',
-        child: LegalEligibilityForm(
-          dark: true,
-          submitLabel: 'アカウント情報を入力',
-          onAccepted: (acceptance) =>
-              setState(() => _legalAcceptance = acceptance),
+        eyebrow: '新規登録',
+        title: 'はじめに確認すること',
+        message: '安心して使うために、年齢とデータの扱いを確認します。',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AuthEntrySwitcher(
+              selected: AuthEntryMode.signup,
+              onLogin: () => context.go(AppRoutes.login),
+              onSignup: () {},
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            LegalEligibilityForm(
+              dark: true,
+              submitLabel: 'アカウント情報を入力',
+              onAccepted: (acceptance) =>
+                  setState(() => _legalAcceptance = acceptance),
+            ),
+          ],
         ),
       );
     }
 
     return AuthJourneyScaffold(
-      eyebrow: '新しい航海を始める',
-      title: '最初のQuestを灯そう',
-      message: 'まだ名前のない願いも大丈夫。\nArcと一緒に、君だけの航路を描こう。',
+      eyebrow: '新規登録',
+      title: 'アカウントを作成',
+      message: '登録後、Arcと最初のQuestを考えられます。',
       child: AutofillGroup(
         child: Form(
           key: _formKey,
@@ -66,6 +78,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              AuthEntrySwitcher(
+                selected: AuthEntryMode.signup,
+                onLogin: () => context.go(AppRoutes.login),
+                onSignup: () {},
+              ),
+              const SizedBox(height: AppSpacing.xl),
               _LegalConfirmation(
                 onReview: auth.isLoading
                     ? null
@@ -173,14 +191,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.auto_awesome_rounded),
-                label: Text(auth.isLoading ? '航路を準備しています' : '航海を始める'),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextButton(
-                onPressed: auth.isLoading
-                    ? null
-                    : () => context.go(AppRoutes.login),
-                child: const Text('アカウントをお持ちの方はログイン'),
+                label: Text(auth.isLoading ? '作成しています' : 'アカウントを作成'),
               ),
             ],
           ),
@@ -241,7 +252,7 @@ class _LegalConfirmation extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           const Expanded(
             child: Text(
-              '年齢条件・利用規約・Privacy・AI処理を確認済み',
+              '年齢条件・利用規約・プライバシー・Arcの生成機能を確認済み',
               style: TextStyle(color: AppColors.white),
             ),
           ),

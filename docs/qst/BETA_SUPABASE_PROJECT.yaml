@@ -13,7 +13,7 @@ project:
   cli_version: "2.111.0"
 migrations:
   status: local_pending_deployment
-  latest_local: "202608240002_atomic_ai_budget_ledger.sql"
+  latest_local: "202609030001_explicit_server_only_table_grants.sql"
   remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   command: "supabase migration list --linked"
   applied_at_utc: "2026-08-08T14:29:40Z"
@@ -67,6 +67,10 @@ functions:
     status: deployed
     deployed_at_utc: "2026-08-01T06:50:27Z"
     version: 1
+  - name: process-data-rights-requests
+    status: local_pending_deployment
+    deployed_at_utc: null
+    version: null
 secrets:
   status: verified
   storage: server_side_only

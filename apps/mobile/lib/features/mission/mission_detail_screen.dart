@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../core/feature_flags/journey_action_hierarchy_feature_flags.dart';
 import '../../widgets/forms/questra_field_label.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/questra_card.dart';
@@ -13,8 +14,10 @@ import '../task/task_model.dart';
 import '../task/task_mutation_banner.dart';
 import '../task/task_mutation_state.dart';
 import '../task/task_progress_service.dart';
+import '../quest_journey/widgets/journey_hierarchy_breadcrumb.dart';
 import 'mission_controller.dart';
 import 'mission_model.dart';
+import 'widgets/mission_card_presentation.dart';
 
 class MissionDetailScreen extends ConsumerStatefulWidget {
   const MissionDetailScreen({required this.missionId, super.key});
@@ -31,8 +34,8 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final mission = ref
-        .watch(missionControllerProvider)
+    final missions = ref.watch(missionControllerProvider);
+    final mission = missions
         .where((item) => item.id == widget.missionId)
         .firstOrNull;
     final tasks =
@@ -42,12 +45,34 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
             .toList()
           ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
     if (mission == null) {
-      return const Scaffold(body: Center(child: Text('Missionが見つかりません。')));
+      return Scaffold(
+        appBar: AppBar(title: const Text('Mission')),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Missionが見つかりません。'),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: () => context.go(AppRoutes.quest),
+                child: const Text('Questへ戻る'),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     final taskProgress = const TaskProgressService().forMission(tasks);
     final taskMutation = ref.watch(taskMutationControllerProvider);
-    final canConfirm =
-        taskProgress.allRequiredCompleted && mission.successConfirmedAt == null;
+    final presentation = MissionCardPresentation.resolve(
+      mission: mission,
+      tasks: tasks,
+      completedMissionIds: missions
+          .where((item) => item.status == MissionStatus.completed)
+          .map((item) => item.id)
+          .toSet(),
+    );
+    final hierarchyV2 = const JourneyActionHierarchyFeatureFlags().enabled;
     return Scaffold(
       appBar: AppBar(title: const Text('Mission')),
       body: QuestraResponsiveListView(
@@ -64,12 +89,19 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
                 ref.read(taskMutationControllerProvider.notifier).clear(),
           ),
           if (taskMutation.isActive) const SizedBox(height: 12),
-          Text(
-            'QUEST  ${mission.questTitle}',
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
+          if (hierarchyV2)
+            JourneyHierarchyBreadcrumb(
+              questId: mission.questId,
+              questTitle: mission.questTitle,
+              currentLevel: 'Mission',
+            )
+          else
+            Text(
+              'QUEST  ${mission.questTitle}',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
           const SizedBox(height: 8),
-          const Text('MISSION', style: TextStyle(fontWeight: FontWeight.w900)),
+          const Text('中間成果', style: TextStyle(fontWeight: FontWeight.w900)),
           Text(mission.title, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 6),
           Text(
@@ -111,6 +143,15 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
               ],
             ),
           ),
+          if (hierarchyV2) ...[
+            const SizedBox(height: 16),
+            _MissionPrimaryActionCard(
+              mission: mission,
+              presentation: presentation,
+              onPressed: () =>
+                  _runPrimaryAction(mission, tasks, taskProgress, presentation),
+            ),
+          ],
           const SizedBox(height: 20),
           Wrap(
             spacing: 10,
@@ -175,6 +216,7 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
                   const SizedBox(height: 14),
                   _TaskActions(
                     isGenerating: _isGenerating,
+                    primary: !hierarchyV2,
                     onGenerate: () => _generateTasks(mission, tasks),
                     onManualAdd: () => _addManualTask(mission, tasks),
                   ),
@@ -186,6 +228,7 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
             const SizedBox(height: 6),
             _TaskActions(
               isGenerating: _isGenerating,
+              primary: !hierarchyV2,
               onGenerate: () => _generateTasks(mission, tasks),
               onManualAdd: () => _addManualTask(mission, tasks),
             ),
@@ -198,26 +241,84 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
             ],
           ],
           const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: canConfirm
-                ? () => ref
-                      .read(missionControllerProvider.notifier)
-                      .confirmMissionSuccess(
-                        mission.id,
-                        allRequiredTasksCompleted:
-                            taskProgress.allRequiredCompleted,
-                      )
-                : null,
-            icon: const Icon(Icons.verified_outlined),
-            label: Text(
-              mission.successConfirmedAt != null
-                  ? 'Mission達成を確認済み'
-                  : '成果を確認してMission達成',
+          if (!hierarchyV2)
+            FilledButton.icon(
+              onPressed:
+                  taskProgress.allRequiredCompleted &&
+                      mission.successConfirmedAt == null
+                  ? () => ref
+                        .read(missionControllerProvider.notifier)
+                        .confirmMissionSuccess(
+                          mission.id,
+                          allRequiredTasksCompleted:
+                              taskProgress.allRequiredCompleted,
+                        )
+                  : null,
+              icon: const Icon(Icons.verified_outlined),
+              label: Text(
+                mission.successConfirmedAt != null
+                    ? 'Mission達成を確認済み'
+                    : '成果を確認してMission達成',
+              ),
             ),
-          ),
         ],
       ),
     );
+  }
+
+  Future<void> _runPrimaryAction(
+    Mission mission,
+    List<QuestraTask> tasks,
+    TaskProgressSnapshot taskProgress,
+    MissionCardPresentation presentation,
+  ) async {
+    final task = presentation.nextTask;
+    switch (presentation.primaryAction) {
+      case MissionCardPrimaryAction.startNextTask:
+      case MissionCardPrimaryAction.resumeTask:
+        if (task != null && mounted) {
+          context.push(
+            AppRoutes.taskDetail(mission.questId, mission.id, task.id),
+          );
+        }
+        return;
+      case MissionCardPrimaryAction.reviewOutcome:
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Missionの成果を確認'),
+            content: Text(
+              'Taskの完了とは別に、このMissionの中間成果が得られたか確認します。\n\n${mission.successCondition.isNotEmpty ? mission.successCondition : mission.doneCondition}',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('まだ達成していない'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('成果を確認した'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed == true && mounted) {
+          ref
+              .read(missionControllerProvider.notifier)
+              .confirmMissionSuccess(
+                mission.id,
+                allRequiredTasksCompleted: taskProgress.allRequiredCompleted,
+              );
+        }
+        return;
+      case MissionCardPrimaryAction.viewDependencies:
+      case MissionCardPrimaryAction.viewCompleted:
+        if (mounted) context.go('${AppRoutes.quest}/${mission.questId}');
+        return;
+      case MissionCardPrimaryAction.viewTasks:
+        await _generateTasks(mission, tasks);
+        return;
+    }
   }
 
   Future<void> _generateTasks(
@@ -360,11 +461,13 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
 class _TaskActions extends StatelessWidget {
   const _TaskActions({
     required this.isGenerating,
+    required this.primary,
     required this.onGenerate,
     required this.onManualAdd,
   });
 
   final bool isGenerating;
+  final bool primary;
   final VoidCallback onGenerate;
   final VoidCallback onManualAdd;
 
@@ -373,16 +476,18 @@ class _TaskActions extends StatelessWidget {
     spacing: 10,
     runSpacing: 10,
     children: [
-      FilledButton.icon(
-        onPressed: isGenerating ? null : onGenerate,
-        icon: isGenerating
-            ? const SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.auto_awesome_outlined),
-        label: Text(isGenerating ? '考えています' : 'Arcに提案してもらう'),
-      ),
+      if (primary)
+        FilledButton.icon(
+          onPressed: isGenerating ? null : onGenerate,
+          icon: _generationIcon(isGenerating),
+          label: Text(isGenerating ? '考えています' : 'Arcに提案してもらう'),
+        )
+      else
+        OutlinedButton.icon(
+          onPressed: isGenerating ? null : onGenerate,
+          icon: _generationIcon(isGenerating),
+          label: Text(isGenerating ? '考えています' : 'Taskを追加提案'),
+        ),
       OutlinedButton.icon(
         onPressed: isGenerating ? null : onManualAdd,
         icon: const Icon(Icons.add),
@@ -390,6 +495,79 @@ class _TaskActions extends StatelessWidget {
       ),
     ],
   );
+
+  Widget _generationIcon(bool loading) => loading
+      ? const SizedBox.square(
+          dimension: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        )
+      : const Icon(Icons.auto_awesome_outlined);
+}
+
+class _MissionPrimaryActionCard extends StatelessWidget {
+  const _MissionPrimaryActionCard({
+    required this.mission,
+    required this.presentation,
+    required this.onPressed,
+  });
+
+  final Mission mission;
+  final MissionCardPresentation presentation;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final task = presentation.nextTask;
+    final message = switch (presentation.primaryAction) {
+      MissionCardPrimaryAction.startNextTask =>
+        '次に行う具体的な行動は「${task?.title ?? 'Task'}」です。',
+      MissionCardPrimaryAction.resumeTask =>
+        '進行中の「${task?.title ?? 'Task'}」を続きから進められます。',
+      MissionCardPrimaryAction.reviewOutcome =>
+        '必須Taskは完了しました。次にMissionの中間成果を確認します。',
+      MissionCardPrimaryAction.viewCompleted => 'このMissionの中間成果は確認済みです。',
+      MissionCardPrimaryAction.viewDependencies => '先に完了する必要があるMissionがあります。',
+      MissionCardPrimaryAction.viewTasks => 'このMissionを進める具体的なTaskを準備します。',
+    };
+    final label = switch (presentation.primaryAction) {
+      MissionCardPrimaryAction.viewTasks => '最初のTaskを準備',
+      MissionCardPrimaryAction.reviewOutcome => 'Missionの成果を確認',
+      MissionCardPrimaryAction.viewCompleted => 'Questで成果を見る',
+      MissionCardPrimaryAction.viewDependencies => '前提Missionを確認',
+      _ => presentation.primaryLabel,
+    };
+    return Semantics(
+      container: true,
+      label: '現在の主操作、$label',
+      explicitChildNodes: true,
+      child: QuestraCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '今やること',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 6),
+            Text(message),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                key: const ValueKey('mission-primary-action'),
+                onPressed: onPressed,
+                icon: const Icon(Icons.arrow_forward_rounded),
+                label: Text(label),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _TaskSuggestionDialog extends StatelessWidget {

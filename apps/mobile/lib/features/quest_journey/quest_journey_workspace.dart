@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/theme/questra_surface_palette.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -65,7 +67,7 @@ class _QuestJourneyWorkspaceState extends ConsumerState<QuestJourneyWorkspace> {
     final progress = const QuestJourneyProgressService().calculate(
       widget.missions,
     );
-    final focus = const QuestFocusSelectionService().select(
+    final focusSelection = const QuestFocusSelectionService().selectTodayFocus(
       tasks: tasks,
       missions: widget.missions,
     );
@@ -74,6 +76,7 @@ class _QuestJourneyWorkspaceState extends ConsumerState<QuestJourneyWorkspace> {
       container: true,
       label: 'Questの航路ワークスペース',
       child: QuestraCard(
+        palette: QuestraSurfacePalette.dark,
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +110,7 @@ class _QuestJourneyWorkspaceState extends ConsumerState<QuestJourneyWorkspace> {
               child: _mode == QuestJourneyMode.focus
                   ? _FocusView(
                       key: const ValueKey('focus'),
-                      tasks: focus,
+                      focusSelection: focusSelection,
                       onToggle: _toggleTask,
                       onOpen: _openTask,
                       onRemoveToday: _removeFromToday,
@@ -291,19 +294,20 @@ class _WorkspaceHeader extends StatelessWidget {
 
 class _FocusView extends StatelessWidget {
   const _FocusView({
-    required this.tasks,
+    required this.focusSelection,
     required this.onToggle,
     required this.onOpen,
     required this.onRemoveToday,
     super.key,
   });
-  final List<QuestraTask> tasks;
+  final QuestFocusSelection focusSelection;
   final ValueChanged<QuestraTask> onToggle;
   final ValueChanged<QuestraTask> onOpen;
   final ValueChanged<QuestraTask> onRemoveToday;
 
   @override
   Widget build(BuildContext context) {
+    final tasks = focusSelection.tasks;
     if (tasks.isEmpty) {
       return const _EmptyFocus();
     }
@@ -713,7 +717,7 @@ class _TaskRow extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: completed ? Colors.white54 : Colors.white,
+                          color: completed ? Colors.white70 : Colors.white,
                           decoration: completed
                               ? TextDecoration.lineThrough
                               : null,

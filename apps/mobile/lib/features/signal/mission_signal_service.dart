@@ -1,5 +1,6 @@
 import '../auth/auth_state.dart';
 import '../mission/mission_model.dart';
+import '../quest/gentle_recovery_service.dart';
 import '../quest/quest_model.dart';
 import 'mission_signal_model.dart';
 
@@ -38,7 +39,13 @@ class MissionSignalService {
             questId: quest.id,
             title: '期限を過ぎたQuestがあります',
             message:
-                '「${quest.title}」の航路をいったん短く引き直しましょう。責めずに、今日できる一歩へ戻れば大丈夫です。',
+                '「${quest.title}」の航路をいったん見直せます。責めずに、休む・期限を見直す・小さく戻る、どれでも大丈夫です。',
+            recoveryActions: const [
+              GentleRecoveryAction.pause,
+              GentleRecoveryAction.reviewDeadline,
+              GentleRecoveryAction.fiveMinuteStep,
+            ],
+            pressure: MissionSignalPressure.medium,
           ),
         );
       } else if (daysUntil <= 3) {
@@ -49,7 +56,11 @@ class MissionSignalService {
             questId: quest.id,
             title: 'もうすぐ期限のQuest',
             message:
-                '「${quest.title}」まであと$daysUntil日。今日は達成に近いMissionをひとつだけ選びましょう。',
+                '「${quest.title}」まであと$daysUntil日。今日は一つだけ選ぶか、期限を見直しても大丈夫です。',
+            recoveryActions: const [
+              GentleRecoveryAction.fiveMinuteStep,
+              GentleRecoveryAction.reviewDeadline,
+            ],
           ),
         );
       }
@@ -65,8 +76,14 @@ class MissionSignalService {
             questId: mission.questId,
             missionId: mission.id,
             title: '止まっているMissionがあります',
-            message:
-                '「${mission.title}」は少し静かです。5分で終わる形に小さくして、Trailへ現在地を残しましょう。',
+            message: '「${mission.title}」は少し静かです。休む、5分だけ進める、小さく分ける、どれでも航路調整です。',
+            recoveryActions: const [
+              GentleRecoveryAction.pause,
+              GentleRecoveryAction.fiveMinuteStep,
+              GentleRecoveryAction.shrink,
+              GentleRecoveryAction.reviewDeadline,
+            ],
+            pressure: MissionSignalPressure.medium,
           ),
         );
       }
@@ -81,7 +98,8 @@ class MissionSignalService {
           questId: mission.questId,
           missionId: mission.id,
           title: '今日の小さな一歩',
-          message: '「${mission.title}」を10分だけ進めてみましょう。小さな前進でも、星図にはちゃんと残ります。',
+          message: '「${mission.title}」を10分だけ進める案です。無理なら今日は休んでも大丈夫です。',
+          recoveryActions: const [GentleRecoveryAction.fiveMinuteStep],
         ),
       );
     }
@@ -100,14 +118,23 @@ class MissionSignalService {
     List<MissionSignal> signals,
     SignalFrequency signalFrequency,
   ) {
+    final budget = pressureBudgetFor(signalFrequency);
     return switch (signalFrequency) {
       SignalFrequency.quiet =>
         signals
             .where((signal) => signal.severity != MissionSignalSeverity.calm)
-            .take(2)
+            .take(budget)
             .toList(growable: false),
-      SignalFrequency.balanced => signals.take(3).toList(growable: false),
-      SignalFrequency.frequent => signals.take(5).toList(growable: false),
+      SignalFrequency.balanced => signals.take(budget).toList(growable: false),
+      SignalFrequency.frequent => signals.take(budget).toList(growable: false),
+    };
+  }
+
+  int pressureBudgetFor(SignalFrequency signalFrequency) {
+    return switch (signalFrequency) {
+      SignalFrequency.quiet => 1,
+      SignalFrequency.balanced => 2,
+      SignalFrequency.frequent => 3,
     };
   }
 

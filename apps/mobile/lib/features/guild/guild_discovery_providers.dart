@@ -18,10 +18,16 @@ final guildDiscoveryRankingServiceProvider =
       return const GuildDiscoveryRankingService();
     });
 
+final guildPilotStatusProvider = FutureProvider<GuildPilotStatus>((ref) async {
+  final repository = ref.watch(guildDiscoveryRepositoryProvider);
+  if (repository == null) return const GuildPilotStatus.localPreview();
+  return repository.pilotStatus();
+});
+
 final guildDiscoveryFeedProvider = FutureProvider<List<GuildDiscoveryQuest>>((
   ref,
 ) async {
   final repository = ref.watch(guildDiscoveryRepositoryProvider);
   if (repository == null) return const <GuildDiscoveryQuest>[];
-  return repository.findApprovedPublic(limit: 40);
+  return repository.findApprovedPublic(limit: 20);
 });

@@ -72,11 +72,8 @@ void main() {
       ),
     );
     await tester.pump();
-    final entry = find.widgetWithText(FilledButton, 'フィードバックを報告');
-    await tester.scrollUntilVisible(
-      entry,
-      260,
-      scrollable: find.byType(Scrollable).first,
+    final entry = find.byKey(
+      const ValueKey('settings_action_/feedback'),
     );
     await tester.ensureVisible(entry);
     await tester.pump(const Duration(milliseconds: 300));

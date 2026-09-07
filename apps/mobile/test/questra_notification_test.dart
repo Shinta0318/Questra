@@ -126,4 +126,34 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('情報通知です。'), findsNothing);
   });
+
+  testWidgets(
+    'error notice keeps long Japanese copy and two actions readable',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(320, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark,
+          home: Scaffold(
+            body: QuestraNotification(
+              message: 'Questの読み込みに失敗しました。通信状態を確認して、もう一度お試しください。',
+              type: QuestraNotificationType.error,
+              onRetry: () {},
+              onDismiss: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.byTooltip('もう一度試す'), findsOneWidget);
+      expect(find.byTooltip('通知を閉じる'), findsOneWidget);
+      expect(
+        tester.getSize(find.byTooltip('もう一度試す')).width,
+        greaterThanOrEqualTo(48),
+      );
+    },
+  );
 }

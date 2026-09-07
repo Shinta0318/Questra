@@ -1,0 +1,24 @@
+version: 1
+canonical_backlog: docs/qst/BACKLOG.yaml
+active_statuses:
+  - Planned
+  - InProgress
+  - ImplementedFoundation
+  - Implemented
+  - ImplementedValidationPending
+  - ImplementedExternalEvidencePending
+  - Blocked
+  - Superseded
+completion_rules:
+  Implemented: local implementation and repeatable local evidence complete
+  ImplementedValidationPending: implementation complete but user market legal or cohort validation pending
+  ImplementedExternalEvidencePending: implementation complete but hosted device RLS provider or operational evidence pending
+  ImplementedFoundation: reusable boundary exists but end-to-end scope remains
+  Blocked: no safe meaningful progress is possible until the named dependency changes
+legacy_policy:
+  preserve_history: true
+  allow_legacy_status_before_qst: 338
+  new_statuses_must_be_canonical: true
+release_policy:
+  externally_distributable_statuses: [Implemented]
+  pending_statuses_are_release_complete: false

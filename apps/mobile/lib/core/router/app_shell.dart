@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/supabase_config.dart';
+import '../feature_flags/navigation_feature_flags.dart';
 import '../../features/onboarding/onboarding_tour_controller.dart';
 import '../layout/questra_responsive_layout.dart';
 import '../theme/questra_colors.dart';
@@ -22,13 +23,21 @@ class AppShell extends ConsumerStatefulWidget {
 class _AppShellState extends ConsumerState<AppShell> {
   @override
   Widget build(BuildContext context) {
-    final tourVisible = ref.watch(onboardingTourControllerProvider).isVisible;
+    final tourState = ref.watch(onboardingTourControllerProvider);
     final navigationShell = widget.navigationShell;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final layout = QuestraLayoutSpec.fromWidth(constraints.maxWidth);
-        final usesRail = !layout.isCompact;
+        final heightAwareNavigation =
+            const NavigationFeatureFlags().heightAwareV2Enabled;
+        final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+        final keyboardVisible = keyboardInset > 0;
+        final usableHeight = constraints.maxHeight - keyboardInset;
+        final railHasRoom = !heightAwareNavigation || usableHeight >= 600;
+        final usesRail = !layout.isCompact && railHasRoom;
+        final hidesNavigationForKeyboard =
+            heightAwareNavigation && keyboardVisible && usableHeight < 560;
         final extendedRail =
             constraints.maxWidth >= QuestraBreakpoints.extendedNavigation;
 
@@ -63,14 +72,18 @@ class _AppShellState extends ConsumerState<AppShell> {
                   ),
                 ],
               ),
-              bottomNavigationBar: usesRail
+              bottomNavigationBar: usesRail || hidesNavigationForKeyboard
                   ? null
                   : QuestraBottomNavigation(
                       currentIndex: navigationShell.currentIndex,
                       onDestinationSelected: _selectDestination,
                     ),
             ),
-            if (tourVisible) const QuestraOnboardingTour(),
+            if (tourState.isVisible)
+              QuestraOnboardingTour(
+                key: ValueKey(tourState.presentationId),
+                entryPoint: tourState.entryPoint,
+              ),
           ],
         );
       },

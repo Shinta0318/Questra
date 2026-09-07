@@ -161,4 +161,99 @@ class AnalyticsService {
       ),
     );
   }
+
+  Future<void> activationStepCompleted({
+    String? userId,
+    required String activationStage,
+    required String surface,
+    required String outcome,
+  }) {
+    return track(
+      AnalyticsEvent(
+        name: AnalyticsEventName.activationStepCompleted,
+        userId: userId,
+        properties: {
+          'activation_stage': activationStage,
+          'surface': surface,
+          'outcome': outcome,
+        },
+      ),
+    );
+  }
+
+  Future<void> meaningfulProgress({
+    String? userId,
+    String? questId,
+    String? missionId,
+    required String metricKey,
+    required String surface,
+    required String progressBand,
+    required String outcome,
+    bool hasTrail = false,
+  }) {
+    return track(
+      AnalyticsEvent(
+        name: AnalyticsEventName.meaningfulProgressRecorded,
+        userId: userId,
+        questId: questId,
+        missionId: missionId,
+        properties: {
+          'metric_key': metricKey,
+          'surface': surface,
+          'progress_band': progressBand,
+          'outcome': outcome,
+          'has_trail': hasTrail,
+        },
+      ),
+    );
+  }
+
+  Future<void> recoveryActionSelected({
+    String? userId,
+    String? questId,
+    String? missionId,
+    required String source,
+    required String outcome,
+    required bool accepted,
+  }) {
+    return track(
+      AnalyticsEvent(
+        name: AnalyticsEventName.recoveryActionSelected,
+        userId: userId,
+        questId: questId,
+        missionId: missionId,
+        properties: {
+          'source': source,
+          'outcome': outcome,
+          'accepted': accepted,
+        },
+      ),
+    );
+  }
+
+  Future<void> guardrail({
+    String? userId,
+    required AnalyticsEventName name,
+    required String guardrail,
+    required String outcome,
+    String? costBand,
+    String? latencyBand,
+    String? consentScope,
+  }) {
+    final properties = <String, Object?>{
+      'guardrail': guardrail,
+      'outcome': outcome,
+    };
+    if (costBand != null) properties['cost_band'] = costBand;
+    if (latencyBand != null) properties['latency_band'] = latencyBand;
+    if (consentScope != null) properties['consent_scope'] = consentScope;
+    return track(
+      AnalyticsEvent(
+        name: name,
+        userId: userId,
+        source: AnalyticsEventSource.system,
+        properties: properties,
+      ),
+    );
+  }
 }

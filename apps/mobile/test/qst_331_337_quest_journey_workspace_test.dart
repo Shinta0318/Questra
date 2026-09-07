@@ -42,6 +42,62 @@ void main() {
     });
   });
 
+  group('QST-345 unified Today Focus contract', () {
+    test('shares one primary Task and at most two secondary Tasks', () {
+      final missions = [_mission('m1'), _mission('m2', order: 2)];
+      final tasks = [
+        _task(
+          'active',
+          'm1',
+          title: '航空券候補を比較する',
+          status: TaskStatus.inProgress,
+          order: 1,
+        ),
+        _task(
+          'ready',
+          'm1',
+          title: 'ホテル候補を比較する',
+          status: TaskStatus.ready,
+          order: 2,
+        ),
+        _task('third', 'm2', title: '旅程を仮決めする', order: 1),
+        _task('fourth', 'm2', title: '持ち物を確認する', order: 2),
+      ];
+
+      final selection = const QuestFocusSelectionService().selectTodayFocus(
+        tasks: tasks,
+        missions: missions,
+      );
+
+      expect(selection.primaryTask?.id, 'active');
+      expect(selection.secondaryTasks.map((task) => task.id), [
+        'ready',
+        'third',
+      ]);
+      expect(selection.tasks, hasLength(3));
+    });
+
+    test('keeps parent context and Trail prompt in the shared contract', () {
+      final task = _task(
+        'done',
+        'm1',
+        title: 'パスポート期限を確認する',
+        status: TaskStatus.completed,
+      );
+      final selection = QuestFocusSelection(tasks: [task]);
+
+      expect(selection.parentLabelFor(task), 'Quest  /  Mission');
+      expect(
+        selection.trailPromptFor(task),
+        'パスポート期限を確認するを完了しました。この一歩をTrailに残せます。',
+      );
+      expect(
+        selection.horizonPromptFor(task),
+        'Quest  /  Missionから、次の一歩へ進めます。',
+      );
+    });
+  });
+
   group('QST-335 partial replanning quality', () {
     test('repairs only failed unfinished Tasks in the selected Mission', () {
       final tasks = [
@@ -97,21 +153,20 @@ Mission _mission(
   MissionStatus status = MissionStatus.todo,
   int order = 0,
   double weight = 1,
-}) =>
-    Mission(
-      id: id,
-      questId: 'q1',
-      questTitle: 'Quest',
-      title: 'Mission $id',
-      description: '中間成果を作る',
-      guideType: GuideType.route,
-      difficulty: MissionDifficulty.normal,
-      status: status,
-      orderIndex: order,
-      sortOrder: order,
-      weight: weight,
-      successCondition: '成果を確認できたら完了',
-    );
+}) => Mission(
+  id: id,
+  questId: 'q1',
+  questTitle: 'Quest',
+  title: 'Mission $id',
+  description: '中間成果を作る',
+  guideType: GuideType.route,
+  difficulty: MissionDifficulty.normal,
+  status: status,
+  orderIndex: order,
+  sortOrder: order,
+  weight: weight,
+  successCondition: '成果を確認できたら完了',
+);
 
 QuestraTask _task(
   String id,
@@ -121,16 +176,15 @@ QuestraTask _task(
   List<String> dependencies = const [],
   int order = 0,
   TaskGeneratedBy generatedBy = TaskGeneratedBy.user,
-}) =>
-    QuestraTask(
-      id: id,
-      questId: 'q1',
-      missionId: missionId,
-      title: title,
-      action: title,
-      doneCondition: '実行を確認したら完了',
-      status: status,
-      dependencyIds: dependencies,
-      orderIndex: order,
-      generatedBy: generatedBy,
-    );
+}) => QuestraTask(
+  id: id,
+  questId: 'q1',
+  missionId: missionId,
+  title: title,
+  action: title,
+  doneCondition: '実行を確認したら完了',
+  status: status,
+  dependencyIds: dependencies,
+  orderIndex: order,
+  generatedBy: generatedBy,
+);

@@ -1,6 +1,7 @@
 import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
 import { revalidateApprovedMissionPlan, runQuestPlanningPipeline, runTaskExpansionPipeline } from "../_shared/quest_planning/pipeline.ts";
 import { validateRouteMissionPlan } from "../_shared/quest_planning/validators.ts";
+import { deterministicSafetyAssessment } from "../_shared/safety_guard.ts";
 
 type RequestBody = {
   mode?: "plan" | "approve" | "expand_tasks";
@@ -37,6 +38,8 @@ Deno.serve(async (req) => {
   const wish = text(payload.wish, 1_200);
   const idempotencyKey = text(payload.idempotency_key, 160);
   if (!questId || !wish || !idempotencyKey) return jsonResponse({ error: "quest_wish_and_idempotency_required" }, { status: 400 });
+  const safety = deterministicSafetyAssessment(wish);
+  if (safety) return jsonResponse({ error: "unsafe_intent", safety }, { status: 422 });
   if (!await ownsQuest(auth, userId, questId)) return jsonResponse({ error: "quest_not_found" }, { status: 404 });
 
   const pipeline = await runQuestPlanningPipeline({

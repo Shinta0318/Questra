@@ -32,7 +32,9 @@ Deno.serve(async (req) => {
     });
     if (!result) return jsonResponse(safeAssessment("safety_fallback"));
     const parsed = JSON.parse(stripFence(result.text)) as Record<string, unknown>;
-    return jsonResponse(normalizeAssessment(parsed, result.sourceType));
+    return jsonResponse(
+      normalizeAssessment(parsed, result.sourceType, result.model),
+    );
   } catch (_) {
     return jsonResponse(safeAssessment("safety_fallback"));
   }
@@ -74,6 +76,7 @@ const safetySchema = {
 function normalizeAssessment(
   data: Record<string, unknown>,
   sourceType: string,
+  providerModel: string,
 ): SafetyAssessment {
   const allowedActions = ["allow", "reframe", "block"];
   const action = allowedActions.includes(String(data.action))
@@ -95,6 +98,7 @@ function normalizeAssessment(
       : undefined,
     policy_version: "2026-07-24.v1",
     source_type: sourceType,
+    provider_model: providerModel,
   };
 }
 

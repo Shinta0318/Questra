@@ -1,0 +1,20 @@
+version: 1
+qst: QST-386
+status: local_static_pass_hosted_execution_pending
+source: supabase/migrations
+coverage:
+  public_tables_created: 98
+  rls_enabled: 98
+  missing_rls: 0
+  access_contract: policy_or_explicit_revoke
+behavior_harness: supabase/tests/rls_behavior.sql
+required_external_evidence:
+  - hosted_migration_apply
+  - database_behavior_harness
+  - two_account_read_write_isolation
+  - candidate_sha_binding
+guardrails:
+  fixed_table_allowlist_is_complete_evidence: false
+  table_without_rls_allowed: false
+  table_without_policy_or_explicit_revoke_allowed: false
+  local_sql_scan_is_hosted_evidence: false

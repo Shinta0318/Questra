@@ -9,12 +9,15 @@ const aiProviderPath = 'supabase/functions/_shared/ai_provider.ts';
 const requiredFunctions = [
   'arc-chat',
   'arc-quest-guide',
+  'quest-planning-v2',
+  'quest-planning-tools',
   'generate-arc-advice',
   'generate-mission',
   'generate-quest-guides',
   'generate-star-map',
   'auth-login',
   'moderate-quest-intent',
+  'process-data-rights-requests',
   'research-mission-resources',
 ];
 
@@ -62,7 +65,11 @@ void main(List<String> arguments) {
   }
   for (final functionName in requiredFunctions) {
     _expect(config, '[functions.$functionName]', configPath, failures);
-    final expectedJwt = functionName == 'auth-login' ? 'false' : 'true';
+    final isPublicWebhook = {
+      'auth-login',
+      'process-data-rights-requests',
+    }.contains(functionName);
+    final expectedJwt = isPublicWebhook ? 'false' : 'true';
     final functionBlock = RegExp(
       r'\[functions\.' +
           RegExp.escape(functionName) +
@@ -76,6 +83,43 @@ void main(List<String> arguments) {
       failures.add('Missing Edge Function source: $functionName');
     }
     _expect(evidence, '- name: $functionName', evidencePath, failures);
+  }
+  final configuredFunctions = RegExp(
+    r'^\[functions\.([^\]]+)\]$',
+    multiLine: true,
+  ).allMatches(config).map((match) => match.group(1)!).toSet();
+  final requiredFunctionSet = requiredFunctions.toSet();
+  final missingFromRequired = configuredFunctions.difference(
+    requiredFunctionSet,
+  );
+  if (missingFromRequired.isNotEmpty) {
+    failures.add(
+      'Configured Edge Functions are missing from requiredFunctions: '
+      '${missingFromRequired.toList()..sort()}.',
+    );
+  }
+  final functionDirs = Directory('supabase/functions')
+      .listSync()
+      .whereType<Directory>()
+      .where((directory) {
+        final name = directory.uri.pathSegments
+            .where((segment) => segment.isNotEmpty)
+            .last;
+        return name != '_shared' &&
+            File('${directory.path}/index.ts').existsSync();
+      })
+      .map(
+        (directory) => directory.uri.pathSegments
+            .where((segment) => segment.isNotEmpty)
+            .last,
+      )
+      .toSet();
+  final missingDirectoryCoverage = functionDirs.difference(requiredFunctionSet);
+  if (missingDirectoryCoverage.isNotEmpty) {
+    failures.add(
+      'Edge Function directories are missing from requiredFunctions: '
+      '${missingDirectoryCoverage.toList()..sort()}.',
+    );
   }
 
   for (final guardrail in requiredEvidenceGuardrails) {

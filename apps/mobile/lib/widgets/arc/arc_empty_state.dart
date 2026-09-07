@@ -10,6 +10,7 @@ class ArcEmptyState extends StatelessWidget {
     required this.title,
     required this.message,
     this.actionLabel,
+    this.actionKey,
     this.onAction,
     this.emotion = ArcEmotion.lonely,
     this.icon = Icons.auto_awesome_outlined,
@@ -19,6 +20,7 @@ class ArcEmptyState extends StatelessWidget {
   final String title;
   final String message;
   final String? actionLabel;
+  final Key? actionKey;
   final VoidCallback? onAction;
   final ArcEmotion emotion;
   final IconData icon;
@@ -41,6 +43,7 @@ class ArcEmptyState extends StatelessWidget {
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 14),
             FilledButton.icon(
+              key: actionKey,
               onPressed: onAction,
               icon: Icon(icon),
               label: Text(actionLabel!),

@@ -1,0 +1,31 @@
+version: 1
+qst: QST-400
+status: execution_pending
+candidate_source_commit: null
+run_id: null
+executed_at_utc: null
+provider: gemini
+planning_case_count: 0
+safety_case_count: 0
+human_planning_review_count: 0
+human_safety_review_count: 0
+category_coverage: 0
+persona_coverage: 0
+pricing_version: null
+results_sha256: null
+regression_report_sha256: null
+human_review_sha256: null
+automated_gate_passed: false
+human_gate_passed: false
+guardrails:
+  clean_candidate_required: true
+  one_run_id_required: true
+  fixed_model_prompt_schema_thinking_required: true
+  zero_price_assumption_allowed: false
+  local_fallback_is_provider_evidence: false
+  safety_fallback_allowed: false
+  synthetic_corpus_only: true
+  raw_user_content_recorded: false
+  reviewer_free_text_recorded: false
+  failed_gate_allows_distribution: false
+

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/persistence/persistence_sync_state.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/performance/grouped_collection_index.dart';
 import '../../widgets/arc/arc_empty_state.dart';
@@ -81,6 +82,15 @@ class MissionScreen extends ConsumerWidget {
         children: [
           PersistenceSyncBanner(
             state: syncState,
+            onRetry:
+                syncState.operation == PersistenceSyncOperation.load &&
+                    profile != null
+                ? () => ref
+                      .read(missionControllerProvider.notifier)
+                      .loadForQuests(
+                        quests.map((quest) => quest.id).toList(growable: false),
+                      )
+                : null,
             onDismiss: () =>
                 ref.read(missionSyncControllerProvider.notifier).clear(),
           ),

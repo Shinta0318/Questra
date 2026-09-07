@@ -29,6 +29,8 @@ abstract final class AppRoutes {
   static String missionSupport(String questId, String missionId) =>
       '/quest/$questId/mission/$missionId/support';
   static const trail = '/trail';
+  static const trailShare = '/share/trail';
+  static String trailShareLink(String token) => '$trailShare/$token';
   static String trailForTask({
     required String questId,
     required String questTitle,
@@ -66,6 +68,7 @@ abstract final class AppRoutes {
   static const guild = '/guild';
   static const profile = '/profile';
   static const settings = '/settings';
+  static String settingsSection(String section) => '$settings/section/$section';
   static const dataRights = '/settings/data-rights';
   static const arcMemory = '/settings/arc-memory';
   static const feedback = '/feedback';

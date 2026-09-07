@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 import '../../core/config/supabase_config.dart';
+import '../../core/observability/runtime_evidence_sink.dart';
 import 'arc_action_trigger_service.dart';
 import 'arc_celebration_service.dart';
 import 'arc_chat_service.dart';
@@ -30,7 +31,10 @@ final arcCelebrationServiceProvider = Provider<ArcCelebrationService>((ref) {
 
 final arcChatServiceProvider = Provider<ArcChatService>((ref) {
   if (SupabaseConfig.isConfigured) {
-    return SupabaseArcChatService(client: Supabase.instance.client);
+    return SupabaseArcChatService(
+      client: Supabase.instance.client,
+      evidenceSink: ref.watch(runtimeEvidenceSinkProvider),
+    );
   }
   return const LocalArcChatService();
 });

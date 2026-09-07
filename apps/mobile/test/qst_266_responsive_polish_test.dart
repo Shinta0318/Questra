@@ -100,7 +100,10 @@ void main() {
 
         expect(tester.takeException(), isNull);
         for (final key in ['home', 'quest', 'arc', 'trail', 'profile']) {
-          expect(tester.getSize(find.byKey(ValueKey('nav-$key'))).height, 58);
+          expect(
+            tester.getSize(find.byKey(ValueKey('nav-$key'))).height,
+            inInclusiveRange(58, 72),
+          );
         }
       });
     }

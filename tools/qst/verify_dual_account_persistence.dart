@@ -44,6 +44,10 @@ void main(List<String> arguments) {
     'rollbackRouteProposal',
     'expectUpdateDenied',
     'confirmMissionOutcome',
+    'expectDataExportContains',
+    'expectDataExportExcludes',
+    'submitCorrectionRequest',
+    'expectPersonalSharingGrantAndWithdrawal',
     'applyTaskRouteProposal',
     'rollbackTaskRouteProposal',
     "'guild_quest_publications'",
@@ -97,6 +101,12 @@ void main(List<String> arguments) {
       'arc_chat_task_context: passed',
       'stale_route_conflict_rejected: passed',
       'stale_route_task_unchanged: passed',
+      'account_a_data_export_owner_scope: passed',
+      'account_b_data_export_excludes_account_a: passed',
+      'account_a_correction_request: passed',
+      'account_b_correction_request_visibility: denied',
+      'personal_sharing_contextual_grant: passed',
+      'personal_sharing_settings_withdrawal: passed',
       'account_b_private_arc_memory_visibility: denied',
       'account_b_private_trail_visibility: denied',
       'account_b_private_media_visibility: denied',
@@ -121,8 +131,8 @@ void main(List<String> arguments) {
       failures.add('A full source commit at execution is required.');
     }
     final clean = _scalar(evidence, 'working_tree_clean_at_execution');
-    if (clean != 'true' && clean != 'false') {
-      failures.add('Working tree cleanliness at execution is required.');
+    if (clean != 'true') {
+      failures.add('Cloud evidence must come from a clean working tree.');
     }
     final projectRef = _scalar(evidence, 'project_ref');
     if (projectRef == null || !RegExp(r'^[a-z0-9]{20}$').hasMatch(projectRef)) {

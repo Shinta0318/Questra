@@ -4177,139 +4177,788 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, supabase/migrations/202608240002_atomic_ai_budget_ledger.sql, supabase/tests/qst_342_ai_budget_concurrency.sql, reports/qst/QST-342.md]
   - id: QST-343
     title: Exact-SHA Supabase Deployment and RLS Evidence Gate
-    status: Planned
+    status: ImplementedExternalEvidencePending
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: app、migration、Edge Function、RLS、Geminiの証拠を一つのcandidate SHAへ固定する。
     depends_on: [QST-338, QST-339, QST-340, QST-341, QST-342]
     blocks: [QST-344, External Beta]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-343.md]
   - id: QST-344
     title: First Ten Minutes Activation Journey
-    status: Planned
+    status: Implemented
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: 理解、同意、Quest確認、最初のTask開始を10分以内の一続きの体験にする。
     depends_on: [QST-338, QST-339, QST-341, QST-343]
     blocks: [QST-345, QST-347]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-344.md]
   - id: QST-345
     title: Unified Today Focus and Completion Loop
-    status: Planned
+    status: Implemented
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: Home、Quest、Taskで同じToday FocusとTask Trail Horizon完了ループを共有する。
     depends_on: [QST-344]
     blocks: [QST-346, QST-347]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-345.md]
   - id: QST-346
     title: Gentle Recovery and Non-Coercive Arc Policy
-    status: Planned
+    status: Implemented
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: 停滞を航路調整として扱い、罪悪感、依存、通知圧力を防ぐ。
     depends_on: [QST-340, QST-345]
     blocks: [QST-347]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-346.md]
   - id: QST-347
     title: Meaningful Progress Metrics and Experimentation
-    status: Planned
+    status: Implemented
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: WMPU、Activation、D7 D30、Trust、Wellbeing、AI原価を計測する。
     depends_on: [QST-344, QST-345, QST-346]
     blocks: [QST-348, QST-351, QST-353, QST-354, QST-355]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-347.md]
   - id: QST-348
     title: Cursor-Paginated Journey Data Plane
-    status: Planned
+    status: ImplementedFoundation
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: core journey dataを欠落させないcursor paginationとbatch mediaへ移行する。
     depends_on: [QST-343, QST-347]
     blocks: [QST-349, QST-357]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-348.md]
   - id: QST-349
     title: Unified Durable Mutation and Conflict Recovery
-    status: Planned
+    status: ImplementedFoundation
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: Quest Mission Trail Mediaへdurable outbox、version、conflict recoveryを適用する。
     depends_on: [QST-343, QST-348]
     blocks: [QST-350, QST-357]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-349.md]
   - id: QST-350
     title: Quest Branch IA and Accessibility Closure
-    status: Planned
+    status: ImplementedExternalEvidencePending
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: shipped routeのIA、responsive、TalkBack、IME、focus、motion、hapticを物理端末で閉じる。
     depends_on: [QST-344, QST-345, QST-346, QST-348, QST-349]
     blocks: [QST-351, External Android Beta]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-350.md]
   - id: QST-351
     title: Japan Wedge Plain Language and Pricing Validation
-    status: PlannedValidation
+    status: ImplementedValidationPending
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: 日本の最初のcohort、平易な表現、Arc tone、価格仮説をユーザー証拠で選ぶ。
     depends_on: [QST-344, QST-347, QST-350]
     blocks: [QST-352, QST-355]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-351.md]
   - id: QST-352
     title: English Productization and International Format Matrix
-    status: Planned
+    status: ImplementedFoundation
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: en-US en-GBを完全なUI AI journeyとして成立させ、地域format基盤を作る。
     depends_on: [QST-351]
     blocks: [International Beta]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-352.md]
   - id: QST-353
     title: Consentful Trail Sharing and Ethical Referral
-    status: PlannedValidation
+    status: ImplementedFoundation
     priority: P2
     epic: TEN-MILLION-READINESS
     goal: revocable snapshot共有と紹介の増分効果をprivacy firstで検証する。
     depends_on: [QST-339, QST-347, QST-350]
     blocks: [QST-354]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-353.md]
   - id: QST-354
     title: Guild Quest Library Controlled Pilot
-    status: PlannedValidation
+    status: ImplementedFoundation
     priority: P2
     epic: TEN-MILLION-READINESS
     goal: curated cohortでdiscover copy adapt first progressの閉ループと安全運用を検証する。
     depends_on: [QST-347, QST-353]
     blocks: [Public Guild]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-354.md]
   - id: QST-355
     title: Premium Boundary and Unit Economics Validation
-    status: PlannedValidation
+    status: ImplementedValidationPending
     priority: P2
     epic: TEN-MILLION-READINESS
     goal: 無料Coreを守る一つのPremium packageと価格、原価、継続意図を検証する。
     depends_on: [QST-342, QST-347, QST-351]
     blocks: [Billing Implementation]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, docs/product/premium_readiness_flags.md, docs/product/premium_unit_economics_validation.md, reports/qst/QST-355.md]
   - id: QST-356
     title: IP Data Rights and M&A Proof Pack
-    status: Planned
+    status: ImplementedValidationPending
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: asset、data、model、Quest DNA、Graphの権利とclaims-to-evidenceを譲渡可能な形で整理する。
     depends_on: [QST-339, QST-340, QST-347]
     blocks: [Enterprise Partnership, M&A Diligence]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, docs/qst/IP_DATA_RIGHTS_PROOF_PACK.yaml, docs/product/ip_data_rights_proof_pack.md, reports/qst/QST-356.md]
   - id: QST-357
     title: 10M Scale Observability Backlog SSOT and Phase Gate Review
-    status: Planned
+    status: ImplementedFoundation
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: runtime observability、scale stage、唯一のBacklog、固定100点再監査で次phaseを判定する。
     depends_on: [QST-338, QST-339, QST-340, QST-341, QST-342, QST-343, QST-344, QST-345, QST-346, QST-347, QST-348, QST-349, QST-350, QST-351, QST-352, QST-353, QST-354, QST-355, QST-356]
     blocks: [Ten Million Scale Phase]
-    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QUESTRA_10M_PRODUCT_AUDIT_20260818.md]
+    evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, docs/qst/QST_STATUS_TAXONOMY.yaml, docs/product/scale_observability_phase_gates.md, reports/qst/QUESTRA_10M_PRODUCT_AUDIT_20260818.md, reports/qst/QST-357.md]
+  - id: QST-358
+    title: Privacy-Safe Runtime Evidence Adapter
+    status: ImplementedFoundation
+    priority: P0
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: crash persistence auth media AI failureを本文やPIIなしの共通証跡へ正規化する。
+    depends_on: [QST-347, QST-357]
+    blocks: [QST-360, QST-362, External Beta]
+    evidence: [docs/product/beta_crash_error_capture_plan.md, reports/qst/QST-358.md]
+  - id: QST-359
+    title: User Data Export and Deletion Operations
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: export deletion correction consent withdrawalをowner-scopedで実行し監査できるようにする。
+    depends_on: [QST-340, QST-356]
+    blocks: [QST-362, Legal Sign-Off, External Beta]
+    evidence: [docs/qst/BETA_LEGAL_SIGNOFF.yaml, docs/product/ip_data_rights_proof_pack.md, reports/qst/QST-359.md]
+  - id: QST-360
+    title: Hosted Supabase Evidence Automation
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: current SHAのmigration function RLS dual-account証拠をhosted projectから再現可能に収集する。
+    depends_on: [QST-343, QST-358, QST-359]
+    blocks: [QST-362, External Beta]
+    evidence: [docs/qst/BETA_SUPABASE_PROJECT.yaml, docs/qst/BETA_RLS_EVIDENCE.yaml, docs/qst/HOSTED_EVIDENCE_RUN.yaml, reports/qst/QST-360.md]
+  - id: QST-361
+    title: Arc Asset Provenance Release Guard
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: Arcとmock assetの出所 permitted-use hash approvalをmanifest化し未確認assetをreleaseから除外する。
+    depends_on: [QST-356]
+    blocks: [QST-362, Public Release]
+    evidence: [docs/qst/IP_DATA_RIGHTS_PROOF_PACK.yaml, docs/qst/ARC_ASSET_PROVENANCE.yaml, reports/qst/QST-361.md]
+  - id: QST-362
+    title: QST-353 to QST-361 Cross-Functional Review
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: Growth Premium rights observability data operations hosted evidenceを再監査し次phaseを判定する。
+    depends_on: [QST-353, QST-354, QST-355, QST-356, QST-357, QST-358, QST-359, QST-360, QST-361]
+    blocks: [QST-363, External Beta]
+    evidence: [reports/qst/QST-345-352-CROSS-REVIEW.md, reports/qst/QST-353-362-CROSS-REVIEW.md, reports/qst/QST-362.md]
+  - id: QST-363
+    title: Guild Pilot Operations and Safety Metrics
+    status: ImplementedExternalEvidencePending
+    priority: P1
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: curated Guild pilotの供給 moderation appeal adoption first-progressを運用可能にする。
+    depends_on: [QST-354, QST-362]
+    blocks: [Public Guild]
+    evidence: [reports/qst/QST-354.md, reports/qst/QST-363.md]
+  - id: QST-364
+    title: Trail Share Recipient UX and Abuse Controls
+    status: ImplementedExternalEvidencePending
+    priority: P1
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: revocable Trail snapshotの受信UX rate limit report abuse計測を閉じる。
+    depends_on: [QST-353, QST-362]
+    blocks: [Public Trail Sharing]
+    evidence: [reports/qst/QST-353.md, reports/qst/QST-364.md]
+  - id: QST-365
+    title: Runtime SLO Dashboard and Alert Drill
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: privacy-safe eventからS0 S1 alert SLO burn rollback drillを実証する。
+    depends_on: [QST-358, QST-360, QST-362]
+    blocks: [External Beta]
+    evidence: [docs/product/scale_observability_phase_gates.md, docs/product/runtime_slo_dashboard_and_drill.md, docs/qst/RUNTIME_SLO_DRILL.yaml, reports/qst/QST-365.md]
+  - id: QST-366
+    title: Dependency License Notice Automation
+    status: ImplementedValidationPending
+    priority: P1
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: Flutter server tool dependenciesのlicenseとnoticeをcandidate SHAごとに生成しレビューする。
+    depends_on: [QST-356, QST-361]
+    blocks: [Store Release]
+    evidence: [docs/product/ip_data_rights_proof_pack.md, docs/legal/THIRD_PARTY_NOTICES.md, docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml, reports/qst/QST-366.md]
+  - id: QST-367
+    title: External Beta Evidence Go-No-Go Refresh
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: candidate legal RLS device accessibility AI cost incident rights evidenceを固定基準で再判定する。
+    depends_on: [QST-359, QST-360, QST-361, QST-362, QST-365, QST-366]
+    blocks: [External Beta Distribution]
+    evidence: [docs/qst/BETA_CANDIDATE.yaml, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml, tools/qst/verify_external_beta_go_no_go.dart, reports/qst/QST-367.md]
+  - id: QST-368
+    title: Data Rights Fulfillment and Retention Drill
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: correction deletion withdrawal requestをSLA付きで処理しbackup provider retentionまで監査証拠を残す。
+    depends_on: [QST-359, QST-360, QST-362]
+    blocks: [External Beta]
+    evidence: [supabase/migrations/202608250007_data_rights_fulfillment_sla.sql, docs/qst/DATA_RIGHTS_FULFILLMENT_DRILL.yaml, docs/qst/DATA_RIGHTS_RETENTION_REGISTER.yaml, docs/product/data_rights_fulfillment_runbook.md, reports/qst/QST-368.md]
+  - id: QST-369
+    title: Candidate Asset Package Hygiene and Ownership Workflow
+    status: ImplementedExternalEvidencePending
+    priority: P1
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: runtime assetだけをcandidateへ同梱しchain of title review approval hash変更を一つのworkflowで管理する。
+    depends_on: [QST-361, QST-362]
+    blocks: [Public Release]
+    evidence: [docs/qst/ARC_ASSET_PROVENANCE.yaml, docs/qst/CANDIDATE_ASSET_PACKAGE.yaml, docs/product/arc_asset_ownership_workflow.md, tools/qst/verify_candidate_asset_package.dart, reports/qst/QST-369.md]
+  - id: QST-370
+    title: Privacy-Safe Observability Sink Integration
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: runtime evidenceをPIIなしowner isolation retention制御付きsinkへ接続し失敗時もjourneyを壊さない。
+    depends_on: [QST-358, QST-360, QST-362]
+    blocks: [QST-365, External Beta]
+    evidence: [supabase/migrations/202608250008_privacy_safe_runtime_observability.sql, apps/mobile/lib/core/observability/runtime_evidence_sink.dart, docs/qst/OBSERVABILITY_SINK_EVIDENCE.yaml, docs/product/privacy_safe_observability_sink.md, reports/qst/QST-370.md]
+  - id: QST-371
+    title: Physical Device Accessibility and Japanese IME Evidence
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: Android実端末でArc Quest Mission Trailの日本語IME TalkBack 200% text tap targetをcandidate SHAへ紐づけて実証する。
+    depends_on: [QST-360, QST-362]
+    blocks: [External Beta]
+    evidence: [docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml, tools/qst/record_physical_accessibility_evidence.dart, tools/qst/verify_physical_accessibility_evidence.dart, docs/product/accessibility_release_gate.md, reports/qst/QST-371.md]
+  - id: QST-372
+    title: QST-363 to QST-371 Cross-Functional Review
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: BETA-EVIDENCE-CLOSURE
+    goal: pilot safety recipient rights SLO license asset observability device evidenceを横断監査しExternal Beta判定を更新する。
+    depends_on: [QST-363, QST-364, QST-365, QST-366, QST-367, QST-368, QST-369, QST-370, QST-371]
+    blocks: [External Beta Distribution]
+    evidence: [reports/qst/QST-363-372-CROSS-REVIEW.md, reports/qst/QST-372.md, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml]
+  - id: QST-373
+    title: Hosted Evidence Runner V2
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
+    goal: Data Rights observability Guild Trail shareを含む最新migrationとEdge Functionを一つのclean SHA runnerで配備検証する。
+    depends_on: [QST-363, QST-364, QST-368, QST-370, QST-372]
+    blocks: [External Beta]
+    evidence: [tools/qst/run_hosted_evidence_gate.ps1, tools/qst/verify_hosted_evidence_runner_v2.dart, supabase/tests/rls_behavior.sql, docs/product/hosted_evidence_runner_v2.md, reports/qst/QST-373.md]
+  - id: QST-374
+    title: Hosted Data Rights Operator Drill
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
+    goal: correction withdrawal deletion cancellation retry receipt retentionを二accountで実証し本文なし証跡を生成する。
+    depends_on: [QST-368, QST-373]
+    blocks: [External Beta]
+    evidence: [tools/qst/run_data_rights_hosted_drill.ps1, docs/qst/DATA_RIGHTS_FULFILLMENT_DRILL.yaml, docs/qst/DATA_RIGHTS_RETENTION_REGISTER.yaml, reports/qst/QST-374.md]
+  - id: QST-375
+    title: Hosted Observability Alert and Retention Drill
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
+    goal: owner isolation rate limit 30日purge S0停止 S1pause sink失敗継続をhosted sinkで実証する。
+    depends_on: [QST-365, QST-370, QST-373]
+    blocks: [External Beta]
+    evidence: [tools/qst/run_observability_hosted_drill.ps1, docs/qst/OBSERVABILITY_SINK_EVIDENCE.yaml, docs/qst/RUNTIME_SLO_DRILL.yaml, reports/qst/QST-375.md]
+  - id: QST-376
+    title: Physical Android Accessibility Evidence Session
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
+    goal: clean candidate実端末でTalkBack日本語IME 200パーセント文字compact layout reduced motionを記録する。
+    depends_on: [QST-371, QST-373]
+    blocks: [External Beta]
+    evidence: [tools/qst/record_physical_accessibility_evidence.dart, tools/qst/verify_physical_accessibility_evidence.dart, docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml, docs/product/accessibility_release_gate.md, reports/qst/QST-376.md]
+  - id: QST-377
+    title: Exact Server Dependency Pinning and License Review Pack
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
+    goal: Edge Function npm importをexact versionへ固定しregistry license hash noticeをcandidateへ結合する。
+    depends_on: [QST-366, QST-372]
+    blocks: [External Beta, Public Release]
+    evidence: [tools/qst/server_dependency_registry.json, docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml, docs/legal/THIRD_PARTY_NOTICES.md, reports/qst/QST-377.md]
+  - id: QST-378
+    title: Arc Asset Chain-of-Title Evidence Intake
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
+    goal: Arc原本生成条件利用権review参照をSHA単位で受け付け未承認差替えをfail closedにする。
+    depends_on: [QST-369, QST-372]
+    blocks: [External Beta, Public Release]
+    evidence: [tools/qst/intake_arc_asset_chain_of_title.dart, docs/qst/arc_asset_chain_of_title/README.md, docs/qst/ARC_ASSET_PROVENANCE.yaml, docs/qst/CANDIDATE_ASSET_PACKAGE.yaml, reports/qst/QST-378.md]
+  - id: QST-379
+    title: Beta Feedback and Incident Operations Activation
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
+    goal: tester受付先daily owner SLA S0 S1 countと停止連絡経路を実運用証跡へ結合する。
+    depends_on: [QST-367, QST-372]
+    blocks: [External Beta]
+    evidence: [tools/qst/activate_beta_feedback_operations.dart, docs/qst/BETA_FEEDBACK_OPERATIONS.yaml, docs/qst/BETA_ISSUE_REGISTER.yaml, reports/qst/QST-379.md]
+  - id: QST-380
+    title: Provider-Backed AI 200-Case Quality and Cost Gate
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
+    goal: 実Gemini応答200件を同一version設定で評価し品質安全latency token cost上限を証明する。
+    depends_on: [QST-256, QST-367, QST-372]
+    blocks: [External Beta]
+    evidence: [tools/qst/run_provider_backed_ai_eval.ps1, reports/qst/QST-256-REGRESSION.json, tools/qst/quest_planning_release_gate.ps1, reports/qst/QST-380.md]
+  - id: QST-381
+    title: Clean Candidate Evidence Orchestrator
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
+    goal: artifact checksum hosted device legal rights asset license operations SLO AI evidenceを同一SHAで一括照合する。
+    depends_on: [QST-373, QST-374, QST-375, QST-376, QST-377, QST-378, QST-379, QST-380]
+    blocks: [External Beta Distribution]
+    evidence: [tools/qst/run_clean_candidate_evidence_gate.ps1, tools/qst/verify_clean_candidate_evidence.dart, docs/qst/BETA_CANDIDATE.yaml, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml, reports/qst/QST-381.md]
+  - id: QST-382
+    title: QST-373 to QST-381 Cross-Functional Review
+    status: Implemented
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
+    goal: hosted rights observability device dependency asset operations AI candidate証跡を横断監査しGo No-Goを更新する。
+    depends_on: [QST-373, QST-374, QST-375, QST-376, QST-377, QST-378, QST-379, QST-380, QST-381]
+    blocks: [External Beta Distribution]
+    evidence: [reports/qst/QST-373-382-CROSS-REVIEW.md, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml]
+  - id: QST-383
+    title: Beta Preview Login and Release Surface Reconciliation
+    status: Implemented
+    priority: P0
+    epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
+    goal: local mock loginの継続先を安定化し、Guild pilotを含む実装済みsurfaceとBeta release notesを一致させる。
+    depends_on: [QST-382]
+    blocks: [Beta Preview Review]
+    evidence: [apps/mobile/test/local_mock_login_test.dart, tools/qst/verify_beta_release_notes_readiness.dart, reports/qst/QST-383.md]
+  - id: QST-384
+    title: Candidate Change Scope and Secret Hygiene Preflight
+    status: ImplementedValidationPending
+    priority: P0
+    epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
+    goal: candidate作成前に変更範囲、dirty state、秘密情報混入、生成物境界をfail closedで点検する。
+    depends_on: [QST-383]
+    blocks: [Clean Candidate]
+    evidence: [docs/qst/CANDIDATE_PREFLIGHT.yaml, tools/qst/verify_candidate_preflight.dart, reports/qst/QST-384.md]
+  - id: QST-385
+    title: Supabase Migration Drift Reconciliation
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
+    goal: local migration head、hosted head、candidate、RLS証跡の食い違いを一つのdrift contractで検出する。
+    depends_on: [QST-384]
+    blocks: [Hosted Supabase Evidence]
+    evidence: [docs/qst/SUPABASE_MIGRATION_DRIFT.yaml, tools/qst/verify_migration_drift.dart, reports/qst/QST-385.md]
+  - id: QST-386
+    title: Dynamic RLS Coverage Manifest
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
+    goal: migrationからclient-facing tableを抽出し、RLS enablementとpolicy coverageの固定リスト漏れを検出する。
+    depends_on: [QST-385]
+    blocks: [Two Account RLS Evidence]
+    evidence: [docs/qst/RLS_COVERAGE_MANIFEST.yaml, tools/qst/verify_dynamic_rls_coverage.dart, reports/qst/QST-386.md]
+  - id: QST-387
+    title: Physical Device Evidence Session Preflight
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
+    goal: AndroidとWebの実機session開始前にcandidate SHA、端末class、IME、accessibility、evidence pathを検証する。
+    depends_on: [QST-384, QST-376]
+    blocks: [Physical Device Evidence]
+    evidence: [docs/qst/DEVICE_SESSION_PREFLIGHT.yaml, tools/qst/verify_device_session_preflight.dart, reports/qst/QST-387.md]
+  - id: QST-388
+    title: Legal Consent Version Reconciliation
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
+    goal: アプリ、migration、privacy文書、signoff manifestの規約・privacy・AI disclosure versionを照合する。
+    depends_on: [QST-385]
+    blocks: [Legal Signoff]
+    evidence: [docs/qst/LEGAL_VERSION_RECONCILIATION.yaml, tools/qst/verify_legal_version_reconciliation.dart, reports/qst/QST-388.md]
+  - id: QST-389
+    title: Arc Asset Release Replacement Readiness
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
+    goal: provenance未確認Arc assetを公開候補へ混入させず、承認済み差替えの入力条件を機械検証する。
+    depends_on: [QST-378, QST-384]
+    blocks: [Arc Asset Release]
+    evidence: [docs/qst/ARC_ASSET_REPLACEMENT_READINESS.yaml, tools/qst/verify_arc_asset_replacement_readiness.dart, reports/qst/QST-389.md]
+  - id: QST-390
+    title: Incident Stop and Rollback Tabletop
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
+    goal: S0/S1発生時の配布停止、feature pause、連絡、rollback判断を非破壊tabletopで検証する。
+    depends_on: [QST-379, QST-384]
+    blocks: [Beta Operations]
+    evidence: [docs/qst/INCIDENT_TABLETOP.yaml, tools/qst/verify_incident_tabletop.dart, reports/qst/QST-390.md]
+  - id: QST-391
+    title: Provider Evaluation Corpus Integrity Gate
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
+    goal: 200件planning corpusとsafety corpusのID、カテゴリ、persona、重複、grounding対象をprovider実行前に検証する。
+    depends_on: [QST-380]
+    blocks: [Provider AI Quality Evidence]
+    evidence: [tools/qst/verify_provider_eval_corpus.dart, reports/qst/QST-391.md]
+  - id: QST-392
+    title: QST-383 to QST-391 Cross-Functional Review
+    status: Implemented
+    priority: P0
+    epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
+    goal: preview、candidate、Supabase、RLS、device、legal、asset、incident、AI corpusを横断監査し次の10件へ反映する。
+    depends_on: [QST-383, QST-384, QST-385, QST-386, QST-387, QST-388, QST-389, QST-390, QST-391]
+    blocks: [External Beta Distribution]
+    evidence: [reports/qst/QST-383-392-CROSS-REVIEW.md, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml]
+  - id: QST-393
+    title: Clean Candidate Scope Partition
+    status: ImplementedValidationPending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
+    goal: 現在の大規模dirty worktreeを意図別に棚卸しし、秘密情報や無関係差分を含まない再現可能なcandidate SHAへ分離する。
+    depends_on: [QST-384, QST-392]
+    blocks: [Clean Candidate, External Beta Distribution]
+    evidence: [docs/qst/CANDIDATE_PREFLIGHT.yaml, docs/qst/CANDIDATE_SCOPE_PARTITION.yaml, tools/qst/verify_candidate_scope_partition.dart, docs/qst/BETA_CANDIDATE.yaml, reports/qst/QST-393.md]
+  - id: QST-394
+    title: Hosted Migration Deployment Execution
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
+    goal: clean candidate SHAから未適用migrationを実Supabaseへ順序通り配備し、local headとhosted headを一致させる。
+    depends_on: [QST-385, QST-393]
+    blocks: [Hosted Supabase Evidence, External Beta Distribution]
+    evidence: [docs/qst/SUPABASE_MIGRATION_DRIFT.yaml, docs/qst/HOSTED_MIGRATION_DEPLOYMENT.yaml, tools/qst/run_hosted_migration_deployment.ps1, tools/qst/verify_hosted_migration_deployment.dart, docs/qst/HOSTED_EVIDENCE_RUN.yaml, reports/qst/QST-394.md]
+  - id: QST-395
+    title: Hosted Dynamic RLS Inventory and Two-Account Replay
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
+    goal: migration由来の全public tableをhosted環境で再列挙し、二accountによる所有境界とserver-only拒否を同一SHAで実証する。
+    depends_on: [QST-386, QST-394]
+    blocks: [Two Account RLS Evidence, External Beta Distribution]
+    evidence: [docs/qst/RLS_COVERAGE_MANIFEST.yaml, supabase/tests/hosted_rls_inventory.sql, tools/qst/capture_cloud_rls_evidence.ps1, tools/qst/verify_cloud_rls_evidence.dart, docs/qst/BETA_RLS_EVIDENCE.yaml, docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml, reports/qst/QST-395.md]
+  - id: QST-396
+    title: Supported Web Candidate Session Evidence
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
+    goal: supported browserとclean candidate artifactで認証、Quest、Mission、Task、Trail、Arcの主要航路と日本語IMEを記録する。
+    depends_on: [QST-383, QST-387, QST-393, QST-395]
+    blocks: [Web Beta Evidence]
+    evidence: [docs/qst/DEVICE_SESSION_PREFLIGHT.yaml, docs/qst/WEB_CANDIDATE_SESSION.yaml, tools/qst/record_web_candidate_evidence.dart, tools/qst/verify_web_candidate_evidence.dart, docs/qst/BETA_DEVICE_VALIDATION.yaml, reports/qst/QST-396.md]
+  - id: QST-397
+    title: Physical Android Candidate Session Evidence
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
+    goal: 物理Android端末で認証、主要航路、日本語IME、TalkBack、200パーセント文字、reduced motionを同一candidate SHAで記録する。
+    depends_on: [QST-387, QST-393, QST-395]
+    blocks: [Android Beta Evidence]
+    evidence: [docs/qst/DEVICE_SESSION_PREFLIGHT.yaml, docs/qst/ANDROID_CANDIDATE_SESSION.yaml, tools/qst/record_android_candidate_evidence.dart, tools/qst/verify_android_candidate_evidence.dart, docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml, reports/qst/QST-397.md]
+  - id: QST-398
+    title: Product Legal Operator and Contact Sign-off Intake
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
+    goal: Product、Legal、Release、Engineeringの実名owner、support/privacy連絡先、同意versionを同一candidateへ署名付きで固定する。
+    depends_on: [QST-388, QST-393]
+    blocks: [Legal Signoff, External Beta Distribution]
+    evidence: [docs/qst/LEGAL_VERSION_RECONCILIATION.yaml, docs/qst/LEGAL_SIGNOFF_INTAKE.yaml, docs/qst/BETA_LEGAL_SIGNOFF.yaml, tools/qst/record_beta_legal_signoff.dart, tools/qst/verify_legal_signoff_intake.dart, reports/qst/QST-398.md]
+  - id: QST-399
+    title: Arc Asset Provenance Completion or Release-safe Replacement
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
+    goal: Arc assetのchain of titleを承認証跡で完結させるか、公開可能な代替assetへ差し替えてcandidate packageを再生成する。
+    depends_on: [QST-389, QST-393]
+    blocks: [Arc Asset Release, External Beta Distribution]
+    evidence: [docs/qst/ARC_ASSET_REPLACEMENT_READINESS.yaml, docs/qst/ARC_ASSET_RELEASE_DECISION.yaml, docs/qst/CANDIDATE_ASSET_PACKAGE.yaml, tools/qst/finalize_arc_asset_release.dart, tools/qst/verify_arc_asset_release_workflow.dart, reports/qst/QST-399.md]
+  - id: QST-400
+    title: Provider-backed 200-case Planning and Safety Evaluation
+    status: ImplementedValidationPending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
+    goal: 固定versionの実Gemini経路で200 planning caseと10 safety caseを実行し、人手評価、品質、latency、token、costをrelease gateへ結合する。
+    depends_on: [QST-391, QST-393, QST-394]
+    blocks: [Provider AI Quality Evidence, External Beta Distribution]
+    evidence: [tools/qst/quest_planning_eval_200.json, tools/qst/quest_planning_safety_eval_cases.json, tools/qst/run_provider_backed_ai_eval.ps1, tools/qst/record_provider_eval_human_review.dart, tools/qst/verify_provider_eval_run.dart, tools/qst/prepare_provider_human_review.dart, tools/qst/verify_provider_human_review.dart, tools/qst/test_provider_review_contract.dart, tools/qst/test_provider_eval_material.ps1, docs/qst/PROVIDER_HUMAN_REVIEW.md, docs/qst/PROVIDER_EVAL_RUN.yaml, reports/qst/QST-400.md]
+  - id: QST-401
+    title: Incident Live Stop and Rollback Drill Execution
+    status: ImplementedExternalEvidencePending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
+    goal: named ownerとclean candidateを用いてS0停止、S1 feature pause、連絡、artifact rollback、非破壊DB判断を時刻付きで実演する。
+    depends_on: [QST-390, QST-393, QST-394]
+    blocks: [Beta Operations, External Beta Distribution]
+    evidence: [docs/qst/INCIDENT_TABLETOP.yaml, docs/qst/INCIDENT_LIVE_DRILL.yaml, docs/qst/BETA_FEEDBACK_OPERATIONS.yaml, tools/qst/run_incident_live_drill.ps1, tools/qst/verify_incident_live_drill.dart, reports/qst/QST-401.md]
+  - id: QST-402
+    title: QST-393 to QST-401 Cross-Functional Review
+    status: InProgress
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
+    goal: candidate、hosted DB、RLS、Web、Android、legal、asset、AI、incident証跡を横断監査しExternal BetaのGo No-Goと次の10件を決定する。
+    depends_on: [QST-393, QST-394, QST-395, QST-396, QST-397, QST-398, QST-399, QST-400, QST-401]
+    blocks: [External Beta Distribution]
+    evidence: [reports/qst/QST-393-402-CROSS-REVIEW.md, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml]
+  - id: QST-403
+    title: Mission Dialog Lifecycle and Safe Close
+    status: InProgress
+    priority: P0
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: Mission追加と編集のcontroller寿命をDialogのWidgetへ一致させ、閉鎖中の例外、二重操作、入力喪失を防止する。
+    depends_on: []
+    blocks: [Core Journey Stability, External Beta Distribution]
+    acceptance:
+      - 360/390/430幅でMission追加と閉鎖を連続操作してcontroller破棄例外がない。
+      - 保存とキャンセルとEscapeと背景タップを区別し、キャンセルで変更しない。
+      - ローカル更新失敗時に入力を保持して再試行可能とする。
+      - 編集と入れ子の期限選択で破棄後のsetStateが発生しない。
+      - WebとAndroidの検証範囲を区別し、未検証を完了として扱わない。
+    evidence: [apps/mobile/test/qst_403_mission_dialog_lifecycle_test.dart, reports/qst/QST-403.md]
+
+  - id: QST-404
+    title: Semantic Surface and Contrast Reconciliation
+    status: InProgress
+    priority: P0
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: 明暗Surfaceと本文・操作色を一組で適用し、Workspaceと設定・支援画面の読めない文字を解消する。
+    depends_on: []
+    blocks: [UI Contrast Baseline, External Beta Distribution]
+    acceptance:
+      - 明るいカードを維持し、Workspaceと体験設定には暗いSurface契約を明示する。
+      - 半透明合成後も本文4.5対1以上、操作境界3対1以上を満たす。
+      - 360/390/430幅とLight/Darkで本文・選択状態・操作を検証する。
+      - MissionとTaskの追加・完了・設定切替を壊さない。
+      - WebとAndroidの証跡、未確認状態、既存変更保全を区別して記録する。
+    evidence: [apps/mobile/test/qst_404_surface_contrast_test.dart, reports/qst/QST-404.md]
+
+  - id: QST-405
+    title: Modal Surface Focus and Keyboard Contract
+    status: InProgress
+    priority: P1
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: TrailとArcの入力シートへ不透明Surface、focus復帰、破棄確認、キーボード余白、保存中の多重操作防止を適用する。
+    depends_on: [QST-404]
+    blocks: [Trail Capture Usability, External Beta Distribution]
+    acceptance:
+      - Trail追加・編集・振り返りで背景と本文が重ならず、入力途中の閉鎖前に破棄確認を行う。
+      - 保存失敗時は入力を保持し、保存中の閉じる・連打を抑止する。
+      - 360/390/430幅とキーボード表示中も末尾の保存操作へ到達できる。
+      - Arc確認シートも共通Navigator・focus・drag契約を利用する。
+      - WebとAndroid、正常・失敗・背景・Escape・戻るの証跡を区別する。
+    evidence: [apps/mobile/test/qst_405_modal_sheet_test.dart, reports/qst/QST-405.md]
+
+  - id: QST-406
+    title: Onboarding Replay Recovery and Accessible Overlay
+    status: InProgress
+    priority: P0
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: 初回と設定からの再表示を、低い画面や文字拡大でも必ず読めて閉じられ、元画面へ戻れるツアーにする。
+    depends_on: [QST-405]
+    blocks: [Onboarding Recovery, External Beta Distribution]
+    acceptance:
+      - Settingsから現在画面上へ即時再表示し、全5ステップ完了またはSkip後に元画面へ戻る。
+      - 低い画面と文字2倍でも本文をスクロールでき、閉じる・Skip・次へを失わない。
+      - 背景タップ、戻る、連打で暗いbarrierだけが残らず、二重遷移しない。
+      - Missionを中間成果、Taskを具体行動として区別し、QuestとTrailの関係を5ステップ以内で説明する。
+      - TOUR_REPLAY_V2を無効化した場合は再表示せず、現在画面の操作を阻害しない。
+      - WebとAndroidの実画面で再表示・完走・Skip・戻る・文字拡大を検証し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_406_onboarding_replay_test.dart, reports/qst/QST-406.md]
+
+  - id: QST-407
+    title: Trail Single Timeline and Low-Friction Capture
+    status: InProgress
+    priority: P1
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: Trailを一つの時系列へ統合し、0件情報や重複表示を除き、短い記録だけで安全に残せるようにする。
+    depends_on: [QST-404, QST-405]
+    blocks: [Trail Capture Usability, External Beta Distribution]
+    acceptance:
+      - 0件時は統計を表示せず、最初のTrailを残す主操作を一つだけ表示する。
+      - 1件と20件で各Trailを一つの時系列へ一度だけ表示し、通常一覧との重複を作らない。
+      - 短い記録だけで保存でき、任意のタイトルと詳細は必要な場合だけ展開する。
+      - 定常読込の成功通知を表示せず、読込失敗と空状態を区別して再試行できる。
+      - Timelineや紐づきなどの不自然な表示語を、記録と関連する関係が伝わる日本語へ変更する。
+      - TRAIL_SINGLE_TIMELINE_V1で表示契約を切り戻せる。
+      - WebとAndroidで0/1/20件、長文、画像失敗、文字拡大、保存後focusを検証し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_407_trail_single_timeline_test.dart, apps/mobile/test/qst_268_trail_first_record_test.dart, reports/qst/QST-407.md]
+
+  - id: QST-408
+    title: Home One Next Step Information Architecture
+    status: InProgress
+    priority: P1
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: 初回・継続・休息のHome状態を分け、現在の一歩へ迷わず進める主操作を一つにする。
+    depends_on: [QST-404, QST-411]
+    blocks: [Home Journey Clarity, External Beta Distribution]
+    acceptance:
+      - 初回Homeは短いArc案内とQuest相談の主操作一つだけを表示する。
+      - 継続時は対象Taskの行動、所要時間、親Mission、親Questを示し、一操作で同じTask IDへ進む。
+      - 0件統計、空のRecent Trail、同じ相談先へ進む重複カードを表示しない。
+      - 読込失敗を空状態に見せず、入力や既存データを失わず再試行できる。
+      - 休息時は未達成を責めず、利用者が再開時期を選べる表現にする。
+      - HOME_NEXT_STEP_V2でHome表示だけを切り戻せる。
+      - WebとAndroidで360/390/430幅、初回、複数Quest、blocked、全完了、オフライン、文字拡大を検証し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_408_home_next_step_test.dart, apps/mobile/test/qst_280_home_today_task_journey_test.dart, reports/qst/QST-408.md]
+
+  - id: QST-409
+    title: Quest Header and List Density Refresh
+    status: InProgress
+    priority: P1
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: Quest一覧と詳細Headerの重複・0値・由来不明な推定表示を減らし、目的・目標年月・次の行動を素早く読めるようにする。
+    depends_on: [QST-404]
+    blocks: [Quest Journey Clarity, External Beta Distribution]
+    acceptance:
+      - Quest一覧で見出し、Hero、進捗Dashboardを重複させず、一覧を初期画面から確認できる。
+      - Mission未生成時は0パーセントや0/0を進捗として見せず、準備中であることを示す。
+      - 既定difficultyやキーワード由来themeをAI評価と混同せず、評価がある場合だけ由来付きで表示する。
+      - 目標日は日付へ見かけ上変換せず、利用者が指定した目標年月として表示する。
+      - 詳細Headerはタイトル幅を優先し、編集を補助操作へ下げ、390幅で航路入口へ到達できる。
+      - QUEST_COMPACT_HEADER_V2で一覧・詳細Headerの表示だけを切り戻せる。
+      - WebとAndroidで短名、100文字名、期限なし、AI未評価、Quest0/多数、文字拡大を検証し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_409_quest_header_density_test.dart, apps/mobile/test/qst_266_responsive_polish_test.dart, reports/qst/QST-409.md]
+
+  - id: QST-410
+    title: Arc Quest Handoff and Honest Planning Recovery UX
+    status: InProgress
+    priority: P0
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: Arcとの相談を再入力させずQuest作成へ引き継ぎ、航路生成に失敗してもMissionを捏造せず安全に再試行・手動保存できるようにする。
+    depends_on: [QST-403, QST-405]
+    blocks: [Arc Quest Creation, External Beta Distribution]
+    acceptance:
+      - Arcとの会話から願い・期限・回答済み条件を引き継ぎ、Quest名と相談全文を混同しない。
+      - 航路生成失敗時に入力を保持し、技術的な例外を表示せず、再試行・Questだけ保存・後での選択肢を同じ画面に表示する。
+      - Fallbackでは固定Missionを生成せず、手動経路でも安全性確認後にQuestだけを保存する。
+      - 保存中の閉鎖と二重承認を抑止し、失敗・取消・再表示でも重複Quest/Missionを作成しない。
+      - QUEST_HANDOFF_RECOVERY_V2で新しい回復UIを切り戻せる。
+      - 実Gemini接続、WebとAndroid、日本語IME、遅延・timeout・schema failureを検証し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_410_arc_quest_handoff_recovery_test.dart, reports/qst/QST-410.md]
+
+  - id: QST-411
+    title: Quest Mission Task Action Hierarchy Closure
+    status: InProgress
+    priority: P1
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: Questを最終目的、Missionを中間成果、Taskを具体行動として、親関係と現在の主操作を視覚・読み上げの双方で一貫して伝える。
+    depends_on: [QST-403, QST-404]
+    blocks: [Core Journey Comprehension, External Beta Distribution]
+    acceptance:
+      - Mission詳細とTask詳細から親Quest・Missionへ戻れる操作可能なパンくずを表示する。
+      - Mission詳細では状態に応じた次のTaskまたは成果確認を主操作1つとして表示し、進捗バーへ操作を混在させない。
+      - Task完了とMissionの中間成果確認を分離し、全必須Task完了後も明示確認なしでMissionを達成扱いにしない。
+      - 親データ欠損時は成功表示せず、Quest一覧への回復操作を提供する。
+      - JOURNEY_ACTION_HIERARCHY_V2で表示契約を切り戻せる。
+      - WebとAndroidで正常・blocked・0 Task・長い親名・文字拡大・二重完了を検証し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_411_action_hierarchy_test.dart, apps/mobile/test/qst_269_core_journey_test.dart, reports/qst/QST-411.md]
+
+  - id: QST-412
+    title: Notification and Persistence Banner Unification
+    status: InProgress
+    priority: P2
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: 読込・保存・失敗通知の役割、寿命、再試行対象を共通化し、通常操作を妨げず失敗から安全に回復できるようにする。
+    depends_on: [QST-404]
+    blocks: [Persistence Feedback Clarity, External Beta Distribution]
+    acceptance:
+      - Quest、Mission、Trailの通常読込成功では通知を表示しない。
+      - 保存・削除成功は短い一時通知として自動消去し、失敗は利用者が閉じるまで残す。
+      - 失敗通知へ生の例外、接続情報、秘密情報、英語の内部メッセージを表示しない。
+      - 読込失敗だけに正しい再試行操作を示し、保存失敗を再読込で上書きしない。
+      - 成功、エラー、警告、情報の色、本文、読み上げ、48px以上の操作領域を共通Widgetで維持する。
+      - NOTIFICATION_POLICY_V2で成功通知の自動消去だけを切り戻せる。
+      - WebとAndroidで複数通知、画面遷移、連続保存、長文、大文字、オフライン復帰を検証し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_412_notification_policy_test.dart, apps/mobile/test/questra_notification_test.dart, reports/qst/QST-412.md]
+
+  - id: QST-413
+    title: Settings Actionable Index and Truthful Capabilities
+    status: InProgress
+    priority: P1
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: 設定トップを実際に移動できる索引へ整理し、接続状態と提供中の機能を利用者が誤解しない言葉で示す。
+    depends_on: [QST-404, QST-406, QST-416]
+    blocks: [Settings Discoverability, External Beta Distribution]
+    acceptance:
+      - Profileから設定を開き、各設定を追加1操作で専用画面または実在Routeへ開ける。
+      - 設定トップでは長い説明一覧を表示せず、操作と演出、航路条件、チュートリアル、データ、同意、フィードバックを索引化する。
+      - 同一画面内設定にも固有Deep Linkを持たせ、戻る操作で設定索引へ復帰できる。
+      - Supabase未接続時はデータ管理を端末内のみと表示し、接続済みと誤認させない。
+      - RLSや所有者境界などの内部語を利用者向け画面へ表示しない。
+      - 不明な設定Deep Linkでは空画面にせず設定索引への回復操作を示す。
+      - SETTINGS_ACTION_INDEX_V2で索引と詳細Route構成だけを切り戻し、設定値と事実性のあるコピーは維持する。
+      - WebとAndroidでlocal/mock/remote、失効session、権限不足、戻る連打を検証し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_413_settings_action_index_test.dart, apps/mobile/test/settings_information_architecture_service_test.dart, reports/qst/QST-413.md]
+
+  - id: QST-414
+    title: First Run and Authentication Plain-Language UX
+    status: InProgress
+    priority: P2
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: 初回価値とログイン、新規登録、パスワード再設定の選択を短い日本語で伝え、モバイルの最初の画面から迷わず進めるようにする。
+    depends_on: [QST-404, QST-405]
+    blocks: [First Run Comprehension, External Beta Distribution]
+    acceptance:
+      - Splashでログインと初めての方を明示し、未登録と再訪の利用者が1操作で目的の画面へ進める。
+      - LoginとSignupの先頭に同じ切替を表示し、新規登録入口をモバイルの初期表示内に置く。
+      - 初回説明で固有用語を一度に並べず、Questraの価値を一文で伝える。
+      - パスワード再設定では登録メールアドレスが必要なことをフォーム前と項目補足で示す。
+      - 320幅、文字2倍でもHero、ブランド名、区切り、フォームがoverflowせずスクロールできる。
+      - AUTH_PLAIN_LANGUAGE_V2でモバイルHero高さと初回選択構成を切り戻せる。
+      - 認証、セッション、同意、ロック、recovery tokenのbackend契約を変更しない。
+      - 実WebとAndroidでIME、失効recovery、連打、ロック、接続なしを検証し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_414_auth_plain_language_test.dart, apps/mobile/test/auth_beta_account_copy_test.dart, apps/mobile/test/auth_recovery_screen_test.dart, reports/qst/QST-414.md]
+
+  - id: QST-415
+    title: Japanese Copy and Accessible Field Localization
+    status: InProgress
+    priority: P2
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: 主要導線の表示語と入力名をロケール辞書へ移し、内部値を見せず、視覚と読み上げで同じ意味を一貫して伝える。
+    depends_on: [QST-407, QST-408, QST-409, QST-410, QST-411, QST-412, QST-413, QST-414]
+    blocks: [Localized Beta Experience, External Beta Distribution]
+    acceptance:
+      - Navigation、Trail、主要フォームの表示語が日本語と英語で切り替わり、同一画面に意図しない言語を混在させない。
+      - 長いグループ説明と個別入力名を分離し、各入力の名前をプレースホルダーだけに依存させない。
+      - 内部enum、例外、保存状態キーを利用者向け画面へ表示しない。
+      - 外部ラベルを一度だけ読み上げ、必須、エラー、文字数を色だけに依存せず伝える。
+      - 日付と時刻を固定ロケールで整形せず、現在のロケールに従う。
+      - LOCALE_COPY_V2で新しい辞書参照を切り戻しても既存翻訳キーとの後方互換性を保つ。
+      - WebとAndroidで日本語IME、英語長文、TalkBack、キーボード、文字拡大を検証し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_415_localized_copy_test.dart, apps/mobile/test/qst_407_trail_single_timeline_test.dart, reports/qst/QST-415.md]
+
+  - id: QST-416
+    title: Height-Aware Navigation and Escape Routes
+    status: InProgress
+    priority: P1
+    epic: UI-UX-AUDIT-REMEDIATION
+    goal: 幅だけでなく利用可能な高さとキーボードを考慮し、主要Navigationと独立Routeから必ず安全な画面へ戻れるようにする。
+    depends_on: []
+    blocks: [Navigation Reachability, External Beta Distribution]
+    acceptance:
+      - 844x390を含む低い横画面ではRailを使わず、全5項目へ到達できるBottom Navigationを表示する。
+      - 文字2倍でも表示名を欠落させず、プロフィールは短い表示名と正式な読み上げ名を両立する。
+      - キーボードで利用可能高さが不足する場合はNavigationを隠してoverflowを防ぎ、入力終了後に復帰する。
+      - 未知Route、Guild未接続、共有Trail無効時にHomeまたはQuestへの回復操作を表示する。
+      - NAVIGATION_HEIGHT_AWARE_V2で高さ判定を切り戻せる。
+      - WebとAndroidで横画面、戻る、SafeArea、キーボード、文字拡大を検証し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_416_height_aware_navigation_test.dart, reports/qst/QST-416.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

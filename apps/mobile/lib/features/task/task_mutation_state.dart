@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/persistence/durable_mutation.dart';
 import 'task_model.dart';
 
 enum TaskMutationStatus { idle, saving, saved, failed, offlinePending }
@@ -104,14 +105,4 @@ class TaskMutationStateController extends Notifier<TaskMutationState> {
   void discard() {
     state = const TaskMutationState();
   }
-}
-
-bool isOfflineFailure(Object error) {
-  final value = error.toString().toLowerCase();
-  return value.contains('failed host lookup') ||
-      value.contains('network is unreachable') ||
-      value.contains('network request failed') ||
-      value.contains('xmlhttprequest error') ||
-      value.contains('socketexception') ||
-      value.contains('offline');
 }

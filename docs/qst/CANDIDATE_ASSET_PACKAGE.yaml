@@ -1,0 +1,56 @@
+version: 1
+status: blocked_ownership_review_pending
+candidate_source_commit: "4d316c6b47604664293b4176b0a54d12e4564c1e"
+working_tree_clean_at_generation: false
+release_ready: false
+runtime_asset_count: 7
+repository_reference_asset_count: 6
+runtime_assets:
+  - path: "apps/mobile/assets/characters/arc/arc_celebrate.png"
+    bytes: 239806
+    sha256: "f0d54be6919b0222ce33f4e92f8262e08a2f7338003fb86636281702269e8cdb"
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_excited.png"
+    bytes: 220542
+    sha256: "62c24bea374c8c0560927a57980e182118c203aec6d28478c237edb6c2ad00ff"
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_lonely.png"
+    bytes: 200513
+    sha256: "7ccc6407d3a120b2f8329b6bba14d63a6456e534f679ecab6fa5c5e9e503286c"
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_normal.png"
+    bytes: 217074
+    sha256: "28299e676f1ecc7419ee15d26f399143cfd0b5e5c6138b015b0626d75644e900"
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_serious.png"
+    bytes: 216916
+    sha256: "3d88b80c2b81130ea02e8f0a0c7e0f0b9f40fa754ccbae7c804c1d4ac15bbafe"
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_support.png"
+    bytes: 212318
+    sha256: "d352e73e4bbb4aae3e6be6099b0b951e4f3f39288c66a41592dc996ad30c252d"
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+  - path: "apps/mobile/assets/characters/arc/arc_worried.png"
+    bytes: 191981
+    sha256: "c5fa64550694fc73c560552a9ff9350da352de4992abe77b0338860963adc39b"
+    provenance: user_supplied_local_import_generation_record_missing
+    release_allowed: false
+excluded_repository_references:
+  - "apps/mobile/assets/mockups/01_Arc_Official.png"
+  - "apps/mobile/assets/mockups/02_Arc_Expressions.png"
+  - "apps/mobile/assets/mockups/03_Questra_Home_Mock.png"
+  - "apps/mobile/assets/mockups/04_Arc_Chat_Mock.png"
+  - "apps/mobile/assets/mockups/arc_approved_reference.jpg"
+  - "apps/mobile/assets/mockups/arc_approved_style_sheet.jpg"
+guardrails:
+  repository_reference_in_flutter_bundle_allowed: false
+  untracked_runtime_asset_allowed: false
+  hash_change_preserves_approval: false
+  approval_without_source_record_allowed: false
+  repository_presence_proves_ownership: false

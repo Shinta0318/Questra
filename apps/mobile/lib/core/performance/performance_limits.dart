@@ -4,6 +4,8 @@ class QuestraPerformanceLimits {
   static const questListLimit = 40;
   static const missionListLimit = 80;
   static const taskListLimit = 200;
+  static const journeyPageLimit = 30;
+  static const journeyPageMaxLimit = 100;
   static const taskPerMissionListLimit = 50;
   static const trailListLimit = 40;
   static const questGuideLimit = 6;
