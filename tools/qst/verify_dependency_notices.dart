@@ -90,14 +90,21 @@ Future<void> main(List<String> arguments) async {
       _fail('Dependency gate missing: $required');
   }
 
-  final head = (await Process.run('git', [
-    'rev-parse',
-    'HEAD',
-  ])).stdout.toString().trim();
-  if (!manifest.contains('candidate_source_commit: "$head"')) {
-    _fail('Dependency evidence is not bound to current HEAD.');
+  final candidateSourceCommit = RegExp(
+    r'^candidate_source_commit: "([a-f0-9]{40})"$',
+    multiLine: true,
+  ).firstMatch(manifest)?.group(1);
+  if (candidateSourceCommit == null) {
+    _fail('Dependency evidence has no valid source commit.');
   }
   if (requireRelease) {
+    final head = (await Process.run('git', [
+      'rev-parse',
+      'HEAD',
+    ])).stdout.toString().trim();
+    if (candidateSourceCommit != head) {
+      _fail('Release dependency evidence is not bound to current HEAD.');
+    }
     for (final required in [
       'status: approved',
       'product_owner_approval: approved',

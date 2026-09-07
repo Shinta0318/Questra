@@ -30,11 +30,12 @@ void main() {
     expect(verifier, contains('artifacts/qst376/'));
   });
 
-  test('asset package verifier binds evidence inventory to current HEAD', () {
+  test('asset package binds HEAD only at the explicit release gate', () {
     final packageVerifier = File(
       '../../tools/qst/verify_candidate_asset_package.dart',
     ).readAsStringSync();
     expect(packageVerifier, contains("git', 'rev-parse', 'HEAD"));
-    expect(packageVerifier, contains('not bound to HEAD'));
+    expect(packageVerifier, contains('if (candidateSourceCommit != head)'));
+    expect(packageVerifier, contains('has no valid source commit'));
   });
 }

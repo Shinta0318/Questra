@@ -57,4 +57,16 @@ void main() {
       isNot(contains('verify_candidate_preflight.dart --require-clean')),
     );
   });
+
+  test('only a distributable GO decision must bind current HEAD', () {
+    final verifier = File(
+      '${repo.path}/tools/qst/verify_external_beta_go_no_go.dart',
+    ).readAsStringSync();
+    expect(
+      verifier,
+      contains('Candidate source commit is missing or invalid.'),
+    );
+    expect(verifier, contains('decision.distributionReady'));
+    expect(verifier, contains('A GO decision must be bound to current HEAD.'));
+  });
 }

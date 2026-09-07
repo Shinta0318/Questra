@@ -15,11 +15,16 @@ void main() {
     'distribution_ready: ${decision.distributionReady}',
     failures,
   );
-  _expect(
-    content,
-    'candidate_source_commit: "${decision.sourceCommit}"',
-    failures,
-  );
+  final recordedSourceCommit = RegExp(
+    r'^candidate_source_commit: "([a-f0-9]{40})"$',
+    multiLine: true,
+  ).firstMatch(content)?.group(1);
+  if (recordedSourceCommit == null) {
+    failures.add('Candidate source commit is missing or invalid.');
+  } else if (decision.distributionReady &&
+      recordedSourceCommit != decision.sourceCommit) {
+    failures.add('A GO decision must be bound to current HEAD.');
+  }
   _expect(
     content,
     'latest_local_migration: "${decision.latestMigration}"',

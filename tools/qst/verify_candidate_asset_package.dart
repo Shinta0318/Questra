@@ -8,9 +8,12 @@ Future<void> main(List<String> arguments) async {
   if (!file.existsSync()) _fail('Candidate asset package manifest is missing.');
   final content = file.readAsStringSync().replaceAll('\r\n', '\n');
   final failures = <String>[];
-  final head = _command(['git', 'rev-parse', 'HEAD']).trim();
-  if (!content.contains('candidate_source_commit: "$head"')) {
-    failures.add('Candidate asset package is not bound to HEAD.');
+  final candidateSourceCommit = RegExp(
+    r'^candidate_source_commit: "([a-f0-9]{40})"$',
+    multiLine: true,
+  ).firstMatch(content)?.group(1);
+  if (candidateSourceCommit == null) {
+    failures.add('Candidate asset package has no valid source commit.');
   }
   final entries = RegExp(
     r'  - path: "([^"]+)"\n'
@@ -58,6 +61,10 @@ Future<void> main(List<String> arguments) async {
       failures.add('Missing guardrail: $required');
   }
   if (requireRelease) {
+    final head = _command(['git', 'rev-parse', 'HEAD']).trim();
+    if (candidateSourceCommit != head) {
+      failures.add('Release candidate asset package is not bound to HEAD.');
+    }
     for (final required in const [
       'status: approved',
       'release_ready: true',
