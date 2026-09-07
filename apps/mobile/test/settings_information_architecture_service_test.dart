@@ -7,19 +7,19 @@ void main() {
   test('builds Settings information architecture overview', () {
     final overview = service.buildOverview();
 
-    expect(overview.heading, '設定ガイド');
+    expect(overview.heading, '設定メニュー');
     expect(
       overview.sections.map((section) => section.type),
       containsAll(SettingsSectionType.values),
     );
-    expect(overview.sections.first.title, 'Arcチュートリアル');
-    expect(overview.sections.first.statusLabel, 'もう一度見る');
-    expect(overview.sections.last.type, SettingsSectionType.consent);
+    expect(overview.sections.first.title, '操作と演出');
+    expect(overview.sections.first.type, SettingsSectionType.experience);
+    expect(overview.sections.last.type, SettingsSectionType.feedback);
     expect(
       overview.sections
           .firstWhere((section) => section.type == SettingsSectionType.trust)
           .summary,
-      contains('所有者境界'),
+      contains('データ保護'),
     );
   });
 }

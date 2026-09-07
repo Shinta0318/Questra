@@ -1,0 +1,75 @@
+version: 1
+qst: QST-393
+status: partition_ready_clean_sha_pending
+branch: codex/initial-questra-structure-pr
+phases:
+  implementation:
+    every_changed_path_classified_once: true
+    groups:
+      - mobile_runtime
+      - mobile_tests
+      - supabase_runtime
+      - release_automation
+      - product_governance
+      - qst_governance
+  candidate_cut:
+    clean_worktree: required
+    candidate_sha: required
+    secret_scan: required
+  post_candidate_evidence:
+    implementation_changes_allowed: false
+    evidence_outputs_only: true
+scope_groups:
+  mobile_runtime:
+    - apps/mobile/lib/
+    - apps/mobile/pubspec.yaml
+    - apps/mobile/web/
+  mobile_tests:
+    - apps/mobile/test/
+    - apps/mobile/integration_test/
+  supabase_runtime:
+    - supabase/functions/
+    - supabase/migrations/
+    - supabase/tests/
+  release_automation:
+    - .gitignore
+    - .github/
+    - tools/qst/
+  product_governance:
+    - docs/analytics/
+    - docs/legal/
+    - docs/product/
+  qst_governance:
+    - docs/qst/
+    - reports/qst/
+post_candidate_evidence_outputs:
+  - docs/qst/BETA_CANDIDATE.yaml
+  - docs/qst/HOSTED_EVIDENCE_RUN.yaml
+  - docs/qst/HOSTED_MIGRATION_DEPLOYMENT.yaml
+  - docs/qst/DATA_RIGHTS_FULFILLMENT_DRILL.yaml
+  - docs/qst/RUNTIME_SLO_DRILL.yaml
+  - docs/qst/OBSERVABILITY_SINK_EVIDENCE.yaml
+  - docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml
+  - docs/qst/WEB_CANDIDATE_SESSION.yaml
+  - docs/qst/ANDROID_CANDIDATE_SESSION.yaml
+  - docs/qst/LEGAL_SIGNOFF_INTAKE.yaml
+  - docs/qst/BETA_LEGAL_SIGNOFF.yaml
+  - docs/qst/LEGAL_VERSION_RECONCILIATION.yaml
+  - docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml
+  - docs/legal/THIRD_PARTY_NOTICES.md
+  - docs/qst/CANDIDATE_ASSET_PACKAGE.yaml
+  - docs/qst/ARC_ASSET_RELEASE_DECISION.yaml
+  - docs/qst/BETA_FEEDBACK_OPERATIONS.yaml
+  - docs/qst/BETA_ISSUE_REGISTER.yaml
+  - docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml
+  - reports/qst/QST-256-REGRESSION.json
+  - reports/qst/QST-400-HUMAN-REVIEW.json
+  - docs/qst/PROVIDER_EVAL_RUN.yaml
+  - docs/qst/INCIDENT_LIVE_DRILL.yaml
+  - tools/qst/quest_planning_eval_results.json
+guardrails:
+  unclassified_path_allowed: false
+  overlapping_scope_allowed: false
+  dirty_worktree_is_candidate: false
+  post_candidate_product_edit_allowed: false
+  partition_manifest_is_candidate_evidence: false

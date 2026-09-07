@@ -1,0 +1,26 @@
+version: 1
+status: generated_review_pending
+generated_at_utc: "2026-09-03T00:27:57.470619Z"
+candidate_source_commit: "4d316c6b47604664293b4176b0a54d12e4564c1e"
+flutter_dart_package_count: 159
+missing_license_file_count: 0
+npm_import_count: 1
+unpinned_npm_import_count: 0
+unregistered_npm_import_count: 0
+stale_server_registry_entry_count: 0
+server_dependency_registry: tools/qst/server_dependency_registry.json
+product_owner_approval: pending
+legal_reviewer_approval: pending
+notice_file: docs/legal/THIRD_PARTY_NOTICES.md
+npm_imports:
+  - specifier: "npm:@supabase/supabase-js@2.112.4"
+    exact_version_pinned: true
+    registry_recorded: true
+    license_sha256: "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936"
+    distribution_integrity: "sha512-UiCX1udlFY1fQQrO7Z3GU7obQsju0w5Vk9mOOwalfo/+Gy+tahWVenSSuu5E/GTy/q//HxvGv2IrCdW66/61kw=="
+    license_review: pending
+guardrails:
+  missing_license_release_allowed: false
+  unpinned_server_dependency_release_allowed: false
+  generated_notice_is_legal_approval: false
+  package_presence_proves_permitted_use: false

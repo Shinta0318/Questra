@@ -418,6 +418,22 @@ Future<void> main() async {
       'status',
       'completed',
     );
+    await accountA.expectDataExportContains(
+      questId: ids.quest,
+      missionId: ids.mission,
+      taskId: ids.task,
+      trailId: ids.trail,
+      memoryId: ids.memory,
+    );
+    await accountB.expectDataExportExcludes(ids.quest);
+    final correctionRequestId = await accountA.submitCorrectionRequest();
+    await _expectNone(
+      accountB,
+      'data_rights_requests',
+      'id',
+      correctionRequestId,
+    );
+    await accountA.expectPersonalSharingGrantAndWithdrawal();
 
     final anonymous = _Session(
       config,
@@ -603,6 +619,12 @@ acceptance:
   arc_chat_task_context: passed
   stale_route_conflict_rejected: passed
   stale_route_task_unchanged: passed
+  account_a_data_export_owner_scope: passed
+  account_b_data_export_excludes_account_a: passed
+  account_a_correction_request: passed
+  account_b_correction_request_visibility: denied
+  personal_sharing_contextual_grant: passed
+  personal_sharing_settings_withdrawal: passed
   account_b_private_arc_memory_visibility: denied
   account_b_private_trail_visibility: denied
   account_b_private_media_visibility: denied
@@ -821,6 +843,89 @@ class _Session {
       'rpc/$function',
       body: body,
       expectedStatuses: {200, 204},
+    );
+  }
+
+  Future<void> expectDataExportContains({
+    required String questId,
+    required String missionId,
+    required String taskId,
+    required String trailId,
+    required String memoryId,
+  }) async {
+    final decoded = jsonDecode(await _rpc('export_my_questra_data', const {}));
+    if (decoded is! Map<String, dynamic>) {
+      throw StateError('Data export did not return an object.');
+    }
+    final expected = <String, String>{
+      'quests': questId,
+      'missions': missionId,
+      'tasks': taskId,
+      'trails': trailId,
+      'arc_memories': memoryId,
+    };
+    for (final entry in expected.entries) {
+      final rows = decoded[entry.key];
+      if (rows is! List ||
+          !rows.whereType<Map>().any((row) => row['id'] == entry.value)) {
+        throw StateError('Owner export is missing ${entry.key}.');
+      }
+    }
+  }
+
+  Future<void> expectDataExportExcludes(String foreignQuestId) async {
+    final decoded = jsonDecode(await _rpc('export_my_questra_data', const {}));
+    final quests = decoded is Map<String, dynamic> ? decoded['quests'] : null;
+    if (quests is! List ||
+        quests.whereType<Map>().any((row) => row['id'] == foreignQuestId)) {
+      throw StateError('Data export crossed the account boundary.');
+    }
+  }
+
+  Future<String> submitCorrectionRequest() async {
+    final decoded = jsonDecode(
+      await _rpc('submit_data_rights_request', {
+        'p_request_type': 'correction',
+        'p_scope': {
+          'target_type': 'profile',
+          'requested_change': 'Hosted owner-scoped correction probe',
+        },
+        'p_idempotency_key': 'qst360-correction-${_uuid()}',
+      }),
+    );
+    final id = decoded is Map<String, dynamic>
+        ? decoded['id'] as String?
+        : null;
+    if (id == null) throw StateError('Correction request returned no id.');
+    return id;
+  }
+
+  Future<void> expectPersonalSharingGrantAndWithdrawal() async {
+    await _rpc('set_user_consent', {
+      'p_purpose_code': 'personal_data_sharing',
+      'p_purpose_version': 1,
+      'p_granted': true,
+      'p_source': 'contextual_prompt',
+    });
+    await expectFieldValue(
+      'user_consents',
+      'purpose_code',
+      'personal_data_sharing',
+      'status',
+      'granted',
+    );
+    await _rpc('set_user_consent', {
+      'p_purpose_code': 'personal_data_sharing',
+      'p_purpose_version': 1,
+      'p_granted': false,
+      'p_source': 'settings',
+    });
+    await expectFieldValue(
+      'user_consents',
+      'purpose_code',
+      'personal_data_sharing',
+      'status',
+      'withdrawn',
     );
   }
 

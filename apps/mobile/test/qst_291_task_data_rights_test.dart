@@ -105,6 +105,12 @@ class _FakeDataRightsRepository implements DataRightsRepository {
   Future<List<DataRightsRequest>> listRequests() async => const [];
 
   @override
+  Future<DataRightsRequest> requestCorrection({
+    required String targetType,
+    required String requestedChange,
+  }) => throw UnimplementedError();
+
+  @override
   Future<DataRightsRequest> requestAccountDeletion({
     required String password,
   }) => throw UnimplementedError();

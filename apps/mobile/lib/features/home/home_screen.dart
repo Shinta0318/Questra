@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/feature_flags/home_feature_flags.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/performance/grouped_collection_index.dart';
 import '../../core/theme/app_colors.dart';
@@ -24,6 +27,7 @@ import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../mission/today_best_next_mission_service.dart';
 import '../mission/today_mission_preference_controller.dart';
+import '../onboarding/activation_journey.dart';
 import '../quest/quest_controller.dart';
 import '../quest/quest_model.dart';
 import '../quest/planning_preferences_controller.dart';
@@ -33,6 +37,7 @@ import '../quest_journey/quest_journey_contract.dart';
 import '../signal/mission_signal_model.dart';
 import '../signal/signal_providers.dart';
 import '../signal/task_signal_card.dart';
+import '../signal/task_signal_model.dart';
 import '../star_map/star_map_recommendation_service.dart';
 import '../trail/trail_model.dart';
 import '../trail/trail_controller.dart';
@@ -48,6 +53,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final nextStepEnabled = const HomeFeatureFlags().nextStepEnabled;
     final profile = ref.watch(authControllerProvider).profile;
     final quests = ref.watch(questControllerProvider);
     final missions = ref.watch(missionControllerProvider);
@@ -59,10 +65,14 @@ class HomeScreen extends ConsumerWidget {
     );
     final todayPreference = ref.watch(todayMissionPreferenceControllerProvider);
     final trails = ref.watch(trailControllerProvider);
-    final navigatorRank = ref
-        .watch(navigatorRankServiceProvider)
-        .resolve(stardustBalance: profile?.stardustBalance ?? 0);
-    final greeting = ref.watch(arcDailyGreetingServiceProvider).resolve(
+    final navigatorRank = nextStepEnabled
+        ? null
+        : ref
+              .watch(navigatorRankServiceProvider)
+              .resolve(stardustBalance: profile?.stardustBalance ?? 0);
+    final greeting = ref
+        .watch(arcDailyGreetingServiceProvider)
+        .resolve(
           quests: quests,
           missions: missions,
           trails: trails,
@@ -71,10 +81,9 @@ class HomeScreen extends ConsumerWidget {
           arcName: profile?.arcName,
           questInterest: profile?.questInterest ?? QuestInterest.adventure,
         );
-    final activeQuests = quests
-        .where((quest) => quest.status == QuestStatus.active)
-        .toList()
-      ..sort((a, b) => b.progress.compareTo(a.progress));
+    final activeQuests =
+        quests.where((quest) => quest.status == QuestStatus.active).toList()
+          ..sort((a, b) => b.progress.compareTo(a.progress));
     final today = WeekdayLabel.fromDateTime(DateTime.now());
     final todayMinutes = planningPreferences.context.consentGranted
         ? planningPreferences.availability.minutesFor(today)
@@ -94,27 +103,31 @@ class HomeScreen extends ConsumerWidget {
     final todayMissions = todayRecommendation == null
         ? const <Mission>[]
         : <Mission>[todayRecommendation.mission];
+    final focusSelection = const QuestFocusSelectionService().selectTodayFocus(
+      tasks: tasks,
+      missions: missions,
+      now: now,
+    );
     final todayJourney = const HomeTodayTaskJourneyService().resolve(
       tasks: tasks,
       loadState: taskLoadState,
       now: now,
-      recommendedTask: todayTask,
+      recommendedTask: focusSelection.primaryTask ?? todayTask,
       hasActiveJourney: activeQuests.isNotEmpty || missions.isNotEmpty,
       isSignedIn: profile != null,
     );
-    final focusTasks = const QuestFocusSelectionService().select(
-      tasks: tasks,
-      missions: missions,
-    );
-    final additionalFocusTasks = focusTasks
+    final additionalFocusTasks = focusSelection.secondaryTasks
         .where((task) => task.id != todayJourney.task?.id)
-        .take(2)
         .toList(growable: false);
-    final taskSignals = ref.watch(taskSignalServiceProvider).generate(
-          tasks: tasks,
-          now: now,
-          frequency: profile?.signalFrequency ?? SignalFrequency.balanced,
-        );
+    final taskSignals = nextStepEnabled
+        ? const <TaskSignal>[]
+        : ref
+              .watch(taskSignalServiceProvider)
+              .generate(
+                tasks: tasks,
+                now: now,
+                frequency: profile?.signalFrequency ?? SignalFrequency.balanced,
+              );
     final missionsByQuest = GroupedCollectionIndex<String, Mission>.build(
       missions,
       keyOf: (mission) => mission.questId,
@@ -134,12 +147,24 @@ class HomeScreen extends ConsumerWidget {
           ),
         )
         .toList(growable: false);
-    final horizon = const HorizonNextChallengeService().suggest(
-      rank: navigatorRank,
+    final horizon = nextStepEnabled
+        ? null
+        : const HorizonNextChallengeService().suggest(
+            rank: navigatorRank!,
+            quests: quests,
+            missions: missions,
+            trails: trails,
+          );
+    final activation = const ActivationJourneyService().resolve(
+      profile: profile,
       quests: quests,
-      missions: missions,
-      trails: trails,
+      tasks: tasks,
+      taskLoadState: taskLoadState,
     );
+    final hasJourneyContent =
+        activeQuests.isNotEmpty || missions.isNotEmpty || tasks.isNotEmpty;
+    final showTodayFocus =
+        !nextStepEnabled || activation.isComplete || hasJourneyContent;
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
@@ -154,48 +179,110 @@ class HomeScreen extends ConsumerWidget {
           children: [
             _SimplifiedArcHero(
               message: greeting.message,
-              onOpenArc: () => context.go(AppRoutes.arc),
+              onOpenArc: nextStepEnabled
+                  ? null
+                  : () => context.go(AppRoutes.arc),
             ),
-            const SizedBox(height: AppSpacing.xl),
-            const _SimpleSectionTitle(title: '今日のTask'),
-            const SizedBox(height: AppSpacing.md),
-            _HomeTodayTaskCard(
-              journey: todayJourney,
-              additionalTasks: additionalFocusTasks,
-              suggestedMission: todayMissions.firstOrNull,
-              recommendationReason: todayRecommendation?.reason,
-              isResting: activeTodayPreference.isResting,
-              onOpenTask: (task) => context.push(
-                AppRoutes.questJourneyFocus(
-                  questId: task.questId,
-                  missionId: task.missionId,
-                  taskId: task.id,
-                ),
+            if (!activation.isComplete &&
+                (!nextStepEnabled || !hasJourneyContent)) ...[
+              const SizedBox(height: AppSpacing.lg),
+              _ActivationJourneyCard(
+                snapshot: activation,
+                onAction: () async {
+                  switch (activation.stage) {
+                    case ActivationJourneyStage.trust:
+                      context.go(
+                        profile == null
+                            ? AppRoutes.signup
+                            : AppRoutes.legalConsent,
+                      );
+                      return;
+                    case ActivationJourneyStage.promise:
+                      context.go(AppRoutes.onboarding);
+                      return;
+                    case ActivationJourneyStage.wish:
+                      context.go(AppRoutes.arc);
+                      return;
+                    case ActivationJourneyStage.questConfirm:
+                      final quest = activation.quest;
+                      context.go(
+                        quest == null
+                            ? AppRoutes.quest
+                            : '${AppRoutes.quest}/${quest.id}?mode=plan',
+                      );
+                      return;
+                    case ActivationJourneyStage.firstTask:
+                      final task = activation.task;
+                      if (task == null) {
+                        context.go(AppRoutes.arc);
+                        return;
+                      }
+                      final started = await ref
+                          .read(taskControllerProvider.notifier)
+                          .start(task.id);
+                      if (context.mounted) {
+                        context.push(
+                          AppRoutes.questJourneyFocus(
+                            questId: task.questId,
+                            missionId: task.missionId,
+                            taskId: task.id,
+                          ),
+                        );
+                      }
+                      if (!started && context.mounted) {
+                        ref.read(taskControllerProvider.notifier).reload();
+                      }
+                      return;
+                    case ActivationJourneyStage.complete:
+                      return;
+                  }
+                },
               ),
-              onStartTask: (task) async {
-                final started = await ref
-                    .read(taskControllerProvider.notifier)
-                    .start(task.id);
-                if (started && context.mounted) {
-                  context.push(
-                    AppRoutes.questJourneyFocus(
-                      questId: task.questId,
-                      missionId: task.missionId,
-                      taskId: task.id,
-                    ),
-                  );
-                }
-              },
-              onOpenMission: (questId, missionId) =>
-                  context.push(AppRoutes.missionDetail(questId, missionId)),
-              onOpenArc: () => context.go(AppRoutes.arc),
-              onOpenTrail: () => context.go(AppRoutes.trail),
-              onRetry: () => ref.read(taskControllerProvider.notifier).reload(),
-              onResume: () => ref
-                  .read(todayMissionPreferenceControllerProvider.notifier)
-                  .resumeToday(),
-            ),
-            if (taskSignals.isNotEmpty) ...[
+            ],
+            if (showTodayFocus) ...[
+              const SizedBox(height: AppSpacing.xl),
+              const _SimpleSectionTitle(title: '今日の一歩'),
+              const SizedBox(height: AppSpacing.md),
+              _HomeTodayTaskCard(
+                journey: todayJourney,
+                focusSelection: focusSelection,
+                additionalTasks: additionalFocusTasks,
+                suggestedMission: todayMissions.firstOrNull,
+                recommendationReason: todayRecommendation?.reason,
+                isResting: activeTodayPreference.isResting,
+                onOpenTask: (task) => context.push(
+                  AppRoutes.questJourneyFocus(
+                    questId: task.questId,
+                    missionId: task.missionId,
+                    taskId: task.id,
+                  ),
+                ),
+                onStartTask: (task) async {
+                  final started = await ref
+                      .read(taskControllerProvider.notifier)
+                      .start(task.id);
+                  if (started && context.mounted) {
+                    context.push(
+                      AppRoutes.questJourneyFocus(
+                        questId: task.questId,
+                        missionId: task.missionId,
+                        taskId: task.id,
+                      ),
+                    );
+                  }
+                },
+                onOpenMission: (questId, missionId) =>
+                    context.push(AppRoutes.missionDetail(questId, missionId)),
+                onOpenArc: () => context.go(AppRoutes.arc),
+                onOpenTrail: () => context.go(AppRoutes.trail),
+                onRetry: () =>
+                    ref.read(taskControllerProvider.notifier).reload(),
+                onResume: () => ref
+                    .read(todayMissionPreferenceControllerProvider.notifier)
+                    .resumeToday(),
+              ),
+            ],
+            if (!nextStepEnabled && taskSignals.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.md),
               TaskSignalCard(
                 signal: taskSignals.first,
@@ -211,49 +298,58 @@ class HomeScreen extends ConsumerWidget {
                 },
               ),
             ],
-            const SizedBox(height: AppSpacing.xl),
-            const _SimpleSectionTitle(title: '進行中のQuest'),
-            const SizedBox(height: AppSpacing.md),
-            if (activeQuests.isEmpty)
-              _HomeEmptyActionCard(
-                icon: Icons.flag_outlined,
-                title: 'まだ進行中のQuestはありません',
-                message: 'Arcに叶えたいことを話して、最初のQuestを見つけましょう。',
-                actionLabel: 'Arcに話す',
-                onAction: () => context.go(AppRoutes.arc),
-              )
-            else
-              _HomeQuestDeck(
-                items: questItems,
-                onOpen: (quest) => context.go('${AppRoutes.quest}/${quest.id}'),
+            if (!nextStepEnabled || activeQuests.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.xl),
+              const _SimpleSectionTitle(title: '進行中のQuest'),
+              const SizedBox(height: AppSpacing.md),
+              if (activeQuests.isEmpty)
+                _HomeEmptyActionCard(
+                  icon: Icons.flag_outlined,
+                  title: 'まだ進行中のQuestはありません',
+                  message: 'Arcに叶えたいことを話して、最初のQuestを見つけましょう。',
+                  actionLabel: 'Arcに話す',
+                  onAction: () => context.go(AppRoutes.arc),
+                )
+              else
+                _HomeQuestDeck(
+                  items: questItems,
+                  onOpen: (quest) =>
+                      context.go('${AppRoutes.quest}/${quest.id}'),
+                ),
+            ],
+            if (!nextStepEnabled || trails.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.xl),
+              const _SimpleSectionTitle(title: '最近のTrail'),
+              const SizedBox(height: AppSpacing.md),
+              _RecentTrailsCard(
+                trails: trails.take(3).toList(growable: false),
+                onOpenTrail: () => context.go(AppRoutes.trail),
               ),
-            const SizedBox(height: AppSpacing.xl),
-            const _SimpleSectionTitle(title: '最近のTrail'),
-            const SizedBox(height: AppSpacing.md),
-            _RecentTrailsCard(
-              trails: trails.take(3).toList(growable: false),
-              onOpenTrail: () => context.go(AppRoutes.trail),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            const _SimpleSectionTitle(title: '次の航路'),
-            const SizedBox(height: AppSpacing.md),
-            HomeHorizonCard(
-              challenge: horizon,
-              onAction: () {
-                switch (horizon.destination) {
-                  case HorizonDestination.arc:
-                    context.go(AppRoutes.arc);
-                  case HorizonDestination.mission:
-                    final questId = horizon.questId;
-                    final missionId = horizon.missionId;
-                    if (questId != null && missionId != null) {
-                      context.push(AppRoutes.missionDetail(questId, missionId));
-                    }
-                  case HorizonDestination.trail:
-                    context.go(AppRoutes.trail);
-                }
-              },
-            ),
+            ],
+            if (!nextStepEnabled) ...[
+              const SizedBox(height: AppSpacing.xl),
+              const _SimpleSectionTitle(title: '次の航路'),
+              const SizedBox(height: AppSpacing.md),
+              HomeHorizonCard(
+                challenge: horizon!,
+                onAction: () {
+                  switch (horizon.destination) {
+                    case HorizonDestination.arc:
+                      context.go(AppRoutes.arc);
+                    case HorizonDestination.mission:
+                      final questId = horizon.questId;
+                      final missionId = horizon.missionId;
+                      if (questId != null && missionId != null) {
+                        context.push(
+                          AppRoutes.missionDetail(questId, missionId),
+                        );
+                      }
+                    case HorizonDestination.trail:
+                      context.go(AppRoutes.trail);
+                  }
+                },
+              ),
+            ],
           ],
         ),
       ),
@@ -295,26 +391,26 @@ class _MissionSignalCard extends StatelessWidget {
                 Text(
                   signal.severity.label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: color,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   signal.title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   signal.message,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.parchment,
-                        height: 1.45,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: AppColors.parchment,
+                    height: 1.45,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -359,18 +455,18 @@ class _ArcSignalCard extends StatelessWidget {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.gold,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   message,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.white,
-                        height: 1.45,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: AppColors.white,
+                    height: 1.45,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -413,10 +509,10 @@ class _CaptainStatusBar extends StatelessWidget {
               Text(
                 'キャプテン\nLv.24',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w800,
-                      height: 1.15,
-                    ),
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w800,
+                  height: 1.15,
+                ),
               ),
             ],
           ),
@@ -450,9 +546,9 @@ class _MetricPill extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: AppColors.white,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ],
       ),
@@ -464,10 +560,64 @@ class _SimplifiedArcHero extends StatelessWidget {
   const _SimplifiedArcHero({required this.message, required this.onOpenArc});
 
   final String message;
-  final VoidCallback onOpenArc;
+  final VoidCallback? onOpenArc;
 
   @override
   Widget build(BuildContext context) {
+    final content = _HomeGlassCard(
+      child: Row(
+        children: [
+          const ArcApprovedPortrait(size: 92),
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Arc',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  message,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.white,
+                    height: 1.35,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (onOpenArc != null) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'タップして話す',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.parchment),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (onOpenArc != null) ...[
+            const SizedBox(width: AppSpacing.sm),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.gold),
+          ],
+        ],
+      ),
+    );
+    final action = onOpenArc;
+    if (action == null) {
+      return Semantics(
+        container: true,
+        label: 'Arcからのメッセージ。$message',
+        child: content,
+      );
+    }
     return Semantics(
       button: true,
       label: 'Arcに話す',
@@ -475,52 +625,124 @@ class _SimplifiedArcHero extends StatelessWidget {
         borderRadius: AppRadius.glassCard,
         onTap: () {
           HapticFeedback.selectionClick();
-          onOpenArc();
+          action();
+        },
+        child: content,
+      ),
+    );
+  }
+}
+
+class _ActivationJourneyCard extends StatelessWidget {
+  const _ActivationJourneyCard({
+    required this.snapshot,
+    required this.onAction,
+  });
+
+  final ActivationJourneySnapshot snapshot;
+  final Future<void> Function() onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = _progressFor(snapshot.stage);
+    return Semantics(
+      button: true,
+      label: '最初の10分: ${snapshot.title}',
+      value: '進み具合 $progress / 4',
+      child: InkWell(
+        borderRadius: AppRadius.glassCard,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          unawaited(onAction());
         },
         child: _HomeGlassCard(
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const ArcApprovedPortrait(size: 92),
-              const SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Arc',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: AppColors.gold,
-                            fontWeight: FontWeight.w800,
-                          ),
+              Row(
+                children: [
+                  const _HomeIconBadge(icon: Icons.rocket_launch_outlined),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '最初の10分',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppColors.gold,
+                                fontWeight: FontWeight.w900,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          snapshot.title,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.w900,
+                              ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      message,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.white,
-                            height: 1.35,
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'タップして話す',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.parchment,
-                          ),
-                    ),
-                  ],
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.gold,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                snapshot.message,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.parchment,
+                  height: 1.45,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.gold),
+              const SizedBox(height: AppSpacing.md),
+              ExcludeSemantics(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  child: LinearProgressIndicator(
+                    value: progress / 4,
+                    minHeight: 7,
+                    backgroundColor: AppColors.deepNavy,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppColors.skyBlue,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  snapshot.actionLabel,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.skyBlue,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  int _progressFor(ActivationJourneyStage stage) {
+    return switch (stage) {
+      ActivationJourneyStage.trust => 0,
+      ActivationJourneyStage.promise => 1,
+      ActivationJourneyStage.wish => 2,
+      ActivationJourneyStage.questConfirm => 3,
+      ActivationJourneyStage.firstTask => 3,
+      ActivationJourneyStage.complete => 4,
+    };
   }
 }
 
@@ -534,9 +756,9 @@ class _SimpleSectionTitle extends StatelessWidget {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: AppColors.white,
-            fontWeight: FontWeight.w900,
-          ),
+        color: AppColors.white,
+        fontWeight: FontWeight.w900,
+      ),
     );
   }
 }
@@ -544,6 +766,7 @@ class _SimpleSectionTitle extends StatelessWidget {
 class _HomeTodayTaskCard extends ConsumerWidget {
   const _HomeTodayTaskCard({
     required this.journey,
+    required this.focusSelection,
     required this.additionalTasks,
     required this.suggestedMission,
     required this.recommendationReason,
@@ -558,6 +781,7 @@ class _HomeTodayTaskCard extends ConsumerWidget {
   });
 
   final HomeTodayTaskJourney journey;
+  final QuestFocusSelection focusSelection;
   final List<QuestraTask> additionalTasks;
   final Mission? suggestedMission;
   final String? recommendationReason;
@@ -590,11 +814,12 @@ class _HomeTodayTaskCard extends ConsumerWidget {
       );
     }
     if (journey.status == HomeTodayTaskStatus.completed) {
+      final completed = journey.task!;
       return _HomeTaskStateCard(
         icon: Icons.check_circle_outline_rounded,
         title: '今日の一歩を進めました',
-        message: '${journey.task!.title}を完了しました。この瞬間をTrailに残せます。',
-        contextLabel: _parentContext(journey.task!),
+        message: focusSelection.trailPromptFor(completed),
+        contextLabel: focusSelection.parentLabelFor(completed),
         actionLabel: 'Trailに残す',
         onAction: onOpenTrail,
       );
@@ -604,8 +829,8 @@ class _HomeTodayTaskCard extends ConsumerWidget {
         return _HomeTaskStateCard(
           icon: Icons.bedtime_outlined,
           title: '今日は休む日',
-          message: '休むことも航路の一部です。明日の一歩へ備えましょう。',
-          actionLabel: 'やっぱり進める',
+          message: '休むことも大切な選択です。余裕が戻ったときに続きから再開できます。',
+          actionLabel: '余裕ができたらTaskを見る',
           onAction: onResume,
         );
       }
@@ -638,27 +863,27 @@ class _HomeTodayTaskCard extends ConsumerWidget {
     final actionLabel = canStart ? 'このTaskを始める' : 'Taskを開く';
     return Semantics(
       container: true,
-      label: '今日のTask、${task.title}。${_parentContext(task)}',
+      label: '今日のTask、${task.title}。${focusSelection.parentLabelFor(task)}',
       child: _HomeGlassCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _parentContext(task),
+              focusSelection.parentLabelFor(task),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.skyBlue,
-                    fontWeight: FontWeight.w800,
-                  ),
+                color: AppColors.skyBlue,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               task.title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
+                color: AppColors.white,
+                fontWeight: FontWeight.w900,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
@@ -666,9 +891,9 @@ class _HomeTodayTaskCard extends ConsumerWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.parchment,
-                    height: 1.45,
-                  ),
+                color: AppColors.parchment,
+                height: 1.45,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             Wrap(
@@ -688,8 +913,8 @@ class _HomeTodayTaskCard extends ConsumerWidget {
                 onPressed: () => canStart
                     ? onStartTask(task)
                     : availability.isDependencyBlocked
-                        ? onOpenMission(task.questId, task.missionId)
-                        : onOpenTask(task),
+                    ? onOpenMission(task.questId, task.missionId)
+                    : onOpenTask(task),
                 icon: Icon(
                   canStart ? Icons.play_arrow_rounded : Icons.arrow_forward,
                 ),
@@ -707,9 +932,9 @@ class _HomeTodayTaskCard extends ConsumerWidget {
               Text(
                 'このあと',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AppColors.parchment,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  color: AppColors.parchment,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               for (final next in additionalTasks)
                 ListTile(
@@ -728,7 +953,7 @@ class _HomeTodayTaskCard extends ConsumerWidget {
                     style: const TextStyle(color: AppColors.white),
                   ),
                   subtitle: Text(
-                    _parentContext(next),
+                    focusSelection.parentLabelFor(next),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: AppColors.parchment),
@@ -743,12 +968,6 @@ class _HomeTodayTaskCard extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  String _parentContext(QuestraTask task) {
-    final quest = task.questTitle.isEmpty ? 'Quest' : task.questTitle;
-    final mission = task.missionTitle.isEmpty ? 'Mission' : task.missionTitle;
-    return '$quest  /  $mission';
   }
 }
 
@@ -789,26 +1008,26 @@ class _HomeTaskStateCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.skyBlue,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  color: AppColors.skyBlue,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
             const SizedBox(height: AppSpacing.sm),
             Text(
               title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
+                color: AppColors.white,
+                fontWeight: FontWeight.w900,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               message,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.parchment,
-                    height: 1.45,
-                  ),
+                color: AppColors.parchment,
+                height: 1.45,
+              ),
             ),
             if (showProgress) ...[
               const SizedBox(height: AppSpacing.md),
@@ -860,9 +1079,9 @@ class _ArcHero extends StatelessWidget {
                 Text(
                   greeting.message,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.white,
-                        height: 1.55,
-                      ),
+                    color: AppColors.white,
+                    height: 1.55,
+                  ),
                 ),
               ],
             ),
@@ -900,9 +1119,9 @@ class _HomeSectionHeader extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: AppColors.white,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ),
         TextButton(onPressed: onAction, child: Text(actionLabel)),
@@ -954,18 +1173,18 @@ class _JourneyFlowCard extends StatelessWidget {
           Text(
             'Home → Arc → Quest',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.gold,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: AppColors.gold,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Arcと一緒に今日の一歩を進める',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w900,
-                  height: 1.25,
-                ),
+              color: AppColors.white,
+              fontWeight: FontWeight.w900,
+              height: 1.25,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           Wrap(
@@ -1046,18 +1265,18 @@ class _FlowStepPill extends StatelessWidget {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.parchment,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: AppColors.parchment,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 Text(
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
@@ -1108,18 +1327,18 @@ class _TodayMissionCard extends StatelessWidget {
                 Text(
                   mission!.title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   mission!.description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.parchment,
-                        height: 1.45,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: AppColors.parchment,
+                    height: 1.45,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Align(
@@ -1194,8 +1413,9 @@ class _HomeQuestDeckState extends State<_HomeQuestDeck> {
         }
 
         final textScale = MediaQuery.textScalerOf(context).scale(1);
-        final compactTextAllowance =
-            ((500 - constraints.maxWidth) * 0.9).clamp(0, 160).toDouble();
+        final compactTextAllowance = ((500 - constraints.maxWidth) * 0.9)
+            .clamp(0, 160)
+            .toDouble();
         final deckHeight =
             178 + compactTextAllowance * (textScale - 1).clamp(0, 1);
         return Column(
@@ -1271,10 +1491,14 @@ class _ActiveQuestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hideEmptyProgress =
+        const HomeFeatureFlags().nextStepEnabled && progress.total == 0;
     return Semantics(
       button: true,
       label: '${quest.title}のQuestを開く',
-      value: '進捗${progress.percent}パーセント、Mission ${progress.missionCountLabel}',
+      value: hideEmptyProgress
+          ? 'Missionを準備中'
+          : '進捗${progress.percent}パーセント、Mission ${progress.missionCountLabel}',
       child: InkWell(
         borderRadius: AppRadius.card,
         onTap: onTap,
@@ -1285,9 +1509,9 @@ class _ActiveQuestCard extends StatelessWidget {
               Text(
                 quest.title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w900,
-                    ),
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               if (nextMission != null) ...[
                 const SizedBox(height: AppSpacing.xs),
@@ -1296,49 +1520,68 @@ class _ActiveQuestCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.parchment,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: AppColors.parchment,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
-              const SizedBox(height: AppSpacing.sm),
-              ExcludeSemantics(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  child: LinearProgressIndicator(
-                    value: progress.value,
-                    minHeight: 8,
-                    backgroundColor: AppColors.deepNavy,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      AppColors.gold,
+              if (!hideEmptyProgress) ...[
+                const SizedBox(height: AppSpacing.sm),
+                ExcludeSemantics(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    child: LinearProgressIndicator(
+                      value: progress.value,
+                      minHeight: 8,
+                      backgroundColor: AppColors.deepNavy,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.gold,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.xs,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  _QuestTag(label: quest.category),
-                  _QuestTag(label: quest.difficulty.label),
-                  Text(
-                    '${progress.percent}%',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w900,
-                        ),
-                  ),
-                  Text(
-                    'Mission ${progress.missionCountLabel}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.parchment,
-                          fontWeight: FontWeight.w800,
-                        ),
-                  ),
-                ],
-              ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.xs,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _QuestTag(label: quest.category),
+                    _QuestTag(label: quest.difficulty.label),
+                    Text(
+                      '${progress.percent}%',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      'Mission ${progress.missionCountLabel}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.parchment,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    _QuestTag(label: quest.category),
+                    _QuestTag(label: quest.difficulty.label),
+                    Text(
+                      'Missionを準備中',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.parchment,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
@@ -1358,7 +1601,7 @@ class _RecentTrailsCard extends StatelessWidget {
     if (trails.isEmpty) {
       return _HomeEmptyActionCard(
         icon: Icons.timeline_outlined,
-        title: 'まだRecent Trailはありません',
+        title: 'まだTrailはありません',
         message: 'Missionのあとに短く残すだけで、挑戦の航跡が見返せるようになります。',
         actionLabel: 'Trailを残す',
         onAction: onOpenTrail,
@@ -1382,26 +1625,26 @@ class _RecentTrailsCard extends StatelessWidget {
                       Text(
                         trail.title,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w900,
-                            ),
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         trail.summary,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.parchment,
-                              height: 1.35,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          color: AppColors.parchment,
+                          height: 1.35,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         trail.trailType.label,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.skyBlue,
-                              fontWeight: FontWeight.w800,
-                            ),
+                          color: AppColors.skyBlue,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ],
                   ),
@@ -1445,9 +1688,9 @@ class _GuildActivitySummary extends StatelessWidget {
                 Text(
                   'Guildの動き',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -1455,10 +1698,10 @@ class _GuildActivitySummary extends StatelessWidget {
                       ? 'Quest、Mission、Task、TrailからGuildへ持ち寄れる相談の種が$countText件あります。'
                       : 'QuestやTrailが増えると、Guildで相談しやすい問いがここに浮かびます。',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.parchment,
-                        height: 1.45,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: AppColors.parchment,
+                    height: 1.45,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Align(
@@ -1518,9 +1761,9 @@ class _HomeEmptyActionCard extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w900,
-                          ),
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -1528,9 +1771,9 @@ class _HomeEmptyActionCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.parchment,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        color: AppColors.parchment,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -1601,9 +1844,9 @@ class _QuestTag extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.white,
-              fontWeight: FontWeight.w800,
-            ),
+          color: AppColors.white,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -1636,9 +1879,9 @@ class _StarMapPreview extends StatelessWidget {
                 Text(
                   'Star Map',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.deepNavy,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: AppColors.deepNavy,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -1646,19 +1889,19 @@ class _StarMapPreview extends StatelessWidget {
                       ? 'Quest、Mission、Task、Trailをつないで、次の一歩を見つけよう。'
                       : recommendation!.title,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.deepNavy,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    color: AppColors.deepNavy,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 if (recommendation != null) ...[
                   const SizedBox(height: 4),
                   Text(
                     recommendation!.reason,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.midnightNavy,
-                          height: 1.35,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      color: AppColors.midnightNavy,
+                      height: 1.35,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ],

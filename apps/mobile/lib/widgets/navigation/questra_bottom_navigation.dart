@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/questra_colors.dart';
+import '../../core/feature_flags/locale_feature_flags.dart';
+import '../../l10n/app_localizations.dart';
 import '../arc/arc_emotion.dart';
 import '../arc/arc_widget.dart';
 import 'questra_navigation_destination.dart';
@@ -19,6 +21,9 @@ class QuestraBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizedCopyEnabled =
+        const LocaleFeatureFlags().localizedJourneyCopyV2Enabled;
+    final copy = localizedCopyEnabled ? AppLocalizations.of(context) : null;
     return SafeArea(
       top: false,
       child: Padding(
@@ -54,7 +59,12 @@ class QuestraBottomNavigation extends StatelessWidget {
                       key: ValueKey('nav-${destination.name}'),
                       icon: destination.icon,
                       selectedIcon: destination.selectedIcon,
-                      label: destination.label,
+                      label: copy == null
+                          ? destination.compactLabel
+                          : destination.localizedCompactLabel(copy),
+                      semanticsLabel: copy == null
+                          ? destination.label
+                          : destination.localizedLabel(copy),
                       selected: currentIndex == destination.index,
                       onTap: () => onDestinationSelected(destination.index),
                     ),
@@ -72,6 +82,7 @@ class _NavItem extends StatelessWidget {
     required this.icon,
     required this.selectedIcon,
     required this.label,
+    required this.semanticsLabel,
     required this.selected,
     required this.onTap,
     super.key,
@@ -80,27 +91,35 @@ class _NavItem extends StatelessWidget {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
+  final String semanticsLabel;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final color = selected ? QuestraColors.gold : QuestraColors.white;
+    final itemHeight = (46 + MediaQuery.textScalerOf(context).scale(11)).clamp(
+      58.0,
+      76.0,
+    );
+    final animationDuration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 180);
 
     return Expanded(
       child: Semantics(
-        label: label,
+        label: semanticsLabel,
         button: true,
         selected: selected,
         child: ExcludeSemantics(
           child: Tooltip(
-            message: label,
+            message: semanticsLabel,
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
               onTap: onTap,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                height: 58,
+                duration: animationDuration,
+                height: itemHeight,
                 padding: const EdgeInsets.symmetric(horizontal: 2),
                 decoration: BoxDecoration(
                   color: selected
@@ -117,19 +136,19 @@ class _NavItem extends StatelessWidget {
                       size: 22,
                     ),
                     const SizedBox(height: 4),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        style: TextStyle(
-                          color: color,
-                          fontSize: 11,
-                          fontWeight: selected
-                              ? FontWeight.w800
-                              : FontWeight.w600,
-                          letterSpacing: 0,
-                        ),
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 11,
+                        fontWeight: selected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        letterSpacing: 0,
                       ),
                     ),
                   ],
@@ -151,6 +170,13 @@ class _ArcNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final itemHeight = (46 + MediaQuery.textScalerOf(context).scale(11)).clamp(
+      58.0,
+      76.0,
+    );
+    final animationDuration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 180);
     return Expanded(
       child: Semantics(
         label: 'Arc',
@@ -163,8 +189,8 @@ class _ArcNavItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               onTap: onTap,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                height: 58,
+                duration: animationDuration,
+                height: itemHeight,
                 padding: const EdgeInsets.symmetric(horizontal: 2),
                 decoration: BoxDecoration(
                   color: selected
@@ -182,21 +208,21 @@ class _ArcNavItem extends StatelessWidget {
                       interactive: false,
                     ),
                     const SizedBox(height: 1),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'Arc',
-                        maxLines: 1,
-                        style: TextStyle(
-                          color: selected
-                              ? QuestraColors.gold
-                              : QuestraColors.white,
-                          fontSize: 11,
-                          fontWeight: selected
-                              ? FontWeight.w800
-                              : FontWeight.w600,
-                          letterSpacing: 0,
-                        ),
+                    Text(
+                      'Arc',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: selected
+                            ? QuestraColors.gold
+                            : QuestraColors.white,
+                        fontSize: 11,
+                        fontWeight: selected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        letterSpacing: 0,
                       ),
                     ),
                   ],

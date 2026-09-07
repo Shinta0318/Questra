@@ -1,0 +1,23 @@
+version: 1
+qst: QST-399
+status: release_evidence_pending
+candidate_source_commit: null
+working_tree_clean_before_apply: false
+decision_route: pending
+runtime_asset_count: 7
+approved_runtime_asset_count: 0
+applied_at_utc: null
+guardrails:
+  complete_set_required: true
+  chain_record_per_runtime_asset_required: true
+  exact_hash_match_required: true
+  product_and_legal_approval_required: true
+  commercial_distribution_permission_required: true
+  partial_approval_allowed: false
+  replacement_without_hash_change_allowed: false
+  current_asset_hash_change_allowed: false
+  reference_mockup_bundled: false
+  failed_apply_restores_previous_manifests: true
+  repository_presence_proves_ownership: false
+  visual_approval_proves_distribution_rights: false
+

@@ -6,6 +6,7 @@ const operationsEvidencePath = 'docs/qst/BETA_FEEDBACK_OPERATIONS.yaml';
 const issueRegisterPath = 'docs/qst/BETA_ISSUE_REGISTER.yaml';
 const servicePath =
     'apps/mobile/lib/features/feedback/beta_feedback_service.dart';
+const activationToolPath = 'tools/qst/activate_beta_feedback_operations.dart';
 
 void main(List<String> arguments) {
   final requireOperations = arguments.contains('--require-operations');
@@ -15,6 +16,7 @@ void main(List<String> arguments) {
   final operations = _read(operationsEvidencePath, failures);
   final register = _read(issueRegisterPath, failures);
   final service = _read(servicePath, failures);
+  final activationTool = _read(activationToolPath, failures);
 
   for (final snippet in [
     'intake_channels:',
@@ -56,37 +58,72 @@ void main(List<String> arguments) {
     'S0:',
     'S1:',
     'issue_register:',
+    'stop_communication:',
     'credential_values_recorded: false',
     'private_journey_content_recorded: false',
+    'invented_operator_evidence_allowed: false',
+    'candidate_commit_mismatch_allowed: false',
   ]) {
     _expect(operations, snippet, operationsEvidencePath, failures);
   }
-  for (final snippet in [
-    'counts:',
-    'open_s0:',
-    'open_s1:',
-    'issues:',
-  ]) {
+  for (final snippet in ['counts:', 'open_s0:', 'open_s1:', 'issues:']) {
     _expect(register, snippet, issueRegisterPath, failures);
   }
   _rejectSecrets(operations, failures);
   _rejectSecrets(register, failures);
+  for (final snippet in [
+    "values['candidate-commit'] != head",
+    'Open S0:',
+    '_looksSensitive',
+  ]) {
+    _expect(activationTool, snippet, activationToolPath, failures);
+  }
 
   if (requireOperations) {
     if (!RegExp(r'^status: verified$', multiLine: true).hasMatch(operations)) {
       failures.add('Feedback operations evidence must be verified.');
     }
-    _expect(operations, 'destination:\n  status: verified',
-        operationsEvidencePath, failures);
-    _expect(operations, 'daily_triage:\n  status: active',
-        operationsEvidencePath, failures);
+    _expect(
+      operations,
+      'destination:\n  status: verified',
+      operationsEvidencePath,
+      failures,
+    );
+    _expect(
+      operations,
+      'daily_triage:\n  status: active',
+      operationsEvidencePath,
+      failures,
+    );
+    _expect(
+      operations,
+      'stop_communication:\n  status: verified',
+      operationsEvidencePath,
+      failures,
+    );
     final channel = _scalar(operations, 'channel_label', 2);
     final owner = _scalar(operations, 'owner_name', 2);
     if (channel == null)
       failures.add('A tester-visible channel label is required.');
     if (owner == null) failures.add('A named daily triage owner is required.');
+    final stopChannel = _scalar(operations, 'channel_label', 2, occurrence: 2);
+    if (stopChannel == null) {
+      failures.add('A verified S0 stop communication channel is required.');
+    }
+    final head = Process.runSync('git', [
+      'rev-parse',
+      'HEAD',
+    ]).stdout.toString().trim();
+    if (!operations.contains('candidate_source_commit: "$head"') ||
+        !register.contains('candidate_source_commit: "$head"')) {
+      failures.add('Feedback operations evidence must match current HEAD.');
+    }
     _expect(
-        register, 'counts:\n  status: verified', issueRegisterPath, failures);
+      register,
+      'counts:\n  status: verified',
+      issueRegisterPath,
+      failures,
+    );
     if (_scalar(register, 'generated_at_utc', 2) == null) {
       failures.add('Issue counts require a generated_at_utc timestamp.');
     }
@@ -122,7 +159,8 @@ void main(List<String> arguments) {
     multiLine: true,
   ).allMatches(issuesSection)) {
     final block = match.group(1)!;
-    final isOpen = !block.contains('    status: resolved') &&
+    final isOpen =
+        !block.contains('    status: resolved') &&
         !block.contains('    status: closed');
     if (!isOpen) continue;
     if (block.contains('    severity: S0')) s0++;
@@ -138,12 +176,18 @@ int _integer(String content, String field, int indent, List<String> failures) {
   return parsed ?? -1;
 }
 
-String? _scalar(String content, String field, int indent) {
+String? _scalar(
+  String content,
+  String field,
+  int indent, {
+  int occurrence = 1,
+}) {
   final prefix = ' ' * indent;
-  final match = RegExp(
+  final matches = RegExp(
     '^${RegExp.escape(prefix + field)}:\\s*"?([^"\\s]+)"?\\s*\$',
     multiLine: true,
-  ).firstMatch(content);
+  ).allMatches(content).toList();
+  final match = occurrence <= matches.length ? matches[occurrence - 1] : null;
   final value = match?.group(1);
   return value == null || value == 'null' || value == 'pending' ? null : value;
 }
@@ -156,7 +200,8 @@ void _rejectSecrets(String content, List<String> failures) {
   ]) {
     if (pattern.hasMatch(content)) {
       failures.add(
-          'Possible credential or personal address in operations evidence.');
+        'Possible credential or personal address in operations evidence.',
+      );
     }
   }
 }
@@ -171,6 +216,10 @@ String _read(String path, List<String> failures) {
 }
 
 void _expect(
-    String content, String snippet, String path, List<String> failures) {
+  String content,
+  String snippet,
+  String path,
+  List<String> failures,
+) {
   if (!content.contains(snippet)) failures.add('Missing "$snippet" in $path.');
 }

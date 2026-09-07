@@ -56,6 +56,12 @@ enum AnalyticsEventName {
   guildDraftCreated,
   mediaAttached,
   onboardingCompleted,
+  activationStepCompleted,
+  meaningfulProgressRecorded,
+  recoveryActionSelected,
+  trustFeedbackSubmitted,
+  wellbeingGuardrailRecorded,
+  aiCostObserved,
   experienceSettingsOpened,
   experienceSettingChanged,
   arcTapped,
@@ -192,6 +198,14 @@ extension AnalyticsEventNameStorage on AnalyticsEventName {
       AnalyticsEventName.guildDraftCreated => 'guild_draft_created',
       AnalyticsEventName.mediaAttached => 'media_attached',
       AnalyticsEventName.onboardingCompleted => 'onboarding_completed',
+      AnalyticsEventName.activationStepCompleted => 'activation_step_completed',
+      AnalyticsEventName.meaningfulProgressRecorded =>
+        'meaningful_progress_recorded',
+      AnalyticsEventName.recoveryActionSelected => 'recovery_action_selected',
+      AnalyticsEventName.trustFeedbackSubmitted => 'trust_feedback_submitted',
+      AnalyticsEventName.wellbeingGuardrailRecorded =>
+        'wellbeing_guardrail_recorded',
+      AnalyticsEventName.aiCostObserved => 'ai_cost_observed',
       AnalyticsEventName.experienceSettingsOpened =>
         'experience_settings_opened',
       AnalyticsEventName.experienceSettingChanged =>
@@ -257,6 +271,15 @@ class AnalyticsPayloadRules {
     'outcome',
     'source_type',
     'plan_quality_band',
+    'metric_key',
+    'activation_stage',
+    'cohort',
+    'window',
+    'guardrail',
+    'cost_band',
+    'latency_band',
+    'accepted',
+    'consent_scope',
   };
 
   static const blockedKeys = {

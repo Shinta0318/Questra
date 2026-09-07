@@ -3,6 +3,7 @@ import 'dart:io';
 const evidencePath = 'docs/qst/BETA_RLS_EVIDENCE.yaml';
 const projectEvidencePath = 'docs/qst/BETA_SUPABASE_PROJECT.yaml';
 const testPath = 'supabase/tests/rls_behavior.sql';
+const inventoryTestPath = 'supabase/tests/hosted_rls_inventory.sql';
 const runnerPath = 'tools/qst/run_rls_behavior_tests.ps1';
 const capturePath = 'tools/qst/capture_cloud_rls_evidence.ps1';
 const runbookPath = 'docs/product/cloud_migration_rls_evidence.md';
@@ -21,6 +22,7 @@ Future<void> main(List<String> arguments) async {
   final evidence = _read(evidencePath, failures);
   final projectEvidence = _read(projectEvidencePath, failures);
   final test = _read(testPath, failures);
+  final inventoryTest = _read(inventoryTestPath, failures);
   final runner = _read(runnerPath, failures);
   final capture = _read(capturePath, failures);
   final runbook = _read(runbookPath, failures);
@@ -62,6 +64,24 @@ Future<void> main(List<String> arguments) async {
     _expect(test, snippet, testPath, failures);
   }
   for (final snippet in [
+    'not c.relrowsecurity',
+    "has_table_privilege('anon'",
+    "has_table_privilege('authenticated'",
+    'QST395_TABLE|',
+    'QST-395 hosted dynamic RLS inventory passed',
+    'rollback;',
+  ]) {
+    _expect(inventoryTest, snippet, inventoryTestPath, failures);
+  }
+  for (final snippet in [
+    'hosted_rls_inventory.sql',
+    'Compare-Object \$localTables \$remoteTables',
+    'local_remote_sets_equal: true',
+    'policy_free_client_access: 0',
+  ]) {
+    _expect(capture, snippet, capturePath, failures);
+  }
+  for (final snippet in [
     'SUPABASE_DB_URL',
     '-LinkedCli',
     'db query --linked',
@@ -73,7 +93,13 @@ Future<void> main(List<String> arguments) async {
 
   _rejectSecrets(evidence, failures);
   if (requireCloud) {
-    await _verifyCloud(evidence, projectEvidence, test, failures);
+    await _verifyCloud(
+      evidence,
+      projectEvidence,
+      test,
+      inventoryTest,
+      failures,
+    );
   }
 
   if (failures.isNotEmpty) {
@@ -96,6 +122,7 @@ Future<void> _verifyCloud(
   String evidence,
   String projectEvidence,
   String test,
+  String inventoryTest,
   List<String> failures,
 ) async {
   if (!RegExp(r'^status: verified$', multiLine: true).hasMatch(evidence)) {
@@ -123,8 +150,8 @@ Future<void> _verifyCloud(
     failures.add('A full source commit at execution is required.');
   }
   final clean = _scalar(evidence, 'working_tree_clean_at_execution', 0);
-  if (clean != 'true' && clean != 'false') {
-    failures.add('Working tree cleanliness must be recorded for RLS evidence.');
+  if (clean != 'true') {
+    failures.add('Cloud RLS evidence must come from a clean working tree.');
   }
   _expect(evidence, 'migrations:\n  status: applied', evidencePath, failures);
   _expect(evidence, 'rls_behavior:\n  status: passed', evidencePath, failures);
@@ -169,6 +196,45 @@ Future<void> _verifyCloud(
     if (_scalar(evidence, field, 2) == null) {
       failures.add('RLS evidence field is missing: $field');
     }
+  }
+
+  final localTableCount =
+      RegExp(
+            r'create\s+table\s+(?:if\s+not\s+exists\s+)?public\.([a-z0-9_]+)',
+            caseSensitive: false,
+          )
+          .allMatches(
+            Directory('supabase/migrations')
+                .listSync()
+                .whereType<File>()
+                .where((file) => file.path.endsWith('.sql'))
+                .map((file) => file.readAsStringSync())
+                .join('\n'),
+          )
+          .map((match) => match.group(1)!.toLowerCase())
+          .toSet()
+          .length;
+  _expect(
+    evidence,
+    'dynamic_inventory:\n  status: passed',
+    evidencePath,
+    failures,
+  );
+  _expect(evidence, '  table_count: $localTableCount', evidencePath, failures);
+  _expect(evidence, '  local_remote_sets_equal: true', evidencePath, failures);
+  _expect(evidence, '  policy_free_client_access: 0', evidencePath, failures);
+  _expect(evidence, '  transaction_rolled_back: true', evidencePath, failures);
+  final inventoryHash = _scalar(evidence, 'inventory_sha256', 2);
+  if (inventoryHash == null ||
+      !RegExp(r'^[a-f0-9]{64}$').hasMatch(inventoryHash)) {
+    failures.add('Hosted inventory SHA-256 is missing.');
+  }
+  final inventoryTestHash = _scalar(evidence, 'inventory_test_sha256', 2);
+  final currentInventoryTestHash = await _sha256(inventoryTestPath);
+  if (inventoryTestHash == null ||
+      currentInventoryTestHash == null ||
+      inventoryTestHash != currentInventoryTestHash) {
+    failures.add('Hosted inventory test SHA-256 does not match.');
   }
 }
 

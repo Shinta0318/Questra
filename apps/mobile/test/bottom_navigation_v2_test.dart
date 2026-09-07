@@ -7,10 +7,10 @@ import 'package:questra/core/router/app_routes.dart';
 import 'package:questra/features/arc/arc_screen.dart';
 import 'package:questra/features/auth/auth_controller.dart';
 import 'package:questra/features/auth/auth_state.dart';
+import 'package:questra/features/guild/guild_discovery_screen.dart';
 import 'package:questra/features/mission/mission_screen.dart';
 import 'package:questra/features/trail/trail_screen.dart';
 import 'package:questra/features/task/task_screen.dart';
-import 'package:questra/widgets/layout/questra_coming_soon_screen.dart';
 import 'package:questra/widgets/navigation/questra_bottom_navigation.dart';
 import 'package:questra/widgets/navigation/questra_navigation_rail.dart';
 
@@ -205,7 +205,7 @@ void main() {
     expect(trailSemantics.properties.selected, isTrue);
   });
 
-  testWidgets('Guild route hides unfinished community interactions', (
+  testWidgets('Guild route exposes the controlled discovery pilot gate', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 800);
@@ -227,9 +227,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.byType(QuestraComingSoonScreen), findsOneWidget);
+    expect(find.byType(GuildDiscoveryScreen), findsOneWidget);
     expect(find.text('Guild'), findsWidgets);
-    expect(find.text('準備中'), findsOneWidget);
+    expect(find.text('ローカルプレビュー'), findsOneWidget);
     expect(find.text('Guildの現在地'), findsNothing);
     expect(find.text('相談ドラフト'), findsNothing);
     expect(find.byType(QuestraBottomNavigation), findsNothing);

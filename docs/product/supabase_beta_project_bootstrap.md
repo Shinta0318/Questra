@@ -61,7 +61,7 @@ powershell -ExecutionPolicy Bypass -File tools/qst/bootstrap_supabase_beta.ps1 `
 3. `supabase db push --linked`
 4. `supabase migration list --linked`でlatest migrationを照合
 5. `supabase secrets set --env-file`でserver-side secretを登録
-6. `supabase functions deploy <function-name>`で6つのEdge FunctionをJWT検証有効のままdeploy
+6. `supabase functions deploy <function-name>`で`supabase/config.toml`に定義された12個のEdge Functionをdeploy
 7. sanitized evidenceを`docs/qst/BETA_SUPABASE_PROJECT.yaml`へ生成
 
 MVP/Betaの既定AI経路はGemini stable Interactions APIである。無料枠では`gemini-3.5-flash`を使用し、
@@ -86,7 +86,7 @@ remote schemaをDashboardやSQL Editorで直接変更しない。すべてのsch
 dart run tools/qst/verify_supabase_beta_bootstrap.dart --require-cloud
 ```
 
-このcheckはproject ref、region、owner、Dashboard証跡参照、CLI access、migration head、9 function、
+このcheckはproject ref、region、owner、Dashboard証跡参照、CLI access、migration head、12 function、
 secret名、candidate commitを要求する。
 secret値は要求せず、記録されている場合は失敗する。QST-160はこのcheckが成功するまで完了ではない。
 

@@ -24,7 +24,7 @@ class ArcQuickAction {
       label: 'やりたいことを相談',
       prompt: 'まだ言葉になっていない、やりたいことを一緒に整理したい。',
     ),
-    'Questを作る' => const ArcQuickAction(
+    'Questを作る' || 'Questとして始める' => const ArcQuickAction(
       intent: ArcQuickActionIntent.createQuest,
       label: 'Questを作る',
       prompt: '叶えたいことをQuestにする相談を始めたい。',
@@ -50,4 +50,18 @@ class ArcQuickAction {
       prompt: '$labelについてArcと相談したい。',
     ),
   };
+}
+
+// Older drafts can contain action prompts recorded as user messages.
+bool isArcActionPrompt(String text) {
+  final value = text.trim();
+  return const [
+        'やりたいことを相談',
+        'Questを作る',
+        '今日の一歩を決める',
+        '計画を見直す',
+        '情報を調べる',
+      ].any((label) => ArcQuickAction.fromLabel(label).prompt == value) ||
+      value == '次の挑戦の候補を一緒に探したい。' ||
+      value.endsWith('についてArcと相談したい。');
 }

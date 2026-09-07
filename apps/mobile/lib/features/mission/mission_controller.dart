@@ -478,7 +478,10 @@ class MissionController extends Notifier<List<Mission>> {
     }
 
     final sync = ref.read(missionSyncControllerProvider.notifier);
-    sync.loading('Missionを読み込んでいます...');
+    sync.loading(
+      'Missionを読み込んでいます...',
+      operation: PersistenceSyncOperation.load,
+    );
     try {
       final loaded = await ref
           .read(missionRepositoryProvider)
@@ -495,7 +498,7 @@ class MissionController extends Notifier<List<Mission>> {
       for (final questId in questIds) {
         _syncQuestProgress(questId);
       }
-      sync.saved('Missionを読み込みました。');
+      sync.clear();
     } catch (error) {
       if (ref.read(authControllerProvider).profile?.id != ownerId) return;
       sync.failed('Missionの読み込み', error);
@@ -539,7 +542,10 @@ class MissionController extends Notifier<List<Mission>> {
     }
 
     final sync = ref.read(missionSyncControllerProvider.notifier);
-    sync.loading('Missionを保存しています...');
+    sync.loading(
+      'Missionを保存しています...',
+      operation: PersistenceSyncOperation.save,
+    );
     try {
       final repository = ref.read(missionRepositoryProvider);
       final savedMission = confirmOutcome
@@ -569,7 +575,10 @@ class MissionController extends Notifier<List<Mission>> {
 
   Future<void> _deleteMission(String missionId) async {
     final sync = ref.read(missionSyncControllerProvider.notifier);
-    sync.loading('Missionを削除しています...');
+    sync.loading(
+      'Missionを削除しています...',
+      operation: PersistenceSyncOperation.delete,
+    );
     try {
       await ref.read(missionRepositoryProvider).delete(missionId);
       sync.saved('Missionを削除しました。');

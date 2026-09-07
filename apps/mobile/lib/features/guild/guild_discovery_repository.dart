@@ -2,15 +2,14 @@ import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
 import 'guild_discovery_model.dart';
 
-const _discoveryColumns =
-    'id,title,summary,author_display_name,tags,difficulty_score,'
-    'estimated_duration_days,estimated_cost_label,copy_count,'
-    'completion_count,average_completion_rate,review_score,review_count,'
-    'seeking_companions,participant_count,visibility,moderation_status,'
-    'published_at';
-
 abstract interface class GuildDiscoveryRepository {
-  Future<List<GuildDiscoveryQuest>> findApprovedPublic({int limit = 20});
+  Future<GuildPilotStatus> pilotStatus();
+
+  Future<List<GuildDiscoveryQuest>> findApprovedPublic({
+    int limit = 20,
+    DateTime? beforePublishedAt,
+    String? beforeId,
+  });
 
   Future<String> publishQuest({
     required String questId,
@@ -35,6 +34,17 @@ abstract interface class GuildDiscoveryRepository {
     required GuildQuestCopyOptions options,
     required String idempotencyKey,
   });
+
+  Future<GuildQuestCopyResult> copyToPrivate({
+    required String publicationId,
+    required GuildQuestCopyOptions options,
+    required String idempotencyKey,
+  });
+
+  Future<void> recordDiscoveryOpened({
+    required String publicationId,
+    required String eventKey,
+  });
 }
 
 class SupabaseGuildDiscoveryRepository implements GuildDiscoveryRepository {
@@ -43,16 +53,39 @@ class SupabaseGuildDiscoveryRepository implements GuildDiscoveryRepository {
   final SupabaseClient client;
 
   @override
-  Future<List<GuildDiscoveryQuest>> findApprovedPublic({int limit = 20}) async {
+  Future<GuildPilotStatus> pilotStatus() async {
+    final result = await client.rpc('get_guild_pilot_status');
+    final row = Map<String, dynamic>.from(result as Map);
+    return GuildPilotStatus(
+      configured: row['configured'] as bool? ?? true,
+      enabled: row['enabled'] as bool? ?? false,
+      cohort: row['cohort'] as String?,
+    );
+  }
+
+  @override
+  Future<List<GuildDiscoveryQuest>> findApprovedPublic({
+    int limit = 20,
+    DateTime? beforePublishedAt,
+    String? beforeId,
+  }) async {
     if (limit <= 0) return const <GuildDiscoveryQuest>[];
     final safeLimit = limit.clamp(1, 50);
-    final rows = await client
-        .from('guild_quest_publications')
-        .select(_discoveryColumns)
-        .eq('visibility', 'public')
-        .eq('moderation_status', 'approved')
-        .order('published_at', ascending: false)
-        .limit(safeLimit);
+    if ((beforePublishedAt == null) != (beforeId == null)) {
+      throw ArgumentError('Guild cursor requires both timestamp and id.');
+    }
+    final rows =
+        await client.rpc(
+              'list_guild_pilot_quests',
+              params: {
+                'p_limit': safeLimit,
+                'p_before_published_at': beforePublishedAt
+                    ?.toUtc()
+                    .toIso8601String(),
+                'p_before_id': beforeId,
+              },
+            )
+            as List;
 
     return rows
         .map((row) => _questFromRow(Map<String, dynamic>.from(row)))
@@ -125,6 +158,45 @@ class SupabaseGuildDiscoveryRepository implements GuildDiscoveryRepository {
         'p_include_missions': options.includeMissions,
         'p_arc_optimization_requested': options.optimizeWithArc,
         'p_idempotency_key': idempotencyKey,
+      },
+    );
+  }
+
+  @override
+  Future<GuildQuestCopyResult> copyToPrivate({
+    required String publicationId,
+    required GuildQuestCopyOptions options,
+    required String idempotencyKey,
+  }) async {
+    final result = await client.rpc(
+      'copy_guild_quest_to_private',
+      params: {
+        'p_publication_id': publicationId,
+        'p_include_missions': options.includeMissions,
+        'p_arc_optimization_requested': options.optimizeWithArc,
+        'p_idempotency_key': idempotencyKey,
+      },
+    );
+    final row = Map<String, dynamic>.from(result as Map);
+    return GuildQuestCopyResult(
+      questId: row['quest_id'] as String,
+      missionCount: row['mission_count'] as int? ?? 0,
+      firstTaskCreated: row['first_task_created'] as bool? ?? false,
+      alreadyApplied: row['already_applied'] as bool? ?? false,
+    );
+  }
+
+  @override
+  Future<void> recordDiscoveryOpened({
+    required String publicationId,
+    required String eventKey,
+  }) async {
+    await client.rpc(
+      'record_guild_pilot_event',
+      params: {
+        'p_event_name': 'discovery_opened',
+        'p_publication_id': publicationId,
+        'p_event_key': eventKey,
       },
     );
   }

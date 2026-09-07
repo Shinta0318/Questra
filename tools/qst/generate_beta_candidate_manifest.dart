@@ -8,7 +8,11 @@ const migrationsPath = 'supabase/migrations';
 const functionsPath = 'supabase/functions';
 const flutterTestsPath = 'apps/mobile/test';
 const supabaseEvidencePath = 'docs/qst/BETA_SUPABASE_PROJECT.yaml';
+const rlsEvidencePath = 'docs/qst/BETA_RLS_EVIDENCE.yaml';
 const deviceEvidencePath = 'docs/qst/BETA_DEVICE_VALIDATION.yaml';
+const assetProvenancePath = 'docs/qst/ARC_ASSET_PROVENANCE.yaml';
+const candidateAssetPackagePath = 'docs/qst/CANDIDATE_ASSET_PACKAGE.yaml';
+const dependencyLicensePath = 'docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml';
 
 const automatedGateNames = [
   'dependency_resolution',
@@ -34,10 +38,25 @@ Future<void> main(List<String> arguments) async {
   final worktreeClean = await _isWorktreeClean(options.outputPath);
   final latestLocalMigration = _latestSqlMigration();
   final remoteMigrationHead = _yamlValue(supabaseEvidencePath, 'remote_head');
-  final edgeFunctionCount = _edgeFunctionCount();
+  final edgeFunctionNames = _edgeFunctionNames();
   final flutterTestFileCount = _flutterTestFileCount();
   final supabaseEvidenceStatus = _yamlValue(supabaseEvidencePath, 'status');
+  final supabaseEvidenceCommit = _yamlValue(
+    supabaseEvidencePath,
+    'candidate_source_commit',
+  );
+  final rlsEvidenceStatus = _yamlValue(rlsEvidencePath, 'status');
+  final rlsEvidenceCommit = _yamlValue(
+    rlsEvidencePath,
+    'source_commit_at_execution',
+  );
   final deviceEvidenceStatus = _yamlValue(deviceEvidencePath, 'status');
+  final assetProvenanceStatus = _yamlValue(assetProvenancePath, 'status');
+  final candidateAssetPackageStatus = _yamlValue(
+    candidateAssetPackagePath,
+    'status',
+  );
+  final dependencyLicenseStatus = _yamlValue(dependencyLicensePath, 'status');
   final artifacts = <_ArtifactEvidence>[];
 
   for (final path in options.artifactPaths) {
@@ -62,12 +81,23 @@ Future<void> main(List<String> arguments) async {
   final automatedPassed = automatedGateNames.every(
     (name) => checks[name] == 'passed',
   );
+  final externalEvidenceMatchesCandidate =
+      supabaseEvidenceStatus == 'verified' &&
+      supabaseEvidenceCommit == sourceCommit &&
+      rlsEvidenceStatus == 'verified' &&
+      rlsEvidenceCommit == sourceCommit &&
+      deviceEvidenceStatus == 'verified' &&
+      assetProvenanceStatus == 'approved' &&
+      candidateAssetPackageStatus == 'approved' &&
+      dependencyLicenseStatus == 'approved' &&
+      remoteMigrationHead == latestLocalMigration;
   final distributionReady =
       options.status == 'approved' &&
       worktreeClean &&
       hasArtifact &&
       automatedPassed &&
-      options.externalEvidenceComplete;
+      options.externalEvidenceComplete &&
+      externalEvidenceMatchesCandidate;
 
   final manifest = _buildManifest(
     status: options.status,
@@ -81,12 +111,19 @@ Future<void> main(List<String> arguments) async {
     checks: checks,
     artifacts: artifacts,
     externalEvidenceComplete: options.externalEvidenceComplete,
+    externalEvidenceMatchesCandidate: externalEvidenceMatchesCandidate,
     latestLocalMigration: latestLocalMigration,
     remoteMigrationHead: remoteMigrationHead,
-    edgeFunctionCount: edgeFunctionCount,
+    edgeFunctionNames: edgeFunctionNames,
     flutterTestFileCount: flutterTestFileCount,
     supabaseEvidenceStatus: supabaseEvidenceStatus,
+    supabaseEvidenceCommit: supabaseEvidenceCommit,
+    rlsEvidenceStatus: rlsEvidenceStatus,
+    rlsEvidenceCommit: rlsEvidenceCommit,
     deviceEvidenceStatus: deviceEvidenceStatus,
+    assetProvenanceStatus: assetProvenanceStatus,
+    candidateAssetPackageStatus: candidateAssetPackageStatus,
+    dependencyLicenseStatus: dependencyLicenseStatus,
   );
 
   final output = File(options.outputPath);
@@ -110,12 +147,19 @@ String _buildManifest({
   required Map<String, String> checks,
   required List<_ArtifactEvidence> artifacts,
   required bool externalEvidenceComplete,
+  required bool externalEvidenceMatchesCandidate,
   required String latestLocalMigration,
   required String? remoteMigrationHead,
-  required int edgeFunctionCount,
+  required List<String> edgeFunctionNames,
   required int flutterTestFileCount,
   required String? supabaseEvidenceStatus,
+  required String? supabaseEvidenceCommit,
+  required String? rlsEvidenceStatus,
+  required String? rlsEvidenceCommit,
   required String? deviceEvidenceStatus,
+  required String? assetProvenanceStatus,
+  required String? candidateAssetPackageStatus,
+  required String? dependencyLicenseStatus,
 }) {
   final buffer = StringBuffer()
     ..writeln('version: 1')
@@ -133,13 +177,31 @@ String _buildManifest({
     ..writeln(
       '  remote_migration_head: ${remoteMigrationHead == null ? 'null' : _yaml(remoteMigrationHead)}',
     )
-    ..writeln('  edge_function_count: $edgeFunctionCount')
+    ..writeln('  edge_function_count: ${edgeFunctionNames.length}')
+    ..writeln('  edge_functions:')
+    ..writeAll(edgeFunctionNames.map((name) => '    - ${_yaml(name)}\n'))
     ..writeln('  flutter_test_file_count: $flutterTestFileCount')
     ..writeln(
       '  supabase_evidence_status: ${_yaml(supabaseEvidenceStatus ?? 'missing')}',
     )
     ..writeln(
+      '  supabase_evidence_commit: ${supabaseEvidenceCommit == null ? 'null' : _yaml(supabaseEvidenceCommit)}',
+    )
+    ..writeln('  rls_evidence_status: ${_yaml(rlsEvidenceStatus ?? 'missing')}')
+    ..writeln(
+      '  rls_evidence_commit: ${rlsEvidenceCommit == null ? 'null' : _yaml(rlsEvidenceCommit)}',
+    )
+    ..writeln(
       '  device_evidence_status: ${_yaml(deviceEvidenceStatus ?? 'missing')}',
+    )
+    ..writeln(
+      '  asset_provenance_status: ${_yaml(assetProvenanceStatus ?? 'missing')}',
+    )
+    ..writeln(
+      '  candidate_asset_package_status: ${_yaml(candidateAssetPackageStatus ?? 'missing')}',
+    )
+    ..writeln(
+      '  dependency_license_status: ${_yaml(dependencyLicenseStatus ?? 'missing')}',
     )
     ..writeln('automated_gates:');
 
@@ -150,6 +212,7 @@ String _buildManifest({
   buffer
     ..writeln('external_evidence:')
     ..writeln('  complete: $externalEvidenceComplete')
+    ..writeln('  matches_candidate_sha: $externalEvidenceMatchesCandidate')
     ..writeln(
       '  status: ${_yaml(externalEvidenceComplete ? 'verified' : 'evidence_missing')}',
     )
@@ -159,6 +222,9 @@ String _buildManifest({
     ..writeln('    - real_device_validation')
     ..writeln('    - support_operations')
     ..writeln('    - legal_sign_off')
+    ..writeln('    - arc_asset_provenance')
+    ..writeln('    - candidate_asset_package')
+    ..writeln('    - dependency_license_notices')
     ..writeln('artifacts:');
 
   if (artifacts.isEmpty) {
@@ -215,12 +281,27 @@ String _latestSqlMigration() {
   return files.last;
 }
 
-int _edgeFunctionCount() => Directory(functionsPath)
-    .listSync()
-    .whereType<Directory>()
-    .where((directory) => !directory.uri.pathSegments.last.startsWith('_'))
-    .where((directory) => File('${directory.path}/index.ts').existsSync())
-    .length;
+List<String> _edgeFunctionNames() {
+  final names =
+      Directory(functionsPath)
+          .listSync()
+          .whereType<Directory>()
+          .where((directory) {
+            final name = directory.uri.pathSegments
+                .where((segment) => segment.isNotEmpty)
+                .last;
+            return !name.startsWith('_') &&
+                File('${directory.path}/index.ts').existsSync();
+          })
+          .map(
+            (directory) => directory.uri.pathSegments
+                .where((segment) => segment.isNotEmpty)
+                .last,
+          )
+          .toList()
+        ..sort();
+  return names;
+}
 
 int _flutterTestFileCount() => Directory(flutterTestsPath)
     .listSync(recursive: true)

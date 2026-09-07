@@ -40,7 +40,8 @@ void main() {
       regeneration,
       isNot(contains('final MissionRegenerationProposalService fallback')),
     );
-    expect(arc, contains('setState(() => _error = error.toString())'));
+    expect(arc, isNot(contains('_error = error.toString()')));
+    expect(arc, contains('入力内容は残っています'));
     expect(arc, contains('_isResolvingIntent = false'));
   });
 }

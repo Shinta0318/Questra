@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "dependencies": [
+    {
+      "specifier": "npm:@supabase/supabase-js@2.112.4",
+      "package": "@supabase/supabase-js",
+      "version": "2.112.4",
+      "registryUrl": "https://registry.npmjs.org/@supabase%2Fsupabase-js/2.112.4",
+      "license": "MIT",
+      "licenseFile": "docs/legal/licenses/supabase-js-2.112.4-LICENSE",
+      "licenseSha256": "334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936",
+      "distributionIntegrity": "sha512-UiCX1udlFY1fQQrO7Z3GU7obQsju0w5Vk9mOOwalfo/+Gy+tahWVenSSuu5E/GTy/q//HxvGv2IrCdW66/61kw==",
+      "distributionShasum": "a9f987cced71b7a4dda52d37f915a31c6fa265c9",
+      "metadataRetrievedAtUtc": "2026-09-03T00:00:00Z"
+    }
+  ]
+}

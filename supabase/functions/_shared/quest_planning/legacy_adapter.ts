@@ -18,6 +18,7 @@ export async function callLegacyGenerateContent(request: ProviderRequest): Promi
     provider: result?.provider ?? "gemini",
     model: result?.model ?? "legacy-unavailable",
     modelVersion: result?.model ?? "legacy-unavailable",
+    thinkingLevel: request.thinkingLevel ?? "low",
     output: result?.text ?? null,
     text: result?.text ?? "",
     toolCalls: [],

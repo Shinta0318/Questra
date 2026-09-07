@@ -1,0 +1,35 @@
+version: 1
+qst: QST-396
+status: pending_supported_web_execution
+candidate_sha: null
+working_tree_clean_at_execution: false
+executed_at_utc: null
+tester_role: null
+environment:
+  browser_family: null
+  browser_version: null
+  operating_system: null
+  supabase_connected: false
+  server_ai_connected: false
+  mock_persistence: false
+artifact:
+  path: null
+  bytes: null
+  sha256: null
+checks:
+  launch: pending
+  login: pending
+  quest_mission_task_trail: pending
+  arc: pending
+  japanese_ime: pending
+  keyboard: pending
+  responsive: pending
+evidence: []
+guardrails:
+  privacy_reviewed: false
+  credential_or_token_recorded: false
+  account_identifier_recorded: false
+  private_journey_content_recorded: false
+  mock_server_is_supported_web_evidence: false
+  automated_test_replaces_human_evidence: false
+  artifact_content_committed: false

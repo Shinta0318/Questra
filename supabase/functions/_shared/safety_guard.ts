@@ -10,6 +10,7 @@ export type SafetyAssessment = {
   safe_alternative?: string;
   policy_version: string;
   source_type: string;
+  provider_model?: string;
 };
 
 const POLICY_VERSION = "2026-07-24.v1";

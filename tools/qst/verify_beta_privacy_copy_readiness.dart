@@ -27,7 +27,7 @@ void main(List<String> arguments) {
     'OpenAI互換経路',
     'store=false',
     '東京',
-    '現在利用できない操作',
+    'データ管理操作',
     '法務確認',
   ]) {
     _expect(notice, snippet, noticePath, failures);

@@ -36,6 +36,7 @@ void main() {
   };
 
   final viewports = <String, Size>{
+    'compact 320': const Size(320, 700),
     'compact': const Size(390, 844),
     'medium': const Size(800, 900),
     'expanded': const Size(1280, 900),

@@ -5,6 +5,10 @@
 > guidance. New work follows the four-level Quest -> Mission -> Task -> Trail
 > model in the Master Spec and active architecture documents.
 
+The active Single Source of Truth is `docs/qst/BACKLOG.yaml`. This Markdown file,
+legacy backlog files, and external planners are historical or supporting evidence
+and must not override the canonical backlog or Master Spec.
+
 This backlog follows
 [`QUESTRA_MASTER_SPEC_V2.md`](../QUESTRA_MASTER_SPEC_V2.md) as Questra's
 highest-level product constitution. The Project Planner and legacy Master Spec
@@ -155,8 +159,9 @@ references where they do not conflict with v2.
 
 ## Selection Rules
 
-- Treat the OneDrive Master Spec and Planner as the source of truth.
-- Pick the first `Ready` QST unless the user names a specific QST.
+- Treat `docs/QUESTRA_MASTER_SPEC_V2.md` and `docs/qst/BACKLOG.yaml` as the product
+  constitution and active backlog source of truth.
+- Pick the highest-priority dependency-ready QST unless the user names a specific QST.
 - Prioritize Release Manager blockers before expansion work.
 - Prioritize the Arc Experience Epic (`QST-046` through `QST-059`) before deferred beta operations while Arc is being raised to an MVP differentiator.
 - Keep generated implementation reports in `reports/qst`.

@@ -38,15 +38,14 @@ class PremiumFeatureFlags {
       .toList(growable: false);
 
   PremiumFeatureAccess accessFor(PremiumCapability capability) {
+    final freeCore = _isFreeCore(capability);
+    final prohibited = capability == PremiumCapability.guildBoosts;
     return PremiumFeatureAccess(
       capability: capability,
-      enabledForBeta: betaOpenAccess,
-      futurePremiumCandidate: switch (capability) {
-        PremiumCapability.arcConsultation ||
-        PremiumCapability.questPlanning ||
-        PremiumCapability.basicMissionPlanning => false,
-        _ => true,
-      },
+      enabledForBeta: !prohibited && (freeCore || betaOpenAccess),
+      futurePremiumCandidate:
+          capability == PremiumCapability.missionRedesign ||
+          capability == PremiumCapability.detailedProgressReview,
       reason: _reasonFor(capability),
     );
   }
@@ -54,6 +53,14 @@ class PremiumFeatureFlags {
   bool canUse(PremiumCapability capability) {
     return accessFor(capability).enabledForBeta;
   }
+
+  bool _isFreeCore(PremiumCapability capability) => switch (capability) {
+    PremiumCapability.arcConsultation ||
+    PremiumCapability.questPlanning ||
+    PremiumCapability.basicMissionPlanning ||
+    PremiumCapability.exportArchive => true,
+    _ => false,
+  };
 
   String _reasonFor(PremiumCapability capability) {
     return switch (capability) {
@@ -68,14 +75,15 @@ class PremiumFeatureFlags {
       PremiumCapability.detailedProgressReview =>
         '詳細な進捗レビューは、将来の継続的な伴走枠として評価します。',
       PremiumCapability.advancedArcMemory =>
-        'BetaではArc Memoryの信頼性検証を優先するため開放します。',
+        '現在のPremium検証パッケージには含めず、信頼性とプライバシーを先に検証します。',
       PremiumCapability.extendedDreamBoard =>
         'Dream BoardはQuest作成体験を補助するためBetaでは開放します。',
-      PremiumCapability.guildBoosts => 'Guildの価値検証を妨げないためBetaでは開放します。',
+      PremiumCapability.guildBoosts => '公開順位や露出を購入する仕組みは導入しません。',
       PremiumCapability.starMapDeepRecommendations =>
         'Star Map推薦の精度検証を優先するためBetaでは開放します。',
       PremiumCapability.threeDArc => '将来の3D Arc準備枠であり、Betaでは表示制限をかけません。',
-      PremiumCapability.exportArchive => 'ユーザーデータの持ち出し導線は信頼性に関わるためBetaでは開放します。',
+      PremiumCapability.exportArchive =>
+        'データの持ち出しはFreeの権利として扱い、Premium対象にしません。',
     };
   }
 }

@@ -1,0 +1,34 @@
+version: 1
+qst: QST-370
+status: local_contract_passed_hosted_pending
+generated_at_utc: "2026-08-25T07:19:38.705646Z"
+candidate_source_commit: "4d316c6b47604664293b4176b0a54d12e4564c1e"
+working_tree_clean_at_execution: false
+latest_migration: "202608250009_runtime_observability_exact_operator_drill.sql"
+hosted_sink_enabled: false
+local_checks:
+  authenticated_owner_assignment: passed
+  server_field_allowlist: passed
+  direct_write_denied: passed
+  per_owner_rate_limit: passed
+  retention_30_days: passed
+  s0_s1_alert_queue: passed
+  aggregate_slo_only: passed
+  collection_default_off: passed
+  transport_failure_isolated: passed
+  arc_fallback_connected: passed
+hosted_checks:
+  migration_deployed: pending
+  two_account_owner_isolation: pending
+  retention_purge: pending
+  alert_delivery_receipt: pending
+  s0_distribution_stop: pending
+  s1_rollout_pause: pending
+  sink_failure_journey_continuity: pending
+guardrails:
+  raw_user_content_recorded: false
+  account_identifier_in_alert_payload: false
+  credential_or_token_recorded: false
+  collection_enabled_without_flag: false
+  local_contract_is_hosted_evidence: false
+  evidence_failure_breaks_primary_journey: false

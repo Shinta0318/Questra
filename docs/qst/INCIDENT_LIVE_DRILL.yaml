@@ -1,0 +1,51 @@
+version: 1
+qst: QST-401
+status: execution_pending
+candidate_source_commit: null
+rollback_candidate_commit: null
+working_tree_clean_at_execution: false
+project_ref: null
+run_id: null
+started_at_utc: null
+completed_at_utc: null
+owners:
+  release_manager_ref: null
+  incident_owner_ref: null
+  support_owner_ref: null
+s0_distribution_stop:
+  executed: false
+  evidence_method: operator_attested_receipts
+  detected_at_utc: null
+  stopped_at_utc: null
+  evidence_ref: null
+  communicated_at_utc: null
+  communication_receipt_ref: null
+  acknowledgement_within_one_hour: false
+s1_feature_pause:
+  operation: quest_planning
+  disabled_verified: false
+  restored_verified: false
+  user_input_preservation_path_verified: false
+  user_input_preservation_evidence_ref: null
+  manual_path_verified: false
+  manual_path_evidence_ref: null
+artifact_rollback:
+  current_artifact_sha256: null
+  rollback_artifact_sha256: null
+  rollback_launch_verified: false
+  evidence_ref: null
+database_decision:
+  destructive_down_migration_executed: false
+  forward_remediation_only: true
+privacy:
+  raw_user_content_recorded: false
+  account_identifier_recorded: false
+  credentials_recorded: false
+guardrails:
+  exact_beta_project_required: true
+  clean_candidate_required: true
+  feature_state_restoration_required: true
+  manual_receipt_is_not_inferred: true
+  tabletop_is_live_execution_evidence: false
+  open_s0_allows_distribution: false
+  failed_restoration_allows_completion: false

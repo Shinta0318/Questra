@@ -1,5 +1,7 @@
-version: 2
+version: 3
 status: signoff_pending
+candidate_source_commit: null
+working_tree_clean_at_signoff: false
 document_version: "2026-08-18-beta.1"
 updated_at_utc: "2026-08-18T00:00:00Z"
 implementation:
@@ -46,9 +48,16 @@ data_requests:
   data_export_available: false
   correction_available: false
   consent_withdrawal_available: false
+  local_implementation: implemented
+  latest_migration: "202608250007_data_rights_fulfillment_sla.sql"
+  hosted_owner_isolation_verified: false
+  deletion_worker_verified: false
 signoffs:
   legal_reviewer: pending
   product_owner: pending
+  release_manager: pending
+  engineering_owner: pending
+signoff_records: []
 guardrails:
   external_distribution_before_approval: false
   legal_gate_bypass_allowed: false

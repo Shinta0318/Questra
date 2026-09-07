@@ -1,6 +1,11 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
+import 'package:uuid/uuid.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/observability/runtime_evidence.dart';
 import '../../core/performance/performance_limits.dart';
 import '../../core/validation/input_validators.dart';
 import '../arc_memory/arc_memory_model.dart';
@@ -11,6 +16,7 @@ import '../quest/quest_title_service.dart';
 import '../task/task_model.dart';
 import '../trail/trail_model.dart';
 import 'arc_quest_change_proposal.dart';
+import 'arc_quick_action.dart';
 
 class ArcChatMessage {
   const ArcChatMessage({
@@ -226,10 +232,12 @@ class SupabaseArcChatService implements ArcChatService {
   const SupabaseArcChatService({
     required this.client,
     this.fallback = const LocalArcChatService(),
+    this.evidenceSink = const NoopRuntimeEvidenceSink(),
   });
 
   final SupabaseClient client;
   final ArcChatService fallback;
+  final RuntimeEvidenceSink evidenceSink;
 
   @override
   Future<ArcChatResponse> send({
@@ -264,7 +272,32 @@ class SupabaseArcChatService implements ArcChatService {
             .map((mission) => mission.id)
             .toSet(),
       );
-    } catch (_) {
+    } on Object catch (error) {
+      await evidenceSink.record(
+        RuntimeEvidence(
+          eventId: const Uuid().v4(),
+          occurredAt: DateTime.now().toUtc(),
+          buildVersion: const String.fromEnvironment(
+            'APP_BUILD_ID',
+            defaultValue: 'development',
+          ),
+          environment: const String.fromEnvironment(
+            'APP_ENVIRONMENT',
+            defaultValue: 'internal_beta',
+          ),
+          platform: kIsWeb ? 'web' : defaultTargetPlatform.name,
+          surface: 'arc_chat',
+          operation: 'arc_chat.invoke',
+          type: RuntimeEvidenceType.aiFallback,
+          severity: RuntimeEvidenceSeverity.s2,
+          errorCode: error is TimeoutException
+              ? 'network_timeout'
+              : 'remote_failure',
+          correlationId: const Uuid().v4(),
+          handled: true,
+          fallbackUsed: true,
+        ),
+      );
       return fallback.send(
         userMessage: userMessage,
         history: history,
@@ -572,7 +605,11 @@ class SupabaseArcChatService implements ArcChatService {
 
 ArcQuestSuggestion? inferArcQuestSuggestion(String rawInput) {
   final input = rawInput.trim();
-  if (input.isEmpty || !_looksLikeQuestIntent(input)) return null;
+  if (input.isEmpty ||
+      isArcActionPrompt(input) ||
+      !_looksLikeQuestIntent(input)) {
+    return null;
+  }
   final title = _questTitleFromInput(input);
   return ArcQuestSuggestion(
     title: title.length <= InputLimits.questTitle

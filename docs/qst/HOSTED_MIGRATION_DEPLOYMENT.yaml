@@ -1,0 +1,53 @@
+version: 1
+qst: QST-394
+status: execution_pending
+project_ref: dhbmgwarnrtelrcrmmfk
+candidate_source_commit: null
+working_tree_clean_at_execution: false
+executed_at_utc: null
+cli_version: null
+migrations:
+  remote_head_before: "202608080006_route_proposal_stale_conflict_guard.sql"
+  latest_local: "202609030001_explicit_server_only_table_grants.sql"
+  pending_at_plan: 21
+  pending_at_execution: null
+  applied_during_run: null
+  remote_head_after: null
+  migration_list_sha256: null
+  pending_plan:
+    - "202608090001_arc_memory_task_events.sql"
+    - "202608090002_task_data_rights_operations.sql"
+    - "202608090003_data_rights_request_lifecycle.sql"
+    - "202608090004_data_rights_reauthentication_worker.sql"
+    - "202608170001_stardust_progression_authority.sql"
+    - "202608170002_ai_entitlement_foundation.sql"
+    - "202608170003_quest_journey_workspace.sql"
+    - "202608180001_versioned_legal_eligibility_gate.sql"
+    - "202608180002_arc_memory_consent_control.sql"
+    - "202608240001_ai_planning_fail_closed_gate.sql"
+    - "202608240002_atomic_ai_budget_ledger.sql"
+    - "202608250001_journey_cursor_pagination_indexes.sql"
+    - "202608250002_consentful_trail_share_snapshots.sql"
+    - "202608250003_guild_controlled_pilot_atomic_copy.sql"
+    - "202608250004_data_rights_correction_and_withdrawal.sql"
+    - "202608250005_guild_pilot_operations_and_metrics.sql"
+    - "202608250006_trail_share_recipient_abuse_controls.sql"
+    - "202608250007_data_rights_fulfillment_sla.sql"
+    - "202608250008_privacy_safe_runtime_observability.sql"
+    - "202608250009_runtime_observability_exact_operator_drill.sql"
+    - "202609030001_explicit_server_only_table_grants.sql"
+execution:
+  runner: tools/qst/run_hosted_migration_deployment.ps1
+  requires:
+    - clean_candidate_sha
+    - explicit_project_ref_confirmation
+    - linked_project_match
+    - authenticated_supabase_cli
+    - successful_db_push_dry_run
+    - expected_remote_head_or_already_current
+guardrails:
+  destructive_repair_allowed: false
+  dashboard_only_change_allowed: false
+  secret_values_recorded: false
+  local_plan_is_hosted_evidence: false
+  unexpected_remote_head_allows_push: false

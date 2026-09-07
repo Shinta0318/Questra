@@ -58,12 +58,12 @@ class QuestController extends Notifier<List<Quest>> {
   Future<void> loadForUser(String userId) async {
     if (ref.read(authControllerProvider).profile?.id != userId) return;
     final sync = ref.read(questSyncControllerProvider.notifier);
-    sync.loading('Questを読み込んでいます...');
+    sync.loading('Questを読み込んでいます...', operation: PersistenceSyncOperation.load);
     try {
       final quests = await ref.read(questRepositoryProvider).findByUser(userId);
       if (ref.read(authControllerProvider).profile?.id != userId) return;
       state = quests;
-      sync.saved('Questを読み込みました。');
+      sync.clear();
     } catch (error) {
       if (ref.read(authControllerProvider).profile?.id != userId) return;
       sync.failed('Questの読み込み', error);
@@ -177,7 +177,7 @@ class QuestController extends Notifier<List<Quest>> {
     }
 
     final sync = ref.read(questSyncControllerProvider.notifier);
-    sync.loading('Questを保存しています...');
+    sync.loading('Questを保存しています...', operation: PersistenceSyncOperation.save);
     try {
       final savedQuest = await ref
           .read(questRepositoryProvider)
@@ -286,7 +286,10 @@ class QuestController extends Notifier<List<Quest>> {
     }
 
     final sync = ref.read(questSyncControllerProvider.notifier);
-    sync.loading('Questを削除しています...');
+    sync.loading(
+      'Questを削除しています...',
+      operation: PersistenceSyncOperation.delete,
+    );
     try {
       await ref
           .read(questRepositoryProvider)

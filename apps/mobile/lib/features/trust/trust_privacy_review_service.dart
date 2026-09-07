@@ -83,10 +83,10 @@ class TrustPrivacyReviewService {
         ),
         TrustPrivacyReviewItem(
           area: TrustPrivacyArea.ownerBoundary,
-          title: 'RLS / 所有者管理',
-          summary: 'ユーザーごとのデータを分離し、他のユーザーのPrivateデータを表示しない設計を前提にします。',
-          statusLabel: '検証対象',
-          userControl: '東京リージョンのBeta環境でRLSを検証しています。実アカウント分離の確認を継続します。',
+          title: 'あなたのデータの保護',
+          summary: 'ユーザーごとのデータを分離し、他の人の非公開データを表示しない設計です。',
+          statusLabel: '保護を検証中',
+          userControl: 'Beta環境で、実際のアカウントを使ったデータ分離の確認を続けています。',
         ),
       ],
       betaNotices: [

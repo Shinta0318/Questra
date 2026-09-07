@@ -39,9 +39,11 @@ void main() {
     expect(find.text('Task: パスポートの有効期限を確認する'), findsOneWidget);
 
     final fields = find.byType(TextFormField);
-    await tester.enterText(fields.at(0), '期限を確認した');
-    await tester.enterText(fields.at(1), '有効期限に余裕があると分かった');
-    await tester.enterText(fields.at(2), '次は航空券の条件を整理する。');
+    expect(fields, findsOneWidget);
+    await tester.enterText(
+      fields.at(0),
+      '期限を確認した。有効期限に余裕があると分かった。次は航空券の条件を整理する。',
+    );
     await tester.ensureVisible(find.text('Trailを保存'));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(find.text('Trailを保存'));

@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../core/router/auth_route_guard.dart';
+import '../../core/config/supabase_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/validation/input_validators.dart';
 import '../../widgets/forms/questra_field_label.dart';
 import 'auth_journey_scaffold.dart';
+import 'auth_entry_switcher.dart';
 import 'auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -35,9 +38,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return AuthJourneyScaffold(
-      eyebrow: 'おかえりなさい',
-      title: '航海を続けよう',
-      message: 'おかえり、キャプテン。\n次の星への航路を、一緒に見つけよう。',
+      eyebrow: 'ログイン',
+      title: 'おかえりなさい',
+      message: '保存したQuestの続きを、Arcと進めよう。',
       child: AutofillGroup(
         child: Form(
           key: _formKey,
@@ -45,6 +48,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              AuthEntrySwitcher(
+                selected: AuthEntryMode.login,
+                onLogin: () {},
+                onSignup: () => context.go(AppRoutes.signup),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              if (SupabaseConfig.isLocalMockPreview) ...[
+                FilledButton.icon(
+                  onPressed: auth.isLoading ? null : _openLocalMockPreview,
+                  icon: const Icon(Icons.visibility_outlined),
+                  label: const Text('モックを開く'),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'アカウントでログイン',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
               if (auth.registrationCompleted)
                 const _AuthNotice(
                   message: 'アカウントを作成しました。確認メールの案内後、登録したログインIDでログインしてください。',
@@ -123,22 +148,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     : const Icon(Icons.arrow_forward_rounded),
                 label: Text(auth.isLoading ? '確認しています' : 'ログイン'),
               ),
-              const SizedBox(height: AppSpacing.md),
-              OutlinedButton(
-                onPressed: auth.isLoading
-                    ? null
-                    : () => context.go(AppRoutes.signup),
-                child: const Text('新しく航海を始める'),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'ログインすると、Quest・Mission・Task・Trailの続きから再開できます。',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.white.withValues(alpha: 0.62),
-                  height: 1.5,
-                ),
-              ),
             ],
           ),
         ),
@@ -168,6 +177,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           identifier: _identifierController.text.trim(),
           password: _passwordController.text,
         );
+  }
+
+  Future<void> _openLocalMockPreview() async {
+    await ref.read(authControllerProvider.notifier).enterLocalMockPreview();
+    if (!mounted || !ref.read(authControllerProvider).isAuthenticated) return;
+
+    final continuation = AuthRouteGuard.safeContinuation(
+      GoRouterState.of(context).uri.queryParameters['continue'],
+    );
+    context.go(continuation ?? AppRoutes.home);
   }
 }
 

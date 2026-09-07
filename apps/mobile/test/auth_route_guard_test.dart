@@ -58,6 +58,19 @@ void main() {
       );
     });
 
+    test('requires login while preserving a Trail share deep link', () {
+      final token = List.filled(64, 'a').join();
+      final location = Uri.parse('${AppRoutes.trailShare}/$token');
+      final redirect = AuthRouteGuard.redirect(
+        auth: const AuthState(),
+        location: location,
+        persistenceAvailable: true,
+      );
+
+      expect(Uri.parse(redirect!).path, AppRoutes.login);
+      expect(Uri.parse(redirect).queryParameters['continue'], location.path);
+    });
+
     test('routes an incomplete profile to onboarding', () {
       expect(
         AuthRouteGuard.redirect(

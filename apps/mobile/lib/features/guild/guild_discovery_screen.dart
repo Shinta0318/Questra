@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/arc/arc_empty_state.dart';
+import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
+import '../auth/auth_controller.dart';
+import '../quest/quest_controller.dart';
 import 'guild_discovery_detail_screen.dart';
 import 'guild_discovery_model.dart';
 import 'guild_discovery_providers.dart';
@@ -21,26 +27,57 @@ class GuildDiscoveryScreen extends ConsumerStatefulWidget {
 
 class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
   GuildDiscoverySection _section = GuildDiscoverySection.recommended;
+  String? _copyingPublicationId;
 
   @override
   Widget build(BuildContext context) {
-    final feed = ref.watch(guildDiscoveryFeedProvider);
+    final pilotStatus = ref.watch(guildPilotStatusProvider);
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
-      appBar: AppBar(title: const Text('Guild')),
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: Navigator.of(context).canPop() ? '戻る' : 'ホームへ戻る',
+          onPressed: () => Navigator.of(context).canPop()
+              ? Navigator.of(context).pop()
+              : context.go(AppRoutes.home),
+          icon: Icon(
+            Navigator.of(context).canPop()
+                ? Icons.arrow_back
+                : Icons.home_outlined,
+          ),
+        ),
+        title: const Text('Guild'),
+      ),
       body: QuestraScreenSurface(
-        child: feed.when(
+        child: pilotStatus.when(
           loading: () => const _DiscoveryLoading(),
           error: (error, stackTrace) => _DiscoveryError(
-            onRetry: () => ref.invalidate(guildDiscoveryFeedProvider),
+            onRetry: () => ref.invalidate(guildPilotStatusProvider),
           ),
-          data: _buildContent,
+          data: (status) => status.enabled
+              ? _buildPilotContent(status)
+              : _PilotGate(status: status),
         ),
       ),
     );
   }
 
-  Widget _buildContent(List<GuildDiscoveryQuest> candidates) {
+  Widget _buildPilotContent(GuildPilotStatus status) {
+    final feed = ref.watch(guildDiscoveryFeedProvider);
+    return feed.when(
+      loading: () => const _DiscoveryLoading(),
+      error: (error, stackTrace) => _DiscoveryError(
+        onRetry: () => ref.invalidate(guildDiscoveryFeedProvider),
+      ),
+      data: (candidates) => _buildContent(candidates, status),
+    );
+  }
+
+  Widget _buildContent(
+    List<GuildDiscoveryQuest> candidates,
+    GuildPilotStatus status,
+  ) {
+    final discoveryRepository = ref.watch(guildDiscoveryRepositoryProvider);
     final results = ref
         .watch(guildDiscoveryRankingServiceProvider)
         .rank(candidates: candidates, section: _section, limit: 20);
@@ -53,7 +90,7 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
       },
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
       children: [
-        const _DiscoveryHeader(),
+        _DiscoveryHeader(cohort: status.cohort),
         const SizedBox(height: 18),
         _DiscoverySectionPicker(
           selected: _section,
@@ -74,19 +111,69 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
               padding: const EdgeInsets.only(bottom: 12),
               child: _DiscoveryQuestCard(
                 result: result,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => GuildDiscoveryDetailScreen(
-                      quest: result.quest,
-                      recommendationReason: result.reason,
-                    ),
-                  ),
+                onTap: () => _openQuest(
+                  result,
+                  copyEnabled: discoveryRepository != null,
                 ),
               ),
             ),
           ),
       ],
     );
+  }
+
+  void _openQuest(GuildDiscoveryResult result, {required bool copyEnabled}) {
+    final repository = ref.read(guildDiscoveryRepositoryProvider);
+    if (repository != null) {
+      unawaited(
+        repository
+            .recordDiscoveryOpened(
+              publicationId: result.quest.id,
+              eventKey: 'guild-open-${const Uuid().v4()}',
+            )
+            .catchError((_) {}),
+      );
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => GuildDiscoveryDetailScreen(
+          quest: result.quest,
+          recommendationReason: result.reason,
+          onCopy: copyEnabled ? () => _copyQuest(result.quest) : null,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _copyQuest(GuildDiscoveryQuest quest) async {
+    if (_copyingPublicationId != null) return;
+    final repository = ref.read(guildDiscoveryRepositoryProvider);
+    final profile = ref.read(authControllerProvider).profile;
+    if (repository == null || profile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('この機能はログイン済みのPilot参加者向けです。')),
+      );
+      return;
+    }
+    _copyingPublicationId = quest.id;
+    try {
+      final result = await repository.copyToPrivate(
+        publicationId: quest.id,
+        options: const GuildQuestCopyOptions(),
+        idempotencyKey: 'guild-copy-${const Uuid().v4()}',
+      );
+      await ref.read(questControllerProvider.notifier).loadForUser(profile.id);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      context.go('${AppRoutes.quest}/${result.questId}');
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Questを取り込めませんでした。内容は変更されていません。')),
+      );
+    } finally {
+      _copyingPublicationId = null;
+    }
   }
 
   String get _emptyTitle => switch (_section) {
@@ -108,7 +195,9 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
 }
 
 class _DiscoveryHeader extends StatelessWidget {
-  const _DiscoveryHeader();
+  const _DiscoveryHeader({this.cohort});
+
+  final String? cohort;
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +220,42 @@ class _DiscoveryHeader extends StatelessWidget {
               context,
             ).textTheme.bodyLarge?.copyWith(color: AppColors.parchment),
           ),
+          if (cohort != null) ...[
+            const SizedBox(height: 8),
+            Semantics(
+              label: 'Guild Pilot参加中',
+              child: const Chip(
+                avatar: Icon(Icons.science_outlined, size: 18),
+                label: Text('限定Pilot'),
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _PilotGate extends StatelessWidget {
+  const _PilotGate({required this.status});
+
+  final GuildPilotStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: ArcEmptyState(
+          title: status.configured ? 'Guild Pilotを準備しています' : 'ローカルプレビュー',
+          message: status.configured
+              ? '安全性を確認しながら少人数で試しています。参加が有効になるまで、Questは公開されません。'
+              : 'Supabaseへ接続すると、参加が許可されたNavigatorだけGuild Pilotを確認できます。',
+          emotion: ArcEmotion.support,
+          icon: Icons.lock_outline_rounded,
+          actionLabel: 'Questへ戻る',
+          onAction: () => context.go(AppRoutes.quest),
+        ),
       ),
     );
   }
@@ -358,6 +482,12 @@ class _DiscoveryError extends StatelessWidget {
               tooltip: 'もう一度読み込む',
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () => context.go(AppRoutes.home),
+              icon: const Icon(Icons.home_outlined),
+              label: const Text('ホームへ戻る'),
             ),
           ],
         ),

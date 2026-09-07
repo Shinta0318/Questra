@@ -1,0 +1,36 @@
+version: 1
+qst: QST-387
+status: ready_external_execution_pending
+candidate:
+  clean_worktree_required: true
+  exact_head_required: true
+  artifact_checksum_required: true
+sessions:
+  - id: android_physical
+    status: pending
+    emulator_allowed: false
+    required_checks: [install, launch, japanese_ime, talkback, large_text_200, compact_layout, reduced_motion, haptics]
+    evidence_root: artifacts/qst376
+  - id: supported_web
+    status: pending
+    mock_persistence_allowed: false
+    required_checks: [launch, login, quest_mission_task_trail, arc, japanese_ime, keyboard, responsive]
+    evidence_root: artifacts/device-validation/web
+privacy:
+  review_before_capture: required
+  credentials_in_evidence: prohibited
+  account_identifiers_in_evidence: prohibited
+  private_journey_content_in_evidence: prohibited
+commands:
+  android_recorder: "dart run tools/qst/record_physical_accessibility_evidence.dart"
+  physical_verifier: "dart run tools/qst/verify_physical_accessibility_evidence.dart --require-physical"
+  candidate_verifier: "dart run tools/qst/verify_beta_candidate_manifest.dart --require-approved"
+  web_recorder: "dart run tools/qst/record_web_candidate_evidence.dart"
+  web_verifier: "dart run tools/qst/verify_web_candidate_evidence.dart --require-web"
+  android_candidate_recorder: "dart run tools/qst/record_android_candidate_evidence.dart"
+  android_candidate_verifier: "dart run tools/qst/verify_android_candidate_evidence.dart --require-physical"
+guardrails:
+  emulator_is_physical_evidence: false
+  mock_server_is_supported_web_evidence: false
+  automated_test_replaces_human_evidence: false
+  stale_sha_evidence_allowed: false

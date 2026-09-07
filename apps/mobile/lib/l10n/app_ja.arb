@@ -6,5 +6,34 @@
   "trail": "Trail",
   "guild": "Guild",
   "profile": "プロフィール",
-  "arc": "Arc"
+  "arc": "Arc",
+  "discardChangesTitle": "変更を破棄しますか？",
+  "discardChangesBody": "保存していない内容は失われます。",
+  "continueEditing": "編集を続ける",
+  "discardAndClose": "破棄して閉じる"
+  ,"requiredField": "必須"
+  ,"profileCompact": "自分"
+  ,"trailEmptyTitle": "まだTrailはありません"
+  ,"trailEmptyMessage": "今日進んだことを、短い言葉から残してみよう。"
+  ,"createFirstTrail": "最初のTrailを残す"
+  ,"createTrail": "Trailを残す"
+  ,"trailHistoryTitle": "これまでのTrail"
+  ,"trailHistoryDescription": "進んだ日ごとに、旅の記録を振り返れます。"
+  ,"trailCount": "Trail {count}件"
+  ,"@trailCount": {"placeholders": {"count": {"type": "int"}}}
+  ,"reflection": "振り返り"
+  ,"starCandidate": "大切な記録の候補"
+  ,"image": "画像"
+  ,"questContext": "Quest：{title}"
+  ,"@questContext": {"placeholders": {"title": {"type": "String"}}}
+  ,"missionContext": "Mission：{title}"
+  ,"@missionContext": {"placeholders": {"title": {"type": "String"}}}
+  ,"taskContext": "Task：{title}"
+  ,"@taskContext": {"placeholders": {"title": {"type": "String"}}}
+  ,"starMemoryCandidate": "大切な記録の候補：{reason}"
+  ,"@starMemoryCandidate": {"placeholders": {"reason": {"type": "String"}}}
+  ,"trailTypeQuest": "Questの記録"
+  ,"trailTypeMission": "Missionの記録"
+  ,"trailTypeArcReflection": "Arcとの振り返り"
+  ,"trailTypeManual": "自分のメモ"
 }

@@ -74,6 +74,10 @@ $$;
 \set owner_plan_preview_id '00000000-0000-4000-8000-000000174101'
 \set owner_mission_draft_id '00000000-0000-4000-8000-000000184101'
 \set owner_mission_candidate_id '00000000-0000-4000-8000-000000194101'
+\set owner_data_rights_request_id '00000000-0000-4000-8000-000000204101'
+\set other_data_rights_request_id '00000000-0000-4000-8000-000000204201'
+\set owner_runtime_event_id '00000000-0000-4000-8000-000000214101'
+\set other_runtime_event_id '00000000-0000-4000-8000-000000214201'
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 values
@@ -234,6 +238,28 @@ insert into public.mission_candidates (
   '確認可能な成果','Quest成功条件を前進させる',2,0.95,'pass',0,'{}'::jsonb
 );
 
+insert into public.data_rights_requests (
+  id,owner_id,request_type,status,scope,idempotency_key
+) values
+  (:'owner_data_rights_request_id',:'owner_id','correction','submitted',
+   '{"target_type":"profile","requested_change":"Owner fixture change"}'::jsonb,
+   'qst373-owner-request'),
+  (:'other_data_rights_request_id',:'other_id','correction','submitted',
+   '{"target_type":"profile","requested_change":"Other fixture change"}'::jsonb,
+   'qst373-other-request');
+
+insert into public.runtime_evidence_events (
+  id,owner_id,event_id,occurred_at,build_version,environment,platform,
+  surface,operation,event_type,severity,error_code,correlation_id,
+  handled,fallback_used
+) values
+  (:'owner_runtime_event_id',:'owner_id','qst373-owner-event',now(),
+   'qst373','internal_beta','android','arc_chat','arc_chat.invoke',
+   'aiFallback','S2','remote_failure','qst373-owner-trace',true,true),
+  (:'other_runtime_event_id',:'other_id','qst373-other-event',now(),
+   'qst373','internal_beta','android','arc_chat','arc_chat.invoke',
+   'aiFallback','S2','remote_failure','qst373-other-trace',true,true);
+
 set local role authenticated;
 
 select set_config('request.jwt.claim.sub', :'owner_id', true);
@@ -261,6 +287,22 @@ select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id
 select pg_temp.qst_assert_eq((select count(*) from public.tasks where id = :'owner_private_task_id'), 1, 'owner can read own private Task');
 select pg_temp.qst_assert_eq((select count(*) from public.mission_plan_drafts where id = :'owner_mission_draft_id'), 1, 'owner can read own Mission plan draft');
 select pg_temp.qst_assert_eq((select count(*) from public.mission_candidates where id = :'owner_mission_candidate_id'), 1, 'owner can read own Mission candidate');
+select pg_temp.qst_assert_eq((select count(*) from public.data_rights_requests where id = :'owner_data_rights_request_id'), 1, 'owner can read own Data Rights request');
+select pg_temp.qst_assert_eq((select count(*) from public.data_rights_requests where id = :'other_data_rights_request_id'), 0, 'owner cannot read another Data Rights request');
+select pg_temp.qst_assert_eq((select count(*) from public.runtime_evidence_events where id = :'owner_runtime_event_id'), 1, 'owner can read own runtime evidence');
+select pg_temp.qst_assert_eq((select count(*) from public.runtime_evidence_events where id = :'other_runtime_event_id'), 0, 'owner cannot read another runtime evidence row');
+select pg_temp.qst_assert_raises(
+  'select count(*) from public.data_rights_fulfillment_receipts',
+  'app user cannot read Data Rights fulfillment receipts'
+);
+select pg_temp.qst_assert_raises(
+  'select count(*) from public.runtime_evidence_alert_queue',
+  'app user cannot read runtime alert queue'
+);
+select pg_temp.qst_assert_raises(
+  'select count(*) from public.runtime_evidence_rate_buckets',
+  'app user cannot read runtime rate buckets'
+);
 select pg_temp.qst_assert_raises(
   format('select count(*) from public.business_quest_signals where signal_id = %L', :'owner_business_signal_id'),
   'Business signal is not client-readable'
@@ -291,6 +333,39 @@ select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id
 select pg_temp.qst_assert_eq((select count(*) from public.tasks where id = :'owner_private_task_id'), 0, 'other cannot read owner private Task');
 select pg_temp.qst_assert_eq((select count(*) from public.mission_plan_drafts where id = :'owner_mission_draft_id'), 0, 'other cannot read owner Mission plan draft');
 select pg_temp.qst_assert_eq((select count(*) from public.mission_candidates where id = :'owner_mission_candidate_id'), 0, 'other cannot read owner Mission candidate');
+select pg_temp.qst_assert_eq((select count(*) from public.data_rights_requests where id = :'owner_data_rights_request_id'), 0, 'other cannot read owner Data Rights request');
+select pg_temp.qst_assert_eq((select count(*) from public.runtime_evidence_events where id = :'owner_runtime_event_id'), 0, 'other cannot read owner runtime evidence');
+
+select pg_temp.qst_assert_raises(
+  format(
+    'insert into public.data_rights_requests (owner_id, request_type, status, scope) values (%L, %L, %L, %L::jsonb)',
+    :'other_id', 'correction', 'submitted', '{}'
+  ),
+  'app user cannot bypass Data Rights request RPC'
+);
+
+select pg_temp.qst_assert_raises(
+  format(
+    'insert into public.runtime_evidence_events (owner_id,event_id,occurred_at,build_version,environment,platform,surface,operation,event_type,severity,error_code,correlation_id,handled,fallback_used) values (%L,%L,now(),%L,%L,%L,%L,%L,%L,%L,%L,%L,true,true)',
+    :'other_id','qst373-direct','qst373','internal_beta','android','arc_chat',
+    'arc_chat.invoke','aiFallback','S2','remote_failure','qst373-direct-trace'
+  ),
+  'app user cannot bypass runtime evidence RPC'
+);
+select pg_temp.qst_assert_raises(
+  format(
+    'select * from public.claim_runtime_evidence_alert(%L::uuid)',
+    :'owner_runtime_event_id'
+  ),
+  'app user cannot claim runtime evidence alert'
+);
+select pg_temp.qst_assert_raises(
+  format(
+    'select public.purge_runtime_evidence_event(%L::uuid)',
+    :'owner_runtime_event_id'
+  ),
+  'app user cannot purge runtime evidence event'
+);
 
 select pg_temp.qst_assert_raises(
   format(
@@ -358,6 +433,21 @@ select pg_temp.qst_assert_raises(
     'private'
   ),
   'other cannot create a media row for owner'
+);
+
+select pg_temp.qst_assert_raises(
+  'select * from public.ai_usage_policies limit 1',
+  'app user cannot read server AI usage policies'
+);
+
+select pg_temp.qst_assert_raises(
+  'select * from public.mission_research_requests limit 1',
+  'app user cannot read Mission research rate metadata'
+);
+
+select pg_temp.qst_assert_raises(
+  'select * from public.enterprise_support_proposals limit 1',
+  'app user cannot read unprojected enterprise support proposals'
 );
 
 rollback;

@@ -1,0 +1,27 @@
+version: 1
+qst: QST-384
+status: implementation_ready_candidate_blocked
+candidate_requirements:
+  branch: codex/initial-questra-structure-pr
+  clean_worktree: required
+  staged_scope_reviewed: required
+  generated_outputs_separated: required
+  secret_scan: required
+scan_scope:
+  - apps/mobile/lib
+  - apps/mobile/web
+  - supabase/functions
+  - .github/workflows
+prohibited_secret_material:
+  - google_api_key_value
+  - supabase_secret_key_value
+  - private_key_block
+  - bearer_token_value
+modes:
+  development: "dart run tools/qst/verify_candidate_preflight.dart"
+  candidate: "dart run tools/qst/verify_candidate_preflight.dart --require-clean"
+guardrails:
+  dirty_worktree_is_candidate: false
+  secret_name_reference_is_secret_value: false
+  local_scan_replaces_host_secret_review: false
+  ignored_or_binary_files_scanned_as_text: false

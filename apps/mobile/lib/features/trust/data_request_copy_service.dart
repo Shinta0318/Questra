@@ -37,7 +37,7 @@ class DataRequestCopyService {
     return const DataRequestCopyReview(
       heading: 'データリクエスト',
       summary:
-          'Questraの挑戦データは本人のものです。Betaでは実処理の前に、削除・エクスポート・訂正・同意撤回の範囲を分かりやすく確認できるようにします。',
+          'Questraの挑戦データは本人のものです。接続済みBetaでは、削除・エクスポート・訂正・同意撤回を本人の操作で管理できます。',
       requests: [
         DataRequestCopy(
           type: DataRequestType.export,
@@ -59,7 +59,7 @@ class DataRequestCopyService {
           title: '訂正リクエスト',
           summary: 'Arcの推定、タグ、記憶、プロフィール情報に誤りがある場合に知らせる導線です。',
           scope: ['Arc推定', 'Tag', 'Arc Memory', 'Profile'],
-          statusLabel: '準備中',
+          statusLabel: '利用可能',
         ),
         DataRequestCopy(
           type: DataRequestType.withdrawal,
@@ -73,7 +73,7 @@ class DataRequestCopyService {
         '削除・エクスポートは無料で利用できる基本機能として扱う',
         '企業支援や広告のために個別データを無断利用しない',
         '本人確認と誤削除防止を両立する',
-        '実装前にPrivacy Policyと運用手順を更新する',
+        '接続先と本人確認が利用できない場合は操作を実行しない',
       ],
     );
   }

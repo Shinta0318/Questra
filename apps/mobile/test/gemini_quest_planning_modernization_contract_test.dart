@@ -27,7 +27,10 @@ void main() {
       expect(adapter, contains('toGeminiSchema(request.responseSchema)'));
       expect(adapter, contains('key === "properties"'));
       expect(adapter, contains('if (attempt === 1)'));
-      expect(adapter, isNot(contains('"minItems", "maxItems", "minimum", "maximum"')));
+      expect(
+        adapter,
+        isNot(contains('"minItems", "maxItems", "minimum", "maximum"')),
+      );
       expect(adapter, isNot(contains('"minLength", "maxLength"')));
       expect(adapter, isNot(contains('top_p:')));
       expect(adapter, isNot(contains('top_k:')));
@@ -129,7 +132,8 @@ void main() {
     'release gate requires 200 provider-backed cases and zero safety violations',
     () {
       final gate = read('tools/qst/quest_planning_release_gate.ps1');
-      expect(gate, contains('At least 200 evaluation cases'));
+      expect(gate, contains('At least 200 planning cases'));
+      expect(gate, contains('At least 10 safety cases'));
       expect(gate, contains('provider_backed_rate'));
       expect(gate, contains('critical_safety_violation'));
       expect(gate, contains('schema_success_rate'));

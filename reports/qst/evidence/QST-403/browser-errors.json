@@ -1,0 +1,6 @@
+{
+  "url": "http://127.0.0.1:5271/#/quest/be607523-b7f2-47a1-96a0-8a6620f40f49",
+  "environment": "local mock, desktop web",
+  "operation": "Quest detail > route > add Mission > dialog closed > 0/1 Mission displayed",
+  "errors": []
+}

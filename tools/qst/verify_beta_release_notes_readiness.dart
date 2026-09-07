@@ -11,9 +11,11 @@ const requiredSnippets = [
   'Betaで確認してほしい航路',
   'Feedback',
   'テストを止める条件',
-  'Guildは主なナビゲーションではComing Soon',
+  'Guild Discovery pilot',
+  '審査済みsnapshot、段階配布、即時停止',
   '完了したMissionやQuestの進捗をTrailとして残し',
-  'Supabase未接続',
+  '`モックを開く`は開発者向けの端末内レビュー',
+  '外部Betaの動作証拠には使用できません',
   '外部クラッシュレポートは無効',
   'クリップボードへコピーするだけ',
 ];

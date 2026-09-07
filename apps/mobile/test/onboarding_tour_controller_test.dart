@@ -50,5 +50,23 @@ void main() {
     controller.replay();
 
     expect(container.read(onboardingTourControllerProvider).isVisible, isTrue);
+    expect(
+      container.read(onboardingTourControllerProvider).entryPoint,
+      OnboardingTourEntryPoint.replay,
+    );
+  });
+
+  test('disabled replay leaves the current screen untouched', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final controller = container.read(
+      onboardingTourControllerProvider.notifier,
+    );
+    controller.replay(enabled: false);
+
+    final state = container.read(onboardingTourControllerProvider);
+    expect(state.isVisible, isFalse);
+    expect(state.presentationId, 0);
   });
 }

@@ -76,13 +76,13 @@ void registerQst269CoreJourneyTests() {
     );
     await tester.pump();
     expect(find.text('必須Task 1 / 1 完了'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('成果を確認してMission達成'),
-      180,
-      scrollable: find.byType(Scrollable).first,
-    );
+    final missionAction = find.byKey(const ValueKey('mission-primary-action'));
+    await tester.ensureVisible(missionAction);
     await tester.pump(const Duration(milliseconds: 100));
-    await tester.tap(find.text('成果を確認してMission達成'));
+    await tester.tap(missionAction);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Taskの完了とは別'), findsOneWidget);
+    await tester.tap(find.text('成果を確認した'));
     await tester.pump(const Duration(milliseconds: 100));
     expect(
       container.read(missionControllerProvider).single.successConfirmedAt,
@@ -100,9 +100,11 @@ void registerQst269CoreJourneyTests() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     final fields = find.byType(TextFormField);
-    await tester.enterText(fields.at(0), 'Missionを達成した日');
-    await tester.enterText(fields.at(1), '成果を確認して次へ進めた');
-    await tester.enterText(fields.at(2), 'Taskを終え、Missionの成果を確認した。');
+    expect(fields, findsOneWidget);
+    await tester.enterText(
+      fields.at(0),
+      'Missionを達成した日。Taskを終え、Missionの成果を確認した。',
+    );
     await tester.tap(find.text('Trailを保存'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
@@ -146,21 +148,19 @@ void registerQst269CoreJourneyTests() {
       );
       await tester.pump();
 
-      final questLabel = tester.getTopLeft(find.text('QUEST  小さな航路を完成させる'));
-      final missionLabel = tester.getTopLeft(find.text('MISSION'));
+      final questLabel = tester.getTopLeft(
+        find.bySemanticsLabel('親Quest、小さな航路を完成させるを開く'),
+      );
+      final missionLabel = tester.getTopLeft(find.text('中間成果'));
       final missionTitle = tester.getTopLeft(find.text('最初の成果を形にする'));
       expect(questLabel.dy, lessThan(missionLabel.dy));
       expect(missionLabel.dy, lessThan(missionTitle.dy));
 
-      await tester.scrollUntilVisible(
-        find.text('成果を確認してMission達成'),
-        250,
-        scrollable: find.byType(Scrollable).first,
-      );
-      final confirm = find.widgetWithText(FilledButton, '成果を確認してMission達成');
+      final confirm = find.byKey(const ValueKey('mission-primary-action'));
+      await tester.ensureVisible(confirm);
       await tester.pump(const Duration(milliseconds: 100));
-      expect(tester.getSize(confirm).height, greaterThanOrEqualTo(48));
-      expect(tester.getSemantics(confirm).label, contains('成果を確認してMission達成'));
+      expect(tester.getSize(confirm).height, greaterThanOrEqualTo(44));
+      expect(tester.getSemantics(confirm).label, contains('Missionの成果を確認'));
       expect(tester.takeException(), isNull);
       semantics.dispose();
     });

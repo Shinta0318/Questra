@@ -1,0 +1,35 @@
+version: 1
+qst: QST-398
+status: signoff_pending
+candidate_source_commit: null
+working_tree_clean_at_intake: false
+document_version: "2026-08-18-beta.1"
+approved_at_utc: null
+operator_legal_name: null
+service_address: null
+privacy_contact: null
+support_contact: null
+signoff_records:
+  - role: release_manager
+    name: null
+    decision: pending
+    approved_at_utc: null
+  - role: engineering_owner
+    name: null
+    decision: pending
+    approved_at_utc: null
+  - role: product_owner
+    name: null
+    decision: pending
+    approved_at_utc: null
+  - role: legal_reviewer
+    name: null
+    decision: pending
+    approved_at_utc: null
+guardrails:
+  hosted_evidence_required: true
+  signature_image_recorded: false
+  credential_values_recorded: false
+  private_account_identifier_recorded: false
+  approval_inferred_from_code: false
+  missing_contact_allows_distribution: false

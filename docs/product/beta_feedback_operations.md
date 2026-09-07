@@ -103,3 +103,16 @@ dart run tools/qst/verify_beta_feedback_readiness.dart --require-operations
 ```
 
 strict gateはtester-visible窓口、実名のtriage owner、SLA、台帳の集計時刻、open S0/S1件数の一致を要求する。
+
+候補SHAへ実運用情報を結合する場合のみ、次を実行する。
+
+```powershell
+dart run tools/qst/activate_beta_feedback_operations.dart `
+  --channel-label=<tester-visible channel> `
+  --owner-ref=<controlled owner reference> `
+  --stop-channel-label=<S0 stop communication channel> `
+  --candidate-commit=<current HEAD>
+dart run tools/qst/verify_beta_feedback_readiness.dart --require-operations
+```
+
+このcommandはissue registerのopen S0/S1を再集計し、current HEADと一致しない候補、credential、personal emailを拒否する。実在しない窓口や担当者を証跡として入力してはならない。

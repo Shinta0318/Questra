@@ -24,6 +24,9 @@ abstract final class SupabaseConfig {
   static bool get persistenceAvailable =>
       isConfigured || localPersistenceAllowed;
 
+  static bool get isLocalMockPreview =>
+      !isConfigured && localPersistenceAllowed;
+
   static PersistenceSource get persistenceSource {
     if (isConfigured) return PersistenceSource.supabase;
     if (localPersistenceAllowed) return PersistenceSource.localDevelopment;

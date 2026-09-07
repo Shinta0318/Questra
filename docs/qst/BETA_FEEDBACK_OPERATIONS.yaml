@@ -1,6 +1,7 @@
 version: 1
 status: activation_pending
 updated_at_utc: null
+candidate_source_commit: null
 destination:
   status: pending
   channel_label: null
@@ -12,6 +13,11 @@ daily_triage:
   owner_name: null
   timezone: Asia/Tokyo
   review_time_local: "10:00"
+stop_communication:
+  status: pending
+  channel_label: null
+  trigger: any_open_s0_or_release_manager_stop
+  owner_role: Release Manager
 sla:
   S0: acknowledge_within_1_hour_and_stop_expansion
   S1: assign_owner_and_qst_within_24_hours
@@ -26,3 +32,5 @@ guardrails:
   clipboard_is_not_delivery_confirmation: true
   credential_values_recorded: false
   private_journey_content_recorded: false
+  invented_operator_evidence_allowed: false
+  candidate_commit_mismatch_allowed: false

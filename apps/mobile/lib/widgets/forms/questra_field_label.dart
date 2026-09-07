@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/feature_flags/locale_feature_flags.dart';
+import '../../l10n/app_localizations.dart';
+
 /// Keeps field names outside the input border so labels never collide with text.
 class QuestraFieldLabel extends StatelessWidget {
   const QuestraFieldLabel({
@@ -21,6 +24,9 @@ class QuestraFieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizedCopyEnabled =
+        const LocaleFeatureFlags().localizedJourneyCopyV2Enabled;
+    final copy = localizedCopyEnabled ? AppLocalizations.of(context) : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -28,18 +34,24 @@ class QuestraFieldLabel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Flexible(
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: foregroundColor,
+              child: Semantics(
+                label: label,
+                header: true,
+                child: ExcludeSemantics(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: foregroundColor,
+                    ),
+                  ),
                 ),
               ),
             ),
             if (required) ...[
               const SizedBox(width: 6),
               Text(
-                '必須',
+                copy?.requiredField ?? '必須',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: Theme.of(context).colorScheme.error,
                   fontWeight: FontWeight.w800,

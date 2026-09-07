@@ -55,6 +55,7 @@ export type ProviderResponse = {
   provider: AiProviderName;
   model: string;
   modelVersion: string;
+  thinkingLevel: ThinkingLevel;
   output: unknown;
   text: string;
   toolCalls: ProviderToolCall[];

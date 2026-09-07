@@ -82,5 +82,6 @@ QuestとMissionは個別に次の公開範囲を持つ。
 - QST-219: レビュー、Navigator Spotlight、通報・ブロック。
 - QST-220: Arc個別最適化、E2E、Beta再公開判定。
 
-GuildルートはQST-215のRLSおよびQST-216の空・読込・失敗状態が検証されるまで
-Coming Soonを維持する。
+Guildルートは、審査済みsnapshot、対象者制限、moderation、kill switchがすべて有効な
+controlled pilotとしてのみ提供する。条件を満たさない環境ではルートを非表示または停止状態とし、
+自由投稿型Guildや一般公開済み機能として表示しない。

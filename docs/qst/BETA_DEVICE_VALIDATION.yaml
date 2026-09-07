@@ -1,5 +1,6 @@
 version: 1
 status: evidence_partial
+physical_accessibility_evidence: docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml
 updated_at_utc: null
 automation:
   status: ready_external_execution_pending

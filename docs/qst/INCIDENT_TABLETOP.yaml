@@ -1,0 +1,47 @@
+version: 1
+qst: QST-390
+status: tabletop_contract_ready_live_drill_pending
+candidate_sha: null
+participants:
+  release_manager: pending
+  incident_owner: pending
+  support_owner: pending
+scenarios:
+  - id: s0_cross_account_visibility
+    severity: S0
+    trigger: any_cross_account_private_data_visibility
+    required_actions: [stop_distribution, disable_affected_surface, preserve_sanitized_evidence, notify_incident_owner, select_known_good_candidate]
+    destructive_database_rollback: prohibited
+    status: pending_live_drill
+  - id: s0_repeated_data_loss
+    severity: S0
+    trigger: repeated_confirmed_owner_data_loss
+    required_actions: [stop_distribution, freeze_mutations_if_safe, preserve_sanitized_evidence, notify_incident_owner, select_known_good_candidate]
+    destructive_database_rollback: prohibited
+    status: pending_live_drill
+  - id: s1_auth_or_persistence_degradation
+    severity: S1
+    trigger: repeated_auth_or_save_failure_without_confirmed_loss
+    required_actions: [pause_expansion, assign_owner, isolate_feature, communicate_status, verify_recovery]
+    status: pending_live_drill
+  - id: s1_ai_provider_degradation
+    severity: S1
+    trigger: provider_failure_or_quality_gate_breach
+    required_actions: [pause_ai_planning, preserve_user_input, offer_retry_or_manual_path, inspect_provider_metrics]
+    template_missions_allowed: false
+    status: pending_live_drill
+decision_log_required:
+  - detected_at_utc
+  - candidate_sha
+  - scenario_id
+  - decision_owner
+  - stop_or_pause_time_utc
+  - recovery_evidence
+  - reopen_decision
+guardrails:
+  tabletop_is_live_execution_evidence: false
+  open_s0_allows_distribution: false
+  silent_stop_allowed: false
+  destructive_down_migration_automatic: false
+  private_journey_content_recorded: false
+  credentials_recorded: false

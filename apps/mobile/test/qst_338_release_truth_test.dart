@@ -86,7 +86,11 @@ void main() {
     ).readAsStringSync();
 
     expect(manifest, contains('local_or_mock_persistence: prohibited'));
-    expect(manifest, contains('guild:\n    status: hidden_not_shipped'));
+    expect(manifest, contains('guild:\n    status: controlled_pilot'));
+    expect(
+      manifest,
+      contains('approved_snapshots_only, eligible_members_only, moderation, kill_switch'),
+    );
     expect(storeCopy, isNot(contains('Guild spaces support')));
     expect(storeCopy, isNot(contains('Guild activity')));
   });

@@ -13,6 +13,13 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          guildPilotStatusProvider.overrideWith(
+            (ref) async => const GuildPilotStatus(
+              configured: true,
+              enabled: true,
+              cohort: 'widget-test',
+            ),
+          ),
           guildDiscoveryFeedProvider.overrideWith(
             (ref) async => const <GuildDiscoveryQuest>[],
           ),
@@ -35,14 +42,23 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          guildPilotStatusProvider.overrideWith(
+            (ref) async => const GuildPilotStatus(
+              configured: true,
+              enabled: true,
+              cohort: 'widget-test',
+            ),
+          ),
           guildDiscoveryFeedProvider.overrideWith((ref) async => [quest]),
         ],
         child: const MaterialApp(home: GuildDiscoveryScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.text(quest.title));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.byType(GuildDiscoveryDetailScreen), findsOneWidget);
     expect(find.text('見つかった理由'), findsOneWidget);

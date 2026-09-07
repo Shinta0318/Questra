@@ -56,7 +56,7 @@ void main() {
 
     expect(find.text('メールアドレス'), findsOneWidget);
     expect(find.text('ログインID'), findsOneWidget);
-    expect(find.textContaining('AI処理を確認済み'), findsOneWidget);
+    expect(find.textContaining('Arcの生成機能を確認済み'), findsOneWidget);
   });
 
   test(

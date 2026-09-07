@@ -12,12 +12,14 @@ void main() {
       const ProviderScope(child: MaterialApp(home: LoginScreen())),
     );
 
-    expect(find.text('航海を続けよう'), findsOneWidget);
+    expect(find.text('おかえりなさい'), findsOneWidget);
     expect(find.text('ログインIDまたはメールアドレス'), findsOneWidget);
     expect(find.text('パスワード'), findsOneWidget);
     expect(find.text('ログイン'), findsWidgets);
-    expect(find.text('新しく航海を始める'), findsOneWidget);
+    expect(find.text('新規登録'), findsWidgets);
     expect(find.text('パスワードを忘れた方'), findsOneWidget);
+    expect(find.text('モックを開く'), findsOneWidget);
+    expect(find.text('アカウントでログイン'), findsOneWidget);
     expect(find.text('Welcome back'), findsNothing);
     expect(find.text('Login'), findsNothing);
     expect(find.text('Create an account'), findsNothing);
@@ -35,8 +37,8 @@ void main() {
       const ProviderScope(child: MaterialApp(home: SignupScreen())),
     );
 
-    expect(find.text('安心して始めるために'), findsOneWidget);
-    expect(find.text('最初のQuestを灯そう'), findsNothing);
+    expect(find.text('はじめに確認すること'), findsOneWidget);
+    expect(find.text('アカウントを作成'), findsNothing);
     expect(find.text('Arcからの呼び名'), findsNothing);
 
     for (var index = 0; index < 4; index++) {
@@ -50,12 +52,12 @@ void main() {
     await tester.tap(continueButton);
     await tester.pumpAndSettle();
 
-    expect(find.text('最初のQuestを灯そう'), findsOneWidget);
+    expect(find.text('アカウントを作成'), findsWidgets);
     expect(find.text('Arcからの呼び名'), findsOneWidget);
     expect(find.text('ログインID'), findsOneWidget);
     expect(find.text('メールアドレス'), findsOneWidget);
     expect(find.text('パスワード'), findsOneWidget);
-    expect(find.text('航海を始める'), findsOneWidget);
+    expect(find.text('新規登録'), findsWidgets);
     expect(find.text('Create your profile'), findsNothing);
     expect(find.text('Signup'), findsNothing);
   });

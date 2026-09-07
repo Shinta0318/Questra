@@ -1,0 +1,25 @@
+version: 1
+qst: QST-385
+status: hosted_deployment_required
+project_ref: dhbmgwarnrtelrcrmmfk
+remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
+latest_local: "202609030001_explicit_server_only_table_grants.sql"
+pending_migration_count: 21
+deployment_order: lexical_filename_order
+evidence_documents:
+  - docs/qst/BETA_SUPABASE_PROJECT.yaml
+  - docs/qst/BETA_RLS_EVIDENCE.yaml
+  - docs/qst/BETA_CANDIDATE.yaml
+  - docs/qst/HOSTED_EVIDENCE_RUN.yaml
+  - docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml
+required_after_deploy:
+  - migration_list_refresh
+  - edge_function_inventory_refresh
+  - rls_behavior_execution
+  - two_account_owner_isolation
+  - candidate_sha_binding
+guardrails:
+  local_files_are_hosted_evidence: false
+  out_of_order_dashboard_changes_allowed: false
+  destructive_remote_repair_allowed: false
+  stale_remote_head_allows_distribution: false

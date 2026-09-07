@@ -1,0 +1,26 @@
+version: 1
+status: local_dry_run_passed_hosted_pending
+generated_at_utc: "2026-08-25T02:00:10.873624Z"
+candidate_source_commit: "4d316c6b47604664293b4176b0a54d12e4564c1e"
+working_tree_clean_at_execution: false
+hosted_sink_connected: false
+alert_delivery_receipt_verified: false
+rollback_execution_verified: false
+privacy:
+  raw_user_content_recorded: false
+  account_identifier_recorded: false
+  credential_or_token_recorded: false
+scenarios:
+  healthy:
+    decision: continue_internal_distribution
+    passed: true
+  s1_slo_breach:
+    decision: pause_rollout_and_page_incident_owner
+    passed: true
+  s0_cross_account:
+    decision: stop_distribution_and_rollback_candidate
+    passed: true
+release_policy:
+  local_dry_run_is_hosted_evidence: false
+  s0_allows_distribution: false
+  s1_allows_rollout_expansion: false

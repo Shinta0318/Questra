@@ -1,0 +1,31 @@
+version: 1
+qst: QST-389
+status: replacement_or_provenance_evidence_required
+runtime_asset_count: 7
+current_release_allowed_count: 0
+accepted_paths:
+  preserve_asset_path: true
+  replacement_requires_new_hash: true
+  provenance_record_requires_exact_hash: true
+required_record_fields:
+  - sourceKind
+  - sourceEvidenceRef
+  - creatorController
+  - creationContext
+  - termsName
+  - termsVersion
+  - termsReference
+  - reviewedUsage
+  - commercialDistributionAllowed
+  - productDecision
+  - legalDecision
+  - reviewedAtUtc
+release_commands:
+  inventory: "dart run tools/qst/verify_arc_asset_provenance.dart"
+  release: "dart run tools/qst/verify_arc_asset_replacement_readiness.dart --require-release"
+guardrails:
+  visual_approval_proves_distribution_rights: false
+  previous_hash_approval_transfers_to_replacement: false
+  missing_generation_record_allowed: false
+  reference_mockup_bundled: false
+  partial_runtime_asset_approval_allowed: false

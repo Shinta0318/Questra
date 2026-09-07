@@ -20,7 +20,7 @@ Terms of Serviceは引き続きDraftであり、外部BetaまたはStore配布�
 | Arc fallback | 未設定・失敗時はlocal response | 継続可能だがremote成功と誤認させない |
 | Feedback | clipboard handoff | 自動送信しないと明記 |
 | Crash capture | external provider disabled | 自動収集中と表現しない |
-| Data requests | UIはpreview、実処理未提供 | export/delete/withdrawal未提供を明記 |
+| Data requests | export、Task削除、訂正依頼、同意撤回、account削除予約を実装。hosted運用未検証 | 内部実装と外部利用可能性を分離して明記 |
 
 ## Copy Rules
 
@@ -50,7 +50,7 @@ Terms of Serviceは引き続きDraftであり、外部BetaまたはStore配布�
 3. 対象地域、年齢条件、準拠法、紛争解決、consumer law確認。
 4. Supabase DPA、subprocessor、backup retention（primary regionはTokyoで確認済み）。
 5. 外部Betaで利用するGemini billing tier、project logging、provider retention、model/provider変更手順。
-6. Account deletion、export、correction、consent withdrawalの実処理。
+6. Account deletion worker、export、correction、consent withdrawalのhosted二account・保持・復旧証跡。
 7. External Beta testerから取得する明示同意とversioned acceptance evidence。
 
 ## Exit Criteria

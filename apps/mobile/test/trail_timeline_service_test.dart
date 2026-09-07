@@ -43,7 +43,7 @@ void main() {
     expect(days.last.trails.single.title, '古いTrail');
   });
 
-  testWidgets('timeline shows summary metrics and day counts', (tester) async {
+  testWidgets('時系列は0件の補助指標を隠して日ごとの件数を示す', (tester) async {
     final reflection = Trail(
       title: 'Reflection Trail',
       summary: '今日の学び',
@@ -83,9 +83,11 @@ void main() {
 
     expect(find.text('Trail'), findsOneWidget);
     expect(find.text('振り返り'), findsOneWidget);
-    expect(find.text('Star候補'), findsOneWidget);
-    expect(find.text('画像'), findsOneWidget);
+    expect(find.text('大切な記録の候補'), findsOneWidget);
+    expect(find.text('画像'), findsNothing);
     expect(find.text('Trail 2件'), findsOneWidget);
     expect(find.text('Trailを残す'), findsOneWidget);
+    expect(find.text('Trail Timeline'), findsNothing);
+    expect(find.text('これまでのTrail'), findsOneWidget);
   });
 }
