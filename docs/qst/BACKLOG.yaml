@@ -4959,6 +4959,201 @@ items:
       - WebとAndroidで横画面、戻る、SafeArea、キーボード、文字拡大を検証し、未確認を完了扱いしない。
     evidence: [apps/mobile/test/qst_416_height_aware_navigation_test.dart, reports/qst/QST-416.md]
 
+  - id: QST-417
+    title: Connected External Preview Bootstrap
+    status: ImplementedValidationPending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V5
+    goal: 公開用Supabase設定だけを安全に読み込み、mockを無効化してAuth、Data API、Edge Function経由GeminiをレビューできるWeb版を再現可能に起動する。
+    depends_on: [QST-338, QST-393, QST-410]
+    blocks: [Connected Preview Evidence, External Beta Distribution]
+    acceptance:
+      - 設定ファイルをリポジトリ外に限定し、キー値をログへ表示しない。
+      - publishableまたはanonキーだけを許可し、secretとservice roleを拒否する。
+      - Supabase AuthとData APIをprobeしてからproduction設定でFlutter Webを起動する。
+      - Geminiキーをclientへ渡さず、認証済みEdge Function経路を利用する。
+      - mock persistenceを無効化し、未配備migrationを利用可能と誤認させない。
+      - 正常と危険な設定の自動テストをRelease Gateで実行する。
+    evidence: [tools/qst/run_connected_preview.ps1, tools/qst/test_connected_preview.ps1, tools/qst/verify_connected_preview_launcher.dart, docs/product/connected_preview_runbook.md, reports/qst/QST-417.md]
+
+  - id: QST-418
+    title: Honest External Capability Status
+    status: ImplementedValidationPending
+    priority: P1
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V5
+    goal: 接続設定、ログイン、端末内プレビュー、Arcのオンライン応答確認を分離し、未確認の外部機能を利用可能と誤認させない。
+    depends_on: [QST-413, QST-417]
+    blocks: [Connected Preview Evidence, External Beta Distribution]
+    acceptance:
+      - Settingsでデータ保存とArcとの相談を別々に表示する。
+      - 接続設定済みでもArc応答を確認するまでは確認済みと表示しない。
+      - 端末内プレビューをオンライン応答として表示しない。
+      - 未ログインと未設定を異なる状態として案内する。
+      - provider名、APIキー、内部エラーを利用者向け表示へ露出しない。
+      - 320幅と文字拡大で状態名、説明、操作が欠けない。
+      - 実WebとAndroidで接続、未接続、プレビューを確認し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_418_connection_status_test.dart, apps/mobile/lib/features/settings/connection_status_service.dart, apps/mobile/lib/features/settings/widgets/connection_status_card.dart, reports/qst/QST-418.md]
+
+  - id: QST-419
+    title: Current Candidate Baseline Refresh
+    status: ImplementedValidationPending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: QST-417と418を含む意図した変更だけをclean SHAへ固定し、artifact、rollback、candidate manifestを現在化する。
+    depends_on: [QST-393, QST-417, QST-418]
+    blocks: [QST-420, QST-421, QST-422, QST-423, QST-425, External Beta Distribution]
+    acceptance:
+      - 意図した変更と既存変更を棚卸しし、秘密情報と一時生成物を候補へ含めない。
+      - source SHA、rollback SHA、artifact SHA-256、build versionを一つのcandidate manifestへ固定する。
+      - candidate作成前後のworktree cleanlinessを機械検証する。
+      - stale evidenceをcurrent evidenceとして採用しない。
+      - 失敗時はcandidateをdraftのまま保ち、配布可能と表示しない。
+    evidence: [docs/qst/BETA_CANDIDATE.yaml, docs/qst/CANDIDATE_PREFLIGHT.yaml, reports/qst/QST-419.md]
+
+  - id: QST-420
+    title: Hosted Supabase Drift Closure
+    status: Planned
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: QST-419のcandidateから未適用migrationとEdge Functionを配備し、local、hosted、manifestのheadを一致させる。
+    depends_on: [QST-394, QST-419]
+    blocks: [QST-421, QST-422, QST-425, External Beta Distribution]
+    acceptance:
+      - dry-runとbackup確認後にmigrationを順序通り適用する。
+      - process-data-rights-requestsを含むcandidate対象Functionを配備する。
+      - hosted headがlatest local migrationと一致する。
+      - secret値をログ、artifact、reportへ保存しない。
+      - 失敗時はschemaを破壊的に巻き戻さず、停止点とforward fixを記録する。
+    evidence: [docs/qst/BETA_SUPABASE_PROJECT.yaml, docs/qst/HOSTED_EVIDENCE_RUN.yaml, reports/qst/QST-420.md]
+
+  - id: QST-421
+    title: Current-SHA RLS and Data Rights Acceptance
+    status: Planned
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 配備済みcandidateで二account所有境界、Storage、Route transaction、Data Rights処理を実証する。
+    depends_on: [QST-395, QST-420]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - Quest、Mission、Task、Trail、Memory、Route、Mediaのowner操作が成功する。
+      - 別accountのread、write、RPC、Storage object操作が拒否される。
+      - export、correction、consent withdrawal、deletionをfixture限定で実行する。
+      - idempotency、stale conflict、rollback、cleanupを検証する。
+      - account識別子とprivate contentを証拠へ残さない。
+    evidence: [docs/qst/BETA_RLS_EVIDENCE.yaml, docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml, docs/qst/HOSTED_EVIDENCE_RUN.yaml, reports/qst/QST-421.md]
+
+  - id: QST-422
+    title: Supported Web Connected Journey Evidence
+    status: Planned
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: supported browserでmockを無効化し、Auth、Quest、Mission、Task、Trail、Arcの主要航路をcurrent candidateで実証する。
+    depends_on: [QST-396, QST-419, QST-420, QST-424]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - QST-417のlauncherからproduction設定で起動し、保存先とArc応答sourceを確認する。
+      - 登録、login、reload、logout、再login後も本人データが復元される。
+      - Arc相談からQuest確認、Mission/Task、完了、Trailまでを通す。
+      - 日本語IME、keyboard、360/390/430幅、失敗と再試行を確認する。
+      - credential、token、個人データをscreenshotとlogへ残さない。
+    evidence: [docs/qst/WEB_CANDIDATE_SESSION.yaml, reports/qst/QST-422.md]
+
+  - id: QST-423
+    title: Physical Android Accessibility Evidence
+    status: Planned
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 物理Androidへcurrent candidateを導入し、主要航路、日本語IME、TalkBack、200%文字、motion設定を実証する。
+    depends_on: [QST-397, QST-419, QST-420, QST-424]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - emulatorではなく識別済み物理端末でinstall、launch、return、resumeを確認する。
+      - Arc、Quest、Mission、Task、TrailをTalkBackと自然なfocus順で操作できる。
+      - 200%文字、compact width、keyboard、safe areaでoverflowしない。
+      - reduced motionとhaptics opt-outが反映される。
+      - privacy review済みのcandidate-bound evidenceだけを保存する。
+    evidence: [docs/qst/ANDROID_CANDIDATE_SESSION.yaml, docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml, reports/qst/QST-423.md]
+
+  - id: QST-424
+    title: Arc Remote Provenance and Degraded Mode Boundary
+    status: ImplementedValidationPending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: Arcのremote成功、local preview、timeout、provider失敗をruntimeで区別し、fallbackからQuestや航路変更を確定できないようにする。
+    depends_on: [QST-410, QST-418]
+    blocks: [QST-422, QST-423, QST-425, External Beta Distribution]
+    acceptance:
+      - remote応答成功時だけsanitized source、時刻、traceをsession状態へ記録する。
+      - Settingsは実成功後だけArc応答確認済みへ表示へ更新する。
+      - remote失敗時のfallbackはQuest候補、Mission、Route変更操作を返さない。
+      - 入力を保持し、再試行、手動継続、後での選択肢を表示する。
+      - provider名、prompt、秘密情報、内部例外を利用者向け表示へ露出しない。
+    evidence: [apps/mobile/test/qst_424_arc_remote_provenance_test.dart, reports/qst/QST-424.md]
+
+  - id: QST-425
+    title: Provider-backed Planning Quality Gate Execution
+    status: Planned
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: fixed model、prompt、schema、thinkingで200 case planningとsafetyを実行し、品質、費用、latency、fallbackを人手評価と共に判定する。
+    depends_on: [QST-400, QST-420, QST-424]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - 200 planning caseとsafety corpusをcurrent candidate設定で実行する。
+      - relevance、specificity、done condition、personalization、duplicate、schema、safety gateを集計する。
+      - model、prompt、schema、thinking、grounding、usage、latencyを各結果へ結合する。
+      - 事前固定sampleを人手評価し、自動自己採点だけに依存しない。
+      - release gate未達時はprovider設定をactive化せず、固定Missionへfallbackしない。
+    evidence: [reports/qst/QST-256-REGRESSION.json, reports/qst/QST-425.md]
+
+  - id: QST-426
+    title: Legal Asset and License Release Closure
+    status: Planned
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: Product、Legal、Release owner、連絡先、同意version、Arc asset権利、dependency noticeをcandidateへ結合する。
+    depends_on: [QST-398, QST-399, QST-419]
+    blocks: [External Beta Distribution, Public Release]
+    acceptance:
+      - supportとprivacy連絡先、運用owner、規約とprivacy versionを実在情報で承認する。
+      - bundled Arc assetすべてのchain of titleを完結するかrelease-safe assetへ差し替える。
+      - dependency license manifestとThird Party Noticesを人手確認する。
+      - 未承認assetまたはlicenseが一つでもあればrelease packageをblockする。
+      - approvalは署名日、candidate SHA、artifact hashへ結合する。
+    evidence: [docs/qst/BETA_LEGAL_SIGNOFF.yaml, docs/qst/ARC_ASSET_PROVENANCE.yaml, docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml, reports/qst/QST-426.md]
+
+  - id: QST-427
+    title: Runtime Operations and Evidence Status Normalization
+    status: Planned
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: feedback、incident、SLO、rollbackを実演し、Backlogの多数statusを共通lifecycleとevidence stateへ正規化する。
+    depends_on: [QST-401, QST-419, QST-420]
+    blocks: [QST-428, External Beta Distribution]
+    acceptance:
+      - named owner、tester channel、S0/S1 count、acknowledgement SLAを実在情報で記録する。
+      - privacy-safe observability sink、alert receipt、feature pause、artifact rollbackを実演する。
+      - QST statusをPlanned、InProgress、Implemented、Validated、Completed、Blocked、Supersededへ正規化する。
+      - deployment、device、legal、providerなどのevidence stateはstatusと分離する。
+      - 既存履歴を失わず、SSOT verifierと集計を更新する。
+    evidence: [docs/qst/BETA_FEEDBACK_OPERATIONS.yaml, docs/qst/RUNTIME_SLO_DRILL.yaml, tools/qst/verify_backlog_ssot.dart, reports/qst/QST-427.md]
+
+  - id: QST-428
+    title: QST-419 to QST-427 Completion Review
+    status: Planned
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: candidate、hosted、RLS、Web、Android、AI、法務、asset、operationsを同一SHAで横断評価し、完成度とGo No-Goを更新する。
+    depends_on: [QST-419, QST-420, QST-421, QST-422, QST-423, QST-424, QST-425, QST-426, QST-427]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - Questra Completion Level Evaluation Promptを変更せず同一基準で再実行する。
+      - 既存QST-394から401の未完了状態を新しい証拠から更新する。
+      - すべてのevidence SHA、artifact hash、environment、timestampを照合する。
+      - blocked gateが一つでもあればExternal BetaをGOにしない。
+      - score、finding、残余risk、次のQSTをレポートへ出力する。
+    evidence: [docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml, reports/qst/QST-419-428-CROSS-REVIEW.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

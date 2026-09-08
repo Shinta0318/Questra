@@ -8,6 +8,7 @@ import { deterministicSafetyAssessment } from "../_shared/safety_guard.ts";
 import { groundedMissionSearch } from "../_shared/grounded_search_provider.ts";
 
 type ArcChatRequest = {
+  trace_id?: string;
   message?: string;
   history?: Array<{ role?: string; text?: string }>;
   context?: {
@@ -30,6 +31,7 @@ Deno.serve(async (req) => {
   if (!payload) {
     return jsonResponse({ error: "Invalid JSON body" }, { status: 400 });
   }
+  const traceId = normalizeTraceId(payload.trace_id) ?? crypto.randomUUID();
   const message = limitText(payload.message?.trim() ?? "", 1_200);
   if (!message) {
     return jsonResponse({
@@ -42,6 +44,7 @@ Deno.serve(async (req) => {
       related_quest_ids: [],
       requires_clarification: false,
       safety_status: "restricted",
+      trace_id: traceId,
     });
   }
   const safety = deterministicSafetyAssessment(message);
@@ -60,6 +63,7 @@ Deno.serve(async (req) => {
       requires_clarification: false,
       safety_status: "blocked",
       safety,
+      trace_id: traceId,
     });
   }
 
@@ -99,11 +103,11 @@ Deno.serve(async (req) => {
       responseSchema: arcChatSchema,
       maxOutputTokens: 1_400,
     });
-    if (!result) return jsonResponse(buildFallbackResponse(payload));
+    if (!result) return jsonResponse(buildFallbackResponse(payload, traceId));
 
     const parsed = JSON.parse(stripJsonFence(result.text)) as Record<string, unknown>;
     const messageText = normalizeArcMessage(text(parsed.message));
-    if (!messageText) return jsonResponse(buildFallbackResponse(payload));
+    if (!messageText) return jsonResponse(buildFallbackResponse(payload, traceId));
     const intentType = routingHint === "conversation_support"
       ? "conversation_support"
       : normalizeIntentType(parsed.intent_type);
@@ -133,9 +137,10 @@ Deno.serve(async (req) => {
         : [],
       grounding_sources: grounding?.sources ?? [],
       context_usage: contextUsage(journeyContext),
+      trace_id: traceId,
     });
   } catch (_error) {
-    return jsonResponse(buildFallbackResponse(payload));
+    return jsonResponse(buildFallbackResponse(payload, traceId));
   }
 });
 
@@ -450,7 +455,7 @@ function shouldGroundSearch(
     /(どんな|どう|必要|おすすめ|最新|比較|相場|ルール|使い方|苦手|？|\?)/.test(message);
 }
 
-function buildFallbackResponse(payload: ArcChatRequest) {
+function buildFallbackResponse(payload: ArcChatRequest, traceId: string) {
   const quest = payload.context?.active_quests?.[0];
   const trail = payload.context?.recent_trails?.[0];
   const task = payload.context?.recent_tasks?.[0];
@@ -478,5 +483,15 @@ function buildFallbackResponse(payload: ArcChatRequest) {
     requires_clarification: false,
     safety_status: "restricted",
     context_usage: contextUsage(payload.context),
+    trace_id: traceId,
   };
+}
+
+function normalizeTraceId(value: unknown) {
+  if (typeof value !== "string") return null;
+  const candidate = value.trim();
+  return candidate.length > 0 && candidate.length <= 64 &&
+      /^[a-zA-Z0-9_-]+$/.test(candidate)
+    ? candidate
+    : null;
 }

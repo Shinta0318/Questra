@@ -68,6 +68,8 @@ jobs:
           dart run tools/qst/verify_data_rights_fulfillment_drill.dart
           dart run tools/qst/verify_rls_readiness.dart
           dart run tools/qst/verify_supabase_beta_bootstrap.dart
+          dart run tools/qst/verify_connected_preview_launcher.dart
+          pwsh -NoProfile -File tools/qst/test_connected_preview.ps1
           dart run tools/qst/verify_beta_release_notes_readiness.dart
       - name: Build Web artifact
         working-directory: apps/mobile

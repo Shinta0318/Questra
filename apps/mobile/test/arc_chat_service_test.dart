@@ -256,6 +256,7 @@ void main() {
     final response = SupabaseArcChatService.parseResponseData({
       'message': 'シンガポールへ向かう星図を描いてみよう。',
       'source_type': 'gemini_interactions',
+      'trace_id': 'trace-arc-chat-1',
       'quick_actions': ['旅程を考える'],
       'intent_type': 'quest_intent',
       'intent_confidence': 0.96,
@@ -276,6 +277,7 @@ void main() {
     }, sourceInput: 'シンガポールに行きたい');
 
     expect(response.sourceType, 'gemini_interactions');
+    expect(response.deliveryMode, ArcChatDeliveryMode.remoteVerified);
     expect(response.questSuggestion!.title, 'シンガポールを訪れる');
     expect(response.questSuggestion!.difficulty, QuestDifficulty.normal);
   });
@@ -322,6 +324,8 @@ void main() {
       final response = SupabaseArcChatService.parseResponseData(
         {
           'message': 'この情報をMissionに反映できるよ。',
+          'source_type': 'gemini_interactions',
+          'trace_id': 'trace-quest-change-1',
           'intent_type': 'active_quest_support',
           'intent_confidence': 0.91,
           'quest_cta': {'show': false, 'reason': ''},

@@ -12,8 +12,12 @@ void main() {
       overview.sections.map((section) => section.type),
       containsAll(SettingsSectionType.values),
     );
-    expect(overview.sections.first.title, '操作と演出');
-    expect(overview.sections.first.type, SettingsSectionType.experience);
+    expect(overview.sections.first.title, '接続状態');
+    expect(overview.sections.first.type, SettingsSectionType.connection);
+    expect(
+      overview.sections.map((section) => section.type),
+      contains(SettingsSectionType.experience),
+    );
     expect(overview.sections.last.type, SettingsSectionType.feedback);
     expect(
       overview.sections

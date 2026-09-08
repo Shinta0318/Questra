@@ -1,4 +1,5 @@
 enum SettingsSectionType {
+  connection,
   experience,
   planning,
   tutorial,
@@ -42,11 +43,28 @@ class SettingsInformationArchitectureService {
 
   SettingsInformationArchitecture buildOverview({
     bool remotePersistenceConnected = false,
+    bool authenticated = false,
+    bool localMockPreview = false,
   }) {
     return SettingsInformationArchitecture(
       heading: '設定メニュー',
       summary: '変更したい項目を選んでください。',
       sections: [
+        SettingsSectionOverview(
+          type: SettingsSectionType.connection,
+          title: '接続状態',
+          summary: localMockPreview
+              ? '端末内プレビューとオンライン機能を区別して確認します。'
+              : 'データ保存とArcのオンライン応答の準備状態を確認します。',
+          statusLabel: remotePersistenceConnected && authenticated
+              ? '応答確認待ち'
+              : localMockPreview
+              ? 'プレビュー'
+              : remotePersistenceConnected
+              ? 'ログインが必要'
+              : '利用できません',
+          destination: 'connection',
+        ),
         const SettingsSectionOverview(
           type: SettingsSectionType.experience,
           title: '操作と演出',

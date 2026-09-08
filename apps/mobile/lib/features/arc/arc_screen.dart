@@ -67,6 +67,7 @@ import 'arc_emotion_timeline_controller.dart';
 import 'arc_emotion_timeline_model.dart';
 import 'arc_guidance_providers.dart';
 import 'arc_action_trigger_service.dart';
+import 'arc_remote_status_controller.dart';
 
 const _missionUuid = Uuid();
 
@@ -116,6 +117,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
   int _draftLoadGeneration = 0;
   Future<void> _draftWriteChain = Future.value();
   final Set<String> _declinedQuestInputs = {};
+  String? _lastFailedInput;
 
   @override
   void initState() {
@@ -290,17 +292,13 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
                   if (_clarificationSession == null)
                     _ArcActionCard(
                       actions: _quickActions,
-                      onQuickAction: (action) =>
-                          action.intent == ArcQuickActionIntent.createQuest ||
-                              action.intent == ArcQuickActionIntent.discussWish
-                          ? _openQuestCreation()
-                          : _send(
-                              action.prompt,
-                              quests: quests,
-                              missions: missions,
-                              trails: trails,
-                              memories: memories.asData?.value ?? const [],
-                            ),
+                      onQuickAction: (action) => _handleQuickAction(
+                        action,
+                        quests: quests,
+                        missions: missions,
+                        trails: trails,
+                        memories: memories.asData?.value ?? const [],
+                      ),
                     ),
                   const SizedBox(height: AppSpacing.md),
                   _ArcDetailsDisclosure(
@@ -692,6 +690,24 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       final response = await ref
           .read(arcChatServiceProvider)
           .send(userMessage: text, history: _messages, context: context);
+      switch (response.deliveryMode) {
+        case ArcChatDeliveryMode.remoteVerified:
+          ref
+              .read(arcRemoteStatusProvider.notifier)
+              .markVerified(
+                traceId: response.traceId,
+                latencyClass:
+                    response.latencyClass ?? ArcRemoteLatencyClass.slow,
+              );
+        case ArcChatDeliveryMode.localPreview:
+          ref.read(arcRemoteStatusProvider.notifier).markPreview();
+        case ArcChatDeliveryMode.degraded:
+          ref
+              .read(arcRemoteStatusProvider.notifier)
+              .markDegraded(
+                failureReason: response.failureReason ?? 'remote_failure',
+              );
+      }
       final arcMessage = ArcChatMessage(
         text:
             response.clarificationQuestions.isNotEmpty &&
@@ -731,12 +747,17 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
         _quickActions = response.quickActions.isEmpty
             ? _quickActions
             : response.quickActions.take(5).toList(growable: false);
+        _lastFailedInput = response.deliveryMode == ArcChatDeliveryMode.degraded
+            ? text
+            : null;
         _isThinking = false;
       });
       _saveDraft();
       _scrollToLatest();
       _recordChatAction(ArcActionTrigger.arcChatResponded);
-      await _rememberChat(userMessage, arcMessage, context);
+      if (response.deliveryMode != ArcChatDeliveryMode.degraded) {
+        await _rememberChat(userMessage, arcMessage, context);
+      }
     } catch (_) {
       if (!mounted) {
         return;
@@ -749,12 +770,71 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
             createdAt: DateTime.now(),
           ),
         );
+        _pendingQuestSuggestion = null;
+        _clarificationSession = null;
+        _pendingQuestChanges = const [];
+        _quickActions = const ['もう一度試す', '入力を編集する', 'あとで続ける'];
+        _lastFailedInput = text;
         _isThinking = false;
       });
+      ref
+          .read(arcRemoteStatusProvider.notifier)
+          .markDegraded(failureReason: 'remote_failure');
       _saveDraft();
       _recordChatAction(ArcActionTrigger.saveFailure);
       _scrollToLatest();
     }
+  }
+
+  void _handleQuickAction(
+    ArcQuickAction action, {
+    required List<Quest> quests,
+    required List<Mission> missions,
+    required List<Trail> trails,
+    required List<ArcMemory> memories,
+  }) {
+    if (action.label == 'もう一度試す') {
+      final failedInput = _lastFailedInput;
+      if (failedInput != null && failedInput.isNotEmpty) {
+        _send(
+          failedInput,
+          quests: quests,
+          missions: missions,
+          trails: trails,
+          memories: memories,
+        );
+      }
+      return;
+    }
+    if (action.label == '入力を編集する') {
+      final failedInput = _lastFailedInput;
+      if (failedInput != null) {
+        _controller
+          ..text = failedInput
+          ..selection = TextSelection.collapsed(offset: failedInput.length);
+      }
+      return;
+    }
+    if (action.label == 'あとで続ける') {
+      setState(() {
+        _lastFailedInput = null;
+        _quickActions = const ['やりたいことを相談', '今日の一歩を決める', '情報を調べる'];
+      });
+      _saveDraft();
+      return;
+    }
+    if (action.intent == ArcQuickActionIntent.createQuest ||
+        action.intent == ArcQuickActionIntent.discussWish) {
+      _openQuestCreation();
+      return;
+    }
+    _send(
+      action.prompt,
+      quests: quests,
+      missions: missions,
+      trails: trails,
+      memories: memories,
+    );
   }
 
   Future<void> _applyQuestChange(
