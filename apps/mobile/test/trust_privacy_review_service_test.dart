@@ -34,6 +34,7 @@ void main() {
       'Betaでは未接続',
     );
     expect(review.futureActions, contains('データエクスポート'));
+    expect(review.betaNotices, contains(contains('東京リージョン')));
     expect(review.betaNotices, contains(contains('自動送信しません')));
     expect(review.betaNotices, contains(contains('まだ利用できません')));
     expect(review.legalStatus, contains('法務確認'));

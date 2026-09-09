@@ -5108,7 +5108,7 @@ items:
 
   - id: QST-426
     title: Legal Asset and License Release Closure
-    status: Planned
+    status: InProgress
     priority: P0
     epic: BETA-COMPLETION-SPRINT
     goal: Product、Legal、Release owner、連絡先、同意version、Arc asset権利、dependency noticeをcandidateへ結合する。
