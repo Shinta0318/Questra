@@ -4996,7 +4996,7 @@ items:
 
   - id: QST-419
     title: Current Candidate Baseline Refresh
-    status: ImplementedValidationPending
+    status: Implemented
     priority: P0
     epic: BETA-COMPLETION-SPRINT
     goal: QST-417と418を含む意図した変更だけをclean SHAへ固定し、artifact、rollback、candidate manifestを現在化する。

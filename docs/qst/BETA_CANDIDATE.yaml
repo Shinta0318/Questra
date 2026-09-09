@@ -2,11 +2,11 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "4d316c6b47604664293b4176b0a54d12e4564c1e"
-rollback_commit: "61e75cf483393ce51067bff92d28e45e99ead48a"
+source_commit: "ecb80731190930cc5b1d12ff082b6abfec963059"
+rollback_commit: "0c134f3137823c76cea53546d9b055677f700d75"
 branch: "codex/initial-questra-structure-pr"
-generated_at_utc: "2026-09-03T04:36:59.305668Z"
-worktree_clean_before_manifest: false
+generated_at_utc: "2026-09-08T23:48:32.299896Z"
+worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
   latest_local_migration: "202609030001_explicit_server_only_table_grants.sql"
@@ -25,7 +25,7 @@ inventory:
     - "quest-planning-tools"
     - "quest-planning-v2"
     - "research-mission-resources"
-  flutter_test_file_count: 202
+  flutter_test_file_count: 220
   supabase_evidence_status: "local_migration_pending_deployment"
   supabase_evidence_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
   rls_evidence_status: "local_migration_pending_deployment"
@@ -35,15 +35,15 @@ inventory:
   candidate_asset_package_status: "blocked_ownership_review_pending"
   dependency_license_status: "generated_review_pending"
 automated_gates:
-  dependency_resolution: "not_run"
-  static_analysis: "not_run"
-  flutter_tests: "not_run"
-  rls_static_readiness: "not_run"
-  performance_readiness: "not_run"
-  feedback_readiness: "not_run"
-  error_capture_contract: "not_run"
-  privacy_copy_contract: "not_run"
-  release_notes_contract: "not_run"
+  dependency_resolution: "passed"
+  static_analysis: "passed"
+  flutter_tests: "passed"
+  rls_static_readiness: "passed"
+  performance_readiness: "passed"
+  feedback_readiness: "passed"
+  error_capture_contract: "passed"
+  privacy_copy_contract: "failed"
+  release_notes_contract: "passed"
 external_evidence:
   complete: false
   matches_candidate_sha: false
@@ -58,9 +58,14 @@ external_evidence:
     - candidate_asset_package
     - dependency_license_notices
 artifacts:
-  - status: not_built
-    path: null
-    sha256: null
+  - status: found
+    path: "artifacts/candidate/questra-web-ecb80731190930cc5b1d12ff082b6abfec963059.zip"
+    bytes: 16432914
+    sha256: "29645ce4145e398858df8c19eda224f1c242dce95b2d9b1d50963bb1a31097ba"
+  - status: found
+    path: "artifacts/candidate/questra-android-ecb80731190930cc5b1d12ff082b6abfec963059.apk"
+    bytes: 63757970
+    sha256: "f8a64636a56732d61549022ae75f73c17cc0a8b73c245dbbd63c34dc1d15424a"
 guardrails:
   local_fallback_is_cloud_evidence: false
   automated_checks_replace_external_evidence: false
