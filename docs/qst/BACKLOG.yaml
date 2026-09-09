@@ -5230,7 +5230,7 @@ items:
 
   - id: QST-428
     title: QST-419 to QST-427 Completion Review
-    status: Planned
+    status: InProgress
     evidence_state: external_pending
     priority: P0
     epic: BETA-COMPLETION-SPRINT

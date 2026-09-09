@@ -1,21 +1,22 @@
 version: 1
-qst: QST-367
+qst: QST-428
 decision: no_go
 distribution_ready: false
-evaluated_at_utc: "2026-09-03T04:37:03.889089Z"
-candidate_source_commit: "4d316c6b47604664293b4176b0a54d12e4564c1e"
+evaluated_at_utc: "2026-09-09T06:16:50.6009113Z"
+candidate_source_commit: "ecb80731190930cc5b1d12ff082b6abfec963059"
+review_source_commit: "b5fecd999f4df83890722ffa0b20181adbb34ee6"
 latest_local_migration: "202609030001_explicit_server_only_table_grants.sql"
-worktree_clean_at_evaluation: false
+worktree_clean_at_evaluation: true
 summary:
-  passed: 0
-  blocked: 12
+  passed: 1
+  blocked: 11
 gates:
   - id: candidate_identity
     title: "Candidate identity and immutable artifacts"
-    status: blocked
+    status: passed
     evidence:
       - "docs/qst/BETA_CANDIDATE.yaml"
-    blocker: "Approve a clean SHA-bound candidate with checksummed artifacts."
+    blocker: null
   - id: hosted_supabase
     title: "Hosted migrations and Edge Functions"
     status: blocked
