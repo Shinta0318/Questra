@@ -14,12 +14,22 @@ void main() {
   const allowed = <String>{
     'Planned',
     'InProgress',
-    'ImplementedFoundation',
     'Implemented',
-    'ImplementedValidationPending',
-    'ImplementedExternalEvidencePending',
+    'Validated',
+    'Completed',
     'Blocked',
     'Superseded',
+  };
+  const allowedEvidenceStates = <String>{
+    'not_started',
+    'local_partial',
+    'local_verified',
+    'external_pending',
+    'external_partial',
+    'external_verified',
+    'human_approval_pending',
+    'human_approved',
+    'not_required',
   };
   final lines = backlogFile.readAsLinesSync();
   final seen = <String>{};
@@ -27,11 +37,13 @@ void main() {
   String? currentId;
   var currentNumber = 0;
   var hasStatus = false;
+  var hasEvidenceState = false;
   var hasEvidence = false;
 
   void closeEntry() {
     if (currentId == null || currentNumber < 338) return;
     if (!hasStatus) errors.add('$currentId has no status.');
+    if (!hasEvidenceState) errors.add('$currentId has no evidence_state.');
     if (!hasEvidence) errors.add('$currentId has no evidence list.');
   }
 
@@ -43,6 +55,7 @@ void main() {
       currentId = 'QST-${idMatch.group(1)}';
       if (!seen.add(currentId)) errors.add('Duplicate QST ID: $currentId');
       hasStatus = false;
+      hasEvidenceState = false;
       hasEvidence = false;
       continue;
     }
@@ -55,6 +68,16 @@ void main() {
         errors.add('$currentId uses non-canonical status: $status');
       }
     }
+    final evidenceStateMatch = RegExp(
+      r'^    evidence_state: (.+)$',
+    ).firstMatch(line);
+    if (evidenceStateMatch != null) {
+      final evidenceState = evidenceStateMatch.group(1)!.trim();
+      hasEvidenceState = true;
+      if (!allowedEvidenceStates.contains(evidenceState)) {
+        errors.add('$currentId uses unknown evidence_state: $evidenceState');
+      }
+    }
     if (line.startsWith('    evidence: [')) hasEvidence = true;
   }
   closeEntry();
@@ -62,6 +85,9 @@ void main() {
   final taxonomy = taxonomyFile.readAsStringSync();
   if (!taxonomy.contains('canonical_backlog: $backlogPath')) {
     errors.add('Status taxonomy does not name the canonical backlog.');
+  }
+  if (!taxonomy.contains('separation_required_from_qst: 338')) {
+    errors.add('Status taxonomy does not require evidence separation.');
   }
   if (errors.isNotEmpty) {
     stderr.writeln(errors.join('\n'));
