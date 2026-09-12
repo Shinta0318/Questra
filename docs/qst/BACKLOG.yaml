@@ -5263,6 +5263,23 @@ items:
       - RouterとInteractions Adapterの契約テストが通る。
     evidence: [supabase/functions/_shared/quest_planning/model_registry_test.ts, apps/mobile/test/gemini_quest_planning_modernization_contract_test.dart, reports/qst/QST-429.md]
 
+  - id: QST-430
+    title: Gemini Executed Model Attribution Integrity
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: fallbackを含む各Provider試行で実際に使われたmodelとthinking levelを成功・失敗の両方へ正確に記録する。
+    depends_on: [QST-249, QST-429]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - fallback失敗時のProviderResponseへ実行したfallback modelを記録する。
+      - modelが決定済みの失敗で既定thinking levelへ誤って置換しない。
+      - HTTP失敗、schema失敗、例外、settlement失敗で同じattribution契約を使う。
+      - trace IDとidempotency keyを試行間で維持する。
+      - 実Provider URLをmockしたDenoテストで異なる2 modelの試行と最終証跡を検証する。
+    evidence: [supabase/functions/_shared/quest_planning/interactions_adapter_test.ts, reports/qst/QST-430.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

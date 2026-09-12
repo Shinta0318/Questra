@@ -23,11 +23,16 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
     );
   }
   let lastError = classifyProviderError();
+  let lastModelName = primaryModel.name;
+  let lastThinkingLevel = request.thinkingLevel ??
+    resolveThinkingLevel(request.modelRole, primaryModel);
   for (let attempt = 1; attempt <= 2; attempt++) {
     const model = attempt === 1
       ? primaryModel
       : resolveFallbackModel(request.modelRole, primaryModel.name, { allowPreview });
     const thinkingLevel = request.thinkingLevel ?? resolveThinkingLevel(request.modelRole, model);
+    lastModelName = model.name;
+    lastThinkingLevel = thinkingLevel;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), bounded(request.timeoutMs, 25_000, 5_000, 60_000));
     try {
@@ -76,6 +81,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           providerMessage ?? lastError.message,
           response.status,
           model.name,
+          thinkingLevel,
         );
       }
       const data = await response.json() as Record<string, unknown>;
@@ -90,7 +96,16 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
             await delay(400);
             continue;
           }
-          return await releaseAndFail(request, startedAt, reservation.reservationId, "malformed_output", "Structured output was not valid JSON", undefined, model.name);
+          return await releaseAndFail(
+            request,
+            startedAt,
+            reservation.reservationId,
+            "malformed_output",
+            "Structured output was not valid JSON",
+            undefined,
+            model.name,
+            thinkingLevel,
+          );
         }
         const schemaIssues = validateJsonSchema(output, request.responseSchema);
         if (schemaIssues.length > 0) {
@@ -106,6 +121,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
             `Structured output failed schema validation at ${schemaIssues[0].path}`,
             undefined,
             model.name,
+            thinkingLevel,
           );
         }
       }
@@ -132,6 +148,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           "AI usage settlement failed",
           undefined,
           model.name,
+          thinkingLevel,
         );
       }
       return result;
@@ -144,6 +161,9 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           reservation.reservationId,
           lastError.code,
           lastError.message,
+          undefined,
+          model.name,
+          thinkingLevel,
         );
       }
       await delay(attempt * 400);
@@ -157,6 +177,9 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
     reservation.reservationId,
     lastError.code,
     lastError.message,
+    undefined,
+    lastModelName,
+    lastThinkingLevel,
   );
 }
 
@@ -168,9 +191,10 @@ async function releaseAndFail(
   message: string,
   status?: number,
   model = "unresolved",
+  thinkingLevel?: ProviderResponse["thinkingLevel"],
 ) {
   await releaseAiBudget(reservationId, code);
-  return failure(request, startedAt, code, message, status, model);
+  return failure(request, startedAt, code, message, status, model, thinkingLevel);
 }
 
 function budgetErrorCode(reason: string): ProviderErrorCode {
@@ -181,12 +205,20 @@ function budgetErrorCode(reason: string): ProviderErrorCode {
   return "budget_unavailable";
 }
 
-function failure(request: ProviderRequest, startedAt: number, code: ProviderErrorCode, message: string, status?: number, model = "unresolved"): ProviderResponse {
+function failure(
+  request: ProviderRequest,
+  startedAt: number,
+  code: ProviderErrorCode,
+  message: string,
+  status?: number,
+  model = "unresolved",
+  thinkingLevel?: ProviderResponse["thinkingLevel"],
+): ProviderResponse {
   return {
     provider: "gemini",
     model,
     modelVersion: model,
-    thinkingLevel: request.thinkingLevel ?? "low",
+    thinkingLevel: thinkingLevel ?? request.thinkingLevel ?? "low",
     output: null,
     text: "",
     toolCalls: [],
