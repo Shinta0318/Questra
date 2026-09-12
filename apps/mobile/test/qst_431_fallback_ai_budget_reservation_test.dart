@@ -45,10 +45,15 @@ void main() {
     expect(admission, contains('response.status !== 429'));
     expect(adapter, contains('primaryModel.name'));
     expect(adapter, contains('fallbackModel.name'));
-    expect(adapter, contains('if (!text)'));
+    expect(adapter, contains('if (!text && toolCalls.length === 0)'));
     expect(adapter, contains('"Provider output was empty"'));
+    expect(adapter, contains('let output: unknown = text || null'));
     expect(
-      adapter.indexOf('if (!text)'),
+      adapter,
+      contains('request.responseSchema && toolCalls.length === 0'),
+    );
+    expect(
+      adapter.indexOf('if (!text && toolCalls.length === 0)'),
       lessThan(adapter.indexOf('let output: unknown = text')),
     );
     expect(adapter, contains('usage.total_input_tokens'));
@@ -59,6 +64,7 @@ void main() {
       contains('generatedOutputTokens + thoughtTokens'),
     );
     expect(adapter, contains('Number.isSafeInteger(value) && value >= 0'));
+    expect(adapter, contains('finishReason: stringValue(data.status)'));
     expect(
       adapter.indexOf('await reserveAiBudget'),
       lessThan(adapter.indexOf('await fetch(INTERACTIONS_URL')),

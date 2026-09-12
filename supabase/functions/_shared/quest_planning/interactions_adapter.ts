@@ -99,7 +99,8 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
       }
       const data = await response.json() as Record<string, unknown>;
       const text = extractText(data);
-      if (!text) {
+      const toolCalls = extractToolCalls(data);
+      if (!text && toolCalls.length === 0) {
         if (attempt === 1) {
           await delay(400);
           continue;
@@ -115,8 +116,8 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           thinkingLevel,
         );
       }
-      let output: unknown = text;
-      if (request.responseSchema) {
+      let output: unknown = text || null;
+      if (request.responseSchema && toolCalls.length === 0) {
         try {
           output = JSON.parse(text);
         } catch (_) {
@@ -161,11 +162,12 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
         thinkingLevel,
         output,
         text,
-        toolCalls: extractToolCalls(data),
+        toolCalls,
         groundingMetadata: extractGroundingMetadata(data),
         usage: extractUsage(data),
         latencyMs: Date.now() - startedAt,
-        finishReason: stringValue(data.finish_reason) ?? "completed",
+        finishReason: stringValue(data.status) ??
+          stringValue(data.finish_reason) ?? "completed",
         traceId: request.traceId,
         error: null,
       };

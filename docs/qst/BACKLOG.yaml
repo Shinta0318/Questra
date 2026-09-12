@@ -5367,7 +5367,7 @@ items:
     depends_on: [QST-430, QST-434]
     blocks: [QST-425, External Beta Distribution]
     acceptance:
-      - 空文字、空steps、text抽出不能を成功扱いしない。
+      - tool callを含まない空文字、空steps、text抽出不能を成功扱いしない。
       - primaryの空応答は許可済みfallback modelで一度だけ再試行する。
       - fallbackも空ならmalformed_outputとして予約を解放する。
       - 空応答をDBへ生成結果として保存しない。
@@ -5394,6 +5394,26 @@ items:
       - 正式usageがある成功応答をbudget settlement失敗へ誤分類しない。
       - usage解析の実行テストとFlutter契約テストが通る。
     evidence: [supabase/functions/_shared/quest_planning/contracts.ts, supabase/functions/_shared/quest_planning/interactions_adapter.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-436.md]
+
+  - id: QST-437
+    title: Gemini Tool-only Interaction Boundary
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 本文を伴わない正当なFunction Calling応答を空回答と誤判定せず、未承認の書き込みから分離して上位層へ返す。
+    depends_on: [QST-254, QST-435, QST-436]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - text抽出前後でfunction callを構造化して保持する。
+      - tool callがある場合だけ本文なし応答を許可する。
+      - tool-only応答へStructured OutputのJSON解析を適用しない。
+      - interaction statusをfinish reasonへ保持する。
+      - Adapter自身はtoolを実行せず、DB書き込みもしない。
+      - usageを精算し、trace、model、thinkingを維持する。
+      - toolなし空応答のfail-closed挙動を維持する。
+      - tool-onlyと空応答のruntime mockが通る。
+    evidence: [supabase/functions/_shared/quest_planning/interactions_adapter.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-437.md]
 
 deferred_existing_items:
   - id: QST-044
