@@ -1,5 +1,5 @@
 import { classifyProviderError, shouldRetry } from "./errors.ts";
-import { resolveModel } from "./model_registry.ts";
+import { resolveFallbackModel, resolveModel } from "./model_registry.ts";
 import { ProviderErrorCode, ProviderRequest, ProviderResponse, ProviderToolCall } from "./contracts.ts";
 import { resolveThinkingLevel } from "./thinking_policy.ts";
 import { validateJsonSchema } from "./json_schema_validator.ts";
@@ -24,7 +24,9 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
   }
   let lastError = classifyProviderError();
   for (let attempt = 1; attempt <= 2; attempt++) {
-    const model = resolveModel(request.modelRole, { fallback: attempt > 1, allowPreview });
+    const model = attempt === 1
+      ? primaryModel
+      : resolveFallbackModel(request.modelRole, primaryModel.name, { allowPreview });
     const thinkingLevel = request.thinkingLevel ?? resolveThinkingLevel(request.modelRole, model);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), bounded(request.timeoutMs, 25_000, 5_000, 60_000));

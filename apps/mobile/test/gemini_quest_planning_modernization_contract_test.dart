@@ -8,7 +8,8 @@ void main() {
       ? Directory.current.parent.parent
       : Directory.current;
 
-  String read(String path) => File('${root.path}/$path').readAsStringSync();
+  String read(String path) => File('${root.path}/$path')
+      .readAsStringSync().replaceAll('\r\n', '\n');
 
   test(
     'new Quest Planning uses Interactions and pinned stable model routing',
@@ -27,6 +28,7 @@ void main() {
       expect(adapter, contains('toGeminiSchema(request.responseSchema)'));
       expect(adapter, contains('key === "properties"'));
       expect(adapter, contains('if (attempt === 1)'));
+      expect(adapter, contains('resolveFallbackModel('));
       expect(
         adapter,
         isNot(contains('"minItems", "maxItems", "minimum", "maximum"')),
@@ -45,6 +47,13 @@ void main() {
         ),
       );
       expect(models, contains('defaultThinkingLevel: "minimal"'));
+      expect(
+        models,
+        contains(r'GEMINI_FALLBACK_MODEL_${role.toUpperCase()}'),
+      );
+      expect(models, contains('candidate === primaryModelName'));
+      expect(models, contains('definition.releaseType === "latest"'));
+      expect(models, contains('definition.releaseType === "experimental"'));
     },
   );
 

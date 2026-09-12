@@ -5245,6 +5245,24 @@ items:
       - score、finding、残余risk、次のQSTをレポートへ出力する。
     evidence: [docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml, reports/qst/QST-419-428-CROSS-REVIEW.md]
 
+  - id: QST-429
+    title: Gemini Model Router Failover Integrity
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 環境変数でprimary modelを上書きした場合も、再試行で別の許可済みmodelへ確実に切り替わるようModel Routerを修正する。
+    depends_on: [QST-249, QST-425]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - primaryとfallbackの環境変数を独立して設定できる。
+      - provider再試行時に失敗したprimaryと同じmodelを再選択しない。
+      - unknown、disabled、latest、experimental modelをproduction経路へ採用しない。
+      - Preview modelは明示feature flagなしで採用しない。
+      - model切替後も同じidempotency keyを維持し、重複保存を発生させない。
+      - RouterとInteractions Adapterの契約テストが通る。
+    evidence: [supabase/functions/_shared/quest_planning/model_registry_test.ts, apps/mobile/test/gemini_quest_planning_modernization_contract_test.dart, reports/qst/QST-429.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass
