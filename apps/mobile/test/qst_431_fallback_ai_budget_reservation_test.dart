@@ -45,6 +45,12 @@ void main() {
     expect(admission, contains('response.status !== 429'));
     expect(adapter, contains('primaryModel.name'));
     expect(adapter, contains('fallbackModel.name'));
+    expect(adapter, contains('if (!text)'));
+    expect(adapter, contains('"Provider output was empty"'));
+    expect(
+      adapter.indexOf('if (!text)'),
+      lessThan(adapter.indexOf('let output: unknown = text')),
+    );
     expect(
       adapter.indexOf('await reserveAiBudget'),
       lessThan(adapter.indexOf('await fetch(INTERACTIONS_URL')),

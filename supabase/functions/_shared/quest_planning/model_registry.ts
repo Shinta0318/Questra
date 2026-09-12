@@ -1,4 +1,4 @@
-import { ModelRole, ThinkingLevel } from "./contracts.ts";
+import type { ModelRole, ThinkingLevel } from "./contracts.ts";
 
 export type ModelReleaseType = "stable" | "preview" | "latest" | "experimental";
 

@@ -1,6 +1,11 @@
 import { classifyProviderError, shouldRetry } from "./errors.ts";
 import { resolveFallbackModel, resolveModel } from "./model_registry.ts";
-import { ProviderErrorCode, ProviderRequest, ProviderResponse, ProviderToolCall } from "./contracts.ts";
+import type {
+  ProviderErrorCode,
+  ProviderRequest,
+  ProviderResponse,
+  ProviderToolCall,
+} from "./contracts.ts";
 import { resolveThinkingLevel } from "./thinking_policy.ts";
 import { validateJsonSchema } from "./json_schema_validator.ts";
 import { releaseAiBudget, reserveAiBudget, settleAiBudget } from "./ai_budget_admission.ts";
@@ -94,6 +99,22 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
       }
       const data = await response.json() as Record<string, unknown>;
       const text = extractText(data);
+      if (!text) {
+        if (attempt === 1) {
+          await delay(400);
+          continue;
+        }
+        return await releaseAndFail(
+          request,
+          startedAt,
+          reservation.reservationId,
+          "malformed_output",
+          "Provider output was empty",
+          undefined,
+          model.name,
+          thinkingLevel,
+        );
+      }
       let output: unknown = text;
       if (request.responseSchema) {
         try {

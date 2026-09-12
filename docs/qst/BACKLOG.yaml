@@ -5357,6 +5357,25 @@ items:
       - hosted配備と同時実行テスト前はExternal BetaをGOにしない。
     evidence: [supabase/migrations/202609120002_ai_budget_idempotent_recovery.sql, supabase/functions/_shared/quest_planning/ai_budget_admission.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-434.md]
 
+  - id: QST-435
+    title: Gemini Empty Output Fail-Closed Handling
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: HTTP成功でも本文が空のGemini応答を成功・課金済みArc回答として返さない。
+    depends_on: [QST-430, QST-434]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - 空文字、空steps、text抽出不能を成功扱いしない。
+      - primaryの空応答は許可済みfallback modelで一度だけ再試行する。
+      - fallbackも空ならmalformed_outputとして予約を解放する。
+      - 空応答をDBへ生成結果として保存しない。
+      - 実行model、thinking level、trace IDを失敗証跡へ維持する。
+      - 利用者向けUIへprovider内部情報を露出しない。
+      - 空応答と既存fallbackの契約テストが通る。
+    evidence: [supabase/functions/_shared/quest_planning/interactions_adapter.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-435.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass
