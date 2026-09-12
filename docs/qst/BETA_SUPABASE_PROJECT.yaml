@@ -1,6 +1,6 @@
 version: 2
 status: local_migration_pending_deployment
-updated_at_utc: "2026-08-24T00:00:00Z"
+updated_at_utc: "2026-09-12T00:00:00Z"
 candidate_source_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
 working_tree_clean_at_deploy: false
 project:
@@ -13,7 +13,7 @@ project:
   cli_version: "2.111.0"
 migrations:
   status: local_pending_deployment
-  latest_local: "202609030001_explicit_server_only_table_grants.sql"
+  latest_local: "202609120001_fallback_ai_budget_reservation.sql"
   remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   command: "supabase migration list --linked"
   applied_at_utc: "2026-08-08T14:29:40Z"

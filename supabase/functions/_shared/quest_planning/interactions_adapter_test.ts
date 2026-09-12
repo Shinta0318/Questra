@@ -14,11 +14,14 @@ Deno.test("fallback failure reports the model and thinking level actually execut
   );
   const originalFetch = globalThis.fetch;
   const providerModels: string[] = [];
+  const reservedModels: string[] = [];
   try {
     for (const [key, value] of Object.entries(env)) Deno.env.set(key, value);
     globalThis.fetch = (async (input, init) => {
       const url = String(input);
-      if (url.endsWith("/rpc/reserve_ai_usage_budget")) {
+      if (url.endsWith("/rpc/reserve_ai_usage_budget_v2")) {
+        const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        reservedModels.push(...body.p_model_names as string[]);
         return jsonResponse({
           allowed: true,
           reservation_id: "11111111-1111-4111-8111-111111111111",
@@ -38,6 +41,7 @@ Deno.test("fallback failure reports the model and thinking level actually execut
 
     const result = await callGeminiInteraction(request());
 
+    assertArrayEquals(reservedModels, ["gemini-3.6-flash", "gemini-3.5-flash"]);
     assertArrayEquals(providerModels, ["gemini-3.6-flash", "gemini-3.5-flash"]);
     assertEquals(result.model, "gemini-3.5-flash");
     assertEquals(result.thinkingLevel, "high");

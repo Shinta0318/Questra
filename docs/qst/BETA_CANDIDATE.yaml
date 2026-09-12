@@ -9,7 +9,7 @@ generated_at_utc: "2026-09-08T23:48:32.299896Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
-  latest_local_migration: "202609030001_explicit_server_only_table_grants.sql"
+  latest_local_migration: "202609120001_fallback_ai_budget_reservation.sql"
   remote_migration_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   edge_function_count: 12
   edge_functions:

@@ -5280,6 +5280,25 @@ items:
       - 実Provider URLをmockしたDenoテストで異なる2 modelの試行と最終証跡を検証する。
     evidence: [supabase/functions/_shared/quest_planning/interactions_adapter_test.ts, reports/qst/QST-430.md]
 
+  - id: QST-431
+    title: Fallback AI Budget Reservation Integrity
+    status: Implemented
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: primaryとfallbackの候補modelすべてを考慮し、最も高い有効単価でAI利用予算を原子的に予約する。
+    depends_on: [QST-342, QST-429, QST-430]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - primaryとfallbackの候補modelを一つの予約RPCへ渡す。
+      - 有効な価格がない候補modelを含む場合はprovider呼び出し前にfail closedする。
+      - 候補中で最大の推定費用を使い、既存の月次上限と冪等予約を維持する。
+      - 実利用量の精算は実際に実行したmodelとtoken数で行う。
+      - 予約RPCはservice role以外から実行できない。
+      - migrationとadapterの契約テスト、およびfallback mock testが通る。
+      - hosted migration配備前はExternal BetaをGOにしない。
+    evidence: [supabase/migrations/202609120001_fallback_ai_budget_reservation.sql, supabase/functions/_shared/quest_planning/interactions_adapter_test.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-431.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

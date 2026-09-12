@@ -13,7 +13,15 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
   if (!apiKey) return failure(request, startedAt, "unknown", "GEMINI_API_KEY is not configured");
   const allowPreview = Deno.env.get("AI_ALLOW_PREVIEW_MODELS") === "true";
   const primaryModel = resolveModel(request.modelRole, { allowPreview });
-  const reservation = await reserveAiBudget(request, primaryModel.name);
+  const fallbackModel = resolveFallbackModel(
+    request.modelRole,
+    primaryModel.name,
+    { allowPreview },
+  );
+  const reservation = await reserveAiBudget(request, [
+    primaryModel.name,
+    fallbackModel.name,
+  ]);
   if (!reservation.allowed || !reservation.reservationId) {
     return failure(
       request,
@@ -29,7 +37,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
   for (let attempt = 1; attempt <= 2; attempt++) {
     const model = attempt === 1
       ? primaryModel
-      : resolveFallbackModel(request.modelRole, primaryModel.name, { allowPreview });
+      : fallbackModel;
     const thinkingLevel = request.thinkingLevel ?? resolveThinkingLevel(request.modelRole, model);
     lastModelName = model.name;
     lastThinkingLevel = thinkingLevel;

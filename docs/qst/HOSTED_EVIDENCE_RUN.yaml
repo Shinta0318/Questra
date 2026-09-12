@@ -5,7 +5,7 @@ executed_at_utc: null
 candidate_source_commit: null
 working_tree_clean_at_start: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
-latest_migration: "202609030001_explicit_server_only_table_grants.sql"
+latest_migration: "202609120001_fallback_ai_budget_reservation.sql"
 gates:
   migrations_and_functions: pending
   rls_behavior: pending

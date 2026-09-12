@@ -9,15 +9,18 @@ export type AiBudgetReservation = {
 
 export async function reserveAiBudget(
   request: ProviderRequest,
-  model: string,
+  models: string[],
 ): Promise<AiBudgetReservation> {
   if (!request.userId) return denied("user_required");
-  const response = await serviceRpc("reserve_ai_usage_budget", {
+  const modelNames = [...new Set(models.map((model) => model.trim()))]
+    .filter((model) => model.length > 0);
+  if (modelNames.length === 0) return denied("budget_model_required");
+  const response = await serviceRpc("reserve_ai_usage_budget_v2", {
     p_user_id: request.userId,
     p_operation: budgetOperation(request.operation),
     p_idempotency_key: request.idempotencyKey,
     p_provider: "gemini",
-    p_model_name: model,
+    p_model_names: modelNames,
     p_estimated_input_tokens: estimateInputTokens(request.input),
     p_max_output_tokens: bounded(request.maxOutputTokens, 2_048, 128, 16_384),
     p_trace_id: request.traceId,
@@ -29,7 +32,8 @@ export async function reserveAiBudget(
   return {
     allowed: body.allowed === true,
     reservationId: stringValue(body.reservation_id),
-    reason: stringValue(body.reason) ?? (body.allowed === true ? "reserved" : "denied"),
+    reason: stringValue(body.reason) ??
+      (body.allowed === true ? "reserved" : "denied"),
     resetsAt: stringValue(body.resets_at),
   };
 }
@@ -58,7 +62,8 @@ export async function releaseAiBudget(
 ) {
   const result = await serviceRpc("release_ai_usage_budget", {
     p_reservation_id: reservationId,
-    p_reason: reason.replace(/[^a-z0-9_.-]/gi, "_").slice(0, 80) || "provider_failed",
+    p_reason: reason.replace(/[^a-z0-9_.-]/gi, "_").slice(0, 80) ||
+      "provider_failed",
   });
   return result?.ok === true;
 }
