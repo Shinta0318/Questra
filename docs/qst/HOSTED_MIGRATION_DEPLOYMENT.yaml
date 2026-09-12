@@ -8,8 +8,8 @@ executed_at_utc: null
 cli_version: null
 migrations:
   remote_head_before: "202608080006_route_proposal_stale_conflict_guard.sql"
-  latest_local: "202609120002_ai_budget_idempotent_recovery.sql"
-  pending_at_plan: 23
+  latest_local: "202609130001_ai_pricing_effective_date_rollover.sql"
+  pending_at_plan: 24
   pending_at_execution: null
   applied_during_run: null
   remote_head_after: null
@@ -38,6 +38,7 @@ migrations:
     - "202609030001_explicit_server_only_table_grants.sql"
     - "202609120001_fallback_ai_budget_reservation.sql"
     - "202609120002_ai_budget_idempotent_recovery.sql"
+    - "202609130001_ai_pricing_effective_date_rollover.sql"
 execution:
   runner: tools/qst/run_hosted_migration_deployment.ps1
   requires:

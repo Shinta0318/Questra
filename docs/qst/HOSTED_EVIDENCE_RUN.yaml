@@ -5,7 +5,7 @@ executed_at_utc: null
 candidate_source_commit: null
 working_tree_clean_at_start: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
-latest_migration: "202609120002_ai_budget_idempotent_recovery.sql"
+latest_migration: "202609130001_ai_pricing_effective_date_rollover.sql"
 gates:
   migrations_and_functions: pending
   rls_behavior: pending
