@@ -25,7 +25,7 @@ inventory:
     - "quest-planning-tools"
     - "quest-planning-v2"
     - "research-mission-resources"
-  flutter_test_file_count: 220
+  flutter_test_file_count: 222
   supabase_evidence_status: "local_migration_pending_deployment"
   supabase_evidence_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
   rls_evidence_status: "local_migration_pending_deployment"

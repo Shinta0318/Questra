@@ -1,5 +1,26 @@
 import { callGeminiInteraction } from "./interactions_adapter.ts";
+import { estimateProviderInputTokens } from "./ai_budget_admission.ts";
 import type { ProviderRequest } from "./contracts.ts";
+
+Deno.test("budget estimate includes provider envelope and CJK text", () => {
+  const value = request();
+  value.systemInstruction = "利用者の希望を安全な航路として整理してください。";
+  value.responseSchema = {
+    type: "object",
+    properties: { title: { type: "string" } },
+    required: ["title"],
+  };
+  value.tools = [{ type: "google_search" }];
+
+  const inputOnlyEstimate = Math.ceil(JSON.stringify(value.input).length / 4);
+  const estimate = estimateProviderInputTokens(value);
+
+  if (estimate <= inputOnlyEstimate * 2) {
+    throw new Error(
+      `Expected full-envelope estimate above ${inputOnlyEstimate * 2}, got ${estimate}`,
+    );
+  }
+});
 
 Deno.test("fallback failure reports the model and thinking level actually executed", async () => {
   const env = {

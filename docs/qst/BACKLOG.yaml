@@ -5299,6 +5299,25 @@ items:
       - hosted migration配備前はExternal BetaをGOにしない。
     evidence: [supabase/migrations/202609120001_fallback_ai_budget_reservation.sql, supabase/functions/_shared/quest_planning/interactions_adapter_test.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-431.md]
 
+  - id: QST-432
+    title: Provider Payload Token Reservation Accuracy
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: AI予算予約の入力token見積りへsystem instruction、schema、tool定義、日本語特性を含め、月次費用上限の過小予約を防ぐ。
+    depends_on: [QST-342, QST-431]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - 実provider payloadに含まれるinput、system instruction、response schema、toolsを見積り対象にする。
+      - 英数字と非ASCII文字を同じ4文字/tokenとして過小評価しない。
+      - 固定overheadと安全marginを加える。
+      - providerへ送らない上限超過inputを予約対象へ含めない。
+      - 実利用量はprovider usageと実行modelで精算する。
+      - model候補別の最大費用予約を維持する。
+      - 見積り契約と既存fallback挙動の回帰テストが通る。
+    evidence: [supabase/functions/_shared/quest_planning/ai_budget_admission.ts, supabase/functions/_shared/quest_planning/interactions_adapter_test.ts, reports/qst/QST-432.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

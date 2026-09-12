@@ -1,4 +1,4 @@
-import { ProviderRequest, ProviderResponse } from "./contracts.ts";
+import type { ProviderRequest, ProviderResponse } from "./contracts.ts";
 
 export type AiBudgetReservation = {
   allowed: boolean;
@@ -21,7 +21,7 @@ export async function reserveAiBudget(
     p_idempotency_key: request.idempotencyKey,
     p_provider: "gemini",
     p_model_names: modelNames,
-    p_estimated_input_tokens: estimateInputTokens(request.input),
+    p_estimated_input_tokens: estimateProviderInputTokens(request),
     p_max_output_tokens: bounded(request.maxOutputTokens, 2_048, 128, 16_384),
     p_trace_id: request.traceId,
     p_abuse_key_hash: request.abuseKeyHash ?? null,
@@ -77,9 +77,31 @@ function budgetOperation(operation: string) {
   return "quest_planning";
 }
 
-function estimateInputTokens(input: unknown) {
-  const chars = (JSON.stringify(input) ?? "{}").length;
-  return Math.max(1, Math.ceil(chars / 4));
+export function estimateProviderInputTokens(request: ProviderRequest) {
+  const envelope = JSON.stringify({
+    input: boundedInputJson(request.input),
+    system_instruction: request.systemInstruction,
+    response_schema: request.responseSchema ?? null,
+    tools: request.tools ?? [],
+  });
+  let asciiCharacters = 0;
+  let nonAsciiCharacters = 0;
+  for (const character of envelope) {
+    if ((character.codePointAt(0) ?? 0) <= 0x7f) {
+      asciiCharacters++;
+    } else {
+      nonAsciiCharacters++;
+    }
+  }
+  const estimatedTokens = Math.ceil(asciiCharacters / 4) +
+    nonAsciiCharacters;
+  const safetyMargin = Math.ceil(estimatedTokens * 0.15);
+  return Math.max(1, estimatedTokens + safetyMargin + 32);
+}
+
+function boundedInputJson(input: unknown) {
+  const text = JSON.stringify(input) ?? "{}";
+  return text.slice(0, 40_000);
 }
 
 async function serviceRpc(name: string, body: Record<string, unknown>) {
