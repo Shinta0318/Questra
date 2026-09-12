@@ -79,7 +79,7 @@ function budgetOperation(operation: string) {
 
 export function estimateProviderInputTokens(request: ProviderRequest) {
   const envelope = JSON.stringify({
-    input: boundedInputJson(request.input),
+    input: boundedInputJson(request.interactionHistory ?? request.input),
     system_instruction: request.systemInstruction,
     response_schema: request.responseSchema ?? null,
     tools: request.tools ?? [],

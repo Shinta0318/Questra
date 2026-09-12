@@ -28,6 +28,8 @@ export type ProviderRequest = {
   input: unknown;
   responseSchema?: Record<string, unknown>;
   tools?: ProviderTool[];
+  // Stateless Interactions continuation history. This remains in memory only.
+  interactionHistory?: unknown[];
   thinkingLevel?: ThinkingLevel;
   timeoutMs?: number;
   maxOutputTokens?: number;
@@ -70,6 +72,8 @@ export type ProviderResponse = {
   finishReason: string;
   traceId: string;
   error: ProviderError | null;
+  // Raw model steps needed to continue store=false function calls. Never persist.
+  continuation?: { steps: unknown[] };
 };
 
 export type ProviderErrorCode =

@@ -5436,8 +5436,8 @@ items:
 
   - id: QST-439
     title: Gemini Function Call Continuation Orchestrator
-    status: Planned
-    evidence_state: not_started
+    status: Validated
+    evidence_state: local_verified
     priority: P0
     epic: BETA-COMPLETION-SPRINT
     goal: requires_action応答を認可済みQuestra Tool Serverで処理し、同じInteractionを安全に継続して最終Structured Outputを得る。
@@ -5451,7 +5451,7 @@ items:
       - 最大step数、timeout、循環、重複書き込みを制限する。
       - 最終Structured Outputをschemaとsemantic validatorへ通す。
       - tool callと結果をprivacy-safe auditへ記録する。
-    evidence: [reports/qst/QST-439.md]
+    evidence: [supabase/functions/_shared/quest_planning/tool_interaction_orchestrator.ts, supabase/functions/_shared/quest_planning/tool_interaction_orchestrator_test.ts, supabase/functions/_shared/quest_planning/tool_server.ts, supabase/functions/_shared/quest_planning/pipeline.ts, reports/qst/QST-439.md]
 
   - id: QST-440
     title: Gemini Pricing Effective-date Rollover

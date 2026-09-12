@@ -51,7 +51,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
     try {
       const body: Record<string, unknown> = {
         model: model.name,
-        input: boundedJson(request.input),
+        input: request.interactionHistory ?? boundedJson(request.input),
         system_instruction: request.systemInstruction,
         store: false,
         generation_config: {
@@ -170,6 +170,9 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           stringValue(data.finish_reason) ?? "completed",
         traceId: request.traceId,
         error: null,
+        continuation: toolCalls.length > 0
+          ? { steps: extractContinuationSteps(data) }
+          : undefined,
       };
       if (!await settleAiBudget(reservation.reservationId, result)) {
         return failure(
@@ -294,6 +297,14 @@ function extractToolCalls(data: Record<string, unknown>) {
     });
   });
   return calls;
+}
+
+export function extractContinuationSteps(data: Record<string, unknown>) {
+  if (!Array.isArray(data.steps)) return [];
+  return data.steps.filter((step) => {
+    if (!isRecord(step)) return false;
+    return step.type !== "user_input" && step.type !== "function_result";
+  });
 }
 
 function extractGroundingMetadata(data: Record<string, unknown>) {
