@@ -9,6 +9,16 @@ void main() {
   final decision = evaluateExternalBetaReadiness();
   final failures = <String>[];
 
+  _expect(
+    content,
+    '  passed: ${decision.gates.where((gate) => gate.passed).length}',
+    failures,
+  );
+  _expect(
+    content,
+    '  blocked: ${decision.gates.where((gate) => !gate.passed).length}',
+    failures,
+  );
   _expect(content, 'decision: ${decision.decision}', failures);
   _expect(
     content,
@@ -30,9 +40,34 @@ void main() {
     'latest_local_migration: "${decision.latestMigration}"',
     failures,
   );
+  final declaredGateIds = RegExp(
+    r'^  - id: ([a-z0-9_]+)$',
+    multiLine: true,
+  ).allMatches(content).map((match) => match.group(1)!).toList();
+  final expectedGateIds = decision.gates.map((gate) => gate.id).toList();
+  if (declaredGateIds.length != expectedGateIds.length ||
+      declaredGateIds.toSet().length != declaredGateIds.length ||
+      !expectedGateIds.every(declaredGateIds.contains)) {
+    failures.add('Gate IDs are missing, duplicated, or unexpected.');
+  }
   for (final gate in decision.gates) {
-    _expect(content, '  - id: ${gate.id}', failures);
-    _expect(content, '    status: ${gate.status}', failures);
+    final block = externalBetaGateBlock(content, gate.id);
+    if (block == null) {
+      failures.add('Missing gate block: ${gate.id}');
+      continue;
+    }
+    _expect(block, '    title: "${_yaml(gate.title)}"', failures);
+    _expect(block, '    status: ${gate.status}', failures);
+    for (final evidence in gate.evidence) {
+      _expect(block, '      - "$evidence"', failures);
+    }
+    if (gate.passed) {
+      if (block.contains('    blocker:')) {
+        failures.add('Passed gate ${gate.id} must not declare a blocker.');
+      }
+    } else {
+      _expect(block, '    blocker: "${_yaml(gate.blocker)}"', failures);
+    }
   }
   for (final guardrail in const [
     'static_test_is_external_evidence: false',
@@ -58,6 +93,15 @@ void main() {
     'External Beta Go/No-Go verification passed: ${decision.decision}.',
   );
 }
+
+String? externalBetaGateBlock(String content, String gateId) {
+  return RegExp(
+    '^  - id: ${RegExp.escape(gateId)}\\s*\$([\\s\\S]*?)(?=^  - id: |^guardrails:)',
+    multiLine: true,
+  ).firstMatch(content)?.group(0);
+}
+
+String _yaml(String value) => value.replaceAll('"', '\\"');
 
 void _expect(String content, String snippet, List<String> failures) {
   if (!content.contains(snippet)) failures.add('Missing or stale: $snippet');

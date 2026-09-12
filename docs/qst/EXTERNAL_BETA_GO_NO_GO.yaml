@@ -8,15 +8,15 @@ review_source_commit: "b5fecd999f4df83890722ffa0b20181adbb34ee6"
 latest_local_migration: "202609120002_ai_budget_idempotent_recovery.sql"
 worktree_clean_at_evaluation: true
 summary:
-  passed: 1
-  blocked: 11
+  passed: 0
+  blocked: 12
 gates:
   - id: candidate_identity
     title: "Candidate identity and immutable artifacts"
-    status: passed
+    status: blocked
     evidence:
       - "docs/qst/BETA_CANDIDATE.yaml"
-    blocker: null
+    blocker: "Approve a clean SHA-bound candidate with checksummed artifacts."
   - id: hosted_supabase
     title: "Hosted migrations and Edge Functions"
     status: blocked

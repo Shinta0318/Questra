@@ -5415,6 +5415,63 @@ items:
       - tool-onlyと空応答のruntime mockが通る。
     evidence: [supabase/functions/_shared/quest_planning/interactions_adapter.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-437.md]
 
+  - id: QST-438
+    title: QST-429 to QST-437 Cross-functional Integrity Review
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 10件のAI基盤変更をコード、UI/UX、AI、DB、Security、Master Specの観点で横断評価し、証跡gateの偽陽性を排除する。
+    depends_on: [QST-429, QST-430, QST-431, QST-432, QST-433, QST-434, QST-435, QST-436, QST-437]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - 各変更のmodel、usage、budget、fallback、tool境界を横断確認する。
+      - External Beta gateのstatusを各gate block内で照合する。
+      - gate IDの欠落、重複、余分なIDを拒否する。
+      - summary件数と実評価を一致させる。
+      - draft candidateをpassedとして表示しない。
+      - hosted、physical device、legal、provider-backed証拠をlocal testで代替しない。
+      - 次のQSTへ残課題を反映する。
+    evidence: [tools/qst/verify_external_beta_go_no_go.dart, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml, reports/qst/QST-438.md]
+
+  - id: QST-439
+    title: Gemini Function Call Continuation Orchestrator
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: requires_action応答を認可済みQuestra Tool Serverで処理し、同じInteractionを安全に継続して最終Structured Outputを得る。
+    depends_on: [QST-254, QST-437, QST-438]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - allowlist済みfunctionだけを実行する。
+      - tool引数、user、quest ownership、RLSを検証する。
+      - write toolは利用者の明示承認前に実行しない。
+      - tool結果から同じInteractionを継続する。
+      - 最大step数、timeout、循環、重複書き込みを制限する。
+      - 最終Structured Outputをschemaとsemantic validatorへ通す。
+      - tool callと結果をprivacy-safe auditへ記録する。
+    evidence: [reports/qst/QST-439.md]
+
+  - id: QST-440
+    title: Gemini Pricing Effective-date Rollover
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: model価格の将来変更をeffective date付きで登録し、予約と精算が実行日時の正しいrateを選ぶようにする。
+    depends_on: [QST-249, QST-431, QST-436, QST-438]
+    blocks: [QST-425]
+    acceptance:
+      - 公式価格の現行rateと次期rateを重複なく登録する。
+      - rate間の空白期間と重複期間をverifierで拒否する。
+      - 予約時刻と精算時刻のrate境界を定義する。
+      - 過去のreservationを新価格で再計算しない。
+      - unknown modelと期限切れrateはfail closedする。
+      - 価格source、確認日、通貨、単位を証跡へ残す。
+      - 境界日時のDB testを追加する。
+    evidence: [reports/qst/QST-440.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass
