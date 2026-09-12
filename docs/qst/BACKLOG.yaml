@@ -5376,6 +5376,25 @@ items:
       - 空応答と既存fallbackの契約テストが通る。
     evidence: [supabase/functions/_shared/quest_planning/interactions_adapter.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-435.md]
 
+  - id: QST-436
+    title: Gemini Interactions Usage Settlement Contract
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: Interactions API正式usage fieldを解析し、thinkingを含む実課金tokenで予算を精算する。
+    depends_on: [QST-430, QST-432, QST-435]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - total_input_tokens、total_output_tokens、total_thought_tokensを優先して解析する。
+      - output課金へvisible outputとthinking tokenを一度だけ加算する。
+      - cached tokenとtool-use tokenを別内訳として保持する。
+      - legacy usage fieldとの移行互換性を維持する。
+      - 負数、小数、非数値tokenを精算へ渡さない。
+      - 正式usageがある成功応答をbudget settlement失敗へ誤分類しない。
+      - usage解析の実行テストとFlutter契約テストが通る。
+    evidence: [supabase/functions/_shared/quest_planning/contracts.ts, supabase/functions/_shared/quest_planning/interactions_adapter.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-436.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

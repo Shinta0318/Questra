@@ -51,6 +51,14 @@ void main() {
       adapter.indexOf('if (!text)'),
       lessThan(adapter.indexOf('let output: unknown = text')),
     );
+    expect(adapter, contains('usage.total_input_tokens'));
+    expect(adapter, contains('usage.total_output_tokens'));
+    expect(adapter, contains('usage.total_thought_tokens'));
+    expect(
+      adapter,
+      contains('generatedOutputTokens + thoughtTokens'),
+    );
+    expect(adapter, contains('Number.isSafeInteger(value) && value >= 0'));
     expect(
       adapter.indexOf('await reserveAiBudget'),
       lessThan(adapter.indexOf('await fetch(INTERACTIONS_URL')),

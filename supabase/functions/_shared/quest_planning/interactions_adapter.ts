@@ -354,16 +354,31 @@ function safeDomain(value: string) {
   }
 }
 
-function extractUsage(data: Record<string, unknown>) {
+export function extractUsage(data: Record<string, unknown>) {
   const usage = isRecord(data.usage)
     ? data.usage
     : isRecord(data.usage_metadata)
     ? data.usage_metadata
     : {};
+  const generatedOutputTokens = tokenValue(usage.total_output_tokens) ??
+    tokenValue(usage.output_tokens) ??
+    tokenValue(usage.candidates_token_count);
+  const thoughtTokens = tokenValue(usage.total_thought_tokens) ??
+    tokenValue(usage.thoughts_token_count) ?? 0;
   return {
-    inputTokens: numberValue(usage.input_tokens) ?? numberValue(usage.prompt_token_count),
-    outputTokens: numberValue(usage.output_tokens) ?? numberValue(usage.candidates_token_count),
-    totalTokens: numberValue(usage.total_tokens) ?? numberValue(usage.total_token_count),
+    inputTokens: tokenValue(usage.total_input_tokens) ??
+      tokenValue(usage.input_tokens) ??
+      tokenValue(usage.prompt_token_count),
+    outputTokens: generatedOutputTokens === undefined
+      ? (thoughtTokens || undefined)
+      : generatedOutputTokens + thoughtTokens,
+    totalTokens: tokenValue(usage.total_tokens) ??
+      tokenValue(usage.total_token_count),
+    generatedOutputTokens,
+    thoughtTokens,
+    cachedTokens: tokenValue(usage.total_cached_tokens) ??
+      tokenValue(usage.cached_content_token_count),
+    toolUseTokens: tokenValue(usage.total_tool_use_tokens),
   };
 }
 
@@ -412,4 +427,9 @@ function bounded(value: number | undefined, fallback: number, min: number, max: 
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null; }
 function stringValue(value: unknown) { return typeof value === "string" && value.trim() ? value.trim() : null; }
 function numberValue(value: unknown) { return typeof value === "number" && Number.isFinite(value) ? value : undefined; }
+function tokenValue(value: unknown) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0
+    ? value
+    : undefined;
+}
 function delay(ms: number) { return new Promise((resolve) => setTimeout(resolve, ms)); }

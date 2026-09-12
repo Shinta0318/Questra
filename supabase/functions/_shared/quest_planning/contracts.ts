@@ -47,8 +47,13 @@ export type ProviderToolCall = {
 
 export type ProviderUsage = {
   inputTokens?: number;
+  // Billable output: visible model output plus thinking tokens.
   outputTokens?: number;
   totalTokens?: number;
+  generatedOutputTokens?: number;
+  thoughtTokens?: number;
+  cachedTokens?: number;
+  toolUseTokens?: number;
 };
 
 export type ProviderResponse = {
