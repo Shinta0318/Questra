@@ -31,6 +31,9 @@ test("adapter sends stateless history and preserves continuation steps", async (
           reason: "reserved",
         });
       }
+      if (url.endsWith("/rpc/record_ai_provider_execution_receipt")) {
+        return jsonResponse({ recorded: true, idempotent: false });
+      }
       if (url.endsWith("/rpc/settle_ai_usage_budget")) {
         return jsonResponse({ settled: true });
       }

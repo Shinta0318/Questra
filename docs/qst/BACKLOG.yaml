@@ -5474,8 +5474,8 @@ items:
 
   - id: QST-441
     title: AI Budget Settlement Reconciliation
-    status: Planned
-    evidence_state: not_started
+    status: Validated
+    evidence_state: local_verified
     priority: P1
     epic: BETA-COMPLETION-SPRINT
     goal: provider成功後に精算応答を失ったreservationを安全に再照合し、二重課金や永続reservedを防ぐ。
@@ -5489,7 +5489,26 @@ items:
       - reconciliation attempt、結果、理由を監査する。
       - service role以外は実行できない。
       - hosted recovery drill手順とrollbackを文書化する。
-    evidence: [reports/qst/QST-441.md]
+    evidence: [supabase/migrations/202609130002_ai_budget_settlement_reconciliation.sql, supabase/functions/_shared/quest_planning/ai_budget_admission.ts, supabase/functions/_shared/quest_planning/ai_budget_reconciliation_test.ts, apps/mobile/test/qst_441_ai_budget_reconciliation_test.dart, supabase/tests/qst_441_ai_budget_reconciliation.sql, reports/qst/QST-441.md]
+
+  - id: QST-442
+    title: AI Provider Receipt Retention and Privacy Lifecycle
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: AI provider実行証跡を必要最小限の期間だけ保持し、監査可能性と利用者プライバシーを両立する。
+    depends_on: [QST-377, QST-441]
+    blocks: [QST-425]
+    acceptance:
+      - receipt、attempt、caseごとに保持期間と削除条件を定義する。
+      - open caseに必要な証跡を解決前に削除しない。
+      - provider interaction IDを保持期限後に削除または不可逆化する。
+      - 利用者のデータ削除要求と法的保持例外を明確に分離する。
+      - retention workerはservice role限定かつ冪等にする。
+      - 削除件数、除外件数、理由を内容非保持の監査ログへ残す。
+      - hosted retention drillとrollback手順を文書化する。
+    evidence: [reports/qst/QST-442.md]
 
 deferred_existing_items:
   - id: QST-044

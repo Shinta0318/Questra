@@ -46,6 +46,20 @@ export async function settleAiBudget(
     response.usage.inputTokens === undefined ||
     response.usage.outputTokens === undefined
   ) return false;
+  const receipt = await serviceRpc("record_ai_provider_execution_receipt", {
+    p_reservation_id: reservationId,
+    p_provider_interaction_id: response.providerInteractionId ?? null,
+    p_model_name: response.model,
+    p_input_tokens: response.usage.inputTokens,
+    p_output_tokens: response.usage.outputTokens,
+    p_finish_reason: response.finishReason.slice(0, 80),
+    p_trace_id: response.traceId,
+  });
+  if (!receipt?.ok) return false;
+  const receiptOutcome = await safeJson(receipt);
+  if (!isRecord(receiptOutcome) || receiptOutcome.recorded !== true) {
+    return false;
+  }
   const result = await serviceRpc("settle_ai_usage_budget", {
     p_reservation_id: reservationId,
     p_model_name: response.model,
@@ -53,7 +67,13 @@ export async function settleAiBudget(
     p_output_tokens: response.usage.outputTokens,
     p_finish_reason: response.finishReason.slice(0, 80),
   });
-  return result?.ok === true;
+  if (result?.ok === true) return true;
+  const reconciliation = await serviceRpc("reconcile_ai_usage_budget", {
+    p_reservation_id: reservationId,
+  });
+  if (!reconciliation?.ok) return false;
+  const outcome = await safeJson(reconciliation);
+  return isRecord(outcome) && outcome.reconciled === true;
 }
 
 export async function releaseAiBudget(
@@ -175,7 +195,7 @@ function bounded(
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function stringValue(value: unknown) {

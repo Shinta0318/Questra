@@ -60,6 +60,7 @@ export type ProviderUsage = {
 
 export type ProviderResponse = {
   provider: AiProviderName;
+  providerInteractionId?: string;
   model: string;
   modelVersion: string;
   thinkingLevel: ThinkingLevel;

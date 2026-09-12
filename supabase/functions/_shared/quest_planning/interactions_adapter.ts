@@ -157,6 +157,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
       }
       const result: ProviderResponse = {
         provider: "gemini",
+        providerInteractionId: stringValue(data.id) ?? undefined,
         model: model.name,
         modelVersion: model.family,
         thinkingLevel,
