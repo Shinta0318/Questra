@@ -5,7 +5,7 @@ distribution_ready: false
 evaluated_at_utc: "2026-09-09T06:16:50.6009113Z"
 candidate_source_commit: "ecb80731190930cc5b1d12ff082b6abfec963059"
 review_source_commit: "b5fecd999f4df83890722ffa0b20181adbb34ee6"
-latest_local_migration: "202609120001_fallback_ai_budget_reservation.sql"
+latest_local_migration: "202609120002_ai_budget_idempotent_recovery.sql"
 worktree_clean_at_evaluation: true
 summary:
   passed: 1

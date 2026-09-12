@@ -5337,6 +5337,26 @@ items:
       - timeout動作と静的契約をテストする。
     evidence: [supabase/functions/_shared/quest_planning/ai_budget_admission.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-433.md]
 
+  - id: QST-434
+    title: AI Budget Idempotent Reservation Recovery
+    status: Implemented
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: DB予約完了後のHTTP応答喪失から同一予約を安全に回収し、二重課金とArc生成停止を防ぐ。
+    depends_on: [QST-431, QST-433]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - 同一user、operation、idempotency keyの有効なreserved行だけを再利用する。
+      - 再利用前にproviderと必要予約費用が既存予約で満たされることを検証する。
+      - settled、released、expired、費用不足の予約を再利用しない。
+      - advisory transaction lockで初回予約と再試行の競合を直列化する。
+      - reserve、settle、releaseを最大2回までtimeout付きで再試行する。
+      - retry後もprovider呼び出しは一度だけにする。
+      - service role以外から回収RPCを実行できない。
+      - hosted配備と同時実行テスト前はExternal BetaをGOにしない。
+    evidence: [supabase/migrations/202609120002_ai_budget_idempotent_recovery.sql, supabase/functions/_shared/quest_planning/ai_budget_admission.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-434.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

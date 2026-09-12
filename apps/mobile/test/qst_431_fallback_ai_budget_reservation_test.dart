@@ -12,6 +12,9 @@ void main() {
     final migration = read(
       'supabase/migrations/202609120001_fallback_ai_budget_reservation.sql',
     );
+    final recoveryMigration = read(
+      'supabase/migrations/202609120002_ai_budget_idempotent_recovery.sql',
+    );
     final admission = read(
       'supabase/functions/_shared/quest_planning/ai_budget_admission.ts',
     );
@@ -23,6 +26,14 @@ void main() {
     expect(migration, contains('p_model_names text[]'));
     expect(migration, contains('ai_model_cost_rate_missing'));
     expect(migration, contains('order by public.ai_token_cost_micros('));
+    expect(recoveryMigration, contains('idempotency_resumed'));
+    expect(recoveryMigration, contains('pg_advisory_xact_lock'));
+    expect(
+      recoveryMigration,
+      contains('reserved_cost_micros >= v_required_cost'),
+    );
+    expect(recoveryMigration, contains("v_existing.status = 'reserved'"));
+    expect(recoveryMigration, contains('for update'));
     expect(migration, contains("auth.role() is distinct from 'service_role'"));
     expect(migration, contains('to service_role'));
     expect(admission, contains('reserve_ai_usage_budget_v2'));
@@ -30,6 +41,8 @@ void main() {
     expect(admission, contains('AI_BUDGET_RPC_TIMEOUT_MS'));
     expect(admission, contains('signal: controller.signal'));
     expect(admission, contains('clearTimeout(timeout)'));
+    expect(admission, contains('attempt <= 2'));
+    expect(admission, contains('response.status !== 429'));
     expect(adapter, contains('primaryModel.name'));
     expect(adapter, contains('fallbackModel.name'));
     expect(

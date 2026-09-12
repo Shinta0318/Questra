@@ -108,24 +108,34 @@ async function serviceRpc(name: string, body: Record<string, unknown>) {
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) return null;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), resolveBudgetRpcTimeout());
-  try {
-    return await fetch(`${url}/rest/v1/rpc/${name}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-  } catch (_) {
-    return null;
-  } finally {
-    clearTimeout(timeout);
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      resolveBudgetRpcTimeout(),
+    );
+    try {
+      const response = await fetch(`${url}/rest/v1/rpc/${name}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: key,
+          Authorization: `Bearer ${key}`,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      if (response.ok || (response.status < 500 && response.status !== 429)) {
+        return response;
+      }
+    } catch (_) {
+      // A lost response is safe to retry because all budget RPCs are idempotent.
+    } finally {
+      clearTimeout(timeout);
+    }
+    if (attempt < 2) await delay(150 * attempt);
   }
+  return null;
 }
 
 export function resolveBudgetRpcTimeout(
@@ -135,6 +145,10 @@ export function resolveBudgetRpcTimeout(
   return Number.isFinite(parsed)
     ? Math.min(10_000, Math.max(500, parsed))
     : 4_000;
+}
+
+function delay(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 async function safeJson(response: Response): Promise<unknown> {
