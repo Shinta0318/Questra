@@ -5318,6 +5318,25 @@ items:
       - 見積り契約と既存fallback挙動の回帰テストが通る。
     evidence: [supabase/functions/_shared/quest_planning/ai_budget_admission.ts, supabase/functions/_shared/quest_planning/interactions_adapter_test.ts, reports/qst/QST-432.md]
 
+  - id: QST-433
+    title: AI Budget Admission Timeout Boundary
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: Supabase予算RPCの無応答がArcとQuest Planningを無期限に停止させないよう、provider呼び出し前のtimeout境界を実装する。
+    depends_on: [QST-431, QST-432]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - reserve、settle、releaseの全予算RPCへAbortSignalを設定する。
+      - timeout既定値をserver環境変数で変更できる。
+      - 異常値を500msから10秒へ制限する。
+      - timeout timerを成功、失敗の両方で必ず解放する。
+      - 予約失敗時はGemini providerを呼ばない。
+      - timeout時に秘密情報やraw promptをlogへ出さない。
+      - timeout動作と静的契約をテストする。
+    evidence: [supabase/functions/_shared/quest_planning/ai_budget_admission.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-433.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass

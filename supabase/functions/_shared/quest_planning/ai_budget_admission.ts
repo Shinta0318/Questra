@@ -108,6 +108,8 @@ async function serviceRpc(name: string, body: Record<string, unknown>) {
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), resolveBudgetRpcTimeout());
   try {
     return await fetch(`${url}/rest/v1/rpc/${name}`, {
       method: "POST",
@@ -117,10 +119,22 @@ async function serviceRpc(name: string, body: Record<string, unknown>) {
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
   } catch (_) {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
+}
+
+export function resolveBudgetRpcTimeout(
+  value = Deno.env.get("AI_BUDGET_RPC_TIMEOUT_MS"),
+) {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed)
+    ? Math.min(10_000, Math.max(500, parsed))
+    : 4_000;
 }
 
 async function safeJson(response: Response): Promise<unknown> {

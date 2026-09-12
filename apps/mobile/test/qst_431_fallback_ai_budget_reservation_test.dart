@@ -27,6 +27,9 @@ void main() {
     expect(migration, contains('to service_role'));
     expect(admission, contains('reserve_ai_usage_budget_v2'));
     expect(admission, contains('p_model_names: modelNames'));
+    expect(admission, contains('AI_BUDGET_RPC_TIMEOUT_MS'));
+    expect(admission, contains('signal: controller.signal'));
+    expect(admission, contains('clearTimeout(timeout)'));
     expect(adapter, contains('primaryModel.name'));
     expect(adapter, contains('fallbackModel.name'));
     expect(
