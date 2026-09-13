@@ -3,8 +3,8 @@ qst: QST-385
 status: hosted_deployment_required
 project_ref: dhbmgwarnrtelrcrmmfk
 remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
-latest_local: "202609130004_ai_budget_reconciliation_operator_queue.sql"
-pending_migration_count: 27
+latest_local: "202609130005_auth_bound_reconciliation_operator_identity.sql"
+pending_migration_count: 28
 deployment_order: lexical_filename_order
 evidence_documents:
   - docs/qst/BETA_SUPABASE_PROJECT.yaml

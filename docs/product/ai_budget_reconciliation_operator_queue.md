@@ -1,5 +1,9 @@
 # AI Budget Reconciliation Operator Queue
 
+> QST-445以降、人間operatorの実行経路は
+> `ai_budget_operator_identity.md`のAuth結合済みRPCを正本とする。
+> 本文のService Role経路は自動workerとQST-443時点の履歴仕様である。
+
 ## 目的
 
 Geminiなどのprovider実行後に精算状態が不明になったcaseを、登録済みoperatorが競合なく調査し、証跡に基づいて解決する。一般利用者、Flutterクライアント、通常の認証済みroleはqueue・receipt・attempt・補正requestを参照または操作できない。

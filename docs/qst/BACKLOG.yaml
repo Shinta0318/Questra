@@ -5547,8 +5547,8 @@ items:
 
   - id: QST-445
     title: Auth-bound Reconciliation Operator Identity
-    status: Planned
-    evidence_state: not_started
+    status: Completed
+    evidence_state: local_verified
     priority: P0
     epic: BETA-COMPLETION-SPRINT
     goal: operatorをSupabase Auth主体へ一意に結合し、ID引数のなりすましと同一人物による補正自己承認をDB境界で防ぐ。
@@ -5561,7 +5561,7 @@ items:
       - requesterとapproverは異なるauth userでなければならない。
       - service worker経路と人間operator経路を監査上区別する。
       - hosted二operator drillと非破壊rollbackを文書化する。
-    evidence: [reports/qst/QST-445.md]
+    evidence: [supabase/migrations/202609130005_auth_bound_reconciliation_operator_identity.sql, apps/mobile/test/qst_445_auth_bound_reconciliation_operator_test.dart, supabase/tests/qst_445_auth_bound_reconciliation_operator.sql, docs/product/ai_budget_operator_identity.md, reports/qst/QST-445.md]
 
   - id: QST-446
     title: AI Reconciliation Scheduler and SLA Alerts
