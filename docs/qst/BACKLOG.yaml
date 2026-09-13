@@ -5512,8 +5512,8 @@ items:
 
   - id: QST-443
     title: AI Budget Reconciliation Operator Queue
-    status: Planned
-    evidence_state: not_started
+    status: Completed
+    evidence_state: local_verified
     priority: P1
     epic: BETA-COMPLETION-SPRINT
     goal: 未解決のAI精算caseを最小権限でclaim、調査、解決し、利用者課金を勝手に変更しない運用境界を作る。
@@ -5527,7 +5527,7 @@ items:
       - 未解決件数、経過時間、SLA違反を識別子なしで集計できる。
       - client roleはqueue、receipt、attemptを参照できない。
       - hosted operator drillとrollback手順を文書化する。
-    evidence: [reports/qst/QST-443.md]
+    evidence: [supabase/migrations/202609130004_ai_budget_reconciliation_operator_queue.sql, apps/mobile/test/qst_443_ai_budget_reconciliation_operator_queue_test.dart, supabase/tests/qst_443_ai_budget_reconciliation_operator_queue.sql, docs/product/ai_budget_reconciliation_operator_queue.md, reports/qst/QST-443.md]
 
 deferred_existing_items:
   - id: QST-044
