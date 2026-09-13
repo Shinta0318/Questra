@@ -3,6 +3,8 @@
 > QST-445以降、人間operatorの実行経路は
 > `ai_budget_operator_identity.md`のAuth結合済みRPCを正本とする。
 > 本文のService Role経路は自動workerとQST-443時点の履歴仕様である。
+> QST-446以降の自動分類、lease回収、SLA通知は
+> `ai_budget_reconciliation_scheduler.md`を正本とする。
 
 ## 目的
 

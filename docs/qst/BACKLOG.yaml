@@ -5565,8 +5565,8 @@ items:
 
   - id: QST-446
     title: AI Reconciliation Scheduler and SLA Alerts
-    status: Planned
-    evidence_state: not_started
+    status: Completed
+    evidence_state: local_verified
     priority: P1
     epic: BETA-COMPLETION-SPRINT
     goal: stale reservation分類、queue監視、期限切れclaim回収、SLA違反通知を冪等なserver workerで自動化する。
@@ -5578,7 +5578,7 @@ items:
       - SLA違反通知は識別子や内容を含まない。
       - worker失敗を再試行し、provider実行や利用量を推測しない。
       - kill switchとrunbookを備える。
-    evidence: [reports/qst/QST-446.md]
+    evidence: [supabase/migrations/202609130006_ai_budget_reconciliation_scheduler.sql, supabase/functions/reconcile-ai-budget/index.ts, supabase/functions/_shared/ai_budget_reconciliation_worker.ts, apps/mobile/test/qst_446_ai_reconciliation_scheduler_test.dart, supabase/tests/qst_446_ai_reconciliation_scheduler.sql, docs/product/ai_budget_reconciliation_scheduler.md, reports/qst/QST-446.md]
 
   - id: QST-447
     title: Hosted AI Budget Chain Deployment and Recovery Drill

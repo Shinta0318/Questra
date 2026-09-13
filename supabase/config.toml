@@ -100,3 +100,6 @@ verify_jwt = true
 
 [functions.process-data-rights-requests]
 verify_jwt = false
+
+[functions.reconcile-ai-budget]
+verify_jwt = false
