@@ -5529,6 +5529,209 @@ items:
       - hosted operator drillとrollback手順を文書化する。
     evidence: [supabase/migrations/202609130004_ai_budget_reconciliation_operator_queue.sql, apps/mobile/test/qst_443_ai_budget_reconciliation_operator_queue_test.dart, supabase/tests/qst_443_ai_budget_reconciliation_operator_queue.sql, docs/product/ai_budget_reconciliation_operator_queue.md, reports/qst/QST-443.md]
 
+  - id: QST-444
+    title: QST-434 to QST-443 Cross-functional Integrity Review
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: AI provider、budget、reconciliation、retention、operator境界をコード、DB、セキュリティ、運用、Master Specの観点で再監査し、次の10件へ反映する。
+    depends_on: [QST-434, QST-435, QST-436, QST-437, QST-438, QST-439, QST-440, QST-441, QST-442, QST-443]
+    blocks: [QST-445]
+    acceptance:
+      - 実装証拠と外部未検証を分離する。
+      - Critical、High、Mediumの残件を重複なく整理する。
+      - SecurityとMaster Specの非交渉原則を確認する。
+      - 次の10件に依存関係と検証境界を設定する。
+    evidence: [reports/qst/QST-444.md]
+
+  - id: QST-445
+    title: Auth-bound Reconciliation Operator Identity
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: operatorをSupabase Auth主体へ一意に結合し、ID引数のなりすましと同一人物による補正自己承認をDB境界で防ぐ。
+    depends_on: [QST-443, QST-444]
+    blocks: [QST-446, QST-447]
+    acceptance:
+      - enabled operatorは一意なauth userへ結合される。
+      - 人間operator向けRPCはoperator IDを引数に取らずauth.uidから解決する。
+      - 一般authenticated userはqueueをclaimまたは閲覧できない。
+      - requesterとapproverは異なるauth userでなければならない。
+      - service worker経路と人間operator経路を監査上区別する。
+      - hosted二operator drillと非破壊rollbackを文書化する。
+    evidence: [reports/qst/QST-445.md]
+
+  - id: QST-446
+    title: AI Reconciliation Scheduler and SLA Alerts
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: stale reservation分類、queue監視、期限切れclaim回収、SLA違反通知を冪等なserver workerで自動化する。
+    depends_on: [QST-445]
+    blocks: [QST-447]
+    acceptance:
+      - schedule重複でcaseやattemptを二重作成しない。
+      - lease切れclaimを安全に再取得できる。
+      - SLA違反通知は識別子や内容を含まない。
+      - worker失敗を再試行し、provider実行や利用量を推測しない。
+      - kill switchとrunbookを備える。
+    evidence: [reports/qst/QST-446.md]
+
+  - id: QST-447
+    title: Hosted AI Budget Chain Deployment and Recovery Drill
+    status: Planned
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: QST-420のdrift closureに続き、AI予算予約からoperator補正までを同一candidate SHAの実Supabaseで検証する。
+    depends_on: [QST-420, QST-441, QST-442, QST-445, QST-446]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - latest migration headとcandidate SHAを固定する。
+      - 応答喪失、receipt競合、同時claim、自己承認拒否、補正適用を実行する。
+      - 二重counter加算がないことをSQLで証明する。
+      - Service Role Keyと利用者識別子を証跡へ残さない。
+      - rollback演習後もopen caseと監査証跡を保持する。
+    evidence: [reports/qst/QST-447.md]
+
+  - id: QST-448
+    title: Gemini Grounding Query Cost Ledger
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: token費用とは別体系のGoogle Search grounding利用量を予約、精算、監査し、最新情報Questの実原価を欠落させない。
+    depends_on: [QST-436, QST-440, QST-441]
+    blocks: [QST-425]
+    acceptance:
+      - grounding query件数と価格単位をversion付きで保持する。
+      - provider metadataから検証済み件数だけを精算する。
+      - 検索文、URL、個人情報を費用ledgerへ保存しない。
+      - Groundingなし処理へ費用を誤加算しない。
+      - 価格不明時は課金推測せずfail closedする。
+    evidence: [reports/qst/QST-448.md]
+
+  - id: QST-449
+    title: AI Cost Anomaly Detection
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: model、operation、thinking、grounding別の原価急増をprivacy-safeな集計で検出し、利用者体験を壊す前に運用停止できるようにする。
+    depends_on: [QST-448]
+    blocks: [QST-425]
+    acceptance:
+      - 日次baselineと急増率をaggregateだけで計算する。
+      - 個人のQuest、会話、user IDをalertへ保存しない。
+      - anomalyだけで利用者課金や権利を変更しない。
+      - operation kill switchへの手動導線を持つ。
+      - false positiveと復旧を監査できる。
+    evidence: [reports/qst/QST-449.md]
+
+  - id: QST-450
+    title: Provider Receipt Authenticity and Replay Guard
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: provider receiptとreservation、trace、model routeの対応を強化し、偽造、cross-reservation replay、古い応答の再利用を拒否する。
+    depends_on: [QST-439, QST-441]
+    blocks: [QST-447]
+    acceptance:
+      - receiptは発行したserver request nonceへ結合される。
+      - provider interaction IDのcross-reservation再利用を拒否する。
+      - trace、operation、model route不一致をoperator caseへ送る。
+      - raw provider outputや秘密情報を保存しない。
+      - duplicate deliveryがcounterを二重更新しない。
+    evidence: [reports/qst/QST-450.md]
+
+  - id: QST-451
+    title: Privacy-safe AI Budget Incident Export
+    status: Planned
+    evidence_state: not_started
+    priority: P2
+    epic: BETA-COMPLETION-SPRINT
+    goal: 障害調査に必要な集計証拠を内容と利用者識別子なしでexportし、サポートや監査へ安全に共有できるようにする。
+    depends_on: [QST-446, QST-449]
+    blocks: [QST-447]
+    acceptance:
+      - exportは期間、件数、reason、latency、costの集計に限定する。
+      - prompt、response、Quest、user ID、provider interaction IDを含めない。
+      - export生成者、期間、schema versionを監査する。
+      - 期限付き保存と削除手順を持つ。
+      - 小集団の再識別を抑止する閾値を設定する。
+    evidence: [reports/qst/QST-451.md]
+
+  - id: QST-452
+    title: Tool Continuation Multi-turn Cost Attribution Drill
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: stateless Function Callingの複数turn、fallback、thinking、tool resultが一つの利用量へ欠落・重複なく帰属することを検証する。
+    depends_on: [QST-439, QST-441, QST-448]
+    blocks: [QST-425]
+    acceptance:
+      - turn別usage合計と最終settlementが一致する。
+      - fallback前後のmodel attributionを保持する。
+      - tool result本文をcost evidenceへ保存しない。
+      - 中断、timeout、duplicate continuationを冪等に処理する。
+      - provider-backed mockとhosted drill手順を備える。
+    evidence: [reports/qst/QST-452.md]
+
+  - id: QST-453
+    title: AI Budget SQL Property and Concurrency Tests
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: reservation、settlement、reconciliation、claim、correctionの不変条件を実PostgreSQLのpropertyと並行testで検証する。
+    depends_on: [QST-445, QST-448, QST-450]
+    blocks: [QST-447]
+    acceptance:
+      - counterがreservation合計と一致する。
+      - 同一idempotency keyとreceipt replayで二重精算しない。
+      - 並行claimは一operatorだけが取得する。
+      - stale correction snapshotは全変更をrollbackする。
+      - random sequence後も非負、状態遷移、owner境界を保つ。
+    evidence: [reports/qst/QST-453.md]
+
+  - id: QST-454
+    title: AI Budget Operations Tabletop and Recovery SLO
+    status: Planned
+    evidence_state: not_started
+    priority: P2
+    epic: BETA-COMPLETION-SPRINT
+    goal: provider障害、精算応答喪失、queue滞留、誤補正のtabletopを行い、検知・復旧・証拠保持のSLOを確定する。
+    depends_on: [QST-446, QST-447, QST-451, QST-453]
+    blocks: [QST-455]
+    acceptance:
+      - 重大度、owner、検知時間、復旧時間、停止判断を定義する。
+      - 利用者へ技術用語や内部費用を露出しない通知方針を持つ。
+      - 誤補正は別requestで相殺し監査履歴を消さない。
+      - tabletop結果を次回QSTへ反映する。
+      - External Beta gateと矛盾しない。
+    evidence: [reports/qst/QST-454.md]
+
+  - id: QST-455
+    title: QST-445 to QST-454 Cross-functional Integrity Review
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 次の10件をコード、UI/UX、AI、DB、セキュリティ、Master Spec、外部証拠で横断レビューし、後続QSTへ反映する。
+    depends_on: [QST-445, QST-446, QST-447, QST-448, QST-449, QST-450, QST-451, QST-452, QST-453, QST-454]
+    blocks: []
+    acceptance:
+      - 各QSTの完了証拠と未検証を再分類する。
+      - Critical、High、Mediumの残差を根拠付きで示す。
+      - UI/UX対象外を実画面確認済みと扱わない。
+      - 次のBacklogを重複なく更新する。
+    evidence: [reports/qst/QST-455.md]
+
 deferred_existing_items:
   - id: QST-044
     title: Performance measurement pass
