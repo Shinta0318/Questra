@@ -14,10 +14,22 @@ class QuestraRouteBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canPop = context.canPop();
+    final router = GoRouter.maybeOf(context);
+    final navigator = Navigator.maybeOf(context);
+    final canPop = router?.canPop() ?? navigator?.canPop() ?? false;
     return IconButton(
       tooltip: canPop ? '戻る' : fallbackTooltip,
-      onPressed: () => canPop ? context.pop() : context.go(fallbackRoute),
+      onPressed: () {
+        if (router != null) {
+          if (router.canPop()) {
+            router.pop();
+          } else {
+            router.go(fallbackRoute);
+          }
+          return;
+        }
+        navigator?.maybePop();
+      },
       icon: const Icon(Icons.arrow_back),
     );
   }

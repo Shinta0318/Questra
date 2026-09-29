@@ -4,7 +4,7 @@ set -euo pipefail
 adb wait-for-device
 for attempt in {1..30}; do
   if adb shell cmd package list packages >/dev/null 2>&1 \
-    && adb shell cmd storage help >/dev/null 2>&1; then
+    && adb shell sm list-volumes all >/dev/null 2>&1; then
     break
   fi
   if [[ "$attempt" -eq 30 ]]; then

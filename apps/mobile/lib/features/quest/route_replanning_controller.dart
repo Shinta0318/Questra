@@ -299,9 +299,7 @@ class RouteReplanningController
           currentSnapshot,
           stagedSnapshot,
         );
-        final missionChanged = stagedChanges.changedEntityIds.any(
-          (id) => id.startsWith('mission:'),
-        );
+        final missionChanged = selected.any(_changesMissionRoute);
         if ((stagedChanges.changedEntityIds.contains('quest') ||
                 missionChanged) &&
             !await ref
@@ -410,6 +408,24 @@ class RouteReplanningController
       tasksRestored = false;
     }
     return questRestored && missionsRestored && tasksRestored;
+  }
+
+  bool _changesMissionRoute(RouteChangeItem item) {
+    if (item.targetTaskId != null || item.targetMissionId == null) {
+      return false;
+    }
+    return switch (item.action) {
+      RouteChangeAction.reorder ||
+      RouteChangeAction.split ||
+      RouteChangeAction.pause ||
+      RouteChangeAction.remove ||
+      RouteChangeAction.resume ||
+      RouteChangeAction.replace => true,
+      RouteChangeAction.add ||
+      RouteChangeAction.merge ||
+      RouteChangeAction.reschedule ||
+      RouteChangeAction.reestimate => false,
+    };
   }
 
   Future<RouteChangeProposal?> refreshStale(

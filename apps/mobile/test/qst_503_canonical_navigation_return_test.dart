@@ -40,6 +40,26 @@ void main() {
     expect(find.text('Profile body'), findsOneWidget);
   });
 
+  testWidgets('plain MaterialApp does not require a GoRouter ancestor', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: QuestraRouteBackButton(
+            fallbackRoute: '/profile',
+            fallbackTooltip: 'プロフィールへ戻る',
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byTooltip('プロフィールへ戻る'), findsOneWidget);
+    await tester.tap(find.byType(QuestraRouteBackButton));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+  });
+
   test('navigation SSOT names the five primary destinations and fallbacks', () {
     final document = File(
       '../../docs/architecture/mvp-navigation.md',
