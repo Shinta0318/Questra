@@ -60,14 +60,14 @@ class SecureTrailDraftRepository implements TrailDraftRepository {
       final encoded = await _storage.read(key: key);
       if (encoded == null || encoded.length > _maxEncodedBytes) return null;
       final decoded = jsonDecode(encoded);
-      if (decoded is! Map) return _failClosed(key);
+      if (decoded is! Map) return await _failClosed(key);
       final row = Map<String, dynamic>.from(decoded);
       final updatedAt = DateTime.tryParse(row['updatedAt'] as String? ?? '');
       if (row['version'] != 1 ||
           row['ownerId'] != ownerId ||
           updatedAt == null ||
           _clock().toUtc().difference(updatedAt.toUtc()) > maxAge) {
-        return _failClosed(key);
+        return await _failClosed(key);
       }
       final draft = TrailComposerDraft(
         id: row['id'] as String? ?? '',
@@ -79,7 +79,9 @@ class SecureTrailDraftRepository implements TrailDraftRepository {
         showDetails: row['showDetails'] as bool? ?? false,
         updatedAt: updatedAt,
       );
-      if (draft.id.isEmpty || draft.isEmpty) return _failClosed(key);
+      if (draft.id.isEmpty || draft.isEmpty) {
+        return await _failClosed(key);
+      }
       return draft;
     } catch (_) {
       return _failClosed(key);
@@ -91,7 +93,7 @@ class SecureTrailDraftRepository implements TrailDraftRepository {
     if (!_validOwner(ownerId) || draft.id.isEmpty) {
       throw ArgumentError('Trail draft owner or id is invalid.');
     }
-    if (draft.isEmpty) return clear(ownerId);
+    if (draft.isEmpty) return await clear(ownerId);
     final encoded = jsonEncode({
       'version': 1,
       'ownerId': ownerId,

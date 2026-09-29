@@ -51,7 +51,7 @@ class SecureOnboardingDraftRepository implements OnboardingDraftRepository {
       final encoded = await _storage.read(key: key);
       if (encoded == null || encoded.length > _maxEncodedBytes) return null;
       final decoded = jsonDecode(encoded);
-      if (decoded is! Map) return _failClosed(key);
+      if (decoded is! Map) return await _failClosed(key);
       final row = Map<String, dynamic>.from(decoded);
       final updatedAt = DateTime.tryParse(row['updatedAt'] as String? ?? '');
       final step = row['step'];
@@ -61,7 +61,7 @@ class SecureOnboardingDraftRepository implements OnboardingDraftRepository {
           !const {0, 1, 4}.contains(step) ||
           updatedAt == null ||
           _clock().toUtc().difference(updatedAt.toUtc()) > maxAge) {
-        return _failClosed(key);
+        return await _failClosed(key);
       }
       return OnboardingDraft(
         step: step,

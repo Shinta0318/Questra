@@ -6,11 +6,14 @@ import 'package:questra/core/theme/app_theme.dart';
 import 'package:questra/features/mission/mission_controller.dart';
 import 'package:questra/features/mission/mission_detail_screen.dart';
 import 'package:questra/features/mission/mission_model.dart';
+import 'package:questra/features/quest/quest_controller.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
+import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/task/task_controller.dart';
 import 'package:questra/features/task/task_detail_screen.dart';
 import 'package:questra/features/task/task_model.dart';
 import 'package:questra/features/trail/trail_controller.dart';
+import 'package:questra/features/trail/trail_model.dart';
 import 'package:questra/features/trail/trail_screen.dart';
 
 void registerQst269CoreJourneyTests() {
@@ -24,6 +27,7 @@ void registerQst269CoreJourneyTests() {
 
     final container = ProviderContainer(
       overrides: [
+        questControllerProvider.overrideWith(Qst269JourneyQuestController.new),
         missionControllerProvider.overrideWith(
           Qst269JourneyMissionController.new,
         ),
@@ -55,7 +59,8 @@ void registerQst269CoreJourneyTests() {
     await tester.ensureVisible(find.text('Taskを完了'));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(find.text('Taskを完了'));
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(
       container.read(taskControllerProvider).single.status,
       TaskStatus.completed,
@@ -64,6 +69,13 @@ void registerQst269CoreJourneyTests() {
       container.read(missionControllerProvider).single.progressPercent,
       100,
     );
+    expect(
+      find.byKey(const ValueKey('task-achievement-card')),
+      findsAtLeastNWidgets(1),
+    );
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -80,7 +92,10 @@ void registerQst269CoreJourneyTests() {
     await tester.ensureVisible(missionAction);
     await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(missionAction);
-    await tester.pumpAndSettle();
+    // Arc and journey surfaces may keep ambient animations active. Waiting for
+    // a fully settled frame would therefore hang the browser integration gate.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.textContaining('Taskの完了とは別'), findsOneWidget);
     await tester.tap(find.text('成果を確認した'));
     await tester.pump(const Duration(milliseconds: 100));
@@ -92,7 +107,17 @@ void registerQst269CoreJourneyTests() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: MaterialApp(theme: AppTheme.light, home: const TrailScreen()),
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const TrailScreen(
+            initialParent: TrailParentContext(
+              questId: 'quest-e2e',
+              questTitle: '小さな航路を完成させる',
+              missionId: 'mission-e2e',
+              missionTitle: '最初の成果を形にする',
+            ),
+          ),
+        ),
       ),
     );
     await tester.pump();
@@ -165,6 +190,20 @@ void registerQst269CoreJourneyTests() {
       semantics.dispose();
     });
   }
+}
+
+class Qst269JourneyQuestController extends QuestController {
+  @override
+  List<Quest> build() => [
+    Quest(
+      id: 'quest-e2e',
+      title: '小さな航路を完成させる',
+      description: '一つの成果を確認できる状態にする',
+      difficulty: QuestDifficulty.normal,
+      status: QuestStatus.active,
+      visibility: QuestVisibility.private,
+    ),
+  ];
 }
 
 class Qst269JourneyMissionController extends MissionController {

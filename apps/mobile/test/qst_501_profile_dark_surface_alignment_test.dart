@@ -45,6 +45,50 @@ void main() {
         );
       }
       expect(find.text('プロフィール'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('profile-account-card')),
+        -240,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump();
+      final accountTitle = tester.widget<Text>(find.text('ゲスト'));
+      expect(accountTitle.style?.color, QuestraSurfacePalette.dark.foreground);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('profile-bond-card')),
+        240,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump();
+      expect(find.text('ArcとのBond'), findsOneWidget);
+      expect(find.text('0 / 100'), findsOneWidget);
+      expect(find.text('Arc Bond'), findsNothing);
+
+      final bondTitle = tester.widget<Text>(find.text('ArcとのBond'));
+      final bondScore = tester.widget<Text>(find.text('0 / 100'));
+      expect(bondTitle.style?.color, QuestraSurfacePalette.dark.foreground);
+      expect(bondScore.style?.color, QuestraSurfacePalette.dark.foreground);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('profile-rank-card')),
+        240,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump();
+      final rankTitle = tester.widget<Text>(
+        find.text('Stardust / Navigator Rank'),
+      );
+      expect(rankTitle.style?.color, QuestraSurfacePalette.dark.foreground);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('profile-journey-card')),
+        240,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump();
+      final journeyTitle = tester.widget<Text>(find.text('旅の現在地'));
+      expect(journeyTitle.style?.color, QuestraSurfacePalette.dark.foreground);
       expect(tester.takeException(), isNull);
     },
   );

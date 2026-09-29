@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../core/theme/questra_surface_palette.dart';
 import '../../widgets/arc/arc_emotion.dart';
@@ -10,7 +13,6 @@ import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
 import '../../widgets/questra_card.dart';
-import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_bond_service.dart';
 import '../arc/navigator_rank_service.dart';
 import '../arc/stardust_service.dart';
@@ -74,38 +76,84 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    profile?.nickname ?? 'ゲスト',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _ProfileIcon(
+                        icon: Icons.person_outline_rounded,
+                        semanticLabel: 'アカウント',
+                      ),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'アカウント',
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.copyWith(
+                                    color: QuestraSurfacePalette.dark.action,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              profile?.nickname ?? 'ゲスト',
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(
+                                    color:
+                                        QuestraSurfacePalette.dark.foreground,
+                                  ),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              profile?.email ?? 'ログインしていません',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color:
+                                        QuestraSurfacePalette.dark.foreground,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(profile?.email ?? 'ログインしていません'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     profile == null ? 'この端末だけのゲスト航路です' : 'ログイン中の航路です',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 12),
-                  Chip(
-                    label: Text(
-                      profile?.onboardingCompleted == true
-                          ? '初期設定済み'
-                          : '初期設定が必要です',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: QuestraSurfacePalette.dark.muted,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  QuestraPrimaryButton(
-                    label: profile == null ? 'ログイン' : 'ログアウト',
-                    onPressed: () async {
-                      if (profile == null) {
-                        context.go(AppRoutes.login);
-                        return;
-                      }
-                      await ref.read(authControllerProvider.notifier).logout();
-                      if (context.mounted) {
-                        context.go(AppRoutes.login);
-                      }
-                    },
+                  const SizedBox(height: AppSpacing.md),
+                  _ProfileStatusBadge(
+                    completed: profile?.onboardingCompleted == true,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  const Divider(height: 1),
+                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(
+                    width: double.infinity,
+                    child: profile == null
+                        ? FilledButton.icon(
+                            onPressed: () => context.go(AppRoutes.login),
+                            icon: const Icon(Icons.login_rounded),
+                            label: const Text('ログイン'),
+                          )
+                        : OutlinedButton.icon(
+                            onPressed: () async {
+                              await ref
+                                  .read(authControllerProvider.notifier)
+                                  .logout();
+                              if (context.mounted) {
+                                context.go(AppRoutes.login);
+                              }
+                            },
+                            icon: const Icon(Icons.logout_rounded),
+                            label: const Text('ログアウト'),
+                          ),
                   ),
                 ],
               ),
@@ -121,7 +169,12 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('旅の現在地', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    '旅の現在地',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: QuestraSurfacePalette.dark.foreground,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 12,
@@ -146,6 +199,9 @@ class ProfileScreen extends ConsumerWidget {
                     profile == null
                         ? 'ログインすると、この航路を別の端末でも続けられます。'
                         : 'Quest、Mission、Task、Trail、Arc Memoryは、このプロフィールに紐づいて保存されます。',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: QuestraSurfacePalette.dark.muted,
+                    ),
                   ),
                 ],
               ),
@@ -165,6 +221,7 @@ class _NavigatorRankCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const palette = QuestraSurfacePalette.dark;
     return QuestraCard(
       key: const ValueKey('profile-rank-card'),
       palette: QuestraSurfacePalette.dark,
@@ -194,10 +251,17 @@ class _NavigatorRankCard extends StatelessWidget {
                   children: [
                     Text(
                       'Stardust / Navigator Rank',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: palette.foreground,
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Text(rank.description),
+                    Text(
+                      rank.description,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: palette.muted),
+                    ),
                   ],
                 ),
               ),
@@ -207,7 +271,7 @@ class _NavigatorRankCard extends StatelessWidget {
           Text(
             rank.label,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
+              color: palette.foreground,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -225,9 +289,7 @@ class _NavigatorRankCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: rank.progressToNext,
               minHeight: 10,
-              backgroundColor: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.12),
+              backgroundColor: palette.foreground.withValues(alpha: 0.12),
               valueColor: AlwaysStoppedAnimation<Color>(
                 Theme.of(context).colorScheme.primary,
               ),
@@ -238,6 +300,9 @@ class _NavigatorRankCard extends StatelessWidget {
             rank.isMaxRank
                 ? '最高ランクに到達しています'
                 : '次のランクまで ${rank.remainingToNext} Stardust',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: palette.muted),
           ),
         ],
       ),
@@ -253,6 +318,7 @@ class _ArcBondCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const palette = QuestraSurfacePalette.dark;
     return QuestraCard(
       key: const ValueKey('profile-bond-card'),
       palette: QuestraSurfacePalette.dark,
@@ -273,51 +339,142 @@ class _ArcBondCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Arc Bond',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      'ArcとのBond',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: palette.foreground,
+                      ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       profileAvailable
                           ? bond.description
                           : 'ログインするとArcとの航路をこのプロフィールに保存できます。',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: palette.muted),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.xl),
           Row(
             children: [
               Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: bond.progress,
-                    minHeight: 10,
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.12),
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      QuestraColors.gold,
-                    ),
-                  ),
+                child: Text(
+                  bond.label,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: palette.foreground),
                 ),
               ),
-              const SizedBox(width: 12),
               Text(
-                '${bond.score}',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
+                '${bond.score} / 100',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: palette.foreground,
                   fontWeight: FontWeight.w900,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Chip(label: Text(bond.label)),
+          const SizedBox(height: AppSpacing.sm),
+          Semantics(
+            label: 'ArcとのBond ${bond.score} / 100',
+            value: '${(bond.progress * 100).round()}パーセント',
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              child: LinearProgressIndicator(
+                value: bond.progress,
+                minHeight: 10,
+                backgroundColor: palette.foreground.withValues(alpha: 0.12),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  QuestraColors.gold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'QuestやTrailを重ねると、ArcとのBondが育ちます。',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: palette.muted),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProfileIcon extends StatelessWidget {
+  const _ProfileIcon({required this.icon, required this.semanticLabel});
+
+  final IconData icon;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: semanticLabel,
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: AppColors.skyBlue.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.skyBlue.withValues(alpha: 0.3)),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, color: AppColors.skyBlue, size: 28),
+      ),
+    );
+  }
+}
+
+class _ProfileStatusBadge extends StatelessWidget {
+  const _ProfileStatusBadge({required this.completed});
+
+  final bool completed;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = completed ? AppColors.auroraTeal : AppColors.warmGold;
+    final label = completed ? '初期設定済み' : '初期設定が必要です';
+    return Semantics(
+      label: label,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(color: color.withValues(alpha: 0.38)),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              completed
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.info_outline_rounded,
+              size: 18,
+              color: color,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: QuestraSurfacePalette.dark.foreground,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -336,9 +493,19 @@ class _ProfileMetric extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value, style: Theme.of(context).textTheme.headlineSmall),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: QuestraSurfacePalette.dark.foreground,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: QuestraSurfacePalette.dark.muted,
+            ),
+          ),
         ],
       ),
     );
