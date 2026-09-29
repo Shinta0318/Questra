@@ -4,6 +4,13 @@ import type {
   ProviderToolCall,
 } from "./contracts.ts";
 import { callGeminiInteraction } from "./interactions_adapter.ts";
+import {
+  failAiToolContinuationAttribution,
+  finalizeAiToolContinuationAttribution,
+  recordAiToolContinuationTurn,
+  startAiToolContinuationAttribution,
+  type AiToolContinuationAttribution,
+} from "./ai_budget_admission.ts";
 import { QUESTRA_TOOLS } from "./tool_registry.ts";
 import {
   executeQuestraTool,
@@ -45,35 +52,67 @@ export async function callGeminiInteractionWithTools(
   const history: unknown[] = [userInputStep(request.input)];
   const seenCalls = new Set<string>();
   let totalToolCalls = 0;
+  const attribution = await startAiToolContinuationAttribution(request);
+  if (attribution.enabled && !attribution.runId) {
+    return requestFailure(request, "Tool cost attribution was unavailable");
+  }
   let response = await callTurn(request, history, 0, deadline, now, callProvider);
+  if (response.error) {
+    await failAiToolContinuationAttribution(
+      attribution,
+      failureReason(response),
+    );
+    return response;
+  }
+  if (!await recordTurn(attribution, request, 0, response)) {
+    return attributionFailure(attribution, response);
+  }
   let usage = response.usage;
   let latencyMs = response.latencyMs;
   let groundingMetadata = response.groundingMetadata;
+  const attemptedModels = [...(response.attemptedModels ?? [])];
 
   for (let turn = 1; response.toolCalls.length > 0; turn++) {
     if (response.finishReason !== "requires_action") {
-      return toolFailure(response, "Provider returned a tool call without requires_action");
+      return await attributedToolFailure(
+        attribution,
+        response,
+        "Provider returned a tool call without requires_action",
+      );
     }
-    if (turn > maxTurns || !response.continuation?.steps.length) {
-      return toolFailure(response, "Tool continuation limit or state was invalid");
+    if (turn >= maxTurns || !response.continuation?.steps.length) {
+      return await attributedToolFailure(
+        attribution,
+        response,
+        "Tool continuation limit or state was invalid",
+      );
     }
     totalToolCalls += response.toolCalls.length;
     if (totalToolCalls > maxToolCalls) {
-      return toolFailure(response, "Tool call limit exceeded");
+      return await attributedToolFailure(
+        attribution,
+        response,
+        "Tool call limit exceeded",
+      );
     }
 
     const results: unknown[] = [];
     for (const call of response.toolCalls) {
       const definition = QUESTRA_TOOLS[call.name];
       if (!definition || definition.access !== "read") {
-        return toolFailure(
+        return await attributedToolFailure(
+          attribution,
           response,
           "A write or unknown tool requires an explicit user approval flow",
         );
       }
       const fingerprint = toolFingerprint(call);
       if (seenCalls.has(fingerprint)) {
-        return toolFailure(response, "Repeated tool call cycle detected");
+        return await attributedToolFailure(
+          attribution,
+          response,
+          "Repeated tool call cycle detected",
+        );
       }
       seenCalls.add(fingerprint);
       const result = await executeTool(call.name, call.arguments, {
@@ -82,7 +121,11 @@ export async function callGeminiInteractionWithTools(
         approved: context.approved === true,
       });
       if (!result.ok) {
-        return toolFailure(response, `Tool execution failed: ${result.error ?? "unknown"}`);
+        return await attributedToolFailure(
+          attribution,
+          response,
+          `Tool execution failed: ${result.error ?? "unknown"}`,
+        );
       }
       results.push(functionResult(call, result.data));
     }
@@ -96,12 +139,26 @@ export async function callGeminiInteractionWithTools(
       now,
       callProvider,
     );
+    if (response.error) {
+      await failAiToolContinuationAttribution(
+        attribution,
+        failureReason(response),
+      );
+      return response;
+    }
+    if (!await recordTurn(attribution, request, turn, response)) {
+      return attributionFailure(attribution, response);
+    }
     usage = mergeUsage(usage, response.usage);
     latencyMs += response.latencyMs;
+    attemptedModels.push(...(response.attemptedModels ?? []));
     groundingMetadata = mergeGrounding(
       groundingMetadata,
       response.groundingMetadata,
     );
+  }
+  if (!await finalizeAiToolContinuationAttribution(attribution, usage)) {
+    return attributionFailure(attribution, response);
   }
   return {
     ...response,
@@ -109,7 +166,45 @@ export async function callGeminiInteractionWithTools(
     usage,
     latencyMs,
     groundingMetadata,
+    attemptedModels,
   };
+}
+
+async function recordTurn(
+  attribution: AiToolContinuationAttribution,
+  request: ProviderRequest,
+  turn: number,
+  response: ProviderResponse,
+) {
+  return recordAiToolContinuationTurn(
+    attribution,
+    turn,
+    turnIdempotencyKey(request.idempotencyKey, turn),
+    response,
+  );
+}
+
+async function attributedToolFailure(
+  attribution: AiToolContinuationAttribution,
+  response: ProviderResponse,
+  message: string,
+) {
+  await failAiToolContinuationAttribution(attribution, "tool_failed");
+  return toolFailure(response, message);
+}
+
+async function attributionFailure(
+  attribution: AiToolContinuationAttribution,
+  response: ProviderResponse,
+) {
+  await failAiToolContinuationAttribution(attribution, "attribution_failed");
+  return toolFailure(response, "Tool cost attribution could not be verified");
+}
+
+function failureReason(response: ProviderResponse) {
+  if (response.error?.code === "timeout") return "timeout" as const;
+  if (response.error?.code === "cancelled") return "cancelled" as const;
+  return "provider_failed" as const;
 }
 
 async function callTurn(
@@ -128,10 +223,12 @@ async function callTurn(
     ...request,
     interactionHistory: [...history],
     timeoutMs: Math.min(request.timeoutMs ?? 45_000, remaining),
-    idempotencyKey: turn === 0
-      ? request.idempotencyKey
-      : `${request.idempotencyKey}:tool-turn-${turn}`,
+    idempotencyKey: turnIdempotencyKey(request.idempotencyKey, turn),
   });
+}
+
+function turnIdempotencyKey(base: string, turn: number) {
+  return turn === 0 ? base : `${base}:tool-turn-${turn}`;
 }
 
 function userInputStep(value: unknown) {
@@ -175,6 +272,7 @@ function mergeUsage(
     "thoughtTokens",
     "cachedTokens",
     "toolUseTokens",
+    "groundingQueries",
   ] as const) {
     const values = [first[key], second[key]].filter(
       (value): value is number => value !== undefined,
@@ -190,14 +288,33 @@ function mergeGrounding(
 ) {
   if (!first) return second;
   if (!second) return first;
+  const queries = uniqueNonEmptyStrings(first.queries, second.queries);
+  const billableQueryCount = groundingQueryCount(first) +
+    groundingQueryCount(second);
   return {
     steps: uniqueObjects(first.steps, second.steps),
-    queries: uniqueStrings(first.queries, second.queries),
+    queries,
+    billableQueryCount,
     sources: uniqueSources(first.sources, second.sources),
     retrievedAt: typeof second.retrievedAt === "string"
       ? second.retrievedAt
       : first.retrievedAt,
   };
+}
+
+function groundingQueryCount(metadata: Record<string, unknown>) {
+  const value = metadata.billableQueryCount;
+  if (Number.isSafeInteger(value) && (value as number) >= 0) {
+    return value as number;
+  }
+  return uniqueNonEmptyStrings(metadata.queries, []).length;
+}
+
+function uniqueNonEmptyStrings(first: unknown, second: unknown) {
+  return [...new Set([...asArray(first), ...asArray(second)]
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0))];
 }
 
 function uniqueObjects(first: unknown, second: unknown) {

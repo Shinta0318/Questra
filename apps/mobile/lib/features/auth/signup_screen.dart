@@ -45,7 +45,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (_legalAcceptance == null) {
       return AuthJourneyScaffold(
         eyebrow: '新規登録',
-        title: 'はじめに確認すること',
         message: '安心して使うために、年齢とデータの扱いを確認します。',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

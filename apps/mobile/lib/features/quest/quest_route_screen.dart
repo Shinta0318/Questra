@@ -184,6 +184,10 @@ class _QuestRouteScreenState extends ConsumerState<QuestRouteScreen> {
             });
             return;
           }
+          if (result == null) {
+            setState(() => _error = '反映する変更を選んでください。');
+            return;
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('承認した内容で航路を更新しました。'),

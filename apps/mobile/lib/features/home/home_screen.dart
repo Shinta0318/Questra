@@ -170,6 +170,8 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: AppColors.deepNavy,
       body: QuestraScreenSurface(
         child: QuestraResponsiveListView(
+          key: const ValueKey('home-content-list'),
+          maxContentWidth: 920,
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.xl,
             AppSpacing.lg,

@@ -83,8 +83,8 @@ class _PersistenceSyncBannerState extends State<PersistenceSyncBanner> {
     return QuestraNotification(
       message: state.message!,
       type: type,
-      onRetry: state.isFailed ? widget.onRetry : null,
-      onDismiss: isLoading ? null : _dismiss,
+      onRetry: state.canRetry ? widget.onRetry : null,
+      onDismiss: isLoading || state.canRetry ? null : _dismiss,
       isBusy: isLoading,
     );
   }

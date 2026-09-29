@@ -3,8 +3,8 @@ qst: QST-386
 status: local_static_pass_hosted_execution_pending
 source: supabase/migrations
 coverage:
-  public_tables_created: 109
-  rls_enabled: 109
+  public_tables_created: 120
+  rls_enabled: 120
   missing_rls: 0
   access_contract: policy_or_explicit_revoke
 behavior_harness: supabase/tests/rls_behavior.sql

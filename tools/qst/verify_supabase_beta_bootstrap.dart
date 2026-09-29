@@ -18,6 +18,7 @@ const requiredFunctions = [
   'auth-login',
   'moderate-quest-intent',
   'process-data-rights-requests',
+  'reconcile-ai-budget',
   'research-mission-resources',
 ];
 
@@ -65,11 +66,12 @@ void main(List<String> arguments) {
   }
   for (final functionName in requiredFunctions) {
     _expect(config, '[functions.$functionName]', configPath, failures);
-    final isPublicWebhook = {
+    final usesApplicationAuth = {
       'auth-login',
       'process-data-rights-requests',
+      'reconcile-ai-budget',
     }.contains(functionName);
-    final expectedJwt = isPublicWebhook ? 'false' : 'true';
+    final expectedJwt = usesApplicationAuth ? 'false' : 'true';
     final functionBlock = RegExp(
       r'\[functions\.' +
           RegExp.escape(functionName) +

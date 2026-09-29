@@ -56,6 +56,21 @@ class Trail {
       createdAt: createdAt ?? this.createdAt,
     );
   }
+
+  Trail copyWithParent({required String questId, required String missionId}) {
+    return Trail(
+      id: id,
+      questId: questId,
+      missionId: missionId,
+      taskId: null,
+      title: title,
+      summary: summary,
+      content: content,
+      trailType: TrailType.missionRecord,
+      sourceType: sourceType,
+      createdAt: createdAt,
+    );
+  }
 }
 
 class TrailParentContext {

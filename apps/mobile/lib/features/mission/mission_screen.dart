@@ -82,15 +82,18 @@ class MissionScreen extends ConsumerWidget {
         children: [
           PersistenceSyncBanner(
             state: syncState,
-            onRetry:
-                syncState.operation == PersistenceSyncOperation.load &&
-                    profile != null
+            onRetry: !syncState.canRetry
+                ? null
+                : syncState.operation == PersistenceSyncOperation.load &&
+                      profile != null
                 ? () => ref
                       .read(missionControllerProvider.notifier)
                       .loadForQuests(
                         quests.map((quest) => quest.id).toList(growable: false),
                       )
-                : null,
+                : () => ref
+                      .read(missionControllerProvider.notifier)
+                      .retryPending(),
             onDismiss: () =>
                 ref.read(missionSyncControllerProvider.notifier).clear(),
           ),

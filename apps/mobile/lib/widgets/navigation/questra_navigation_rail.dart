@@ -71,7 +71,9 @@ class QuestraNavigationRail extends StatelessWidget {
               selectedIcon: destination.isArc
                   ? const _RailArcIcon(selected: true)
                   : Icon(destination.selectedIcon),
-              label: Text(destination.label),
+              label: Text(
+                extended ? destination.label : destination.compactLabel,
+              ),
               padding: const EdgeInsets.symmetric(vertical: 4),
             ),
         ],

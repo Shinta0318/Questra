@@ -13,7 +13,7 @@ project:
   cli_version: "2.111.0"
 migrations:
   status: local_pending_deployment
-  latest_local: "202609130006_ai_budget_reconciliation_scheduler.sql"
+  latest_local: "202609150006_immutable_compensating_ai_budget_correction.sql"
   remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   command: "supabase migration list --linked"
   applied_at_utc: "2026-08-08T14:29:40Z"
@@ -100,6 +100,10 @@ secrets:
     - AI_RECONCILIATION_TIMEOUT_MS
     - AI_RECONCILIATION_ALERT_WEBHOOK_URL
     - AI_RECONCILIATION_ALERT_WEBHOOK_SECRET
+    - AI_GROUNDING_MAX_QUERIES_PER_REQUEST
+    - AI_RECEIPT_BINDING_ENABLED
+    - AI_RECEIPT_NONCE_SECRET
+    - AI_TOOL_CONTINUATION_ATTRIBUTION_ENABLED
 client_configuration:
   status: not_verified
   allowed_dart_defines:

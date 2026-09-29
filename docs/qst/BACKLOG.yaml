@@ -3687,7 +3687,8 @@ items:
     evidence: [State matrix screenshots, Fixture absence test, Query profile, QST Report]
   - id: QST-321
     title: Canonical Navigation and Return Contract
-    status: Planned
+    status: Superseded
+    superseded_by: QST-503
     priority: P1
     epic: INFORMATION-ARCHITECTURE
     background: QST-197のBeta Navigationと古いarchitecture文書が競合し、Settings系画面には見える戻る操作がない。
@@ -3724,7 +3725,8 @@ items:
     evidence: [Route inventory, Back behavior recording, Responsive navigation screenshots, QST Report]
   - id: QST-322
     title: Arc-First Quest Entry Consolidation
-    status: Planned
+    status: Superseded
+    superseded_by: QST-504
     priority: P1
     epic: QUEST-CREATION-UX
     background: Quest作成面はArc相談、manual form、category templateを同時に強く表示し、入口の優先順位が不明瞭である。
@@ -3761,7 +3763,8 @@ items:
     evidence: [Entry screenshots, CTA hierarchy golden, Intent transfer test, QST Report]
   - id: QST-323
     title: Onboarding Journey Controls and Resume
-    status: Planned
+    status: Superseded
+    superseded_by: QST-505
     priority: P1
     epic: ONBOARDING
     background: Onboardingの言葉とArc表現は良いが、進捗、戻る、Skip、resumeが初期画面から理解できない。
@@ -5587,7 +5590,7 @@ items:
     priority: P0
     epic: BETA-COMPLETION-SPRINT
     goal: QST-420のdrift closureに続き、AI予算予約からoperator補正までを同一candidate SHAの実Supabaseで検証する。
-    depends_on: [QST-420, QST-441, QST-442, QST-445, QST-446]
+    depends_on: [QST-420, QST-441, QST-442, QST-445, QST-446, QST-448, QST-449, QST-450, QST-451, QST-452, QST-453, QST-454]
     blocks: [QST-425, External Beta Distribution]
     acceptance:
       - latest migration headとcandidate SHAを固定する。
@@ -5595,12 +5598,14 @@ items:
       - 二重counter加算がないことをSQLで証明する。
       - Service Role Keyと利用者識別子を証跡へ残さない。
       - rollback演習後もopen caseと監査証跡を保持する。
+      - receipt binding、tool continuation attribution、schedulerをcanary確認後に段階的に有効化し、失敗時は証跡を消さず直前のflag状態へ戻す。
+      - QST-453のproperty／並行claim testとQST-454の全tabletop scenarioを同一candidateで実行する。
     evidence: [reports/qst/QST-447.md]
 
   - id: QST-448
     title: Gemini Grounding Query Cost Ledger
-    status: Planned
-    evidence_state: not_started
+    status: Completed
+    evidence_state: local_verified
     priority: P1
     epic: BETA-COMPLETION-SPRINT
     goal: token費用とは別体系のGoogle Search grounding利用量を予約、精算、監査し、最新情報Questの実原価を欠落させない。
@@ -5612,12 +5617,12 @@ items:
       - 検索文、URL、個人情報を費用ledgerへ保存しない。
       - Groundingなし処理へ費用を誤加算しない。
       - 価格不明時は課金推測せずfail closedする。
-    evidence: [reports/qst/QST-448.md]
+    evidence: [supabase/migrations/202609130007_grounding_query_cost_ledger.sql, supabase/functions/_shared/quest_planning/interactions_adapter.ts, supabase/functions/_shared/quest_planning/grounding.ts, supabase/functions/_shared/quest_planning/ai_budget_admission.ts, supabase/functions/_shared/quest_planning/tool_interaction_orchestrator.ts, apps/mobile/test/qst_448_grounding_query_cost_ledger_test.dart, supabase/tests/qst_448_grounding_query_cost_ledger.sql, docs/product/grounding_query_cost_ledger.md, reports/qst/QST-448.md]
 
   - id: QST-449
     title: AI Cost Anomaly Detection
-    status: Planned
-    evidence_state: not_started
+    status: Completed
+    evidence_state: local_verified
     priority: P1
     epic: BETA-COMPLETION-SPRINT
     goal: model、operation、thinking、grounding別の原価急増をprivacy-safeな集計で検出し、利用者体験を壊す前に運用停止できるようにする。
@@ -5629,12 +5634,12 @@ items:
       - anomalyだけで利用者課金や権利を変更しない。
       - operation kill switchへの手動導線を持つ。
       - false positiveと復旧を監査できる。
-    evidence: [reports/qst/QST-449.md]
+    evidence: [supabase/migrations/202609150001_ai_cost_anomaly_detection.sql, supabase/functions/_shared/quest_planning/ai_budget_admission.ts, apps/mobile/test/qst_449_ai_cost_anomaly_detection_test.dart, supabase/tests/qst_449_ai_cost_anomaly_detection.sql, docs/product/ai_cost_anomaly_detection.md, reports/qst/QST-449.md]
 
   - id: QST-450
     title: Provider Receipt Authenticity and Replay Guard
-    status: Planned
-    evidence_state: not_started
+    status: Completed
+    evidence_state: local_verified
     priority: P1
     epic: BETA-COMPLETION-SPRINT
     goal: provider receiptとreservation、trace、model routeの対応を強化し、偽造、cross-reservation replay、古い応答の再利用を拒否する。
@@ -5646,12 +5651,12 @@ items:
       - trace、operation、model route不一致をoperator caseへ送る。
       - raw provider outputや秘密情報を保存しない。
       - duplicate deliveryがcounterを二重更新しない。
-    evidence: [reports/qst/QST-450.md]
+    evidence: [supabase/migrations/202609150002_provider_receipt_authenticity_replay_guard.sql, supabase/functions/_shared/quest_planning/ai_budget_admission.ts, supabase/functions/_shared/quest_planning/interactions_adapter.ts, apps/mobile/test/qst_450_provider_receipt_authenticity_test.dart, supabase/tests/qst_450_provider_receipt_authenticity.sql, docs/product/provider_receipt_authenticity.md, reports/qst/QST-450.md]
 
   - id: QST-451
     title: Privacy-safe AI Budget Incident Export
-    status: Planned
-    evidence_state: not_started
+    status: Completed
+    evidence_state: local_verified
     priority: P2
     epic: BETA-COMPLETION-SPRINT
     goal: 障害調査に必要な集計証拠を内容と利用者識別子なしでexportし、サポートや監査へ安全に共有できるようにする。
@@ -5663,12 +5668,12 @@ items:
       - export生成者、期間、schema versionを監査する。
       - 期限付き保存と削除手順を持つ。
       - 小集団の再識別を抑止する閾値を設定する。
-    evidence: [reports/qst/QST-451.md]
+    evidence: [supabase/migrations/202609150003_privacy_safe_ai_budget_incident_export.sql, apps/mobile/test/qst_451_privacy_safe_ai_budget_incident_export_test.dart, supabase/tests/qst_451_privacy_safe_ai_budget_incident_export.sql, docs/product/ai_budget_incident_export.md, reports/qst/QST-451.md]
 
   - id: QST-452
     title: Tool Continuation Multi-turn Cost Attribution Drill
-    status: Planned
-    evidence_state: not_started
+    status: Completed
+    evidence_state: local_verified
     priority: P1
     epic: BETA-COMPLETION-SPRINT
     goal: stateless Function Callingの複数turn、fallback、thinking、tool resultが一つの利用量へ欠落・重複なく帰属することを検証する。
@@ -5680,12 +5685,12 @@ items:
       - tool result本文をcost evidenceへ保存しない。
       - 中断、timeout、duplicate continuationを冪等に処理する。
       - provider-backed mockとhosted drill手順を備える。
-    evidence: [reports/qst/QST-452.md]
+    evidence: [supabase/functions/_shared/quest_planning/tool_interaction_orchestrator.ts, supabase/functions/_shared/quest_planning/tool_interaction_orchestrator_test.ts, supabase/migrations/202609150004_tool_continuation_cost_attribution.sql, supabase/tests/qst_452_tool_continuation_cost_attribution.sql, apps/mobile/test/qst_452_tool_continuation_cost_attribution_test.dart, docs/product/tool_continuation_cost_attribution.md, reports/qst/QST-452.md]
 
   - id: QST-453
     title: AI Budget SQL Property and Concurrency Tests
-    status: Planned
-    evidence_state: not_started
+    status: Implemented
+    evidence_state: external_pending
     priority: P1
     epic: BETA-COMPLETION-SPRINT
     goal: reservation、settlement、reconciliation、claim、correctionの不変条件を実PostgreSQLのpropertyと並行testで検証する。
@@ -5697,16 +5702,16 @@ items:
       - 並行claimは一operatorだけが取得する。
       - stale correction snapshotは全変更をrollbackする。
       - random sequence後も非負、状態遷移、owner境界を保つ。
-    evidence: [reports/qst/QST-453.md]
+    evidence: [supabase/tests/qst_453_ai_budget_properties.sql, tools/qst/run_ai_budget_concurrency_drill.ps1, apps/mobile/test/qst_453_ai_budget_property_concurrency_test.dart, docs/product/ai_budget_property_concurrency_testing.md, reports/qst/QST-453.md]
 
   - id: QST-454
     title: AI Budget Operations Tabletop and Recovery SLO
-    status: Planned
-    evidence_state: not_started
+    status: Completed
+    evidence_state: local_verified
     priority: P2
     epic: BETA-COMPLETION-SPRINT
     goal: provider障害、精算応答喪失、queue滞留、誤補正のtabletopを行い、検知・復旧・証拠保持のSLOを確定する。
-    depends_on: [QST-446, QST-447, QST-451, QST-453]
+    depends_on: [QST-446, QST-451, QST-453]
     blocks: [QST-455]
     acceptance:
       - 重大度、owner、検知時間、復旧時間、停止判断を定義する。
@@ -5714,12 +5719,12 @@ items:
       - 誤補正は別requestで相殺し監査履歴を消さない。
       - tabletop結果を次回QSTへ反映する。
       - External Beta gateと矛盾しない。
-    evidence: [reports/qst/QST-454.md]
+    evidence: [docs/qst/AI_BUDGET_OPERATIONS_TABLETOP.yaml, docs/product/ai_budget_operations_recovery.md, tools/qst/verify_ai_budget_operations_tabletop.dart, apps/mobile/test/qst_454_ai_budget_operations_tabletop_test.dart, reports/qst/QST-454.md]
 
   - id: QST-455
     title: QST-445 to QST-454 Cross-functional Integrity Review
-    status: Planned
-    evidence_state: not_started
+    status: Completed
+    evidence_state: local_verified
     priority: P0
     epic: BETA-COMPLETION-SPRINT
     goal: 次の10件をコード、UI/UX、AI、DB、セキュリティ、Master Spec、外部証拠で横断レビューし、後続QSTへ反映する。
@@ -5730,7 +5735,1376 @@ items:
       - Critical、High、Mediumの残差を根拠付きで示す。
       - UI/UX対象外を実画面確認済みと扱わない。
       - 次のBacklogを重複なく更新する。
-    evidence: [reports/qst/QST-455.md]
+    evidence: [apps/mobile/test/qst_455_ai_budget_cross_functional_review_test.dart, reports/qst/QST-447.md, reports/qst/QST-455.md]
+
+  - id: QST-456
+    title: Approval-safe AI Route Replacement after Manual Missions
+    status: Implemented
+    evidence_state: external_pending
+    priority: P0
+    epic: QUEST-PLANNING-V2
+    goal: 手動Mission作成後も、完了済み成果を保護し、未完了の残り航路だけをGemini案へ明示承認後に置き換えられるようにする。
+    depends_on: [QST-185, QST-252, QST-258, QST-341]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - Geminiへ現在のMission、状態、順序を所有者境界内で渡す。
+      - 完了済みMissionを維持し、AI候補として重複生成しない。
+      - 未完了Missionは承認後だけ新しい航路へ置き換える。
+      - プレビュー後にMissionが変わった場合はtransaction全体を拒否する。
+      - 旧Missionを物理削除せず履歴として保持する。
+      - UIで維持件数と置換件数を示し、明示承認を求める。
+      - Gemini障害時に固定Missionを作成しない。
+      - Local testとHosted二アカウントdrillの証跡を分離する。
+    evidence: [supabase/migrations/202609150005_approval_safe_ai_route_replacement.sql, supabase/functions/quest-planning-v2/index.ts, supabase/functions/_shared/quest_planning/existing_route_context.ts, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/lib/features/quest_journey/quest_journey_workspace.dart, apps/mobile/lib/features/task/task_repository.dart, apps/mobile/test/qst_456_approval_safe_ai_route_replacement_test.dart, supabase/tests/qst_456_approval_safe_ai_route_replacement.sql, docs/product/approval_safe_ai_route_replacement.md, reports/qst/QST-456.md]
+
+  - id: QST-457
+    title: Trail Quest and Mission Linking Flow
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail画面からQuestを選び、そのQuestに属するMissionを選択して、親子関係が明確なTrailを保存できるようにする。
+    depends_on: [QST-204, QST-258, QST-285]
+    blocks: []
+    acceptance:
+      - Trail画面の作成シートでQuestを先に選択する。
+      - Mission候補は選択したQuestに属するものだけを表示する。
+      - removed Missionとarchived Questを新規紐づけ候補へ表示しない。
+      - QuestとMissionを選ぶまでTrailを保存しない。
+      - 保存したTrailへquest_idとmission_idを設定する。
+      - Task起点など既存の親コンテキスト付き作成を維持する。
+      - DBのTrail階層整合性Triggerと矛盾しない。
+      - Flutter analyzeと関連Widget testが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_457_trail_quest_mission_linking_test.dart, apps/mobile/test/qst_268_trail_first_record_test.dart, supabase/migrations/202608080003_trail_parent_delete_integrity_fix.sql, reports/qst/QST-457.md]
+
+  - id: QST-458
+    title: Immutable Compensating AI Budget Correction
+    status: Implemented
+    evidence_state: external_pending
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: 適用済みの誤補正を改ざんせず、現在snapshotから監査可能な別requestとして相殺し、既存の二人承認transactionでのみ反映する。
+    depends_on: [QST-445, QST-453, QST-454, QST-455]
+    blocks: [QST-447]
+    acceptance:
+      - 適用済み補正requestとaudit recordを更新または削除しない。
+      - 元request、相殺request、対象reservationの関連を型付きIDで保持する。
+      - 現在snapshotが元request適用後の値と一致しない場合はstaleとして全変更を拒否する。
+      - 相殺requestの作成者と承認者を別のauth-bound operatorに限定する。
+      - request作成だけではcounterを変更せず、既存の承認済みtransactionでのみ反映する。
+      - 同じ元requestへの重複相殺をidempotency keyとDB制約で防止する。
+      - owner境界、自己承認拒否、rollback、並行作成を実PostgreSQL testで検証する。
+      - hosted drillでは秘密情報、利用者識別子、Quest内容を証跡へ残さない。
+    evidence: [supabase/migrations/202609150006_immutable_compensating_ai_budget_correction.sql, supabase/tests/qst_458_immutable_compensating_correction.sql, apps/mobile/test/qst_458_immutable_compensating_correction_test.dart, docs/product/immutable_compensating_ai_budget_correction.md, reports/qst/QST-458.md]
+
+  - id: QST-459
+    title: Trail Parent Correction and History Protection
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 手動TrailのQuest／Mission選択ミスを後から修正できるようにし、Task起点Trailの親履歴は変更不能として保護する。
+    depends_on: [QST-278, QST-285, QST-457]
+    blocks: []
+    acceptance:
+      - Trail編集画面に現在のQuestとMissionを表示する。
+      - 手動Trailだけ明示操作後にQuestとMissionを再選択できる。
+      - Mission候補は選択したactive Questに属し、removedでないものに限定する。
+      - Task起点TrailではQuest、Mission、Taskの親関係を変更できない。
+      - 親変更時にtask_idを解除し、mission_recordとして保存する。
+      - 保存失敗時に本文と選択を保持して再試行できる。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/lib/features/trail/trail_model.dart, apps/mobile/test/qst_459_trail_parent_editing_test.dart, reports/qst/QST-459.md]
+
+  - id: QST-460
+    title: Trail Parent Navigation
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: TrailカードのQuest／Mission階層から対応する親詳細へ戻れるようにし、記録と航路の往復を短くする。
+    depends_on: [QST-411, QST-457, QST-459]
+    blocks: []
+    acceptance:
+      - TrailカードのQuestチップから親Quest詳細へ遷移できる。
+      - Missionチップから正しいQuest配下のMission詳細へ遷移できる。
+      - 作成／編集sheet内のbreadcrumbは表示専用を維持する。
+      - 操作可能なチップをbutton semanticsで読み上げる。
+      - 親が解決できないTrailへ壊れた遷移を表示しない。
+      - Widget router testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_460_trail_parent_navigation_test.dart, reports/qst/QST-460.md]
+
+  - id: QST-461
+    title: Trail Journey Filter
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: TrailをQuestからMissionの順で絞り込み、記録が増えても目的の航路を短時間で見返せるようにする。
+    depends_on: [QST-077, QST-457, QST-460]
+    blocks: []
+    acceptance:
+      - TrailのあるQuestだけを絞り込み候補へ表示する。
+      - Mission候補を選択Quest配下かつTrailのある項目に限定する。
+      - Quest変更時にMission filterを解除する。
+      - 集計、画像、highlightを表示中のTrailへ一致させる。
+      - 一操作ですべてのTrail表示へ戻れる。
+      - 360pxで1カラム、広い画面で2カラムになりoverflowしない。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_461_trail_journey_filter_test.dart, reports/qst/QST-461.md]
+
+  - id: QST-462
+    title: Trail Scoped Entry
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Quest／Mission詳細からTrailへ移動した際に親の航路文脈をURLと初期フィルターで維持し、目的の記録へ直接到達できるようにする。
+    depends_on: [QST-460, QST-461]
+    blocks: []
+    acceptance:
+      - Quest詳細からそのQuestに絞り込んだTrailへ遷移できる。
+      - Mission詳細からそのMissionに絞り込んだTrailへ遷移できる。
+      - URLがQuest IDと任意のMission IDを保持する。
+      - 不正または古い親IDでは壊れず全Trailへ戻る。
+      - Task起点の親固定composerを維持する。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/core/router/app_routes.dart, apps/mobile/lib/core/router/app_router.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/lib/features/mission/mission_detail_screen.dart, apps/mobile/test/qst_462_trail_scoped_entry_test.dart, reports/qst/QST-462.md]
+
+  - id: QST-463
+    title: Trail Contextual Create
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: 表示中のQuest／MissionフィルターをTrail作成へ引き継ぎ、再選択負担と誤紐づけを減らす。
+    depends_on: [QST-457, QST-461, QST-462]
+    blocks: []
+    acceptance:
+      - Mission絞り込み中の作成sheetへQuestとMissionを初期選択する。
+      - Quest絞り込み中はQuestだけを初期選択し、Mission選択を残す。
+      - Task起点の固定親contextを変更可能にしない。
+      - 古い親IDを保存へ利用しない。
+      - 保存時にQuestとMissionの階層整合性を維持する。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_463_trail_contextual_create_test.dart, reports/qst/QST-463.md]
+
+  - id: QST-464
+    title: Empty Journey Trail Recovery
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trailが0件のQuest／Missionへ文脈付きで入ってもDropdown例外を起こさず、その航路の最初の記録を作れるようにする。
+    depends_on: [QST-461, QST-462, QST-463]
+    blocks: []
+    acceptance:
+      - 選択中のQuestをTrail 0件でもfilter候補へ保持する。
+      - 選択中のMissionをTrail 0件でもfilter候補へ保持する。
+      - Dropdown初期値が候補不在で例外にならない。
+      - 空状態から選択航路を引き継いでTrail作成を開始できる。
+      - 全Trail表示へ戻る導線を維持する。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_464_empty_journey_trail_test.dart, reports/qst/QST-464.md]
+
+  - id: QST-465
+    title: QST-456 to QST-464 Cross-functional Integrity Review
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: QST-456〜464をコード、UI/UX、AI、DB、セキュリティ、Master Spec、証跡境界で横断レビューし、発見した不整合を修正する。
+    depends_on: [QST-456, QST-457, QST-458, QST-459, QST-460, QST-461, QST-462, QST-463, QST-464]
+    blocks: []
+    acceptance:
+      - 同名CTAの挙動差を調査して統一する。
+      - archived／removed航路へ無効な作成操作を表示しない。
+      - AI航路置換が承認前に永続化されないことを再確認する。
+      - DB／RLSのlocal証跡とhosted未検証を混同しない。
+      - Master SpecのQuest階層と履歴保護に整合する。
+      - 次のBacklog方向を重複なく提示する。
+      - Flutter analyze、関連test、SSOT gateが通る。
+    evidence: [apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_465_cross_functional_integrity_review_test.dart, reports/qst/QST-465.md]
+
+  - id: QST-466
+    title: Trail Filter URL Synchronization
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: TrailのQuest／Mission絞り込みをURLへ同期し、再読み込みや画面復帰でも航路文脈を維持する。
+    depends_on: [QST-461, QST-462, QST-465]
+    blocks: []
+    acceptance:
+      - Quest filterをquestId queryへ反映する。
+      - Mission filterをquestIdとmissionId queryへ反映する。
+      - Quest変更時に古いMission queryを残さない。
+      - 解除時にqueryのないTrail URLへ戻る。
+      - Trail widgetをRouter非依存に保つ。
+      - 不正queryを表示または保存へ利用しない。
+      - Router Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/lib/core/router/app_router.dart, apps/mobile/test/qst_466_trail_filter_url_sync_test.dart, reports/qst/QST-466.md]
+
+  - id: QST-467
+    title: Trail Incremental Pagination
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 初回Trail取得を40件に保ちながら、重複やowner越境なく過去のページを追加表示できるようにする。
+    depends_on: [QST-067, QST-077, QST-465]
+    blocks: []
+    acceptance:
+      - 初回表示を40件以内に制限する。
+      - 41件目の存在から追加ページ有無を判定する。
+      - 追加取得をowner境界内で行う。
+      - created_atとidで決定的に並べる。
+      - 既存IDを重複追加しない。
+      - 失敗時に既存Trailを消さず再試行できる。
+      - 利用者切替時にpagination stateを破棄する。
+      - Repository testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_repository.dart, apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/lib/features/trail/trail_pagination_state.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_467_trail_pagination_test.dart, reports/qst/QST-467.md]
+
+  - id: QST-468
+    title: Trail Parent Domain Validation
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: UI以外のTrail作成経路でもQuest／Mission／Task階層の不整合をstate変更前に拒否する。
+    depends_on: [QST-278, QST-457, QST-465]
+    blocks: []
+    acceptance:
+      - cross-Quest Missionを拒否する。
+      - cross-Mission Taskを拒否する。
+      - archived Questとremoved Missionを新規親として拒否する。
+      - 不正TrailをController stateへ追加しない。
+      - 親データ未ロードを不整合と混同しない。
+      - DB triggerとRLSを最終防衛線として維持する。
+      - Domain testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_parent_validator.dart, apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_468_trail_parent_domain_validation_test.dart, supabase/migrations/202608080003_trail_parent_delete_integrity_fix.sql, reports/qst/QST-468.md]
+
+  - id: QST-469
+    title: Trail Parent Mutation Policy
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail編集APIでTask起点履歴や未解決のQuest／Mission親を変更できないようにする。
+    depends_on: [QST-459, QST-468]
+    blocks: []
+    acceptance:
+      - 親を変えない本文編集を維持する。
+      - Task起点Trailの親変更を拒否する。
+      - 手動Trailの親変更を解決済みの有効階層だけに限定する。
+      - 未解決親への変更を拒否する。
+      - 拒否時にoptimistic stateとDBを変更しない。
+      - 同期／非同期更新APIへ同じpolicyを適用する。
+      - Domain testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_parent_validator.dart, apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_469_trail_parent_mutation_policy_test.dart, reports/qst/QST-469.md]
+
+  - id: QST-470
+    title: Trail Update Rejection Feedback
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Trail親policy拒否と通信保存失敗を型付き結果で区別し、入力を保持したまま適切な回復操作を案内する。
+    depends_on: [QST-459, QST-469]
+    blocks: []
+    acceptance:
+      - 更新結果をsaved／rejected／failedで区別する。
+      - 親policy拒否でQuestとMissionの再選択を案内する。
+      - Trail不在時に画面更新を案内する。
+      - 保存失敗時に入力を保持して再試行できる。
+      - 拒否時にController stateを変更しない。
+      - 既存bool API互換を維持する。
+      - Widget／unit testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_470_trail_update_feedback_test.dart, reports/qst/QST-470.md]
+
+  - id: QST-471
+    title: Trail Owner-scoped Idempotency
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 同一Trail IDの再送をowner内だけで収束させ、別ownerの記録を変更しない。
+    depends_on: [QST-199, QST-285, QST-467]
+    blocks: []
+    acceptance:
+      - upsert置換条件へownerIdとtrailIdを使う。
+      - 同一ownerの再送を一件へ収束させる。
+      - 異なるownerの同一IDを相互に削除しない。
+      - find／save／deleteでowner境界を統一する。
+      - Supabase RLSの意味と矛盾しない。
+      - Repository testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_repository.dart, apps/mobile/test/qst_471_trail_owner_scoped_idempotency_test.dart, reports/qst/QST-471.md]
+
+  - id: QST-472
+    title: Trail Delete Recovery
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail削除を待機可能にし、失敗時に重複なく元の表示位置へ復元する。
+    depends_on: [QST-041, QST-471]
+    blocks: []
+    acceptance:
+      - 削除成否をawaitして取得できる。
+      - 失敗時に削除Trailを元の位置へ復元する。
+      - 同じIDを重複復元しない。
+      - 存在しないTrail削除でstateを変更しない。
+      - ローカル未ログイン動作を維持する。
+      - 削除確認UIが完了を待つ。
+      - Unit testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_472_trail_delete_recovery_test.dart, reports/qst/QST-472.md]
+
+  - id: QST-473
+    title: Trail Media Batch Loading
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail画像metadataをowner-boundな一括queryで取得し、追加ページでは未取得IDだけを読み込む。
+    depends_on: [QST-051, QST-467]
+    blocks: []
+    acceptance:
+      - Trail ID配列を一括取得するRepository契約を持つ。
+      - owner_idとTrail関連だけにqueryを限定する。
+      - Trailごとに最新画像一件だけを採用する。
+      - 取得済み画像を再問い合わせしない。
+      - 利用者切替時に前利用者のstateを即時破棄する。
+      - 古い非同期responseを適用しない。
+      - Repository testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/media/media_repository.dart, apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_473_trail_media_batch_loading_test.dart, reports/qst/QST-473.md]
+
+  - id: QST-474
+    title: Trail Media Stale Response Guard
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail削除や利用者切替後に古い画像responseがattachment stateを再投入しないようにする。
+    depends_on: [QST-473]
+    blocks: []
+    acceptance:
+      - 全画像load開始時にgenerationを更新する。
+      - 空Trail一覧が処理中requestを無効化する。
+      - 未ログイン状態が処理中requestを無効化する。
+      - response適用前にownerとgenerationを再確認する。
+      - stale response後も空stateを維持する。
+      - Race testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_474_trail_media_stale_response_test.dart, reports/qst/QST-474.md]
+
+  - id: QST-475
+    title: Trail Filter Pagination Disclosure
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 未読込ページが残るfilter空状態でTrail不在を断定せず、過去のTrail追加読込へ案内する。
+    depends_on: [QST-461, QST-467]
+    blocks: []
+    acceptance:
+      - 未読込ページがある場合は現在の読込範囲だけが空であると表示する。
+      - 過去のTrailに一致する可能性を説明する。
+      - 追加読込操作を同じ状態で利用できる。
+      - 全ページ読込後だけ航路にTrailがないと断定する。
+      - Quest／Mission filterを維持したまま追加読込できる。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_475_trail_filter_pagination_disclosure_test.dart, reports/qst/QST-475.md]
+
+  - id: QST-476
+    title: Trail Cross-functional Integrity Review II
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: QST-466〜475を横断レビューし、ページング、owner切替、画像raceの整合性を修正する。
+    depends_on: [QST-466, QST-467, QST-468, QST-469, QST-470, QST-471, QST-472, QST-473, QST-474, QST-475]
+    blocks: []
+    acceptance:
+      - ローカル追加がremote pagination offsetを進めない。
+      - refresh後に古い追加読込responseを適用しない。
+      - owner切替後に旧ownerの削除失敗Trailを復元しない。
+      - 画像変更後に古いbatch responseを適用しない。
+      - Quest→Mission→Task→Trail階層を維持する。
+      - AI／DB／security／Master Spec境界をレビューする。
+      - Trail回帰、Flutter analyze、QST gateが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_476_cross_functional_trail_review_test.dart, reports/qst/QST-476.md]
+
+  - id: QST-477
+    title: Trail Keyset Pagination
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail追加読込をcreated_atとidのcursorへ移行し、閲覧中の新規投稿による重複・欠落を防ぐ。
+    depends_on: [QST-467, QST-476]
+    blocks: []
+    acceptance:
+      - Repository契約がoffsetではなくcursorを受け取る。
+      - created_atとidの複合降順を安定した境界に使う。
+      - owner_id境界と取得上限を維持する。
+      - 閲覧中の新規投稿が次ページをずらさない。
+      - 同一created_atではidをtie-breakに使う。
+      - ローカル追加件数をremote cursorへ混ぜない。
+      - Repository／Controller回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_repository.dart, apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_477_trail_cursor_pagination_test.dart, reports/qst/QST-477.md]
+
+  - id: QST-478
+    title: Trail Composer Draft Recovery
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail作成中の親選択と本文をowner別に保護し、安全に復元・破棄できるようにする。
+    depends_on: [QST-405, QST-457]
+    blocks: []
+    acceptance:
+      - Trail下書きをowner別のsecure storageへ保存する。
+      - Quest／Mission選択と入力内容を復元する。
+      - 復元前に現在の親階層を再検証する。
+      - 異なる呼出contextの下書きを自動適用しない。
+      - 期限切れ、破損、owner不一致をfail-closedで削除する。
+      - 保存成功または明示破棄後に下書きを削除する。
+      - Repository／Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_draft_repository.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/lib/widgets/forms/questra_modal_sheet.dart, apps/mobile/test/qst_478_trail_draft_recovery_test.dart, reports/qst/QST-478.md]
+
+  - id: QST-479
+    title: Trail Parent Selection Preview
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Trail保存前に選択したQuest→Mission階層を視覚・読み上げの両方で確認できるようにする。
+    depends_on: [QST-457, QST-478]
+    blocks: []
+    acceptance:
+      - QuestとMission選択後に保存先階層を表示する。
+      - Quest→Missionの親子関係を明示する。
+      - 読み上げ用の一つの意味的ラベルを提供する。
+      - 内部IDを利用者へ表示しない。
+      - 360pxと430pxでoverflowしない。
+      - 既存の固定parent作成フローを維持する。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_479_trail_parent_selection_preview_test.dart, reports/qst/QST-479.md]
+
+  - id: QST-480
+    title: Trail Missing Mission Recovery
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 選択したQuestにMissionがないTrail作成状態を、対象QuestのMission作成導線へ回復可能にする。
+    depends_on: [QST-457, QST-479]
+    blocks: []
+    acceptance:
+      - Missionがない選択済みQuestに回復CTAを表示する。
+      - CTAが対象Quest IDを保持する。
+      - Trail Modalを閉じてQuest詳細へ遷移する。
+      - 未完了Modalをnavigation historyへ残さない。
+      - Missionがある場合は回復CTAを表示しない。
+      - 実タップのWidget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/core/router/app_routes.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_480_trail_missing_mission_recovery_test.dart, reports/qst/QST-480.md]
+
+  - id: QST-481
+    title: Trail Mission Creation Return Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail作成中に不足Missionを追加した後、同じQuestを保持したTrail作成へ安全に戻れるようにする。
+    depends_on: [QST-480]
+    blocks: []
+    acceptance:
+      - Trailから対象QuestのMission作成へ安全なreturnToを渡す。
+      - Mission作成成功時だけTrail作成へ戻る。
+      - 戻ったTrail作成で対象Questを選択済みにする。
+      - 新しいMissionを含む対応Mission一覧から選択できる。
+      - 外部URL、別Quest、create指定のない戻り先を拒否する。
+      - 通常のQuest詳細からのMission作成は従来どおり画面に留まる。
+      - Route契約／Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/core/router/app_routes.dart, apps/mobile/lib/core/router/app_router.dart, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_481_trail_mission_return_contract_test.dart, reports/qst/QST-481.md]
+
+  - id: QST-482
+    title: Trail Draft Context Conflict Guard
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 別のQuestに保存中のTrail下書きを、新しい航路の入力で無言に上書きしない。
+    depends_on: [QST-478, QST-481]
+    blocks: []
+    acceptance:
+      - 呼出Questと保存済み下書きのQuest不一致を検出する。
+      - 利用者が判断するまで競合下書きを自動適用しない。
+      - 利用者が判断するまで新しい入力を下書きへ自動保存しない。
+      - 下書きを開く操作で元のQuest／Mission／本文を復元する。
+      - 明示破棄後だけ新しい航路の下書き保存を開始する。
+      - 固定parent作成では既存下書きを残して閉じられる。
+      - Draft／Widget回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_482_trail_draft_context_conflict_test.dart, reports/qst/QST-482.md]
+
+  - id: QST-483
+    title: Trail Newly Created Mission Selection
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Trailから追加したMissionを戻り先で自動選択し、同じMissionを探し直す操作をなくす。
+    depends_on: [QST-481]
+    blocks: []
+    acceptance:
+      - Mission作成結果から新しいMission IDを取得する。
+      - Mission作成成功後のTrail routeへQuest IDとMission IDを渡す。
+      - Trail composerが対象Questと新規Missionを選択済みにする。
+      - Mission作成キャンセル時はTrailへ遷移しない。
+      - 通常のQuest詳細からのMission作成は画面に留まる。
+      - Route／Widget回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/core/router/app_routes.dart, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/test/qst_481_trail_mission_return_contract_test.dart, apps/mobile/test/qst_483_trail_created_mission_selection_test.dart, reports/qst/QST-483.md]
+
+  - id: QST-484
+    title: Mission Scoped Trail Direct Entry
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Mission詳細から、そのMissionを選択済みにしたTrail作成へ一操作で進めるようにする。
+    depends_on: [QST-462, QST-483]
+    blocks: []
+    acceptance:
+      - Mission詳細にTrail記録の明確なCTAを表示する。
+      - CTAがQuest IDとMission IDをTrail routeへ渡す。
+      - Trail composerを開いた状態で遷移する。
+      - composerを閉じた後も同じMissionで絞り込んだTrail一覧を表示する。
+      - 内部IDを利用者向けcopyへ露出しない。
+      - 実タップのWidget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/mission/mission_detail_screen.dart, apps/mobile/test/qst_484_mission_trail_direct_entry_test.dart, reports/qst/QST-484.md]
+
+  - id: QST-485
+    title: Trail Composer URL Lifecycle
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Routeから開いたTrail composer終了後にcreate指定を除去し、再読込による意図しない再表示を防ぐ。
+    depends_on: [QST-466, QST-481]
+    blocks: []
+    acceptance:
+      - URLのcreate=1からTrail composerを一度だけ開く。
+      - composer終了後にcreate queryを除去する。
+      - Quest／Mission filter queryは維持する。
+      - Mission作成へのhandoff時は戻り先正規化で遷移を上書きしない。
+      - URL再読込で閉じたcomposerを再表示しない。
+      - 保存成功を含むWidget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_485_trail_composer_url_lifecycle_test.dart, reports/qst/QST-485.md]
+
+  - id: QST-486
+    title: Trail Journey Cross-functional Review II
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: QST-477〜485のページング、下書き、親階層、往復導線、URL lifecycleを横断再検証する。
+    depends_on: [QST-477, QST-478, QST-479, QST-480, QST-481, QST-482, QST-483, QST-484, QST-485]
+    blocks: []
+    acceptance:
+      - QST-477〜485のfocused regressionがすべて通る。
+      - Flutter analyzeが警告を含めて0件になる。
+      - Backlog SSOTとcandidate manifestが通る。
+      - RLS readinessとmigration driftが通る。
+      - External Beta判定を実証済み証拠だけで維持する。
+      - Critical／High findingsを次のQSTへ反映する。
+      - レビュー結果と残余リスクをQST Reportへ記録する。
+    evidence: [apps/mobile/test/qst_477_trail_cursor_pagination_test.dart, apps/mobile/test/qst_478_trail_draft_recovery_test.dart, apps/mobile/test/qst_479_trail_parent_selection_preview_test.dart, apps/mobile/test/qst_480_trail_missing_mission_recovery_test.dart, apps/mobile/test/qst_481_trail_mission_return_contract_test.dart, apps/mobile/test/qst_482_trail_draft_context_conflict_test.dart, apps/mobile/test/qst_483_trail_created_mission_selection_test.dart, apps/mobile/test/qst_484_mission_trail_direct_entry_test.dart, apps/mobile/test/qst_485_trail_composer_url_lifecycle_test.dart, reports/qst/QST-486.md]
+
+  - id: QST-487
+    title: Trail Journey Analytics Privacy Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail作成導線の改善効果を、本文・名称・URL・entity IDを収集せず計測できるようにする。
+    depends_on: [QST-486]
+    blocks: []
+    acceptance:
+      - composer open、parent selection、Mission recovery、draft conflict resolution、save successを区別する。
+      - Trail本文、title、summary、Quest名、Mission名を送信しない。
+      - Quest ID、Mission ID、Route IDを送信しない。
+      - allowlist済みのsurface、outcome、source、booleanだけを利用する。
+      - Analytics失敗がTrail操作を止めない。
+      - Privacy contract／回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/core/analytics/analytics_event.dart, apps/mobile/lib/core/analytics/analytics_service.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_487_trail_journey_analytics_privacy_test.dart, reports/qst/QST-487.md]
+
+  - id: QST-488
+    title: Trail Composer Accessibility Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: TrailのQuest／Mission選択と回復導線を読み上げ可能にし、compact画面の200%文字表示でも操作可能にする。
+    depends_on: [QST-479, QST-480, QST-487]
+    blocks: []
+    acceptance:
+      - Quest selectorに目的を示すSemantics labelがある。
+      - Mission selectorがQuest選択前後の状態を読み上げる。
+      - Mission作成への回復CTAが遷移先を読み上げる。
+      - 360px、200%文字表示でoverflowしない。
+      - 長いQuest／Mission名をlayout内へ収める。
+      - Semantics／responsive回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_488_trail_accessibility_contract_test.dart, reports/qst/QST-488.md]
+
+  - id: QST-489
+    title: Trail Filter Result Feedback
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: TrailのQuest／Mission絞り込み結果件数を画面表示と読み上げで明示し、解除結果を理解しやすくする。
+    depends_on: [QST-461, QST-466, QST-488]
+    blocks: []
+    acceptance:
+      - QuestとMission filterの目的をSemanticsで示す。
+      - filter適用中に表示Trail件数を示す。
+      - 件数変更をlive regionで読み上げる。
+      - filter解除後に件数表示を除去し全Trailへ戻す。
+      - compact layoutを維持する。
+      - Filter／URL回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_489_trail_filter_result_feedback_test.dart, reports/qst/QST-489.md]
+
+  - id: QST-490
+    title: Trail Draft Save Status
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail入力中のsecure draft保存状態を明示し、保存失敗時も入力が保持されていることを伝える。
+    depends_on: [QST-478, QST-482]
+    blocks: []
+    acceptance:
+      - debounce待機中と保存中に保存状態を示す。
+      - secure draft保存成功を表示する。
+      - 保存失敗を表示し入力内容を維持する。
+      - 状態変更をlive regionで読み上げる。
+      - 連続入力では最新writeだけが表示状態を更新する。
+      - Draft回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_490_trail_draft_save_status_test.dart, reports/qst/QST-490.md]
+
+  - id: QST-491
+    title: Trail Parent Availability Feedback
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail作成中に選択済みQuest／Missionが利用不可になった場合、古い親へ保存せず再選択を案内する。
+    depends_on: [QST-468, QST-481]
+    blocks: []
+    acceptance:
+      - 選択済みQuestのarchived／missing状態を検出する。
+      - 選択済みMissionのremoved／missing状態を検出する。
+      - 利用不可状態をlive regionで通知する。
+      - stale parentを保存対象にしない。
+      - 入力本文とdraft IDを維持したまま再選択できる。
+      - Domain／Widget回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_491_trail_parent_availability_feedback_test.dart, reports/qst/QST-491.md]
+
+  - id: QST-492
+    title: Trail Parent Navigation Touch Target
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: TrailカードのQuest／Mission親階層navigationを44px以上の安定したタップ対象にする。
+    depends_on: [QST-460, QST-488]
+    blocks: []
+    acceptance:
+      - tappable Quest chipの高さが44px以上ある。
+      - tappable Mission chipの高さが44px以上ある。
+      - 非interactive preview chipは余計なbutton semanticsを持たない。
+      - 親Quest／Missionへの既存遷移を維持する。
+      - compact幅で階層chipがWrapする。
+      - Navigation／size回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_492_trail_parent_touch_target_test.dart, reports/qst/QST-492.md]
+
+  - id: QST-493
+    title: Completed Mission Trail Guidance
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: 完了済みMissionにも振り返りや学びのTrailを残せることを明示する。
+    depends_on: [QST-457, QST-488]
+    blocks: []
+    acceptance:
+      - 完了MissionをTrail親として選択できる。
+      - selector上で完了状態を示す。
+      - 選択後に振り返り記録が可能な理由を短く示す。
+      - 完了Missionの状態を変更しない。
+      - 通常Missionでは追加説明を表示しない。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_493_completed_mission_trail_guidance_test.dart, reports/qst/QST-493.md]
+
+  - id: QST-494
+    title: Trail Quest Selector Journey Ordering
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Trail作成時のQuest候補を旅の継続性に沿って並べ、現在進めているQuestを素早く選べるようにする。
+    depends_on: [QST-457, QST-488, QST-493]
+    blocks: []
+    acceptance:
+      - 進行中Questを候補の先頭に表示する。
+      - 下書きQuestを進行中Questの後に表示する。
+      - 完了Questを後方へ配置し完了状態を明示する。
+      - archived Questを選択候補へ含めない。
+      - 同じ状態ではタイトル順で安定して表示する。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_494_trail_quest_selector_order_test.dart, reports/qst/QST-494.md]
+
+  - id: QST-495
+    title: Trail Mission Selector Journey Ordering
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Trail作成・編集時のMission候補を現在の航路順に整理し、次に記録するMissionを見つけやすくする。
+    depends_on: [QST-457, QST-488, QST-493, QST-494]
+    blocks: []
+    acceptance:
+      - 未完了Missionを完了Missionより先に表示する。
+      - 未完了Mission内ではorderIndexとsortOrderを維持する。
+      - 完了Missionを後方へ配置し完了状態を明示する。
+      - removed Missionを選択候補へ含めない。
+      - Trail新規作成と編集で同じ並びを使う。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_495_trail_mission_selector_order_test.dart, reports/qst/QST-495.md]
+
+  - id: QST-496
+    title: Trail Journey Cross-functional Review III
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: QST-487からQST-495の分析、アクセシビリティ、下書き、親選択、旅程順を横断監査し次の改善判断へ反映する。
+    depends_on: [QST-487, QST-488, QST-489, QST-490, QST-491, QST-492, QST-493, QST-494, QST-495]
+    blocks: []
+    acceptance:
+      - Trail集中回帰テストが通る。
+      - Flutter analyzeが警告なしで通る。
+      - Analytics payloadに本文やentity IDを含めない。
+      - QuestからMission、Trailへの親子関係を維持する。
+      - Backlog、candidate、RLS、migration、Beta readiness gateを再検証する。
+      - 外部証跡不足を実装完了と混同せずGo／No-Goを更新する。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_487_trail_journey_analytics_privacy_test.dart, apps/mobile/test/qst_488_trail_accessibility_contract_test.dart, apps/mobile/test/qst_489_trail_filter_result_feedback_test.dart, apps/mobile/test/qst_490_trail_draft_save_status_test.dart, apps/mobile/test/qst_491_trail_parent_availability_feedback_test.dart, apps/mobile/test/qst_492_trail_parent_touch_target_test.dart, apps/mobile/test/qst_493_completed_mission_trail_guidance_test.dart, apps/mobile/test/qst_494_trail_quest_selector_order_test.dart, apps/mobile/test/qst_495_trail_mission_selector_order_test.dart, tools/qst/verify_beta_readiness_report.dart, reports/qst/QST-496.md]
+
+  - id: QST-497
+    title: Trail Physical Accessibility Evidence Contract
+    status: Completed
+    evidence_state: external_pending
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: TrailのQuest／Mission選択と保存導線を物理Androidで検証する必須シナリオをcandidate-bound evidence gateへ追加する。
+    depends_on: [QST-376, QST-488, QST-496]
+    blocks: []
+    acceptance:
+      - QuestからMissionを選ぶTrail導線を物理確認項目に含める。
+      - Trail日本語IME compositionを物理確認項目に含める。
+      - Trailの200%文字拡大とTalkBack reading orderを確認項目に含める。
+      - 保存成功と親availability errorを色だけに依存せず確認する。
+      - recorderが各Trail scenarioの明示確認なしでは証跡を作成しない。
+      - 実機未実施をpendingのまま維持し自動テストで代替しない。
+    evidence: [docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml, tools/qst/record_physical_accessibility_evidence.dart, tools/qst/verify_physical_accessibility_evidence.dart, docs/product/accessibility_release_gate.md, apps/mobile/test/qst_497_trail_physical_accessibility_contract_test.dart, reports/qst/QST-497.md]
+
+  - id: QST-498
+    title: Trail Hosted Ownership Evidence Contract
+    status: Completed
+    evidence_state: external_pending
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: Trailが選択QuestとそのMissionにだけ保存され、別Quest・別owner親への書き込みが拒否されるHosted証跡契約を整備する。
+    depends_on: [QST-199, QST-468, QST-496]
+    blocks: []
+    acceptance:
+      - ownerが一致するQuest／Mission親へTrailを書けるSQL assertionを持つ。
+      - 同一ownerでも別QuestのMissionを指定したTrailを拒否する。
+      - 別ownerのQuest／Missionを親にしたTrailを拒否する。
+      - behavior testをtransaction rollbackする。
+      - capture toolがTrail親境界の結果をsanitized evidenceへ記録する。
+      - 現candidateのHosted再実行前はpendingを維持する。
+    evidence: [supabase/tests/rls_behavior.sql, docs/qst/BETA_RLS_EVIDENCE.yaml, tools/qst/capture_cloud_rls_evidence.ps1, tools/qst/verify_cloud_rls_evidence.dart, apps/mobile/test/qst_498_trail_hosted_ownership_contract_test.dart, reports/qst/QST-498.md]
+
+  - id: QST-499
+    title: Trail Journey Performance Budget
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trailの親filter、pagination、DB indexへ明示的な性能予算を設け、大量の旅程記録でも一覧操作を安定させる。
+    depends_on: [QST-467, QST-477, QST-489, QST-496]
+    blocks: []
+    acceptance:
+      - Quest／Mission filterを1パスでprojectionする。
+      - ローカル表示対象を400件の明示予算内で処理する。
+      - projectionを16ms budgetで回帰検証する。
+      - repository pageを40件へ制限しowner境界を維持する。
+      - Supabaseにowner＋Quest／Mission＋cursor indexを要求する。
+      - performance verifierとfilter／cursor回帰テストが通る。
+    evidence: [apps/mobile/lib/core/performance/performance_limits.dart, apps/mobile/lib/features/trail/trail_journey_projection.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_499_trail_journey_performance_budget_test.dart, tools/qst/verify_performance_readiness.dart, reports/qst/QST-499.md]
+
+  - id: QST-500
+    title: Trail Filtered Pagination Discovery CTA
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 絞り込み結果が現在pageで0件でも、過去pageを探せることを空状態の直下で明確にする。
+    depends_on: [QST-475, QST-489, QST-499]
+    blocks: []
+    acceptance:
+      - 読み込み済み範囲だけが0件であることを明示する。
+      - 過去Trailの読み込みCTAを説明文の直下へ表示する。
+      - load more CTAを画面内で重複表示しない。
+      - この航路へのTrail作成と全件表示を維持する。
+      - hasMoreがない場合は本当に未記録の空状態を表示する。
+      - pagination disclosure Widget testsが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_475_trail_filter_pagination_disclosure_test.dart, apps/mobile/test/qst_500_trail_filtered_pagination_cta_test.dart, reports/qst/QST-500.md]
+
+  - id: QST-501
+    title: Profile Dark Journey Surface Alignment
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: UI-UX-POLISH
+    goal: Profileの大型light cardをQuestra共通dark surfaceへ揃え、Home・Arcとの視覚的連続性を高める。
+    depends_on: [QST-404, QST-442]
+    blocks: []
+    acceptance:
+      - Account、Arc Bond、Navigator Rank、旅の現在地をdark paletteへ統一する。
+      - surface上の文字とiconをColorSchemeから解決する。
+      - progress backgroundをdark surface上で読み取れる強さにする。
+      - 390px／200%文字で全カードへ到達できoverflowしない。
+      - light／dark themeのcontrast回帰を維持する。
+      - Profile／surface Widget testsが通る。
+    evidence: [apps/mobile/lib/features/profile/profile_screen.dart, apps/mobile/test/qst_501_profile_dark_surface_alignment_test.dart, apps/mobile/test/qst_404_surface_contrast_test.dart, reports/qst/QST-501.md]
+
+  - id: QST-502
+    title: Home Desktop Journey Composition
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: UI-UX-POLISH
+    goal: Home初期状態を説明やカードで埋めず、desktopで落ち着いて読める中央journey columnへ整える。
+    depends_on: [QST-408, QST-442]
+    blocks: []
+    acceptance:
+      - wide desktopのHome本文を920px以内へ制約する。
+      - compact mobileでは利用可能幅を維持する。
+      - 初回HomeのArc説明と単一CTA契約を維持する。
+      - 空のQuest／Trail sectionを初回表示へ追加しない。
+      - 再訪時のToday Task導線を変更しない。
+      - desktop／mobile／Home next-step testsが通る。
+    evidence: [apps/mobile/lib/features/home/home_screen.dart, apps/mobile/test/qst_502_home_desktop_composition_test.dart, apps/mobile/test/qst_408_home_next_step_test.dart, reports/qst/QST-502.md]
+
+  - id: QST-503
+    title: Canonical Navigation Return Contract Closure
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: INFORMATION-ARCHITECTURE
+    goal: 実装済みの五つのPrimary destinationと直リンク時の安全な戻り先を一つのnavigation契約へ統一する。
+    depends_on: [QST-197, QST-299, QST-321, QST-502]
+    blocks: []
+    acceptance:
+      - Primary NavigationをHome、Quest、Arc、Trail、Profileの順で正本化する。
+      - MissionとTaskをQuest branch内の文脈画面として明記する。
+      - Settings、Feedback、Data Rights、Arc Memory、Guildへ共通の戻る操作を適用する。
+      - navigation stackがある場合は元画面へ戻る。
+      - 直リンクでstackがない場合は文書化した安全な親画面へ遷移する。
+      - tooltip、semantic action、既存Bottom Navigation契約を回帰検証する。
+    evidence: [docs/architecture/mvp-navigation.md, apps/mobile/lib/widgets/navigation/questra_route_back_button.dart, apps/mobile/lib/features/settings/settings_screen.dart, apps/mobile/lib/features/feedback/beta_feedback_screen.dart, apps/mobile/lib/features/trust/data_rights_screen.dart, apps/mobile/lib/features/arc_memory/arc_memory_control_screen.dart, apps/mobile/lib/features/guild/guild_discovery_screen.dart, apps/mobile/test/qst_503_canonical_navigation_return_test.dart, apps/mobile/test/bottom_navigation_v2_test.dart, reports/qst/QST-503.md]
+
+  - id: QST-504
+    title: Arc-First Quest Entry Return Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-CREATION-UX
+    goal: Quest一覧からArc相談を主入口として開き、相談後もQuestへ迷わず復帰できる文脈を保つ。
+    depends_on: [QST-322, QST-410, QST-503]
+    blocks: []
+    acceptance:
+      - Quest一覧の全作成CTAがArc Quest entry routeを使う。
+      - Quest起点のArc画面にQuestへ戻る操作を表示する。
+      - Mission起点ではMissionへ戻る表現を維持する。
+      - returnToは内部Quest routeだけを許可し外部URLやHomeを拒否する。
+      - AI計画失敗時の手動Quest fallbackでMissionを捏造しない。
+      - QuestからArc、Questへの往復をWidget Testで確認する。
+    evidence: [apps/mobile/lib/core/router/app_routes.dart, apps/mobile/lib/features/quest/quest_screen.dart, apps/mobile/lib/features/arc/arc_screen.dart, apps/mobile/test/qst_504_arc_first_quest_return_test.dart, apps/mobile/test/qst_410_arc_quest_handoff_recovery_test.dart, reports/qst/QST-504.md]
+
+  - id: QST-505
+    title: Onboarding Journey Controls and Secure Resume
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: ACTIVATION-UX
+    goal: 3画面の短いOnboardingに進捗、戻る、後で設定、owner別途中再開を追加し離脱不安を下げる。
+    depends_on: [QST-323, QST-406, QST-504]
+    blocks: []
+    acceptance:
+      - 各画面で現在のstepと全3stepを視覚・Semanticsの両方で示す。
+      - 2画面目以降から入力を失わず前画面へ戻れる。
+      - 後で設定を選ぶと架空のQuestを生成せずArcへ進む。
+      - 未完了stepと入力をowner別の暗号化local storageへ保存する。
+      - draftを7日で失効し、壊れた値や別owner値をfail closedする。
+      - 完了またはSkip時にdraftを削除する。
+      - 保存失敗時に入力を維持し色だけに依存しないエラーを示す。
+    evidence: [apps/mobile/lib/features/onboarding/onboarding_draft_repository.dart, apps/mobile/lib/features/onboarding/onboarding_screen.dart, apps/mobile/test/qst_505_onboarding_resume_controls_test.dart, apps/mobile/test/onboarding_experience_preset_test.dart, apps/mobile/test/qst_406_onboarding_replay_test.dart, reports/qst/QST-505.md]
+
+  - id: QST-506
+    title: Journey Entry and Evidence Cross-functional Review IV
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: CROSS-FUNCTIONAL-REVIEW
+    goal: QST-497からQST-505のTrail、Profile、Home、Navigation、Arc Quest entry、Onboardingを横断監査し次cycleへ反映する。
+    depends_on: [QST-497, QST-498, QST-499, QST-500, QST-501, QST-502, QST-503, QST-504, QST-505]
+    blocks: []
+    acceptance:
+      - 集中回帰テストとFlutter analyzeが通る。
+      - UIのPrimary hierarchy、戻り先、Onboarding入力保持を確認する。
+      - AI失敗時に固定Missionを生成しない契約を回帰する。
+      - owner境界、RLS、migration drift、安全なreturn URLを検証する。
+      - Story禁止とArc表現をMaster Specへ照合する。
+      - Backlog、candidate、performance、accessibility、Beta readiness gateを再検証する。
+      - 外部証跡不足を自動テストで代替せずExternal BetaのNo-Goを維持する。
+    evidence: [apps/mobile/test/qst_497_trail_physical_accessibility_contract_test.dart, apps/mobile/test/qst_498_trail_hosted_ownership_contract_test.dart, apps/mobile/test/qst_499_trail_journey_performance_budget_test.dart, apps/mobile/test/qst_500_trail_filtered_pagination_cta_test.dart, apps/mobile/test/qst_501_profile_dark_surface_alignment_test.dart, apps/mobile/test/qst_502_home_desktop_composition_test.dart, apps/mobile/test/qst_503_canonical_navigation_return_test.dart, apps/mobile/test/qst_504_arc_first_quest_return_test.dart, apps/mobile/test/qst_505_onboarding_resume_controls_test.dart, reports/qst/QST-506.md]
+
+  - id: QST-507
+    title: Primary Screen State Matrix Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: UI-UX-QUALITY
+    goal: 主要画面の目的、最重要CTA、状態、Widget／Golden／物理証跡を機械検証可能な正本へ揃える。
+    depends_on: [QST-326, QST-506]
+    blocks: []
+    acceptance:
+      - Home、Arc、Quest、Trail、Profile、Onboardingをmatrixへ含める。
+      - empty、content、loading、saving、error、offline、AI状態を画面責務に応じて列挙する。
+      - 各画面へ既存Widget Test evidenceを紐づける。
+      - Goldenのviewport、文字倍率、locale、theme、motion、font条件を固定する。
+      - Goldenを物理TalkBack、IME、実通信証跡の代替にしない。
+      - verifierが画面、route、契約token、test file欠落をfail closedする。
+    evidence: [docs/qst/PRIMARY_SCREEN_STATE_MATRIX.yaml, docs/product/SCREEN_STATE_MATRIX_V1.md, tools/qst/verify_primary_screen_state_matrix.dart, apps/mobile/test/qst_507_primary_screen_state_matrix_test.dart, apps/mobile/test/responsive_viewport_matrix_test.dart, reports/qst/QST-507.md]
+
+  - id: QST-508
+    title: Mutation Recovery Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: Quest、Mission、Task、Trailの保存失敗時に入力を失わず、重複を避けて安全に再試行できる共通契約を完成する。
+    depends_on: [QST-277, QST-412, QST-470, QST-506]
+    blocks: []
+    acceptance:
+      - 保存失敗時に内部例外を出さず入力保持を明示する。
+      - QuestとMissionの最新保存操作を同じentityで再試行できる。
+      - QuestとMissionの削除失敗時にentityを画面へ復元する。
+      - Taskのowner-scoped durable queueとidempotency keyを維持する。
+      - Trail作成と編集はdraftを維持し一覧読込だけ共通Bannerから再試行する。
+      - 古い成功応答が新しい失敗操作のretry slotを消さない。
+      - owner切替時にpending retryと同期表示を破棄する。
+      - 再試行可能な通知を誤って閉じられない。
+    evidence: [docs/product/PERSISTENCE_RECOVERY_CONTRACT.md, apps/mobile/lib/core/persistence/persistence_sync_state.dart, apps/mobile/lib/widgets/persistence_sync_banner.dart, apps/mobile/lib/features/quest/quest_controller.dart, apps/mobile/lib/features/mission/mission_controller.dart, apps/mobile/lib/features/task/task_mutation_state.dart, apps/mobile/lib/features/trail/trail_sync_state.dart, apps/mobile/test/qst_508_mutation_recovery_contract_test.dart, reports/qst/QST-508.md]
+
+  - id: QST-509
+    title: Achievement Loop Closure
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: RETENTION-UX
+    goal: Task完了からArcの祝福、親付きTrail記録、次TaskまたはMission成果確認までを一つの回復可能な体験へ接続する。
+    depends_on: [QST-258, QST-277, QST-457, QST-508]
+    blocks: []
+    acceptance:
+      - Remote保存成功後だけTask完了モーメントを表示する。
+      - ArcがTaskの前進を祝い、Trailを自動生成しない。
+      - Trail作成へQuest、Mission、Taskの親情報を渡す。
+      - 同じMissionの依存関係を満たす次Taskを優先する。
+      - 必須Task完了時はMission成果確認を優先する。
+      - Task完了だけでMissionを自動完了しない。
+      - Task一覧、詳細、Quest Journey Workspaceで共通体験を使う。
+      - 完了取り消しと200%文字でのCTA到達性を維持する。
+    evidence: [docs/product/ACHIEVEMENT_LOOP_CONTRACT.md, apps/mobile/lib/features/arc/arc_celebration_service.dart, apps/mobile/lib/features/task/task_achievement_flow.dart, apps/mobile/lib/features/task/task_screen.dart, apps/mobile/lib/features/task/task_detail_screen.dart, apps/mobile/lib/features/quest_journey/quest_journey_workspace.dart, apps/mobile/test/qst_509_task_achievement_loop_test.dart, reports/qst/QST-509.md]
+
+  - id: QST-510
+    title: Task Mutation Owner Switch Race Guard
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: Task保存中の認証主体切替後に旧ownerの遅延応答が新ownerのTask、同期状態、Mission進捗へ反映されないようにする。
+    depends_on: [QST-277, QST-287, QST-508, QST-509]
+    blocks: []
+    acceptance:
+      - Task保存開始時のowner世代を保持する。
+      - 保存成功・失敗がowner切替後に返っても新ownerのstateや同期表示を変更しない。
+      - Task並び替えの遅延応答にも同じowner境界を適用する。
+      - 旧ownerの未確定操作はdurable queueに保持し、新ownerへ再試行操作を漏らさない。
+      - 遅延成功、遅延失敗、遅延並び替えの回帰テストを通す。
+    evidence: [apps/mobile/lib/features/task/task_controller.dart, apps/mobile/test/qst_510_task_owner_switch_race_test.dart, reports/qst/QST-510.md]
+
+  - id: QST-511
+    title: Owner-scoped Task Mutation Serialization
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: 同一ownerのTask保存、並び替え、再試行、破棄を順に処理し、1件のdurable queueが並行操作で失われないようにする。
+    depends_on: [QST-277, QST-287, QST-508, QST-510]
+    blocks: []
+    acceptance:
+      - 同一ownerのTask保存は先行操作の完了までrepositoryとdurable queueへ進めない。
+      - 先行保存が失敗した場合、再試行待ちを保持し後続の通常保存を拒否する。
+      - 再試行と破棄を保存と同じowner queueに入れ、実行時にpendingを再確認する。
+      - Task並び替えと通常保存も同じ順序契約を使う。
+      - owner切替中も旧ownerの遅延結果を新ownerへ反映しない。
+      - 二重保存、失敗後再試行、並び替え競合の回帰テストを通す。
+    evidence: [apps/mobile/lib/features/task/task_controller.dart, apps/mobile/test/qst_511_task_mutation_serialization_test.dart, reports/qst/QST-511.md]
+
+  - id: QST-512
+    title: Stale Task Snapshot Mutation Guard
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: 先行Task保存の待機中に作られた古いTask snapshotで、後続保存が先行変更を上書きしないようにする。
+    depends_on: [QST-510, QST-511]
+    scope: Taskの状態変更、日程更新、並び替えについて、実行時の最新状態との競合を検知し安全に再評価または拒否する。
+    likely_files:
+      - apps/mobile/lib/features/task/task_controller.dart
+      - apps/mobile/lib/features/task/task_model.dart
+      - apps/mobile/test/qst_512_stale_task_snapshot_test.dart
+      - reports/qst/QST-512.md
+    acceptance:
+      - 保存待機中の別操作が古いTask値を丸ごと上書きしない。
+      - 状態遷移は最新の依存関係とTask statusで再評価する。
+      - 再評価できない競合は入力を失わず明示的に拒否する。
+      - 失敗後のretryは同じownerと意図した変更だけを再適用する。
+      - 並び替えと通常更新の交差操作を遅延repositoryで検証する。
+    evidence: [apps/mobile/lib/features/task/task_controller.dart, apps/mobile/lib/features/task/task_model.dart, apps/mobile/test/qst_512_stale_task_snapshot_test.dart, reports/qst/QST-512.md]
+
+  - id: QST-513
+    title: Route Approval Task Failure Propagation
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: 航路変更の承認中にTask更新が失敗した場合、成功扱いや提案の消失を防ぎ、利用者が安全に再確認できるようにする。
+    depends_on: [QST-512]
+    scope: ローカル航路承認経路のTask mutation結果、提案状態、部分反映時の復旧を検証する。Supabase RPCの原子性契約とは境界を分ける。
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - apps/mobile/test/qst_513_route_approval_task_failure_test.dart
+      - reports/qst/QST-513.md
+    acceptance:
+      - Task更新がfalseまたは例外を返した場合に承認成功と表示しない。
+      - 変更案と失敗理由を保持し、重複適用せずに再確認できる。
+      - 複数変更の途中失敗で部分反映を検知し、復旧方針を明示する。
+      - 古いTask snapshotの競合を含む回帰テストを通す。
+    evidence: [apps/mobile/lib/features/quest/route_replanning_controller.dart, apps/mobile/lib/features/quest/quest_route_screen.dart, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/test/qst_513_route_approval_task_failure_test.dart, reports/qst/QST-513.md]
+
+  - id: QST-514
+    title: Local Route Approval Atomic Recovery
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: Supabase未接続時の複数航路変更を、途中失敗しても元のQuest・Mission・Taskへ戻せる原子的な操作として扱う。
+    depends_on: [QST-513]
+    scope: ローカル航路承認の変更適用順、補償復旧、Repository statusの確定順、Undo snapshotを一つの契約として整備する。
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - apps/mobile/lib/features/quest/route_replanning_repository.dart
+      - apps/mobile/test/qst_514_local_route_atomic_recovery_test.dart
+      - reports/qst/QST-514.md
+    acceptance:
+      - ローカルの複数変更は全件成功するまで提案をacceptedへ確定しない。
+      - 途中失敗時にQuest・Mission・Taskを承認前snapshotへ復旧する。
+      - 復旧失敗時は部分反映を隠さず、手動復旧に必要な情報を保持する。
+      - 成功、途中失敗、復旧失敗、再試行の回帰テストを通す。
+    evidence: [apps/mobile/lib/features/quest/route_replanning_controller.dart, apps/mobile/lib/features/quest/route_replanning_repository.dart, apps/mobile/test/qst_514_local_route_atomic_recovery_test.dart, reports/qst/QST-514.md]
+
+  - id: QST-515
+    title: Route Mutation Persistence Acknowledgement
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: ローカル航路承認でQuest・Missionの保存完了を待ち、永続化失敗を承認成功として扱わない。
+    depends_on: [QST-514]
+    scope: 航路変更専用のawait可能なQuest・Mission mutation APIを追加し、state更新とRepository保存の結果を承認処理へ返す。
+    likely_files:
+      - apps/mobile/lib/features/quest/quest_controller.dart
+      - apps/mobile/lib/features/mission/mission_controller.dart
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - apps/mobile/test/qst_515_route_persistence_ack_test.dart
+      - reports/qst/QST-515.md
+    acceptance:
+      - Quest期限変更の保存完了を航路承認が待つ。
+      - Mission追加・変更・削除・順序変更の保存失敗を検知する。
+      - 永続化失敗時はQST-514の補償復旧へ進み、成功通知を出さない。
+      - 通常のQuest・Mission操作契約を壊さない回帰テストを通す。
+    evidence: [apps/mobile/lib/features/quest/quest_controller.dart, apps/mobile/lib/features/mission/mission_controller.dart, apps/mobile/lib/features/quest/route_replanning_controller.dart, apps/mobile/lib/features/quest/route_snapshot_service.dart, apps/mobile/test/qst_515_route_persistence_ack_test.dart, reports/qst/QST-515.md]
+
+  - id: QST-516
+    title: QST-507-515 Cross-functional Quality Review
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: QUALITY-REVIEW
+    goal: QST-507〜515をコード、UI/UX、AI、DB、セキュリティ、Master Spec準拠で横断レビューし、次のQST群へ結果を反映する。
+    depends_on: [QST-515]
+    scope: Task達成導線、mutation回復、owner境界、直列化、stale snapshot、航路承認と永続化を証拠ベースで再評価する。
+    likely_files:
+      - docs/qst/BACKLOG.yaml
+      - reports/qst/QST-516.md
+    acceptance:
+      - 6観点の評価と未解決リスクを証拠付きで記録する。
+      - Critical/High findingsを重複確認後に採番する。
+      - Master Specとの矛盾、UI文言、DB/RLS、AI承認境界を確認する。
+      - 次の10件へ優先順位と依存関係を反映する。
+    evidence: [reports/qst/QST-516.md]
+
+  - id: QST-517
+    title: Route Snapshot Schema V2 Alignment
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: FlutterとSupabaseの航路snapshotをversion付きの同一契約へ揃え、再読込した未変更提案を偽staleにしない。
+    depends_on: [QST-196, QST-286, QST-515, QST-516]
+    blocks: [QST-518, QST-525]
+    likely_files:
+      - apps/mobile/lib/features/quest/route_snapshot_service.dart
+      - apps/mobile/lib/features/quest/route_replanning_repository.dart
+      - supabase/migrations
+      - apps/mobile/test/qst_517_route_snapshot_schema_v2_test.dart
+      - reports/qst/QST-517.md
+    acceptance:
+      - Flutter captureとSQL captureが同じsnapshotVersionとfield集合を使う。
+      - DBから再読込した未変更proposalをfreshとして承認できる。
+      - Mission内容、Task進捗、Quest期限の実変更はstaleとして拒否する。
+      - 旧version proposalは明示的な理由でfail closedまたは安全に移行する。
+      - schema parityと再読込回帰テストを通す。
+    evidence: []
+
+  - id: QST-518
+    title: Awaitable Route Undo Result Contract
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: 航路の元に戻す操作をawait可能にし、成功・stale・失敗・部分復旧をUIへ正確に返す。
+    depends_on: [QST-517]
+    blocks: [QST-519, QST-523]
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - apps/mobile/lib/features/quest/quest_route_screen.dart
+      - apps/mobile/lib/features/quest/quest_detail_screen.dart
+      - apps/mobile/test/qst_518_route_undo_result_test.dart
+      - reports/qst/QST-518.md
+    acceptance:
+      - Undo結果を呼出元がawaitし、成功確認後だけ成功通知を出す。
+      - 例外、stale、部分復旧を握りつぶさず再試行可能な状態を表示する。
+      - Undo中の二重操作を防ぎ、画面離脱後のcontext利用を行わない。
+      - Supabase RPCとローカル経路を同一の結果型で扱う。
+      - 成功、失敗、二重tap、画面破棄の回帰テストを通す。
+    evidence: []
+
+  - id: QST-519
+    title: Route Undo Snapshot Retention and Compensating Recovery
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: Undo用snapshotを復旧完了まで保持し、Quest・Mission・Taskを保存確認付きで一貫して復元する。
+    depends_on: [QST-518]
+    blocks: [QST-520, QST-525]
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - apps/mobile/lib/features/quest/quest_controller.dart
+      - apps/mobile/lib/features/mission/mission_controller.dart
+      - apps/mobile/lib/features/task/task_controller.dart
+      - apps/mobile/test/qst_519_route_undo_compensation_test.dart
+      - reports/qst/QST-519.md
+    acceptance:
+      - Undo snapshotは全Repository復元成功まで破棄しない。
+      - Quest、Mission、Task復元の保存完了を待つ。
+      - 中途失敗時にsnapshotと失敗対象を保持し、重複適用せず再試行できる。
+      - 完了済みTaskを未完了へ戻さない既存DB契約を維持する。
+      - localとSupabaseのRollback回帰を通す。
+    evidence: []
+
+  - id: QST-520
+    title: Crash-safe Local Route Mutation Journal
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: PERSISTENCE-QUALITY
+    goal: ローカル航路承認・Undoの途中状態をowner単位で安全に記録し、強制終了後に復旧判断できるようにする。
+    depends_on: [QST-349, QST-519]
+    blocks: [QST-524]
+    likely_files:
+      - apps/mobile/lib/features/quest
+      - apps/mobile/lib/core/persistence
+      - apps/mobile/test/qst_520_route_mutation_journal_test.dart
+      - reports/qst/QST-520.md
+    acceptance:
+      - journalがowner、proposal、段階、before snapshot、attemptを最小限で保持する。
+      - 別ownerへjournal内容や再試行操作を漏らさない。
+      - 再起動後に適用済み、復旧必要、不明を判別し勝手に再適用しない。
+      - 成功時にjournalを消去し、期限切れと破損はfail closedにする。
+      - Mock previewはremote保存保証ではないことを明示する。
+    evidence: []
+
+  - id: QST-521
+    title: Remote Task Optimistic Concurrency RPC
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: 別端末・再読込前のTask通常編集が新しいremote状態を上書きしないよう、version条件付き保存をDB正本にする。
+    depends_on: [QST-287, QST-512, QST-516]
+    blocks: [QST-525]
+    likely_files:
+      - apps/mobile/lib/features/task/task_repository.dart
+      - apps/mobile/lib/features/task/task_controller.dart
+      - supabase/migrations
+      - supabase/tests/rls_behavior.sql
+      - apps/mobile/test/qst_521_remote_task_cas_test.dart
+      - reports/qst/QST-521.md
+    acceptance:
+      - 通常Task更新はexpected versionを検証し、成功時だけversionを進める。
+      - version不一致を上書きせずconflict結果として返す。
+      - owner、Quest、Missionの親整合性をRPC内で再検証する。
+      - retryは同じoperationを冪等に扱い、別内容を同じkeyで受け付けない。
+      - 二端末競合、owner越境、応答喪失のテストを通す。
+    evidence: []
+
+  - id: QST-522
+    title: Route Proposal Provenance and Generation Contract
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: AI-TRANSPARENCY
+    goal: 航路提案がrules、Gemini、手動のどの経路で生成されたかを監査可能にし、Arcの自然なUIを保ちながら透明性を高める。
+    depends_on: [QST-249, QST-257, QST-516]
+    blocks: [QST-525]
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_model.dart
+      - apps/mobile/lib/features/quest/route_replanning_repository.dart
+      - apps/mobile/lib/features/quest/route_replanning_presentation.dart
+      - supabase/migrations
+      - apps/mobile/test/qst_522_route_provenance_test.dart
+      - reports/qst/QST-522.md
+    acceptance:
+      - proposalへgenerator type、modelまたはruleset version、prompt/schema version、grounding有無を保存する。
+      - provider失敗やlocal heuristicをGemini生成と偽らない。
+      - 監査情報へAPI key、会話全文、不要な個人情報を保存しない。
+      - ユーザー向けにはArcをAI Assistantと呼ばず、必要な透明性だけを自然に表示する。
+      - legacy proposalを安全に読める。
+    evidence: []
+
+  - id: QST-523
+    title: Route Recovery UX and Accessibility States
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: UX-QUALITY
+    goal: 航路の適用、Undo、競合、復旧失敗を視覚・音声読み上げ・操作状態で理解できるようにする。
+    depends_on: [QST-507, QST-518, QST-519]
+    blocks: [QST-524]
+    likely_files:
+      - apps/mobile/lib/features/quest/quest_route_screen.dart
+      - apps/mobile/lib/features/quest/quest_detail_screen.dart
+      - apps/mobile/lib/widgets
+      - apps/mobile/test/qst_523_route_recovery_accessibility_test.dart
+      - reports/qst/QST-523.md
+    acceptance:
+      - 適用中とUndo中は進行中labelを示し重複操作を無効化する。
+      - stale、保存失敗、復旧失敗を色だけで区別せず、次の行動を提示する。
+      - Snackbar action以外からも復旧状態を再確認できる。
+      - 320px、200% text、keyboard focus、SemanticsのWidget testを通す。
+      - 日本語copyが責任追及や失敗感を与えない。
+    evidence: []
+
+  - id: QST-524
+    title: Primary State Golden and Physical Evidence Closure
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: QUALITY-EVIDENCE
+    goal: 主要画面と航路回復のloading、empty、error、offline、permission、AI失敗をGoldenと物理確認手順で閉じる。
+    depends_on: [QST-507, QST-509, QST-520, QST-523]
+    blocks: [QST-526]
+    likely_files:
+      - docs/qst/PRIMARY_SCREEN_STATE_MATRIX.yaml
+      - docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml
+      - apps/mobile/test
+      - reports/qst/QST-524.md
+    acceptance:
+      - Home、Arc、Quest、Mission、Task、Trail、航路Reviewの必須状態にcurrent-SHA証跡がある。
+      - 360、390、430pxと200% textのGoldenまたは同等証跡を保存する。
+      - TalkBack、keyboard、reduce motion、hapticの未確認をPass扱いしない。
+      - backend error、offline、permission、AI fallback fixtureを再現できる。
+      - 証跡欠落時にrelease gateが失敗する。
+    evidence: []
+
+  - id: QST-525
+    title: Current-SHA Hosted Route RLS and Failure Injection Gate
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: RELEASE-MANAGEMENT
+    goal: snapshot V2、Undo、Task CASを含むcurrent candidate SHAをHosted Supabaseで二アカウント・失敗注入付きで実証する。
+    depends_on: [QST-343, QST-349, QST-517, QST-519, QST-521, QST-522]
+    blocks: [QST-526, External Beta]
+    likely_files:
+      - docs/qst/BETA_SUPABASE_PROJECT.yaml
+      - docs/qst/BETA_RLS_EVIDENCE.yaml
+      - docs/qst/HOSTED_EVIDENCE_RUN.yaml
+      - supabase/tests/rls_behavior.sql
+      - tools/qst
+      - reports/qst/QST-525.md
+    acceptance:
+      - candidate SHA、migration head、function version、project refが一致する。
+      - Account BがAccount AのTask、Route、snapshot、journalへread/writeできない。
+      - snapshot再読込、apply、Undo、version conflict、応答喪失をHosted環境で実行する。
+      - test dataを削除し、秘密値とprivate journey本文を証跡へ残さない。
+      - working tree dirtyまたはSHA不一致でgateが失敗する。
+    evidence: []
+
+  - id: QST-526
+    title: QST-517-525 Cross-functional Quality Review
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: QUALITY-REVIEW
+    goal: QST-517〜525をコード、UI/UX、AI、DB、セキュリティ、Master Spec準拠で横断レビューし、次の10件へ反映する。
+    depends_on: [QST-517, QST-518, QST-519, QST-520, QST-521, QST-522, QST-523, QST-524, QST-525]
+    blocks: []
+    likely_files:
+      - docs/qst/BACKLOG.yaml
+      - reports/qst/QST-526.md
+    acceptance:
+      - snapshot、Undo、CAS、provenance、UX、current-SHA evidenceを6観点で再評価する。
+      - CriticalとHighの未解決を重複確認後に採番する。
+      - 自動テストと外部証跡を区別し、未確認をPass扱いしない。
+      - 次の10件へ優先順位、依存関係、rollbackを反映する。
+    evidence: []
 
 deferred_existing_items:
   - id: QST-044

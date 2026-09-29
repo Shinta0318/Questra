@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../widgets/navigation/questra_route_back_button.dart';
 import '../arc/arc_remote_status_controller.dart';
 import '../auth/auth_controller.dart';
 import '../arc_memory/arc_memory_management_preview_service.dart';
@@ -132,7 +133,15 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
-      appBar: AppBar(title: Text(selected?.title ?? '設定')),
+      appBar: AppBar(
+        leading: QuestraRouteBackButton(
+          fallbackRoute: initialSection == null
+              ? AppRoutes.profile
+              : AppRoutes.settings,
+          fallbackTooltip: initialSection == null ? 'プロフィールへ戻る' : '設定へ戻る',
+        ),
+        title: Text(selected?.title ?? '設定'),
+      ),
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: AppGradients.adventure),
         child: SafeArea(

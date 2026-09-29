@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/analytics/analytics_service.dart';
+import '../../core/performance/performance_limits.dart';
 import '../arc/arc_action_trigger_service.dart';
 import '../arc/arc_bond_growth_service.dart';
 import '../arc/arc_emotion_timeline_controller.dart';
@@ -14,9 +15,15 @@ import '../arc_memory/arc_memory_providers.dart';
 import '../auth/auth_controller.dart';
 import '../media/media_model.dart';
 import '../media/media_providers.dart';
+import '../mission/mission_controller.dart';
+import '../quest/quest_controller.dart';
 import '../tagging/tagging_providers.dart';
+import '../task/task_controller.dart';
 import 'trail_model.dart';
+import 'trail_pagination_state.dart';
+import 'trail_parent_validator.dart';
 import 'trail_providers.dart';
+import 'trail_repository.dart';
 import 'trail_sync_state.dart';
 
 final trailControllerProvider = NotifierProvider<TrailController, List<Trail>>(
@@ -28,7 +35,21 @@ final trailMediaControllerProvider =
       TrailMediaController.new,
     );
 
+enum TrailUpdateStatus { saved, rejected, failed }
+
+class TrailUpdateResult {
+  const TrailUpdateResult(this.status, {this.message});
+
+  final TrailUpdateStatus status;
+  final String? message;
+
+  bool get isSaved => status == TrailUpdateStatus.saved;
+}
+
 class TrailController extends Notifier<List<Trail>> {
+  int _loadGeneration = 0;
+  TrailPageCursor? _nextCursor;
+
   @override
   List<Trail> build() {
     final initialUserId = ref.read(authControllerProvider).profile?.id;
@@ -37,7 +58,10 @@ class TrailController extends Notifier<List<Trail>> {
       next,
     ) {
       if (next == previous) return;
+      _loadGeneration++;
+      _nextCursor = null;
       state = const [];
+      ref.read(trailPaginationControllerProvider.notifier).reset();
       if (next != null) unawaited(loadForUser(next));
     });
 
@@ -56,18 +80,84 @@ class TrailController extends Notifier<List<Trail>> {
 
   Future<void> loadForUser(String userId) async {
     if (ref.read(authControllerProvider).profile?.id != userId) return;
+    final generation = ++_loadGeneration;
+    _nextCursor = null;
     final sync = ref.read(trailSyncControllerProvider.notifier);
+    final pagination = ref.read(trailPaginationControllerProvider.notifier);
+    pagination.reset();
     sync.loading('Trailを読み込んでいます...', TrailSyncOperation.load);
     try {
-      final trails = await ref.read(trailRepositoryProvider).findByUser(userId);
-      if (ref.read(authControllerProvider).profile?.id != userId) return;
-      state = trails;
+      final page = await ref
+          .read(trailRepositoryProvider)
+          .findByUser(
+            userId,
+            limit: QuestraPerformanceLimits.trailListLimit + 1,
+          );
+      if (generation != _loadGeneration ||
+          ref.read(authControllerProvider).profile?.id != userId) {
+        return;
+      }
+      final hasMore = page.length > QuestraPerformanceLimits.trailListLimit;
+      final visiblePage = page
+          .take(QuestraPerformanceLimits.trailListLimit)
+          .toList(growable: false);
+      state = visiblePage;
+      _nextCursor = visiblePage.isEmpty
+          ? null
+          : TrailPageCursor.fromTrail(visiblePage.last);
+      pagination.loaded(hasMore: hasMore);
       // Routine reads do not need a success banner. Empty and loaded states are
       // already visible in the Trail screen, while failures stay actionable.
       sync.clear();
     } catch (error) {
-      if (ref.read(authControllerProvider).profile?.id != userId) return;
+      if (generation != _loadGeneration ||
+          ref.read(authControllerProvider).profile?.id != userId) {
+        return;
+      }
+      pagination.reset();
       sync.failed(error);
+    }
+  }
+
+  Future<void> loadMoreForUser(String userId) async {
+    if (ref.read(authControllerProvider).profile?.id != userId) return;
+    final paginationState = ref.read(trailPaginationControllerProvider);
+    if (paginationState.isLoading || !paginationState.canRequestMore) return;
+    final pagination = ref.read(trailPaginationControllerProvider.notifier);
+    final generation = _loadGeneration;
+    final cursor = _nextCursor;
+    pagination.loading();
+    try {
+      final page = await ref
+          .read(trailRepositoryProvider)
+          .findByUser(
+            userId,
+            limit: QuestraPerformanceLimits.trailListLimit + 1,
+            before: cursor,
+          );
+      if (generation != _loadGeneration ||
+          ref.read(authControllerProvider).profile?.id != userId) {
+        return;
+      }
+      final hasMore = page.length > QuestraPerformanceLimits.trailListLimit;
+      final existingIds = state.map((trail) => trail.id).toSet();
+      final consumedPage = page
+          .take(QuestraPerformanceLimits.trailListLimit)
+          .toList(growable: false);
+      final additions = consumedPage.where(
+        (trail) => existingIds.add(trail.id),
+      );
+      state = [...state, ...additions];
+      if (consumedPage.isNotEmpty) {
+        _nextCursor = TrailPageCursor.fromTrail(consumedPage.last);
+      }
+      pagination.loaded(hasMore: hasMore);
+    } catch (_) {
+      if (generation != _loadGeneration ||
+          ref.read(authControllerProvider).profile?.id != userId) {
+        return;
+      }
+      pagination.failed();
     }
   }
 
@@ -142,6 +232,17 @@ class TrailController extends Notifier<List<Trail>> {
     if (parent != null && !parent.isStructurallyValid) {
       throw ArgumentError.value(parent, 'parent', 'Trail parent is invalid.');
     }
+    if (parent != null) {
+      final validation = const TrailParentValidator().validate(
+        parent: parent,
+        quests: ref.read(questControllerProvider),
+        missions: ref.read(missionControllerProvider),
+        tasks: ref.read(taskControllerProvider),
+      );
+      if (!validation.canProceed) {
+        throw ArgumentError.value(parent, 'parent', validation.reason);
+      }
+    }
     final trail = Trail(
       id: trailId,
       questId: parent?.questId,
@@ -164,6 +265,12 @@ class TrailController extends Notifier<List<Trail>> {
   }
 
   void updateTrail(Trail updatedTrail) {
+    final previous = state
+        .where((trail) => trail.id == updatedTrail.id)
+        .firstOrNull;
+    if (previous == null || !_canApplyTrailUpdate(previous, updatedTrail)) {
+      return;
+    }
     state = [
       for (final trail in state)
         if (trail.id == updatedTrail.id) updatedTrail else trail,
@@ -173,10 +280,26 @@ class TrailController extends Notifier<List<Trail>> {
   }
 
   Future<bool> updateTrailAndWait(Trail updatedTrail) async {
+    final result = await updateTrailWithResult(updatedTrail);
+    return result.isSaved;
+  }
+
+  Future<TrailUpdateResult> updateTrailWithResult(Trail updatedTrail) async {
     final previous = state
         .where((trail) => trail.id == updatedTrail.id)
         .firstOrNull;
-    if (previous == null) return false;
+    if (previous == null) {
+      return const TrailUpdateResult(
+        TrailUpdateStatus.rejected,
+        message: 'このTrailは別の画面で変更された可能性があります。画面を更新してください。',
+      );
+    }
+    if (!_canApplyTrailUpdate(previous, updatedTrail)) {
+      return const TrailUpdateResult(
+        TrailUpdateStatus.rejected,
+        message: '紐づけ先を確認できませんでした。QuestとMissionを選び直してください。',
+      );
+    }
     state = [
       for (final trail in state)
         if (trail.id == updatedTrail.id) updatedTrail else trail,
@@ -191,15 +314,32 @@ class TrailController extends Notifier<List<Trail>> {
           if (identical(trail, updatedTrail)) previous else trail,
       ];
     }
-    return saved;
+    return TrailUpdateResult(
+      saved ? TrailUpdateStatus.saved : TrailUpdateStatus.failed,
+      message: saved ? null : '保存できませんでした。入力を残したまま再試行できます。',
+    );
+  }
+
+  bool _canApplyTrailUpdate(Trail previous, Trail updated) {
+    return const TrailParentMutationPolicy().canApply(
+      previous: previous,
+      updated: updated,
+      quests: ref.read(questControllerProvider),
+      missions: ref.read(missionControllerProvider),
+      tasks: ref.read(taskControllerProvider),
+    );
   }
 
   void removeTrail(String trailId) {
-    final removedTrail = state
-        .where((trail) => trail.id == trailId)
-        .firstOrNull;
+    unawaited(removeTrailAndWait(trailId));
+  }
+
+  Future<bool> removeTrailAndWait(String trailId) async {
+    final removedIndex = state.indexWhere((trail) => trail.id == trailId);
+    if (removedIndex < 0) return false;
+    final removedTrail = state[removedIndex];
     state = state.where((trail) => trail.id != trailId).toList();
-    unawaited(_deleteTrail(trailId, removedTrail));
+    return _deleteTrail(trailId, removedTrail, removedIndex);
   }
 
   Future<MediaAttachment?> attachImageToTrail({
@@ -463,10 +603,14 @@ class TrailController extends Notifier<List<Trail>> {
     }
   }
 
-  Future<void> _deleteTrail(String trailId, Trail? removedTrail) async {
+  Future<bool> _deleteTrail(
+    String trailId,
+    Trail removedTrail,
+    int removedIndex,
+  ) async {
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
-      return;
+      return true;
     }
 
     final sync = ref.read(trailSyncControllerProvider.notifier);
@@ -476,29 +620,36 @@ class TrailController extends Notifier<List<Trail>> {
       await ref
           .read(trailRepositoryProvider)
           .delete(ownerId: userId, trailId: trailId);
-      sync.saved('Trailを削除しました。');
+      if (ref.read(authControllerProvider).profile?.id == userId) {
+        sync.saved('Trailを削除しました。');
+      }
+      return true;
     } catch (error) {
-      if (removedTrail != null) {
-        state = [removedTrail, ...state];
+      if (ref.read(authControllerProvider).profile?.id != userId) return false;
+      if (!state.any((trail) => trail.id == removedTrail.id)) {
+        final restored = [...state];
+        restored.insert(removedIndex.clamp(0, restored.length), removedTrail);
+        state = restored;
       }
       sync.failed(error);
+      return false;
     }
   }
 }
 
 class TrailMediaController extends Notifier<Map<String, MediaAttachment>> {
+  int _loadGeneration = 0;
+
   @override
   Map<String, MediaAttachment> build() {
     ref.listen(authControllerProvider.select((state) => state.profile?.id), (
       previous,
       next,
     ) {
-      if (next == null) {
-        state = const {};
-        return;
-      }
       if (next != previous) {
-        _loadForCurrentTrails();
+        _loadGeneration++;
+        state = const {};
+        if (next != null) _loadForCurrentTrails();
       }
     });
 
@@ -516,35 +667,48 @@ class TrailMediaController extends Notifier<Map<String, MediaAttachment>> {
   }
 
   void setAttachment(String trailId, MediaAttachment attachment) {
+    _loadGeneration++;
     state = {...state, trailId: attachment};
   }
 
   void clearAttachment(String trailId) {
+    _loadGeneration++;
     final updated = {...state}..remove(trailId);
     state = updated;
   }
 
   Future<void> loadForTrails(List<Trail> trails) async {
+    final generation = ++_loadGeneration;
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null || trails.isEmpty) {
       state = const {};
       return;
     }
-
-    final nextState = <String, MediaAttachment>{};
-    for (final trail in trails) {
-      try {
-        final images = await ref
-            .read(mediaRepositoryProvider)
-            .findTrailImages(ownerId: userId, trailId: trail.id);
-        if (images.isNotEmpty) {
-          nextState[trail.id] = images.first;
-        }
-      } catch (_) {
-        // Media sync state is introduced later; keep loading best-effort.
+    final trailIds = trails.map((trail) => trail.id).toSet();
+    final preserved = <String, MediaAttachment>{
+      for (final entry in state.entries)
+        if (trailIds.contains(entry.key)) entry.key: entry.value,
+    };
+    final missingIds = trailIds.difference(preserved.keys.toSet()).toList();
+    if (missingIds.isEmpty) {
+      state = preserved;
+      return;
+    }
+    try {
+      final loaded = await ref
+          .read(mediaRepositoryProvider)
+          .findTrailImageMap(ownerId: userId, trailIds: missingIds);
+      if (generation != _loadGeneration ||
+          ref.read(authControllerProvider).profile?.id != userId) {
+        return;
+      }
+      state = {...preserved, ...loaded};
+    } catch (_) {
+      if (generation == _loadGeneration &&
+          ref.read(authControllerProvider).profile?.id == userId) {
+        state = preserved;
       }
     }
-    state = nextState;
   }
 
   void _loadForCurrentTrails() {

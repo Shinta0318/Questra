@@ -8,6 +8,7 @@ import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/questra_card.dart';
 import '../quest_journey/widgets/journey_hierarchy_breadcrumb.dart';
 import 'task_availability_service.dart';
+import 'task_achievement_flow.dart';
 import 'task_controller.dart';
 import 'task_model.dart';
 import 'task_mutation_banner.dart';
@@ -49,6 +50,12 @@ class TaskDetailScreen extends ConsumerWidget {
       missionTasks,
     );
     final mutation = ref.watch(taskMutationControllerProvider);
+    final achievementPlan = task.status == TaskStatus.completed
+        ? const TaskAchievementService().build(
+            completedTask: task,
+            allTasks: ref.watch(taskControllerProvider),
+          )
+        : null;
     return Scaffold(
       appBar: AppBar(title: const Text('Taskの詳細')),
       body: QuestraResponsiveListView(
@@ -130,49 +137,79 @@ class TaskDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
           ],
-          FilledButton.icon(
-            onPressed: availability.canComplete
-                ? () => ref
-                      .read(taskControllerProvider.notifier)
-                      .complete(task.id)
-                : availability.canStart
-                ? () => ref.read(taskControllerProvider.notifier).start(task.id)
-                : null,
-            icon: Icon(
-              availability.canComplete
-                  ? Icons.check_circle_outline
-                  : Icons.play_arrow,
+          if (achievementPlan != null) ...[
+            TaskAchievementCard(
+              plan: achievementPlan,
+              onTrail: () => context.go(
+                AppRoutes.trailForTask(
+                  questId: task.questId,
+                  questTitle: task.questTitle,
+                  missionId: task.missionId,
+                  missionTitle: task.missionTitle,
+                  taskId: task.id,
+                  taskTitle: task.title,
+                ),
+              ),
+              onNext: () {
+                if (achievementPlan.missionReadyForReview) {
+                  context.push(
+                    AppRoutes.missionDetail(task.questId, task.missionId),
+                  );
+                  return;
+                }
+                final next = achievementPlan.nextTask;
+                if (next != null) {
+                  context.push(
+                    AppRoutes.taskDetail(next.questId, next.missionId, next.id),
+                  );
+                  return;
+                }
+                context.push(
+                  AppRoutes.questJourneyFocus(questId: task.questId),
+                );
+              },
+              onUndo: () =>
+                  ref.read(taskControllerProvider.notifier).reopen(task.id),
             ),
-            label: Text(
-              availability.canComplete
-                  ? 'Taskを完了'
+            const SizedBox(height: 10),
+          ] else
+            FilledButton.icon(
+              onPressed: availability.canComplete
+                  ? () => _completeAndCelebrate(context, ref, task)
                   : availability.canStart
-                  ? 'Taskを開始'
-                  : task.status == TaskStatus.completed
-                  ? '完了済み'
-                  : '前提Taskを確認',
-            ),
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            key: const ValueKey('task-create-trail'),
-            onPressed: () => context.go(
-              AppRoutes.trailForTask(
-                questId: task.questId,
-                questTitle: task.questTitle,
-                missionId: task.missionId,
-                missionTitle: task.missionTitle,
-                taskId: task.id,
-                taskTitle: task.title,
+                  ? () =>
+                        ref.read(taskControllerProvider.notifier).start(task.id)
+                  : null,
+              icon: Icon(
+                availability.canComplete
+                    ? Icons.check_circle_outline
+                    : Icons.play_arrow,
+              ),
+              label: Text(
+                availability.canComplete
+                    ? 'Taskを完了'
+                    : availability.canStart
+                    ? 'Taskを開始'
+                    : '前提Taskを確認',
               ),
             ),
-            icon: const Icon(Icons.route_outlined),
-            label: Text(
-              task.status == TaskStatus.completed
-                  ? 'このTaskのTrailを残す'
-                  : '途中のTrailを残す',
+          const SizedBox(height: 10),
+          if (achievementPlan == null)
+            OutlinedButton.icon(
+              key: const ValueKey('task-create-trail'),
+              onPressed: () => context.go(
+                AppRoutes.trailForTask(
+                  questId: task.questId,
+                  questTitle: task.questTitle,
+                  missionId: task.missionId,
+                  missionTitle: task.missionTitle,
+                  taskId: task.id,
+                  taskTitle: task.title,
+                ),
+              ),
+              icon: const Icon(Icons.route_outlined),
+              label: const Text('途中のTrailを残す'),
             ),
-          ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -210,6 +247,25 @@ class TaskDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _completeAndCelebrate(
+    BuildContext context,
+    WidgetRef ref,
+    QuestraTask task,
+  ) async {
+    final controller = ref.read(taskControllerProvider.notifier);
+    final completed = await controller.complete(task.id);
+    if (!context.mounted || !completed) return;
+    final tasks = ref.read(taskControllerProvider);
+    final savedTask = tasks.where((item) => item.id == task.id).firstOrNull;
+    if (savedTask == null) return;
+    await showTaskAchievementJourney(
+      context: context,
+      completedTask: savedTask,
+      allTasks: tasks,
+      onUndo: () => controller.reopen(savedTask.id),
     );
   }
 }

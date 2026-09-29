@@ -50,7 +50,12 @@ dart run tools/qst/record_physical_accessibility_evidence.dart \
   --japanese_ime=artifacts/qst376/japanese_ime.mp4 \
   --large_text_200=artifacts/qst376/large_text_200.mp4 \
   --compact_layout=artifacts/qst376/compact_layout.mp4 \
-  --reduced_motion_and_haptics=artifacts/qst376/reduced_motion_and_haptics.mp4
+  --reduced_motion_and_haptics=artifacts/qst376/reduced_motion_and_haptics.mp4 \
+  --trail_quest_mission_selection=true \
+  --trail_japanese_ime_composition=true \
+  --trail_large_text_200=true \
+  --trail_talkback_reading_order=true \
+  --trail_error_and_save_feedback=true
 ```
 
 The physical gate requires `docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml` to
@@ -63,6 +68,15 @@ include candidate-bound evidence for:
 - `large_text_200`
 - `compact_layout`
 - `reduced_motion_and_haptics`
+
+The same physical session must explicitly confirm these Trail journey
+scenarios before it can be accepted:
+
+- Select a Quest, then select only a Mission belonging to that Quest.
+- Compose and correct Japanese text without premature submit or corruption.
+- Complete the parent selectors and save flow at 200% text scale.
+- Verify TalkBack reading order for parent selectors, save state, and errors.
+- Confirm save success and parent-unavailable feedback without relying on color.
 
 ## Manual Evidence Checklist
 

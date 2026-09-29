@@ -61,13 +61,15 @@ class QuestScreen extends ConsumerWidget {
       backgroundColor: QuestraColors.deepNavy,
       appBar: AppBar(
         title: Text(compactHeader ? 'Quest' : 'Quest一覧'),
-        actions: [
-          IconButton(
-            tooltip: 'ArcとQuestを考える',
-            onPressed: () => context.go(AppRoutes.arc),
-            icon: const Icon(Icons.add_circle_outline),
-          ),
-        ],
+        actions: quests.isEmpty
+            ? null
+            : [
+                IconButton(
+                  tooltip: 'ArcとQuestを考える',
+                  onPressed: () => context.go(AppRoutes.arcForQuestCreation()),
+                  icon: const Icon(Icons.add_circle_outline),
+                ),
+              ],
       ),
       body: QuestraScreenSurface(
         child: QuestraResponsiveListView(
@@ -81,13 +83,16 @@ class QuestScreen extends ConsumerWidget {
           children: [
             PersistenceSyncBanner(
               state: syncState,
-              onRetry:
-                  syncState.operation == PersistenceSyncOperation.load &&
-                      profile != null
+              onRetry: !syncState.canRetry
+                  ? null
+                  : syncState.operation == PersistenceSyncOperation.load &&
+                        profile != null
                   ? () => ref
                         .read(questControllerProvider.notifier)
                         .loadForUser(profile.id)
-                  : null,
+                  : () => ref
+                        .read(questControllerProvider.notifier)
+                        .retryPending(),
               onDismiss: () =>
                   ref.read(questSyncControllerProvider.notifier).clear(),
             ),
@@ -96,7 +101,8 @@ class QuestScreen extends ConsumerWidget {
               _QuestHero(
                 activeCount: activeQuests.length,
                 emotion: arcExpression.emotion,
-                onCreateQuest: () => context.go(AppRoutes.arc),
+                onCreateQuest: () =>
+                    context.go(AppRoutes.arcForQuestCreation()),
               ),
             if (!compactHeader && concern != null) ...[
               const SizedBox(height: 16),
@@ -114,7 +120,7 @@ class QuestScreen extends ConsumerWidget {
                 ),
                 actionLabel: focusQuest == null ? 'ArcとQuestを考える' : 'Quest詳細へ',
                 onOpenQuest: focusQuest == null
-                    ? () => context.go(AppRoutes.arc)
+                    ? () => context.go(AppRoutes.arcForQuestCreation())
                     : () => context.go('${AppRoutes.quest}/${focusQuest.id}'),
               ),
             ],
@@ -133,7 +139,7 @@ class QuestScreen extends ConsumerWidget {
                 message: '最初のQuestを灯すと、ArcがMissionとTrailへの航路を一緒に描きます。',
                 actionLabel: 'ArcとQuestを考える',
                 icon: Icons.add_circle_outline,
-                onAction: () => context.go(AppRoutes.arc),
+                onAction: () => context.go(AppRoutes.arcForQuestCreation()),
               )
             else
               ...quests.map(

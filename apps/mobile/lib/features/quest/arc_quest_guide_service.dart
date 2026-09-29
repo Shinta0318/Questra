@@ -192,6 +192,10 @@ class ArcQuestGuide {
     this.draftId,
     this.currentMissionClientId,
     this.currentTaskCandidates = const [],
+    this.replacesExistingRoute = false,
+    this.existingMissionCount = 0,
+    this.completedMissionCount = 0,
+    this.replaceableMissionCount = 0,
   });
 
   final String questId;
@@ -211,6 +215,10 @@ class ArcQuestGuide {
   final String? draftId;
   final String? currentMissionClientId;
   final List<ArcTaskCandidate> currentTaskCandidates;
+  final bool replacesExistingRoute;
+  final int existingMissionCount;
+  final int completedMissionCount;
+  final int replaceableMissionCount;
 }
 
 abstract interface class ArcQuestGuideService {
@@ -347,6 +355,12 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
       },
     );
     final data = Map<String, dynamic>.from(response.data as Map);
+    if (data['error'] == 'route_changed_since_preview') {
+      throw StateError('提案後にMissionが変更されました。最新の航路を読み直して、もう一度作成してください。');
+    }
+    if (data['error'] == 'completed_mission_duplicate_in_plan') {
+      throw StateError('完了済みMissionと重なる候補がありました。完了内容を保ったまま、もう一度作成してください。');
+    }
     if (data['status'] != 'approved') {
       throw StateError('Missionを確定できませんでした。候補は失われていません。');
     }
@@ -412,6 +426,9 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
     );
     final qualityGate = Map<String, dynamic>.from(
       preview['qualityGate'] as Map? ?? const {},
+    );
+    final routeApplication = Map<String, dynamic>.from(
+      preview['routeApplication'] as Map? ?? const {},
     );
     if (data['preview_id'] is! String ||
         data['approval_token'] is! String ||
@@ -492,6 +509,14 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
       draftId: data['draft_id'] as String?,
       currentMissionClientId: taskPlan['missionClientId'] as String?,
       currentTaskCandidates: taskCandidates,
+      replacesExistingRoute:
+          routeApplication['applicationMode'] == 'replace_remaining',
+      existingMissionCount:
+          (routeApplication['existingMissionCount'] as num?)?.toInt() ?? 0,
+      completedMissionCount:
+          (routeApplication['completedMissionCount'] as num?)?.toInt() ?? 0,
+      replaceableMissionCount:
+          (routeApplication['replaceableMissionCount'] as num?)?.toInt() ?? 0,
     );
   }
 

@@ -38,6 +38,11 @@ export function validateGroundingEvidence(
     : [];
   const issues: string[] = [];
   if (queries.length === 0) issues.push("grounding_query_missing");
+  const uniqueQueryCount = new Set(queries.map((query) => query.trim())).size;
+  if (
+    !Number.isSafeInteger(metadata.billableQueryCount) ||
+    metadata.billableQueryCount !== uniqueQueryCount
+  ) issues.push("grounding_query_count_invalid");
   if (sources.length === 0) issues.push("grounding_source_missing");
   if (typeof metadata.retrievedAt !== "string" || Number.isNaN(Date.parse(metadata.retrievedAt))) issues.push("grounding_retrieved_at_missing");
   return { valid: issues.length === 0, issues };

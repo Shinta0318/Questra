@@ -55,6 +55,7 @@ void main() {
               status: PersistenceSyncStatus.failed,
               message: 'Questの読み込みに失敗しました。通信状態を確認してください。',
               operation: PersistenceSyncOperation.load,
+              retryAvailable: true,
             ),
             onRetry: () => retryCount++,
             onDismiss: () {},
@@ -83,7 +84,8 @@ void main() {
     final state = container.read(_syncProvider);
     expect(state.status, PersistenceSyncStatus.failed);
     expect(state.operation, PersistenceSyncOperation.save);
-    expect(state.message, 'Questの保存に失敗しました。通信状態を確認して、もう一度お試しください。');
+    expect(state.message, 'Questの保存に失敗しました。変更内容は保持されています。');
+    expect(state.inputPreserved, isTrue);
     expect(state.message, isNot(contains('postgres')));
     expect(state.message, isNot(contains('password')));
   });
@@ -98,7 +100,8 @@ void main() {
 
     final state = container.read(trailSyncControllerProvider);
     expect(state.operation, TrailSyncOperation.save);
-    expect(state.message, contains('もう一度お試しください'));
+    expect(state.message, contains('入力内容は保持'));
+    expect(state.inputPreserved, isTrue);
     expect(state.message, isNot(contains('token')));
     expect(state.message, isNot(contains('secret')));
   });

@@ -39,7 +39,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return AuthJourneyScaffold(
       eyebrow: 'ログイン',
-      title: 'おかえりなさい',
       message: '保存したQuestの続きを、Arcと進めよう。',
       child: AutofillGroup(
         child: Form(

@@ -146,6 +146,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                           : QuestJourneyMode.focus,
                       focusMissionId: state.uri.queryParameters['mission'],
                       focusTaskId: state.uri.queryParameters['task'],
+                      returnLocation: state.uri.queryParameters['returnTo'],
                     ),
                     routes: [
                       GoRoute(
@@ -227,7 +228,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     taskId,
                     taskTitle,
                   ].every((value) => value != null && value.trim().isNotEmpty);
+                  final hasQuestScope =
+                      questId != null && questId.trim().isNotEmpty;
                   return TrailScreen(
+                    initialFilterQuestId: questId,
+                    initialFilterMissionId: missionId,
+                    onFilterRouteChanged: (questId, missionId) => context.go(
+                      questId == null
+                          ? AppRoutes.trail
+                          : AppRoutes.trailForJourney(
+                              questId: questId,
+                              missionId: missionId,
+                            ),
+                    ),
                     initialParent: hasTaskParent
                         ? TrailParentContext(
                             questId: questId!,
@@ -238,7 +251,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                             taskTitle: taskTitle!,
                           )
                         : null,
-                    openComposer: query['create'] == '1' && hasTaskParent,
+                    openComposer:
+                        query['create'] == '1' &&
+                        (hasTaskParent || hasQuestScope),
                   );
                 },
               ),

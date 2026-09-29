@@ -1,0 +1,48 @@
+version: 1
+status: local_contract_ready
+locale: ja_JP
+theme: dark
+golden_baseline:
+  compact_viewport: 390x844
+  large_text_scale: 2.0
+  reduce_motion: true
+  deterministic_japanese_font_required: true
+  candidate_sha_binding_required: true
+  physical_evidence_replaced_by_golden: false
+screens:
+  - id: home
+    route: /home
+    purpose: 次の一歩を迷わず選ぶ
+    primary_action: Arcに相談する_or_Missionを確認する
+    states: [empty, content, loading, error, offline]
+    evidence: [apps/mobile/test/qst_408_home_next_step_test.dart, apps/mobile/test/qst_502_home_desktop_composition_test.dart]
+  - id: arc
+    route: /arc
+    purpose: 願いを言語化しQuestと航路を相談する
+    primary_action: message_send_or_quest_confirm
+    states: [welcome, content, ai_generating, ai_fallback, error, offline]
+    evidence: [apps/mobile/test/qst_410_arc_quest_handoff_recovery_test.dart, apps/mobile/test/qst_504_arc_first_quest_return_test.dart]
+  - id: quest
+    route: /quest
+    purpose: Questと現在の航路を確認する
+    primary_action: ArcとQuestを考える_or_Questを開く
+    states: [empty, content, loading, error, offline]
+    evidence: [apps/mobile/test/bottom_navigation_v2_test.dart, apps/mobile/test/responsive_screen_smoke_test.dart]
+  - id: trail
+    route: /trail
+    purpose: QuestとMissionに紐づく一歩を記録し振り返る
+    primary_action: Trailを残す
+    states: [empty, filtered_empty, content, loading, saving, error, offline]
+    evidence: [apps/mobile/test/qst_457_trail_quest_mission_linking_test.dart, apps/mobile/test/qst_500_trail_filtered_pagination_cta_test.dart]
+  - id: profile
+    route: /profile
+    purpose: 本人情報と旅の成長と設定入口を確認する
+    primary_action: 設定を開く
+    states: [content, loading, error, offline]
+    evidence: [apps/mobile/test/qst_501_profile_dark_surface_alignment_test.dart, apps/mobile/test/responsive_screen_smoke_test.dart]
+  - id: onboarding
+    route: /onboarding
+    purpose: Arcとの旅を短く安全に開始する
+    primary_action: 次へ_or_旅を始める
+    states: [initial, resumed, saving, error]
+    evidence: [apps/mobile/test/qst_505_onboarding_resume_controls_test.dart, apps/mobile/test/qst_406_onboarding_replay_test.dart]

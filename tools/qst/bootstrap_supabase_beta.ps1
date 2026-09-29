@@ -47,6 +47,7 @@ $requiredFunctions = @(
   'auth-login',
   'moderate-quest-intent',
   'process-data-rights-requests',
+  'reconcile-ai-budget',
   'research-mission-resources'
 )
 $latestMigrationFile = Get-ChildItem 'supabase/migrations/*.sql' |

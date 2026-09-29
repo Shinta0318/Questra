@@ -3,7 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/persistence/durable_mutation.dart';
 import 'task_model.dart';
 
-enum TaskMutationStatus { idle, saving, saved, failed, offlinePending }
+enum TaskMutationStatus {
+  idle,
+  saving,
+  saved,
+  failed,
+  offlinePending,
+  conflict,
+}
 
 class PendingTaskMutation {
   const PendingTaskMutation({
@@ -86,6 +93,13 @@ class TaskMutationStateController extends Notifier<TaskMutationState> {
           ? 'オフラインです。変更内容は保持されています。接続後に再試行してください。'
           : 'Taskを保存できませんでした。変更内容は保持されています。',
       pending: mutation,
+    );
+  }
+
+  void conflict() {
+    state = const TaskMutationState(
+      status: TaskMutationStatus.conflict,
+      message: 'Taskが先に更新されました。最新の内容を確認して、もう一度操作してください。',
     );
   }
 

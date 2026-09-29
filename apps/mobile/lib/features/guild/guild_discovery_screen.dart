@@ -11,6 +11,7 @@ import '../../widgets/arc/arc_empty_state.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
+import '../../widgets/navigation/questra_route_back_button.dart';
 import '../auth/auth_controller.dart';
 import '../quest/quest_controller.dart';
 import 'guild_discovery_detail_screen.dart';
@@ -35,16 +36,9 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: Navigator.of(context).canPop() ? '戻る' : 'ホームへ戻る',
-          onPressed: () => Navigator.of(context).canPop()
-              ? Navigator.of(context).pop()
-              : context.go(AppRoutes.home),
-          icon: Icon(
-            Navigator.of(context).canPop()
-                ? Icons.arrow_back
-                : Icons.home_outlined,
-          ),
+        leading: const QuestraRouteBackButton(
+          fallbackRoute: AppRoutes.home,
+          fallbackTooltip: 'ホームへ戻る',
         ),
         title: const Text('Guild'),
       ),

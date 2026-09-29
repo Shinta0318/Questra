@@ -2,6 +2,7 @@ import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
 import { revalidateApprovedMissionPlan, runQuestPlanningPipeline, runTaskExpansionPipeline } from "../_shared/quest_planning/pipeline.ts";
 import { validateRouteMissionPlan } from "../_shared/quest_planning/validators.ts";
 import { deterministicSafetyAssessment } from "../_shared/safety_guard.ts";
+import { buildExistingRouteContext } from "../_shared/quest_planning/existing_route_context.ts";
 
 type RequestBody = {
   mode?: "plan" | "approve" | "expand_tasks";
@@ -41,6 +42,10 @@ Deno.serve(async (req) => {
   const safety = deterministicSafetyAssessment(wish);
   if (safety) return jsonResponse({ error: "unsafe_intent", safety }, { status: 422 });
   if (!await ownsQuest(auth, userId, questId)) return jsonResponse({ error: "quest_not_found" }, { status: 404 });
+  const existingRoute = await loadExistingRouteContext(auth, questId);
+  if (!existingRoute) {
+    return jsonResponse({ error: "planning_context_unavailable" }, { status: 503 });
+  }
 
   const pipeline = await runQuestPlanningPipeline({
     questId,
@@ -52,6 +57,7 @@ Deno.serve(async (req) => {
     location: text(payload.location, 200),
     constraints: Array.isArray(payload.constraints) ? payload.constraints.filter((item): item is string => typeof item === "string").slice(0, 12) : [],
     approvedContext: payload.approved_context,
+    existingRoute,
     userId,
     abuseKeyHash,
     idempotencyKey,
@@ -125,6 +131,17 @@ async function expandTasks(
     passes: pipeline.passes,
     versions: pipeline.versions,
   });
+}
+
+async function loadExistingRouteContext(auth: string, questId: string) {
+  const response = await userFetch(
+    auth,
+    `/rest/v1/missions?quest_id=eq.${questId}&route_state=neq.removed&select=id,title,objective,success_condition,expected_outcome,status,required,order_index,sort_order,generated_by,updated_at&order=order_index.asc&limit=31`,
+  );
+  if (!response?.ok) return null;
+  const rows = await response.json() as Array<Record<string, unknown>>;
+  if (rows.length > 30) return null;
+  return buildExistingRouteContext(rows);
 }
 
 async function hashedAbuseKey(req: Request) {
@@ -250,7 +267,15 @@ async function approvePreview(auth: string, userId: string, payload: RequestBody
     headers: { "Content-Type": "application/json", apikey: anon, Authorization: auth },
     body: JSON.stringify({ p_preview_id: previewId, p_approval_token: approvalToken }),
   });
-  if (!response.ok) return jsonResponse({ error: "approval_failed" }, { status: response.status === 400 ? 409 : 503 });
+  if (!response.ok) {
+    const detail = await response.text();
+    const error = detail.includes("route_changed_since_preview")
+      ? "route_changed_since_preview"
+      : detail.includes("completed_mission_duplicate_in_plan")
+      ? "completed_mission_duplicate_in_plan"
+      : "approval_failed";
+    return jsonResponse({ status: "conflict", error });
+  }
   return jsonResponse(await response.json());
 }
 

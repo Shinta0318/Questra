@@ -1,0 +1,101 @@
+version: 1
+qst: QST-454
+status: design_tabletop_completed_hosted_drill_pending
+performed_at_utc: "2026-09-19T14:00:00Z"
+scope: ai_budget_reservation_settlement_reconciliation_and_correction
+roles:
+  incident_commander: release_manager
+  technical_owner: backend_owner
+  reconciliation_owner: auth_bound_approver
+  support_owner: support_lead
+severity_slo:
+  S0:
+    acknowledge_minutes: 5
+    contain_minutes: 15
+    recovery_minutes: 240
+    distribution: stop
+  S1:
+    acknowledge_minutes: 15
+    contain_minutes: 30
+    recovery_minutes: 480
+    distribution: pause_expansion
+  S2:
+    acknowledge_minutes: 240
+    contain_minutes: 480
+    recovery_minutes: 2880
+    distribution: monitor
+scenarios:
+  - id: provider_outage
+    severity: S1
+    detection: provider_failure_rate_or_fallback_rate_breach
+    owner: backend_owner
+    stop_decision: disable_affected_ai_operation_and_pause_expansion
+    recovery: verify_primary_and_fallback_canary_before_reenable
+    user_message_key: arc_route_temporarily_unavailable
+    result: pass_design_tabletop
+  - id: settlement_response_lost_after_commit
+    severity: S1
+    detection: stale_reservation_with_provider_receipt
+    owner: reconciliation_owner
+    stop_decision: keep_provider_calls_paused_if_receipt_conflict_rate_breaches_slo
+    recovery: reconcile_from_verified_receipt_with_same_idempotency_key
+    user_message_key: arc_route_status_checking
+    result: pass_design_tabletop
+  - id: reconciliation_queue_backlog
+    severity: S1
+    detection: oldest_open_case_or_alert_age_breach
+    owner: reconciliation_owner
+    stop_decision: scheduler_kill_switch_and_manual_claim_only
+    recovery: reclaim_expired_leases_then_drain_oldest_first
+    user_message_key: arc_route_status_checking
+    result: pass_design_tabletop
+  - id: incorrect_correction_applied
+    severity: S1
+    detection: counter_reservation_property_mismatch_or_operator_review
+    owner: reconciliation_owner
+    stop_decision: suspend_new_corrections_for_affected_operation
+    recovery: create_separate_compensating_request_from_current_snapshot
+    delete_or_rewrite_prior_audit: prohibited
+    same_person_approval: prohibited
+    result: pass_design_tabletop
+  - id: cross_owner_or_negative_counter
+    severity: S0
+    detection: qst_453_property_or_rls_violation
+    owner: incident_commander
+    stop_decision: stop_distribution_and_disable_affected_operation
+    recovery: preserve_evidence_select_known_good_candidate_and_forward_fix
+    destructive_database_rollback: prohibited
+    result: pass_design_tabletop
+user_notifications:
+  expose_internal_cost: false
+  expose_model_or_provider_error: false
+  expose_reservation_or_trace: false
+  promise_unverified_completion: false
+  copy:
+    arc_route_temporarily_unavailable: "現在、Arcの航路づくりを一時停止しています。相談内容は保持されています。しばらくしてから再試行できます。"
+    arc_route_status_checking: "航路の処理状況を確認しています。内容を失わずに確認を続けます。"
+tabletop_findings:
+  - severity: Critical
+    item: hosted_candidate_execution_is_still_missing
+    owner_qst: QST-447
+  - severity: High
+    item: qst_453_property_and_concurrency_execution_is_pending
+    owner_qst: QST-453
+  - severity: High
+    item: webhook_receipt_and_scheduler_recovery_drill_are_pending
+    owner_qst: QST-447
+  - severity: Medium
+    item: compensating_correction_operator_ux_is_not_a_beta_client_surface
+    owner_qst: QST-455
+next_review:
+  qst: QST-455
+  must_reclassify_external_evidence: true
+external_beta:
+  required_decision: no_go_until_all_critical_evidence_is_candidate_bound
+  current_decision: no_go
+guardrails:
+  tabletop_is_hosted_execution_evidence: false
+  audit_deletion_allowed: false
+  direct_counter_edit_allowed: false
+  user_billing_or_entitlement_change_allowed: false
+  credentials_or_journey_content_recorded: false

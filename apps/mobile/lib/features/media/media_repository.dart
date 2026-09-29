@@ -9,6 +9,11 @@ import 'media_model.dart';
 const trailMediaBucket = 'trail-media';
 
 abstract interface class MediaRepository {
+  Future<Map<String, MediaAttachment>> findTrailImageMap({
+    required String ownerId,
+    required List<String> trailIds,
+  });
+
   Future<List<MediaAttachment>> findTrailImages({
     required String ownerId,
     required String trailId,
@@ -40,6 +45,31 @@ abstract interface class MediaRepository {
 
 class InMemoryMediaRepository implements MediaRepository {
   final List<MediaAttachment> _attachments = [];
+
+  @override
+  Future<Map<String, MediaAttachment>> findTrailImageMap({
+    required String ownerId,
+    required List<String> trailIds,
+  }) async {
+    final targetIds = trailIds.toSet();
+    final attachments =
+        _attachments
+            .where(
+              (attachment) =>
+                  attachment.ownerId == ownerId &&
+                  attachment.relatedTable == 'trails' &&
+                  targetIds.contains(attachment.relatedId) &&
+                  attachment.mediaType == MediaType.image,
+            )
+            .toList(growable: false)
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final result = <String, MediaAttachment>{};
+    for (final attachment in attachments) {
+      final trailId = attachment.relatedId;
+      if (trailId != null) result.putIfAbsent(trailId, () => attachment);
+    }
+    return result;
+  }
 
   @override
   Future<List<MediaAttachment>> findTrailImages({
@@ -114,6 +144,31 @@ class SupabaseMediaRepository implements MediaRepository {
   const SupabaseMediaRepository(this.client);
 
   final SupabaseClient client;
+
+  @override
+  Future<Map<String, MediaAttachment>> findTrailImageMap({
+    required String ownerId,
+    required List<String> trailIds,
+  }) async {
+    if (trailIds.isEmpty) return const {};
+    final rows = await client
+        .from('media')
+        .select(
+          'id,owner_id,guild_id,bucket,path,media_type,related_table,related_id,visibility,metadata,created_at',
+        )
+        .eq('owner_id', ownerId)
+        .eq('related_table', 'trails')
+        .inFilter('related_id', trailIds)
+        .eq('media_type', 'image')
+        .order('created_at', ascending: false);
+    final result = <String, MediaAttachment>{};
+    for (final row in rows) {
+      final attachment = _attachmentFromRow(Map<String, dynamic>.from(row));
+      final trailId = attachment.relatedId;
+      if (trailId != null) result.putIfAbsent(trailId, () => attachment);
+    }
+    return result;
+  }
 
   @override
   Future<List<MediaAttachment>> findTrailImages({

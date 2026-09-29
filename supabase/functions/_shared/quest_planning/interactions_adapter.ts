@@ -39,6 +39,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
   let lastModelName = primaryModel.name;
   let lastThinkingLevel = request.thinkingLevel ??
     resolveThinkingLevel(request.modelRole, primaryModel);
+  const attemptedModels: string[] = [];
   for (let attempt = 1; attempt <= 2; attempt++) {
     const model = attempt === 1
       ? primaryModel
@@ -46,6 +47,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
     const thinkingLevel = request.thinkingLevel ?? resolveThinkingLevel(request.modelRole, model);
     lastModelName = model.name;
     lastThinkingLevel = thinkingLevel;
+    attemptedModels.push(model.name);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), bounded(request.timeoutMs, 25_000, 5_000, 60_000));
     try {
@@ -95,6 +97,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           response.status,
           model.name,
           thinkingLevel,
+          attemptedModels,
         );
       }
       const data = await response.json() as Record<string, unknown>;
@@ -114,6 +117,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           undefined,
           model.name,
           thinkingLevel,
+          attemptedModels,
         );
       }
       let output: unknown = text || null;
@@ -135,6 +139,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
             undefined,
             model.name,
             thinkingLevel,
+            attemptedModels,
           );
         }
         const schemaIssues = validateJsonSchema(output, request.responseSchema);
@@ -152,9 +157,21 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
             undefined,
             model.name,
             thinkingLevel,
+            attemptedModels,
           );
         }
       }
+      const groundingMetadata = extractGroundingMetadata(data);
+      const usage = extractUsage(data);
+      usage.groundingQueries = groundingMetadata === null
+        ? 0
+        : Array.isArray(groundingMetadata.queries)
+        ? new Set(
+          groundingMetadata.queries.filter((value) =>
+            typeof value === "string" && value.trim().length > 0
+          ).map((value) => (value as string).trim()),
+        ).size
+        : undefined;
       const result: ProviderResponse = {
         provider: "gemini",
         providerInteractionId: stringValue(data.id) ?? undefined,
@@ -164,18 +181,25 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
         output,
         text,
         toolCalls,
-        groundingMetadata: extractGroundingMetadata(data),
-        usage: extractUsage(data),
+        groundingMetadata,
+        usage,
         latencyMs: Date.now() - startedAt,
         finishReason: stringValue(data.status) ??
           stringValue(data.finish_reason) ?? "completed",
         traceId: request.traceId,
         error: null,
+        attemptedModels: [...attemptedModels],
         continuation: toolCalls.length > 0
           ? { steps: extractContinuationSteps(data) }
           : undefined,
       };
-      if (!await settleAiBudget(reservation.reservationId, result)) {
+      if (
+        !await settleAiBudget(
+          reservation.reservationId,
+          result,
+          reservation.receiptBinding,
+        )
+      ) {
         return failure(
           request,
           startedAt,
@@ -184,6 +208,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           undefined,
           model.name,
           thinkingLevel,
+          attemptedModels,
         );
       }
       return result;
@@ -199,6 +224,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           undefined,
           model.name,
           thinkingLevel,
+          attemptedModels,
         );
       }
       await delay(attempt * 400);
@@ -215,6 +241,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
     undefined,
     lastModelName,
     lastThinkingLevel,
+    attemptedModels,
   );
 }
 
@@ -227,9 +254,19 @@ async function releaseAndFail(
   status?: number,
   model = "unresolved",
   thinkingLevel?: ProviderResponse["thinkingLevel"],
+  attemptedModels: string[] = [],
 ) {
   await releaseAiBudget(reservationId, code);
-  return failure(request, startedAt, code, message, status, model, thinkingLevel);
+  return failure(
+    request,
+    startedAt,
+    code,
+    message,
+    status,
+    model,
+    thinkingLevel,
+    attemptedModels,
+  );
 }
 
 function budgetErrorCode(reason: string): ProviderErrorCode {
@@ -248,6 +285,7 @@ function failure(
   status?: number,
   model = "unresolved",
   thinkingLevel?: ProviderResponse["thinkingLevel"],
+  attemptedModels: string[] = [],
 ): ProviderResponse {
   return {
     provider: "gemini",
@@ -273,6 +311,7 @@ function failure(
       status,
       message,
     },
+    attemptedModels: [...attemptedModels],
   };
 }
 
@@ -308,16 +347,24 @@ export function extractContinuationSteps(data: Record<string, unknown>) {
   });
 }
 
-function extractGroundingMetadata(data: Record<string, unknown>) {
+export function extractGroundingMetadata(data: Record<string, unknown>) {
   const searches: Record<string, unknown>[] = [];
   const queries = new Set<string>();
   const sourceByUri = new Map<string, { id: string; title: string; uri: string }>();
   visit(data.steps, (item) => {
     if (item.type !== "google_search_call" && item.type !== "google_search_result") return;
     searches.push({ type: item.type, id: stringValue(item.id), status: stringValue(item.status) });
-    for (const key of ["query", "search_query", "searchQuery"] as const) {
-      const query = stringValue(item[key]);
-      if (query) queries.add(query.slice(0, 500));
+    if (item.type === "google_search_call") {
+      for (const key of ["query", "search_query", "searchQuery"] as const) {
+        const query = stringValue(item[key]);
+        if (query) queries.add(query.slice(0, 500));
+      }
+      if (Array.isArray(item.queries)) {
+        for (const value of item.queries) {
+          const query = stringValue(value);
+          if (query) queries.add(query.slice(0, 500));
+        }
+      }
     }
     collectGroundingSources(item, sourceByUri);
   });
@@ -325,6 +372,7 @@ function extractGroundingMetadata(data: Record<string, unknown>) {
     ? {
       steps: searches,
       queries: [...queries],
+      billableQueryCount: queries.size,
       sources: [...sourceByUri.values()],
       retrievedAt: new Date().toISOString(),
     }

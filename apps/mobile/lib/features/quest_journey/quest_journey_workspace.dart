@@ -10,6 +10,7 @@ import '../../widgets/questra_card.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
 import '../task/task_controller.dart';
+import '../task/task_achievement_flow.dart';
 import '../task/task_model.dart';
 import 'quest_journey_contract.dart';
 
@@ -150,27 +151,26 @@ class _QuestJourneyWorkspaceState extends ConsumerState<QuestJourneyWorkspace> {
 
   Future<void> _toggleTask(QuestraTask task) async {
     final controller = ref.read(taskControllerProvider.notifier);
-    final ok = task.status == TaskStatus.completed
+    final wasCompleted = task.status == TaskStatus.completed;
+    final ok = wasCompleted
         ? await controller.reopen(task.id)
         : await controller.completeFromWorkspace(task.id);
     if (!mounted || !ok) return;
+    if (!wasCompleted) {
+      final tasks = ref.read(taskControllerProvider);
+      final completed = tasks.where((item) => item.id == task.id).firstOrNull;
+      if (completed == null) return;
+      await showTaskAchievementJourney(
+        context: context,
+        completedTask: completed,
+        allTasks: tasks,
+        onUndo: () => controller.reopen(completed.id),
+      );
+      return;
+    }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            task.status == TaskStatus.completed
-                ? 'Taskを未完了へ戻しました。'
-                : 'Taskを完了しました。',
-          ),
-          action: task.status == TaskStatus.completed
-              ? null
-              : SnackBarAction(
-                  label: '元に戻す',
-                  onPressed: () => controller.reopen(task.id),
-                ),
-        ),
-      );
+      ..showSnackBar(SnackBar(content: Text('Taskを未完了へ戻しました。')));
   }
 
   void _openTask(QuestraTask task) =>
@@ -180,11 +180,14 @@ class _QuestJourneyWorkspaceState extends ConsumerState<QuestJourneyWorkspace> {
     final ok = await ref
         .read(taskControllerProvider.notifier)
         .updateTask(task.copyWith(clearScheduledDate: true));
-    if (mounted && ok) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('今日のFocusから外しました。')));
-    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok ? '今日のFocusから外しました。' : 'Taskが更新されています。最新の内容を確認して、もう一度操作してください。',
+        ),
+      ),
+    );
   }
 
   Future<void> _addTask(Mission mission) async {
@@ -397,6 +400,15 @@ class _PlanView extends StatelessWidget {
     }
     return Column(
       children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            onPressed: onAskArcForMission,
+            icon: const Icon(Icons.auto_fix_high_outlined),
+            label: const Text('AIで残りの航路を作る'),
+          ),
+        ),
+        const SizedBox(height: 12),
         for (final mission in open)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),

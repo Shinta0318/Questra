@@ -179,6 +179,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
               onBack: returnLocation == null
                   ? null
                   : () => context.go(returnLocation),
+              backTooltip: widget.focusMissionId == null
+                  ? 'Questへ戻る'
+                  : 'Missionへ戻る',
               onDiscard: _hasDraftContent ? _confirmDiscardDraft : null,
             ),
             Expanded(
@@ -344,11 +347,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
   }
 
   String? get _safeReturnLocation {
-    final value = widget.returnLocation?.trim();
-    if (value == null || !value.startsWith('/quest/')) return null;
-    final uri = Uri.tryParse(value);
-    if (uri == null || uri.hasScheme || uri.host.isNotEmpty) return null;
-    return value;
+    return AppRoutes.safeArcReturnLocation(widget.returnLocation);
   }
 
   bool get _hasDraftContent =>
@@ -1087,9 +1086,10 @@ class _ArcMissionContextCard extends StatelessWidget {
 }
 
 class _ArcHeader extends StatelessWidget {
-  const _ArcHeader({this.onBack, this.onDiscard});
+  const _ArcHeader({this.onBack, this.backTooltip = '戻る', this.onDiscard});
 
   final VoidCallback? onBack;
+  final String backTooltip;
   final VoidCallback? onDiscard;
 
   @override
@@ -1106,7 +1106,7 @@ class _ArcHeader extends StatelessWidget {
           if (onBack != null)
             IconButton(
               onPressed: onBack,
-              tooltip: 'Missionへ戻る',
+              tooltip: backTooltip,
               icon: const Icon(Icons.arrow_back),
             ),
           const SizedBox(width: 8),

@@ -25,7 +25,12 @@ class TaskMutationBanner extends StatelessWidget {
     }
     final failed = state.canRetry;
     final saving = state.status == TaskMutationStatus.saving;
-    final color = failed ? Colors.redAccent : AppColors.cosmicBlue;
+    final conflict = state.status == TaskMutationStatus.conflict;
+    final color = failed
+        ? Colors.redAccent
+        : conflict
+        ? Colors.orangeAccent
+        : AppColors.cosmicBlue;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -43,7 +48,11 @@ class TaskMutationBanner extends StatelessWidget {
             )
           else
             Icon(
-              failed ? Icons.cloud_off_outlined : Icons.check_circle_outline,
+              failed
+                  ? Icons.cloud_off_outlined
+                  : conflict
+                  ? Icons.warning_amber_rounded
+                  : Icons.check_circle_outline,
               color: color,
             ),
           const SizedBox(width: 10),

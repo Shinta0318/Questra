@@ -6,7 +6,7 @@ working_tree_clean_at_execution: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
 migrations:
   status: local_pending_deployment
-  latest_local: "202609130006_ai_budget_reconciliation_scheduler.sql"
+  latest_local: "202609150006_immutable_compensating_ai_budget_correction.sql"
   remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   command: "supabase migration list --linked"
 rls_behavior:
@@ -20,6 +20,12 @@ rls_behavior:
   transaction_rolled_back: true
   executed_at_utc: "2026-08-01T05:49:37.1115118Z"
   psql_version: "supabase-cli 2.111.0 (db query --linked)"
+trail_parent_contract:
+  status: pending_current_candidate_replay
+  owner_valid_parent_write: pending
+  cross_quest_mission_write: pending
+  cross_account_parent_write: pending
+  transaction_rolled_back: pending
 live_dual_account:
   status: passed
   evidence: "docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml"
@@ -43,7 +49,7 @@ live_dual_account:
   ephemeral_accounts_removed: true
 dynamic_inventory:
   status: local_pending_hosted_replay
-  table_count: 109
+  table_count: 115
   inventory_sha256: null
   test_file: "supabase/tests/hosted_rls_inventory.sql"
   inventory_test_sha256: null

@@ -107,6 +107,38 @@ class AnalyticsService {
     );
   }
 
+  Future<void> trailJourney({
+    required AnalyticsEventName name,
+    required String surface,
+    required String outcome,
+    required bool hasQuest,
+    required bool hasMission,
+    String source = 'user',
+  }) {
+    assert(
+      const {
+        AnalyticsEventName.trailComposerOpened,
+        AnalyticsEventName.trailParentSelected,
+        AnalyticsEventName.trailMissionRecoveryOpened,
+        AnalyticsEventName.trailDraftConflictResolved,
+        AnalyticsEventName.trailComposerCompleted,
+      }.contains(name),
+      'Unsupported Trail journey analytics event.',
+    );
+    return track(
+      AnalyticsEvent(
+        name: name,
+        properties: {
+          'surface': surface,
+          'outcome': outcome,
+          'has_quest': hasQuest,
+          'has_mission': hasMission,
+          'source': source,
+        },
+      ),
+    );
+  }
+
   Future<void> arcChatSent({
     String? userId,
     required bool hasQuest,

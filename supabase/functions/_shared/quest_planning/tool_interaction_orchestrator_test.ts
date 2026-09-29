@@ -15,6 +15,7 @@ test("adapter sends stateless history and preserves continuation steps", async (
   const originalDeno = runtime.Deno;
   const originalFetch = globalThis.fetch;
   const providerInputs: unknown[] = [];
+  let receiptBody: Record<string, unknown> | null = null;
   const env: Record<string, string> = {
     GEMINI_API_KEY: "test-key",
     SUPABASE_URL: "https://example.supabase.co",
@@ -31,7 +32,8 @@ test("adapter sends stateless history and preserves continuation steps", async (
           reason: "reserved",
         });
       }
-      if (url.endsWith("/rpc/record_ai_provider_execution_receipt")) {
+      if (url.endsWith("/rpc/record_ai_provider_execution_receipt_v3")) {
+        receiptBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
         return jsonResponse({ recorded: true, idempotent: false });
       }
       if (url.endsWith("/rpc/settle_ai_usage_budget")) {
@@ -66,6 +68,8 @@ test("adapter sends stateless history and preserves continuation steps", async (
     assert.deepEqual(providerInputs[0], value.interactionHistory);
     assert.equal(result.finishReason, "requires_action");
     assert.equal(result.toolCalls[0].name, "get_quest_context");
+    assert.equal(receiptBody?.p_grounding_query_count, 0);
+    assert.equal(receiptBody?.p_thinking_level, "high");
     assert.deepEqual(result.continuation?.steps, [{
       type: "function_call",
       id: "call-1",
@@ -103,6 +107,170 @@ test("budget estimate includes stateless continuation history", () => {
     estimateProviderInputTokens(continued) >
       estimateProviderInputTokens(initial) + 500,
   );
+});
+
+test("provider-backed multi-turn fallback finalizes exact aggregate cost attribution", async () => {
+  const runtime = globalThis as unknown as Record<string, unknown>;
+  const originalDeno = runtime.Deno;
+  const originalFetch = globalThis.fetch;
+  const attributionBodies: Record<string, unknown>[] = [];
+  const providerModels: string[] = [];
+  let reservationCount = 0;
+  let providerCall = 0;
+  let finalizedBody: Record<string, unknown> | null = null;
+  const env: Record<string, string> = {
+    GEMINI_API_KEY: "test-key",
+    SUPABASE_URL: "https://example.supabase.co",
+    SUPABASE_SERVICE_ROLE_KEY: "service-role",
+    AI_TOOL_CONTINUATION_ATTRIBUTION_ENABLED: "true",
+    AI_RECEIPT_BINDING_ENABLED: "false",
+  };
+  try {
+    runtime.Deno = { env: { get: (key: string) => env[key] } };
+    globalThis.fetch = (async (input, init) => {
+      const url = String(input);
+      const body = init?.body
+        ? JSON.parse(String(init.body)) as Record<string, unknown>
+        : {};
+      if (url.endsWith("/rpc/start_ai_tool_continuation_attribution")) {
+        attributionBodies.push(body);
+        return jsonResponse({
+          started: true,
+          run_id: "22222222-2222-4222-8222-222222222222",
+          status: "running",
+        });
+      }
+      if (url.endsWith("/rpc/reserve_ai_usage_budget_v2")) {
+        reservationCount++;
+        return jsonResponse({
+          allowed: true,
+          reservation_id: reservationCount === 1
+            ? "11111111-1111-4111-8111-111111111111"
+            : "33333333-3333-4333-8333-333333333333",
+          reason: "reserved",
+        });
+      }
+      if (url.endsWith("/rpc/reserve_ai_grounding_budget")) {
+        return jsonResponse({ allowed: true, reason: "reserved" });
+      }
+      if (url.endsWith("/rpc/record_ai_provider_execution_receipt_v3")) {
+        return jsonResponse({ recorded: true, idempotent: false });
+      }
+      if (url.endsWith("/rpc/settle_ai_usage_budget")) {
+        return jsonResponse({ settled: true });
+      }
+      if (url.endsWith("/rpc/record_ai_tool_continuation_turn")) {
+        attributionBodies.push(body);
+        return jsonResponse({ recorded: true, idempotent: false });
+      }
+      if (url.endsWith("/rpc/finalize_ai_tool_continuation_attribution")) {
+        finalizedBody = body;
+        attributionBodies.push(body);
+        return jsonResponse({ completed: true, idempotent: false });
+      }
+      if (url.endsWith("/rpc/fail_ai_tool_continuation_attribution")) {
+        throw new Error("Successful drill must not fail attribution");
+      }
+      if (url.includes("generativelanguage.googleapis.com")) {
+        providerCall++;
+        providerModels.push(String(body.model));
+        if (providerCall === 2) {
+          return jsonResponse({ error: { message: "temporary outage" } }, 503);
+        }
+        if (providerCall === 1) {
+          return jsonResponse({
+            id: "interaction-turn-0",
+            status: "requires_action",
+            steps: [
+              {
+                type: "google_search_call",
+                id: "search-0",
+                status: "completed",
+                query: "official entry requirements",
+              },
+              {
+                type: "function_call",
+                id: "call-1",
+                name: "get_quest_context",
+                arguments: { questId: "quest-1" },
+                signature: "signed-continuation",
+              },
+            ],
+            usage: { total_input_tokens: 10, total_output_tokens: 4 },
+          });
+        }
+        return jsonResponse({
+          id: "interaction-turn-1",
+          status: "completed",
+          output_text: '{"phases":["prepare"]}',
+          steps: [{
+            type: "google_search_call",
+            id: "search-1",
+            status: "completed",
+            query: "official entry requirements",
+          }],
+          usage: { total_input_tokens: 14, total_output_tokens: 8 },
+        });
+      }
+      throw new Error(`Unexpected URL: ${url}`);
+    }) as typeof fetch;
+
+    const requestValue = request();
+    requestValue.tools = [
+      ...requestValue.tools ?? [],
+      { type: "google_search" },
+    ];
+    const result = await callGeminiInteractionWithTools(
+      requestValue,
+      { userId: "user-1" },
+      {},
+      {
+        executeTool: async () => ({
+          ok: true,
+          data: { title: "private-tool-result-must-not-enter-cost-ledger" },
+        }),
+      },
+    );
+
+    assert.equal(result.error, null);
+    assert.deepEqual(result.usage, {
+      inputTokens: 24,
+      outputTokens: 12,
+      generatedOutputTokens: 12,
+      thoughtTokens: 0,
+      groundingQueries: 2,
+    });
+    assert.equal(result.groundingMetadata?.billableQueryCount, 2);
+    assert.deepEqual(result.groundingMetadata?.queries, [
+      "official entry requirements",
+    ]);
+    assert.equal(reservationCount, 2);
+    assert.equal(providerModels.length, 3);
+    assert.notEqual(providerModels[1], providerModels[2]);
+    const turnBodies = attributionBodies.filter((item) =>
+      Object.hasOwn(item, "p_turn_number")
+    );
+    assert.equal(turnBodies.length, 2);
+    assert.deepEqual(turnBodies[0].p_attempted_models, [providerModels[0]]);
+    assert.deepEqual(turnBodies[1].p_attempted_models, [
+      providerModels[1],
+      providerModels[2],
+    ]);
+    assert.deepEqual(finalizedBody, {
+      p_run_id: "22222222-2222-4222-8222-222222222222",
+      p_total_input_tokens: 24,
+      p_total_output_tokens: 12,
+      p_total_grounding_query_count: 2,
+    });
+    assert.doesNotMatch(
+      JSON.stringify(attributionBodies),
+      /private-tool-result-must-not-enter-cost-ledger/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalDeno === undefined) delete runtime.Deno;
+    else runtime.Deno = originalDeno;
+  }
 });
 
 test("tool server rejects arguments outside the registered schema", async () => {
@@ -209,6 +377,7 @@ test("executes owner-scoped read tool and continues stateless interaction", asyn
     "entry requirements",
     "official travel requirements",
   ]);
+  assert.equal(result.groundingMetadata?.billableQueryCount, 2);
 });
 
 test("blocks write tools before execution", async () => {
@@ -270,6 +439,34 @@ test("stops repeated tool-call cycles", async () => {
   assert.equal(providerCalls, 2);
   assert.equal(executions, 1);
   assert.match(result.error?.message ?? "", /cycle/);
+});
+
+test("maxTurns counts the initial provider turn and never exceeds the five-turn ledger", async () => {
+  let providerCalls = 0;
+  const result = await callGeminiInteractionWithTools(
+    request(),
+    { userId: "user-1" },
+    { maxTurns: 5, maxToolCalls: 12 },
+    {
+      callProvider: async () => {
+        providerCalls++;
+        return response({
+          finishReason: "requires_action",
+          toolCalls: [{
+            id: `call-${providerCalls}`,
+            name: "get_quest_context",
+            arguments: { questId: `quest-${providerCalls}` },
+          }],
+          continuation: { steps: [{ type: "function_call" }] },
+        });
+      },
+      executeTool: async () => ({ ok: true, data: [] }),
+    },
+  );
+
+  assert.equal(providerCalls, 5);
+  assert.equal(result.error?.code, "tool_failed");
+  assert.match(result.error?.message ?? "", /continuation limit/);
 });
 
 function request(): ProviderRequest {

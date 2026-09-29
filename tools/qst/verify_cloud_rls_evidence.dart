@@ -51,6 +51,10 @@ Future<void> main(List<String> arguments) async {
     'QST-041 RLS behavior tests passed',
     'Get-FileHash -Algorithm SHA256',
     'status: verified',
+    'trail_parent_contract:',
+    'owner_valid_parent_write: passed',
+    'cross_quest_mission_write: denied',
+    'cross_account_parent_write: denied',
   ]) {
     _expect(capture, snippet, capturePath, failures);
   }
@@ -60,6 +64,9 @@ Future<void> main(List<String> arguments) async {
     'owner cannot read another private Quest',
     'other cannot read owner Arc Memory',
     'other cannot create a Quest for owner',
+    'owner can create a Trail with matching Quest and Mission parents',
+    'owner cannot create a Trail with a Mission from another Quest',
+    'owner cannot create a Trail under another owner journey',
   ]) {
     _expect(test, snippet, testPath, failures);
   }
@@ -92,6 +99,20 @@ Future<void> main(List<String> arguments) async {
   }
 
   _rejectSecrets(evidence, failures);
+  _expect(evidence, 'trail_parent_contract:', evidencePath, failures);
+  for (final field in const [
+    'owner_valid_parent_write',
+    'cross_quest_mission_write',
+    'cross_account_parent_write',
+    'transaction_rolled_back',
+  ]) {
+    if (!RegExp(
+      '^  $field: (pending|passed|denied|true)\$',
+      multiLine: true,
+    ).hasMatch(evidence)) {
+      failures.add('Trail parent evidence field is missing: $field');
+    }
+  }
   if (requireCloud) {
     await _verifyCloud(
       evidence,
@@ -189,6 +210,10 @@ Future<void> _verifyCloud(
     'cross_account_checks: passed',
     'write_denial_checks: passed',
     'transaction_rolled_back: true',
+    'trail_parent_contract:\n  status: passed',
+    '  owner_valid_parent_write: passed',
+    '  cross_quest_mission_write: denied',
+    '  cross_account_parent_write: denied',
   ]) {
     _expect(evidence, result, evidencePath, failures);
   }

@@ -16,6 +16,7 @@ export type PlanningInput = {
   location?: string | null;
   constraints?: string[];
   approvedContext?: Record<string, unknown>;
+  existingRoute?: Record<string, unknown>;
   userId?: string | null;
   abuseKeyHash?: string | null;
   idempotencyKey: string;
@@ -74,7 +75,7 @@ export async function runQuestPlanningPipeline(input: PlanningInput): Promise<Pl
     ]),
     ...(grounding.required ? [{ type: "google_search" as const }] : []),
   ];
-  const strategy = await runPass("strategic_plan", { understanding: understandingOutput, successContract: success.response.output, achievementDomains: domains.response.output, groundingDecision: grounding }, input, traceId, prompts, strategyTools);
+  const strategy = await runPass("strategic_plan", { understanding: understandingOutput, successContract: success.response.output, achievementDomains: domains.response.output, groundingDecision: grounding, existingRoute: input.existingRoute }, input, traceId, prompts, strategyTools);
   passes.push(strategy.pass);
   if (!strategy.response || strategy.response.error) return failed(traceId, passes, prompts, strategy.response?.error?.retryable);
   const groundingValidation = validateGroundingEvidence(grounding, strategy.response.groundingMetadata);
@@ -83,7 +84,7 @@ export async function runQuestPlanningPipeline(input: PlanningInput): Promise<Pl
     return result(traceId, "retryable_error", passes, null, [{ path: "$.grounding", code: "grounding_failed", message: "Current facts could not be verified with traceable sources" }], prompts);
   }
 
-  const generated = await runPass("route_mission_generation", { questId: input.questId, understanding: understandingOutput, successContract: success.response.output, achievementDomains: domains.response.output, strategicPlan: strategy.response.output, groundingMetadata: strategy.response.groundingMetadata }, input, traceId, prompts);
+  const generated = await runPass("route_mission_generation", { questId: input.questId, understanding: understandingOutput, successContract: success.response.output, achievementDomains: domains.response.output, strategicPlan: strategy.response.output, groundingMetadata: strategy.response.groundingMetadata, existingRoute: input.existingRoute }, input, traceId, prompts);
   passes.push(generated.pass);
   if (!generated.response || generated.response.error) return failed(traceId, passes, prompts, generated.response?.error?.retryable);
   let plan = generated.response.output;
@@ -150,6 +151,14 @@ export async function runQuestPlanningPipeline(input: PlanningInput): Promise<Pl
     currentTaskPlan: taskPlan,
     currentTaskCritic: finalTaskCritic,
     groundingMetadata: strategy.response.groundingMetadata,
+    routeApplication: input.existingRoute ?? {
+      applicationMode: "initial",
+      baseMissions: [],
+      completedMissionIds: [],
+      existingMissionCount: 0,
+      completedMissionCount: 0,
+      replaceableMissionCount: 0,
+    },
     qualityGate: {
       status: "passed",
       version: "qst-341-v1",

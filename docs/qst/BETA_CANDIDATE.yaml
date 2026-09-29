@@ -9,7 +9,7 @@ generated_at_utc: "2026-09-08T23:48:32.299896Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
-  latest_local_migration: "202609130006_ai_budget_reconciliation_scheduler.sql"
+  latest_local_migration: "202609150006_immutable_compensating_ai_budget_correction.sql"
   remote_migration_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   edge_function_count: 13
   edge_functions:
@@ -26,7 +26,7 @@ inventory:
     - "quest-planning-v2"
     - "reconcile-ai-budget"
     - "research-mission-resources"
-  flutter_test_file_count: 228
+  flutter_test_file_count: 293
   supabase_evidence_status: "local_migration_pending_deployment"
   supabase_evidence_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
   rls_evidence_status: "local_migration_pending_deployment"

@@ -6,6 +6,7 @@ import '../../widgets/questra_card.dart';
 import 'arc_expression_engine.dart';
 
 enum ArcCelebrationEvent {
+  taskCompleted,
   missionStarted,
   missionCompleted,
   trailRecorded,
@@ -62,6 +63,12 @@ class ArcCelebrationService {
         : subject.trim();
 
     return switch (event) {
+      ArcCelebrationEvent.taskCompleted => _ArcCelebrationCopy(
+        title: '今日の一歩を完了',
+        message: name == null
+            ? '一歩進んだね。この経験をTrailに残すと、次の航路を選びやすくなるよ。'
+            : '「$name」を完了したね。この経験をTrailに残すと、次の航路を選びやすくなるよ。',
+      ),
       ArcCelebrationEvent.missionStarted => _ArcCelebrationCopy(
         title: 'Mission点灯',
         message: name == null

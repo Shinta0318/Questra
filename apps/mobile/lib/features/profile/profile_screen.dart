@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
+import '../../core/theme/questra_surface_palette.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
@@ -68,6 +69,8 @@ class ProfileScreen extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
           children: [
             QuestraCard(
+              key: const ValueKey('profile-account-card'),
+              palette: QuestraSurfacePalette.dark,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -113,6 +116,8 @@ class ProfileScreen extends ConsumerWidget {
             _NavigatorRankCard(rank: navigatorRank, stardust: stardust),
             const SizedBox(height: 16),
             QuestraCard(
+              key: const ValueKey('profile-journey-card'),
+              palette: QuestraSurfacePalette.dark,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -161,6 +166,8 @@ class _NavigatorRankCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return QuestraCard(
+      key: const ValueKey('profile-rank-card'),
+      palette: QuestraSurfacePalette.dark,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -170,12 +177,14 @@ class _NavigatorRankCard extends StatelessWidget {
                 width: 54,
                 height: 54,
                 decoration: BoxDecoration(
-                  color: QuestraColors.cosmicBlue.withValues(alpha: 0.12),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.explore_outlined,
-                  color: QuestraColors.cosmicBlue,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(width: 14),
@@ -198,7 +207,7 @@ class _NavigatorRankCard extends StatelessWidget {
           Text(
             rank.label,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: QuestraColors.deepNavy,
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -216,9 +225,11 @@ class _NavigatorRankCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: rank.progressToNext,
               minHeight: 10,
-              backgroundColor: QuestraColors.cloud,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                QuestraColors.cosmicBlue,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.12),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
@@ -243,6 +254,8 @@ class _ArcBondCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return QuestraCard(
+      key: const ValueKey('profile-bond-card'),
+      palette: QuestraSurfacePalette.dark,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -283,7 +296,9 @@ class _ArcBondCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: bond.progress,
                     minHeight: 10,
-                    backgroundColor: QuestraColors.cloud,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.12),
                     valueColor: const AlwaysStoppedAnimation<Color>(
                       QuestraColors.gold,
                     ),
@@ -293,8 +308,8 @@ class _ArcBondCard extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 '${bond.score}',
-                style: const TextStyle(
-                  color: QuestraColors.deepNavy,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.w900,
                 ),
               ),

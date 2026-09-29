@@ -56,6 +56,8 @@ export type ProviderUsage = {
   thoughtTokens?: number;
   cachedTokens?: number;
   toolUseTokens?: number;
+  // Sum of provider-billable Grounding queries across requests/turns.
+  groundingQueries?: number;
 };
 
 export type ProviderResponse = {
@@ -73,6 +75,8 @@ export type ProviderResponse = {
   finishReason: string;
   traceId: string;
   error: ProviderError | null;
+  // Ordered provider attempts for cost attribution. Contains no prompt/output.
+  attemptedModels?: string[];
   // Raw model steps needed to continue store=false function calls. Never persist.
   continuation?: { steps: unknown[] };
 };

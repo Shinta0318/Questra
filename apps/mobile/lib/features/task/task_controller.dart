@@ -23,6 +23,8 @@ final taskControllerProvider =
 
 class TaskController extends Notifier<List<QuestraTask>> {
   int _loadGeneration = 0;
+  int _ownerGeneration = 0;
+  final Map<String, Future<void>> _mutationTails = {};
 
   @override
   List<QuestraTask> build() {
@@ -31,6 +33,7 @@ class TaskController extends Notifier<List<QuestraTask>> {
       next,
     ) {
       if (previous == next) return;
+      _ownerGeneration++;
       state = const [];
       ref.read(taskLoadStateProvider.notifier).reset();
       ref.read(taskMutationControllerProvider.notifier).discard();
@@ -118,9 +121,35 @@ class TaskController extends Notifier<List<QuestraTask>> {
   ) async {
     if (ordered.isEmpty) return true;
     if (ordered.any((task) => task.missionId != missionId)) return false;
+    final ownerId =
+        ref.read(authControllerProvider).profile?.id ?? 'local-preview';
+    final ownerGeneration = _ownerGeneration;
+    try {
+      return await _serializeTaskMutation(
+        ownerId,
+        ownerGeneration,
+        () => _reorderMissionTasksNow(missionId, ordered),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> _reorderMissionTasksNow(
+    String missionId,
+    List<QuestraTask> ordered,
+  ) async {
+    final latestById = {
+      for (final task in state.where((task) => task.missionId == missionId))
+        task.id: task,
+    };
+    if (ordered.map((task) => task.id).toSet().length != ordered.length ||
+        ordered.any((task) => !latestById.containsKey(task.id))) {
+      return false;
+    }
     final desired = [
       for (var index = 0; index < ordered.length; index++)
-        ordered[index].copyWith(orderIndex: index),
+        latestById[ordered[index].id]!.copyWith(orderIndex: index),
     ];
     final ids = desired.map((task) => task.id).toSet();
     final previous = state
@@ -134,8 +163,14 @@ class TaskController extends Notifier<List<QuestraTask>> {
       previous: List.unmodifiable(previous),
       queuedAt: DateTime.now().toUtc(),
     );
+    final ownerGeneration = _ownerGeneration;
+    bool isCurrentOwner() =>
+        ownerGeneration == _ownerGeneration &&
+        (ref.read(authControllerProvider).profile?.id ?? 'local-preview') ==
+            mutation.ownerId;
     final sync = ref.read(taskMutationControllerProvider.notifier);
     await _queueMutation(mutation);
+    if (!isCurrentOwner()) return false;
     sync.saving(mutation);
     _merge(desired);
     try {
@@ -146,18 +181,41 @@ class TaskController extends Notifier<List<QuestraTask>> {
             desired,
             operationId: mutation.idempotencyKey,
           );
+      if (!isCurrentOwner()) return false;
       _merge(saved);
       sync.saved('Taskの順番を更新しました。');
       await _clearQueuedMutation(mutation.ownerId);
+      if (!isCurrentOwner()) return false;
       return true;
     } catch (error) {
+      if (!isCurrentOwner()) return false;
       state = [...state.where((task) => !ids.contains(task.id)), ...previous];
       sync.failed(mutation, error);
       return false;
     }
   }
 
-  Future<bool> updateTask(QuestraTask task) => _save(task);
+  Future<bool> updateTask(QuestraTask task) async {
+    final observed = _find(task.id);
+    if (observed == null) return false;
+    final ownerId =
+        ref.read(authControllerProvider).profile?.id ?? 'local-preview';
+    final ownerGeneration = _ownerGeneration;
+    try {
+      return await _serializeTaskMutation(ownerId, ownerGeneration, () async {
+        final current = _find(task.id);
+        if (!identical(current, observed) ||
+            task.basedOnSnapshotRevision != current?.snapshotRevision) {
+          ref.read(taskMutationControllerProvider.notifier).conflict();
+          return false;
+        }
+        await _persistBatchNow([task]);
+        return true;
+      });
+    } catch (_) {
+      return false;
+    }
+  }
 
   Future<void> restoreRouteSnapshot(
     String questId,
@@ -178,121 +236,159 @@ class TaskController extends Notifier<List<QuestraTask>> {
     _syncMissions([...current, ...snapshot]);
   }
 
-  Future<bool> start(String taskId) async {
-    final task = _find(taskId);
-    if (task == null ||
-        !const TaskAvailabilityService()
-            .evaluate(task, forMission(task.missionId))
-            .canStart) {
-      return false;
-    }
-    return _updateStatus(taskId, TaskStatus.inProgress);
-  }
+  Future<bool> start(String taskId) => _runTaskIntent(taskId, (task) {
+    final canStart = const TaskAvailabilityService()
+        .evaluate(task, forMission(task.missionId))
+        .canStart;
+    return canStart ? task.copyWith(status: TaskStatus.inProgress) : null;
+  });
 
-  Future<bool> complete(String taskId) async {
-    final task = _find(taskId);
-    if (task == null ||
-        !const TaskAvailabilityService()
-            .evaluate(task, forMission(task.missionId))
-            .canComplete) {
-      return false;
-    }
-    return _updateStatus(
-      taskId,
-      TaskStatus.completed,
-      completedAt: DateTime.now(),
-    );
-  }
+  Future<bool> complete(String taskId) => _runTaskIntent(taskId, (task) {
+    final canComplete = const TaskAvailabilityService()
+        .evaluate(task, forMission(task.missionId))
+        .canComplete;
+    return canComplete
+        ? task.copyWith(
+            status: TaskStatus.completed,
+            completedAt: DateTime.now(),
+          )
+        : null;
+  });
 
   /// Workspace completion is intentionally one action. Dependency validation
   /// remains authoritative, but a ready Task does not require a separate
   /// "start" tap before it can be checked off.
-  Future<bool> completeFromWorkspace(String taskId) async {
-    final task = _find(taskId);
-    if (task == null) return false;
-    final availability = const TaskAvailabilityService().evaluate(
-      task,
-      forMission(task.missionId),
-    );
-    if (!availability.canStart && !availability.canComplete) return false;
-    return _updateStatus(
-      taskId,
-      TaskStatus.completed,
-      completedAt: DateTime.now(),
-    );
-  }
+  Future<bool> completeFromWorkspace(String taskId) =>
+      _runTaskIntent(taskId, (task) {
+        final availability = const TaskAvailabilityService().evaluate(
+          task,
+          forMission(task.missionId),
+        );
+        return availability.canStart || availability.canComplete
+            ? task.copyWith(
+                status: TaskStatus.completed,
+                completedAt: DateTime.now(),
+              )
+            : null;
+      });
 
-  Future<bool> reopen(String taskId) async {
-    final task = _find(taskId);
-    if (task == null || task.status != TaskStatus.completed) return false;
-    return _save(
-      task.copyWith(status: TaskStatus.pending, clearCompletedAt: true),
-    );
-  }
+  Future<bool> reopen(String taskId) => _runTaskIntent(
+    taskId,
+    (task) => task.status == TaskStatus.completed
+        ? task.copyWith(status: TaskStatus.pending, clearCompletedAt: true)
+        : null,
+  );
 
   Future<bool> skip(String taskId) => _updateStatus(taskId, TaskStatus.skipped);
 
   Future<bool> block(String taskId) =>
       _updateStatus(taskId, TaskStatus.blocked);
 
-  Future<bool> reschedule(String taskId, DateTime date) async {
-    final task = _find(taskId);
-    if (task == null || task.status == TaskStatus.completed) return false;
-    return _save(
-      task.copyWith(scheduledDate: date, status: TaskStatus.pending),
-    );
-  }
+  Future<bool> reschedule(String taskId, DateTime date) => _runTaskIntent(
+    taskId,
+    (task) => task.status == TaskStatus.completed
+        ? null
+        : task.copyWith(scheduledDate: date, status: TaskStatus.pending),
+  );
 
   Future<bool> _updateStatus(
     String taskId,
     TaskStatus status, {
     DateTime? completedAt,
-  }) async {
-    final task = _find(taskId);
-    if (task == null || task.status == TaskStatus.completed) return false;
-    return _save(
-      task.copyWith(
-        status: status,
-        completedAt: completedAt,
-        clearCompletedAt: completedAt == null,
-      ),
-    );
-  }
+  }) => _runTaskIntent(
+    taskId,
+    (task) => task.status == TaskStatus.completed
+        ? null
+        : task.copyWith(
+            status: status,
+            completedAt: completedAt,
+            clearCompletedAt: completedAt == null,
+          ),
+  );
 
-  Future<bool> _save(QuestraTask task) async {
+  Future<bool> _runTaskIntent(
+    String taskId,
+    QuestraTask? Function(QuestraTask current) buildDesired,
+  ) async {
+    final ownerId =
+        ref.read(authControllerProvider).profile?.id ?? 'local-preview';
+    final ownerGeneration = _ownerGeneration;
     try {
-      await _persistBatch([task]);
-      return true;
+      return await _serializeTaskMutation(ownerId, ownerGeneration, () async {
+        final current = _find(taskId);
+        if (current == null) return false;
+        final desired = buildDesired(current);
+        if (desired == null) return false;
+        await _persistBatchNow([desired]);
+        return true;
+      });
     } catch (_) {
       return false;
     }
   }
 
   Future<bool> retryPending() async {
-    final pending = ref.read(taskMutationControllerProvider).pending;
-    final ownerId = ref.read(authControllerProvider).profile?.id;
-    if (pending == null ||
-        (ownerId != null && pending.ownerId != ownerId) ||
-        (ownerId == null && pending.ownerId != 'local-preview')) {
-      return false;
-    }
+    final ownerId =
+        ref.read(authControllerProvider).profile?.id ?? 'local-preview';
+    final ownerGeneration = _ownerGeneration;
     try {
-      await _persistBatch(pending.desired, retryOf: pending);
-      return true;
+      return await _serializeTaskMutation(ownerId, ownerGeneration, () async {
+        final mutationState = ref.read(taskMutationControllerProvider);
+        final pending = mutationState.pending;
+        if (!mutationState.canRetry || pending?.ownerId != ownerId) {
+          return false;
+        }
+        try {
+          await _persistBatchNow(pending!.desired, retryOf: pending);
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }, allowPending: true);
     } catch (_) {
       return false;
     }
   }
 
   Future<void> discardPending() async {
-    final pending = ref.read(taskMutationControllerProvider).pending;
-    final ownerId = ref.read(authControllerProvider).profile?.id;
-    if (pending == null || pending.ownerId != ownerId) return;
-    await _clearQueuedMutation(pending.ownerId);
-    ref.read(taskMutationControllerProvider.notifier).discard();
+    final ownerId =
+        ref.read(authControllerProvider).profile?.id ?? 'local-preview';
+    final ownerGeneration = _ownerGeneration;
+    try {
+      await _serializeTaskMutation(ownerId, ownerGeneration, () async {
+        final mutationState = ref.read(taskMutationControllerProvider);
+        final pending = mutationState.pending;
+        if (!mutationState.canRetry || pending?.ownerId != ownerId) return;
+        await _clearQueuedMutation(ownerId);
+        if (_isCurrentOwner(ownerId, ownerGeneration) &&
+            identical(
+              ref.read(taskMutationControllerProvider).pending,
+              pending,
+            )) {
+          ref.read(taskMutationControllerProvider.notifier).discard();
+        }
+      }, allowPending: true);
+    } catch (_) {
+      // A switched owner must never discard the prior owner's retry.
+    }
   }
 
   Future<List<QuestraTask>> _persistBatch(
+    List<QuestraTask> desired, {
+    PendingTaskMutation? retryOf,
+  }) {
+    final ownerId =
+        ref.read(authControllerProvider).profile?.id ?? 'local-preview';
+    final ownerGeneration = _ownerGeneration;
+    return _serializeTaskMutation(
+      ownerId,
+      ownerGeneration,
+      () => _persistBatchNow(desired, retryOf: retryOf),
+      allowPending: retryOf != null,
+    );
+  }
+
+  Future<List<QuestraTask>> _persistBatchNow(
     List<QuestraTask> desired, {
     PendingTaskMutation? retryOf,
   }) async {
@@ -310,8 +406,14 @@ class TaskController extends Notifier<List<QuestraTask>> {
           previous: List.unmodifiable(previous),
           queuedAt: DateTime.now().toUtc(),
         );
+    final ownerGeneration = _ownerGeneration;
+    bool isCurrentOwner() =>
+        ownerGeneration == _ownerGeneration &&
+        (ref.read(authControllerProvider).profile?.id ?? 'local-preview') ==
+            mutation.ownerId;
     final sync = ref.read(taskMutationControllerProvider.notifier);
     await _queueMutation(mutation);
+    if (!isCurrentOwner()) throw StateError('Task owner changed during save');
     sync.saving(mutation);
     _merge(desired);
     _syncMissions(desired);
@@ -331,6 +433,7 @@ class TaskController extends Notifier<List<QuestraTask>> {
               ),
             ]
           : await repository.saveAll(desired);
+      if (!isCurrentOwner()) throw StateError('Task owner changed during save');
       _merge(saved);
       _syncMissions(saved);
       for (final task in saved) {
@@ -353,12 +456,46 @@ class TaskController extends Notifier<List<QuestraTask>> {
         saved.length == 1 ? 'Taskを保存しました。' : '${saved.length}件のTaskを保存しました。',
       );
       await _clearQueuedMutation(mutation.ownerId);
+      if (!isCurrentOwner()) throw StateError('Task owner changed during save');
       return saved;
     } catch (error) {
+      if (!isCurrentOwner()) rethrow;
       state = [...state.where((task) => !ids.contains(task.id)), ...previous];
       _syncMissions([...desired, ...previous]);
       sync.failed(mutation, error);
       rethrow;
+    }
+  }
+
+  bool _isCurrentOwner(String ownerId, int generation) =>
+      generation == _ownerGeneration &&
+      (ref.read(authControllerProvider).profile?.id ?? 'local-preview') ==
+          ownerId;
+
+  Future<T> _serializeTaskMutation<T>(
+    String ownerId,
+    int ownerGeneration,
+    Future<T> Function() run, {
+    bool allowPending = false,
+  }) async {
+    final previous = _mutationTails[ownerId];
+    final completed = Completer<void>();
+    final tail = completed.future;
+    _mutationTails[ownerId] = tail;
+    try {
+      if (previous != null) await previous;
+      if (!_isCurrentOwner(ownerId, ownerGeneration)) {
+        throw StateError('Task owner changed during save');
+      }
+      if (!allowPending && ref.read(taskMutationControllerProvider).canRetry) {
+        throw StateError('Resolve pending Task changes before saving again');
+      }
+      return await run();
+    } finally {
+      if (identical(_mutationTails[ownerId], tail)) {
+        _mutationTails.remove(ownerId);
+      }
+      completed.complete();
     }
   }
 

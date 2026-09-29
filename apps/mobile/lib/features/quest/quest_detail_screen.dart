@@ -75,6 +75,7 @@ class QuestDetailScreen extends ConsumerWidget {
     this.initialJourneyMode = QuestJourneyMode.focus,
     this.focusMissionId,
     this.focusTaskId,
+    this.returnLocation,
     super.key,
   });
 
@@ -82,6 +83,7 @@ class QuestDetailScreen extends ConsumerWidget {
   final QuestJourneyMode initialJourneyMode;
   final String? focusMissionId;
   final String? focusTaskId;
+  final String? returnLocation;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -90,6 +92,10 @@ class QuestDetailScreen extends ConsumerWidget {
         .where((quest) => quest.id == questId);
     final quest = questMatches.isEmpty ? null : questMatches.first;
     final arcGuideState = ref.watch(arcQuestGuideControllerProvider);
+    final hasActiveArcGuide =
+        arcGuideState.isLoading(questId) ||
+        arcGuideState.guideFor(questId) != null ||
+        arcGuideState.errorFor(questId) != null;
     final pendingRouteProposal = ref.watch(
       routeReplanningControllerProvider.select((state) => state[questId]),
     );
@@ -130,18 +136,33 @@ class QuestDetailScreen extends ConsumerWidget {
                 initialMode: initialJourneyMode,
                 focusMissionId: focusMissionId,
                 focusTaskId: focusTaskId,
-                onCreateMission: () => _showMissionCreateDialog(
-                  context,
-                  ref,
-                  quest,
-                  missions.length,
+                onCreateMission: () => unawaited(
+                  _createMissionAndMaybeReturn(
+                    context,
+                    ref,
+                    quest,
+                    missions.length,
+                    returnLocation,
+                  ),
                 ),
                 onAskArcForMission: () => ref
                     .read(arcQuestGuideControllerProvider.notifier)
                     .generateForQuest(quest),
               )
             else
-              _MissionsSection(quest: quest, missions: missions),
+              _MissionsSection(
+                quest: quest,
+                missions: missions,
+                returnLocation: returnLocation,
+              ),
+            if (hasActiveArcGuide) ...[
+              const SizedBox(height: 16),
+              _ArcQuestGuidePanel(
+                quest: quest,
+                state: arcGuideState,
+                missions: missions,
+              ),
+            ],
             const SizedBox(height: 16),
             Theme(
               data: Theme.of(context).copyWith(
@@ -183,8 +204,6 @@ class QuestDetailScreen extends ConsumerWidget {
                     isLoading: arcGuideState.isLoading(quest.id),
                     pendingProposal: pendingRouteProposal,
                   ),
-                  const SizedBox(height: 16),
-                  _ArcQuestGuidePanel(quest: quest, state: arcGuideState),
                 ],
               ),
             ),
@@ -797,6 +816,12 @@ Future<void> _reviewRoute(
     );
     return;
   }
+  if (mutation == null) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('反映する変更を選んでください。')));
+    return;
+  }
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: const Text('承認した内容で航路を更新しました。'),
@@ -1214,7 +1239,8 @@ class _QuestJourneyOverview extends ConsumerWidget {
             latestTrail: latestTrail,
             hasArcGuide: hasArcGuide,
             onOpenMission: () => context.go(AppRoutes.mission),
-            onOpenTrail: () => context.go(AppRoutes.trail),
+            onOpenTrail: () =>
+                context.go(AppRoutes.trailForJourney(questId: quest.id)),
             onGenerateGuide: () => ref
                 .read(arcQuestGuideControllerProvider.notifier)
                 .generateForQuest(quest),
@@ -2402,10 +2428,15 @@ class _MilestoneTile extends ConsumerWidget {
 }
 
 class _ArcQuestGuidePanel extends ConsumerStatefulWidget {
-  const _ArcQuestGuidePanel({required this.quest, required this.state});
+  const _ArcQuestGuidePanel({
+    required this.quest,
+    required this.state,
+    required this.missions,
+  });
 
   final Quest quest;
   final ArcQuestGuideState state;
+  final List<Mission> missions;
 
   @override
   ConsumerState<_ArcQuestGuidePanel> createState() =>
@@ -2431,12 +2462,36 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
     if (draft == null || draft.validCandidates.isEmpty) return;
     final guide = _loadedGuide;
     if (guide?.previewId != null) {
+      if (guide!.replacesExistingRoute) {
+        final approved = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('残りの航路を更新しますか？'),
+            content: Text(
+              '完了済みMission ${guide.completedMissionCount}件はそのまま残します。'
+              '未完了Mission ${guide.replaceableMissionCount}件は、確認中のAI案へ置き換わります。'
+              '確定するまでは現在の航路は変わりません。',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('戻る'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('この航路に更新'),
+              ),
+            ],
+          ),
+        );
+        if (approved != true || !mounted) return;
+      }
       try {
         await ref
             .read(arcQuestGuideControllerProvider.notifier)
             .approveForQuest(
               widget.quest,
-              guide!,
+              guide,
               draft.validCandidates
                   .map((candidate) => candidate.toArcCandidate())
                   .toList(growable: false),
@@ -2647,14 +2702,20 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
                 overflow: TextOverflow.ellipsis,
               ),
             ] else
-              const Text('ArcがこのQuestの進め方と最初のMission候補をまとめます。'),
+              Text(
+                widget.missions.isEmpty
+                    ? 'ArcがこのQuestの進め方と最初のMission候補をまとめます。'
+                    : '現在のMissionと進捗を読み、完了した成果を残したまま残りの航路を組み直します。',
+              ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () => ref
                   .read(arcQuestGuideControllerProvider.notifier)
                   .generateForQuest(widget.quest),
               icon: const Icon(Icons.auto_awesome_outlined),
-              label: const Text('Arcガイドを生成'),
+              label: Text(
+                widget.missions.isEmpty ? 'Arcガイドを生成' : 'AIで残りの航路を作る',
+              ),
             ),
           ] else ...[
             ArcWidget(
@@ -2687,6 +2748,26 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
                 label: const Text('Mission候補を描き直す'),
               ),
             ] else ...[
+              if (guide.replacesExistingRoute) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: QuestraColors.gold.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: QuestraColors.gold.withValues(alpha: 0.28),
+                    ),
+                  ),
+                  child: Text(
+                    '完了済み ${guide.completedMissionCount}件を維持し、'
+                    '未完了 ${guide.replaceableMissionCount}件をこの案へ置き換えます。'
+                    '確定前は現在の航路に影響しません。',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               Text(
                 'Mission候補を確認する',
                 style: Theme.of(
@@ -3159,10 +3240,15 @@ class _GuideCard extends ConsumerWidget {
 }
 
 class _MissionsSection extends ConsumerWidget {
-  const _MissionsSection({required this.quest, required this.missions});
+  const _MissionsSection({
+    required this.quest,
+    required this.missions,
+    this.returnLocation,
+  });
 
   final Quest quest;
   final List<Mission> missions;
+  final String? returnLocation;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -3293,11 +3379,14 @@ class _MissionsSection extends ConsumerWidget {
             runSpacing: 8,
             children: [
               FilledButton.icon(
-                onPressed: () => _showMissionCreateDialog(
-                  context,
-                  ref,
-                  quest,
-                  missions.length,
+                onPressed: () => unawaited(
+                  _createMissionAndMaybeReturn(
+                    context,
+                    ref,
+                    quest,
+                    missions.length,
+                    returnLocation,
+                  ),
                 ),
                 icon: const Icon(Icons.add),
                 label: const Text('Missionを追加'),
@@ -3756,13 +3845,38 @@ Future<void> _regenerateMissionWithIntent(
   }
 }
 
-Future<void> _showMissionCreateDialog(
+Future<void> _createMissionAndMaybeReturn(
+  BuildContext context,
+  WidgetRef ref,
+  Quest quest,
+  int sortOrder,
+  String? returnLocation,
+) async {
+  final createdMission = await _showMissionCreateDialog(
+    context,
+    ref,
+    quest,
+    sortOrder,
+  );
+  if (createdMission == null || !context.mounted) return;
+  final destination = AppRoutes.safeTrailComposerReturnLocation(
+    returnLocation,
+    questId: quest.id,
+  );
+  if (destination != null) {
+    context.go(
+      AppRoutes.trailComposerForQuest(quest.id, missionId: createdMission.id),
+    );
+  }
+}
+
+Future<Mission?> _showMissionCreateDialog(
   BuildContext context,
   WidgetRef ref,
   Quest quest,
   int sortOrder,
 ) async {
-  await showDialog<void>(
+  return showDialog<Mission>(
     context: context,
     builder: (context) =>
         _MissionCreateDialog(quest: quest, sortOrder: sortOrder),
@@ -3801,7 +3915,7 @@ class _MissionCreateDialogState extends ConsumerState<_MissionCreateDialog> {
       _saveError = null;
     });
     try {
-      ref
+      final mission = ref
           .read(missionControllerProvider.notifier)
           .addMissionDraft(
             quest: widget.quest,
@@ -3811,7 +3925,7 @@ class _MissionCreateDialogState extends ConsumerState<_MissionCreateDialog> {
             difficulty: MissionDifficulty.easy,
             sortOrder: widget.sortOrder,
           );
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(mission);
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -4202,25 +4316,8 @@ class _TrailSection extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
-            onPressed: () {
-              final latestMission = missions.isEmpty ? null : missions.first;
-              ref
-                  .read(trailControllerProvider.notifier)
-                  .addQuestTrail(
-                    questId: quest.id,
-                    missionId: latestMission?.id,
-                    questTitle: quest.title,
-                  );
-              showArcCelebrationSnackBar(
-                context,
-                ref
-                    .read(arcCelebrationServiceProvider)
-                    .build(
-                      event: ArcCelebrationEvent.trailRecorded,
-                      subject: quest.title,
-                    ),
-              );
-            },
+            onPressed: () =>
+                context.go(AppRoutes.trailForJourney(questId: quest.id)),
             icon: const Icon(Icons.timeline_outlined),
             label: const Text('Trailを残す'),
           ),

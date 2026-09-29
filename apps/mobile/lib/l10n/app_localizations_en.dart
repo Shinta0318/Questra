@@ -68,7 +68,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Look back on your journey one day at a time.';
 
   @override
-  String trailCount(int count) => '$count Trails';
+  String trailCount(int count) {
+    return '$count Trails';
+  }
 
   @override
   String get reflection => 'Reflections';
@@ -80,16 +82,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get image => 'Images';
 
   @override
-  String questContext(String title) => 'Quest: $title';
+  String questContext(String title) {
+    return 'Quest: $title';
+  }
 
   @override
-  String missionContext(String title) => 'Mission: $title';
+  String missionContext(String title) {
+    return 'Mission: $title';
+  }
 
   @override
-  String taskContext(String title) => 'Task: $title';
+  String taskContext(String title) {
+    return 'Task: $title';
+  }
 
   @override
-  String starMemoryCandidate(String reason) => 'Memory candidate: $reason';
+  String starMemoryCandidate(String reason) {
+    return 'Memory candidate: $reason';
+  }
 
   @override
   String get trailTypeQuest => 'Quest update';

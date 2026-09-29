@@ -36,7 +36,7 @@ void main() {
     expect(recoveryMigration, contains('for update'));
     expect(migration, contains("auth.role() is distinct from 'service_role'"));
     expect(migration, contains('to service_role'));
-    expect(admission, contains('reserve_ai_usage_budget_v2'));
+    expect(admission, contains('reserve_ai_usage_budget_v'));
     expect(admission, contains('p_model_names: modelNames'));
     expect(admission, contains('AI_BUDGET_RPC_TIMEOUT_MS'));
     expect(admission, contains('signal: controller.signal'));

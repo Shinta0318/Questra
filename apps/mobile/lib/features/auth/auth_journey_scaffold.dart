@@ -9,14 +9,14 @@ import '../../widgets/arc/arc_asset_paths.dart';
 class AuthJourneyScaffold extends StatelessWidget {
   const AuthJourneyScaffold({
     required this.eyebrow,
-    required this.title,
+    this.title,
     required this.message,
     required this.child,
     super.key,
   });
 
   final String eyebrow;
-  final String title;
+  final String? title;
   final String message;
   final Widget child;
 
@@ -145,7 +145,7 @@ class _AuthPanel extends StatelessWidget {
   });
 
   final String eyebrow;
-  final String title;
+  final String? title;
   final Widget child;
 
   @override
@@ -168,14 +168,17 @@ class _AuthPanel extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w800,
+                  if (title case final title?) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
                     ),
-                  ),
+                  ],
                   const SizedBox(height: AppSpacing.xxl),
                   child,
                 ],

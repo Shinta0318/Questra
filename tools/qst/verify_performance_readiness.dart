@@ -25,6 +25,20 @@ const requiredFiles = {
     '.limit(limit)',
     '.select(',
   ],
+  'apps/mobile/lib/features/trail/trail_journey_projection.dart': [
+    'projectTrailJourney',
+    'questId',
+    'missionId',
+  ],
+  'apps/mobile/lib/core/performance/performance_limits.dart': [
+    'trailLoadedItemBudget',
+    'trailJourneyProjectionBudgetMs',
+  ],
+  'supabase/migrations/202608250001_journey_cursor_pagination_indexes.sql': [
+    'trails_owner_created_cursor_idx',
+    'trails_owner_quest_created_cursor_idx',
+    'trails_owner_mission_created_cursor_idx',
+  ],
   'apps/mobile/lib/features/arc_memory/arc_memory_repository.dart': [
     '.limit(limit)',
     '.select(',

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/questra_colors.dart';
 import '../../core/validation/input_validators.dart';
 import '../../widgets/forms/questra_field_label.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
+import '../../widgets/navigation/questra_route_back_button.dart';
 import '../../widgets/questra_card.dart';
 import '../auth/auth_controller.dart';
 import 'beta_feedback_model.dart';
@@ -47,7 +49,13 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
   Widget build(BuildContext context) {
     final destination = ref.watch(betaFeedbackDestinationProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Betaフィードバック')),
+      appBar: AppBar(
+        leading: const QuestraRouteBackButton(
+          fallbackRoute: AppRoutes.profile,
+          fallbackTooltip: 'プロフィールへ戻る',
+        ),
+        title: const Text('Betaフィードバック'),
+      ),
       body: QuestraScreenSurface(
         child: Form(
           key: _formKey,
@@ -73,9 +81,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
                             children: [
                               Text(
                                 '航路で気づいたことを教えてください',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
+                                style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(fontWeight: FontWeight.w900),
                               ),
                               const SizedBox(height: AppSpacing.xs),
@@ -98,8 +104,8 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
                     Text(
                       '報告内容',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     QuestraFieldLabel(
@@ -232,7 +238,9 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
       actual: _actualController.text,
     );
     try {
-      final report = ref.read(betaFeedbackServiceProvider).createReport(
+      final report = ref
+          .read(betaFeedbackServiceProvider)
+          .createReport(
             draft: draft,
             testerId: profile?.id ?? 'anonymous-beta',
             buildVersion: _buildVersion,
@@ -280,8 +288,9 @@ class _FeedbackField extends StatelessWidget {
       child: TextFormField(
         controller: controller,
         keyboardType: minLines > 1 ? TextInputType.multiline : null,
-        textInputAction:
-            minLines > 1 ? TextInputAction.newline : TextInputAction.next,
+        textInputAction: minLines > 1
+            ? TextInputAction.newline
+            : TextInputAction.next,
         minLines: minLines,
         maxLines: minLines + 2,
         decoration: InputDecoration(hintText: hint),
