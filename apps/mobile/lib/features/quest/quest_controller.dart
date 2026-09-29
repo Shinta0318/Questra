@@ -27,6 +27,8 @@ final questSyncControllerProvider =
     );
 
 class QuestController extends Notifier<List<Quest>> {
+  final PersistenceRetrySlot _retrySlot = PersistenceRetrySlot();
+
   @override
   List<Quest> build() {
     final initialUserId = ref.read(authControllerProvider).profile?.id;
@@ -35,6 +37,8 @@ class QuestController extends Notifier<List<Quest>> {
       next,
     ) {
       if (next == previous) return;
+      _retrySlot.clear();
+      ref.read(questSyncControllerProvider.notifier).clear();
       state = const [];
       if (next != null) unawaited(loadForUser(next));
     });
@@ -66,9 +70,16 @@ class QuestController extends Notifier<List<Quest>> {
       sync.clear();
     } catch (error) {
       if (ref.read(authControllerProvider).profile?.id != userId) return;
-      sync.failed('Questの読み込み', error);
+      sync.failed(
+        'Questの読み込み',
+        error,
+        retryAvailable: true,
+        inputPreserved: false,
+      );
     }
   }
+
+  Future<bool> retryPending() => _retrySlot.retry();
 
   void add(Quest quest) {
     state = [...state, quest];
@@ -113,7 +124,25 @@ class QuestController extends Notifier<List<Quest>> {
     );
   }
 
-  void updateProgress(String questId, double progress) {
+  void stageRouteUpdate(Quest updatedQuest) {
+    state = [
+      for (final quest in state)
+        if (quest.id == updatedQuest.id) updatedQuest else quest,
+    ];
+  }
+
+  Future<bool> persistRouteUpdate(Quest updatedQuest) => _persistQuest(
+    updatedQuest,
+    sourceType: ArcMemorySourceType.questUpdated,
+    recordJourney: false,
+  );
+
+  Future<bool> restoreRouteSnapshot(Quest quest) async {
+    stageRouteUpdate(quest);
+    return persistRouteUpdate(quest);
+  }
+
+  void updateProgress(String questId, double progress, {bool persist = true}) {
     final quest = findById(questId);
     if (quest == null) return;
     final normalized = progress.clamp(0.0, 1.0);
@@ -123,13 +152,15 @@ class QuestController extends Notifier<List<Quest>> {
       for (final current in state)
         if (current.id == questId) updatedQuest else current,
     ];
-    unawaited(
-      _persistQuest(
-        updatedQuest,
-        sourceType: ArcMemorySourceType.questUpdated,
-        recordJourney: false,
-      ),
-    );
+    if (persist) {
+      unawaited(
+        _persistQuest(
+          updatedQuest,
+          sourceType: ArcMemorySourceType.questUpdated,
+          recordJourney: false,
+        ),
+      );
+    }
   }
 
   void remove(String id) {
@@ -156,16 +187,17 @@ class QuestController extends Notifier<List<Quest>> {
     return 'completed';
   }
 
-  Future<void> _persistQuest(
+  Future<bool> _persistQuest(
     Quest quest, {
     required ArcMemorySourceType sourceType,
     bool recordJourney = true,
   }) async {
+    final mutationSerial = _retrySlot.begin();
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
       ref
           .read(questSyncControllerProvider.notifier)
-          .failed('Quest save', 'ログインが必要です。');
+          .failed('Questの保存', 'ログインが必要です。', inputPreserved: true);
       if (recordJourney) {
         _recordQuestAction(
           ArcActionTrigger.unauthenticated,
@@ -173,7 +205,7 @@ class QuestController extends Notifier<List<Quest>> {
           surface: 'Quest保存',
         );
       }
-      return;
+      return false;
     }
 
     final sync = ref.read(questSyncControllerProvider.notifier);
@@ -182,7 +214,7 @@ class QuestController extends Notifier<List<Quest>> {
       final savedQuest = await ref
           .read(questRepositoryProvider)
           .save(ownerId: userId, quest: quest);
-      if (ref.read(authControllerProvider).profile?.id != userId) return;
+      if (ref.read(authControllerProvider).profile?.id != userId) return false;
       state = [
         for (final current in state)
           if (current.id == quest.id) savedQuest else current,
@@ -192,9 +224,24 @@ class QuestController extends Notifier<List<Quest>> {
         _growBond(sourceType, savedQuest);
         unawaited(_rememberQuest(userId, savedQuest, sourceType));
       }
+      _retrySlot.resolve(mutationSerial);
       sync.saved('Questを保存しました。');
+      return true;
     } catch (error) {
-      sync.failed('Questの保存', error);
+      _retrySlot.remember(
+        mutationSerial,
+        () => _persistQuest(
+          quest,
+          sourceType: sourceType,
+          recordJourney: recordJourney,
+        ),
+      );
+      sync.failed(
+        'Questの保存',
+        error,
+        retryAvailable: true,
+        inputPreserved: true,
+      );
       if (recordJourney) {
         _recordQuestAction(
           ArcActionTrigger.saveFailure,
@@ -202,6 +249,7 @@ class QuestController extends Notifier<List<Quest>> {
           surface: 'Quest保存',
         );
       }
+      return false;
     }
   }
 
@@ -277,11 +325,12 @@ class QuestController extends Notifier<List<Quest>> {
   }
 
   Future<void> _deleteQuest(String questId, Quest? removedQuest) async {
+    final mutationSerial = _retrySlot.begin();
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
       ref
           .read(questSyncControllerProvider.notifier)
-          .failed('Quest delete', 'ログインが必要です。');
+          .failed('Questの削除', 'ログインが必要です。', inputPreserved: true);
       return;
     }
 
@@ -294,12 +343,22 @@ class QuestController extends Notifier<List<Quest>> {
       await ref
           .read(questRepositoryProvider)
           .delete(ownerId: userId, questId: questId);
+      _retrySlot.resolve(mutationSerial);
       sync.saved('Questを削除しました。');
     } catch (error) {
       if (removedQuest != null) {
         state = [removedQuest, ...state];
       }
-      sync.failed('Questの削除', error);
+      _retrySlot.remember(mutationSerial, () async {
+        state = state.where((quest) => quest.id != questId).toList();
+        await _deleteQuest(questId, removedQuest);
+      });
+      sync.failed(
+        'Questの削除',
+        error,
+        retryAvailable: true,
+        inputPreserved: true,
+      );
     }
   }
 }

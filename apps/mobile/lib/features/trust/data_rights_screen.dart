@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/questra_surface_palette.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
+import '../../widgets/navigation/questra_route_back_button.dart';
 import '../../widgets/questra_card.dart';
 import '../task/task_controller.dart';
 import '../task/task_model.dart';
@@ -38,7 +40,13 @@ class _DataRightsScreenState extends ConsumerState<DataRightsScreen> {
     final tasks = ref.watch(taskControllerProvider);
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
-      appBar: AppBar(title: const Text('データ管理')),
+      appBar: AppBar(
+        leading: const QuestraRouteBackButton(
+          fallbackRoute: AppRoutes.settings,
+          fallbackTooltip: '設定へ戻る',
+        ),
+        title: const Text('データ管理'),
+      ),
       body: QuestraResponsiveListView(
         padding: const EdgeInsets.all(AppSpacing.xl),
         children: [

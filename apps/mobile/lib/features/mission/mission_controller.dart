@@ -41,6 +41,8 @@ final missionSyncControllerProvider =
     );
 
 class MissionController extends Notifier<List<Mission>> {
+  final PersistenceRetrySlot _retrySlot = PersistenceRetrySlot();
+
   @override
   List<Mission> build() {
     ref.listen(planningPreferencesControllerProvider, (previous, next) {
@@ -59,6 +61,8 @@ class MissionController extends Notifier<List<Mission>> {
       next,
     ) {
       if (next == previous) return;
+      _retrySlot.clear();
+      ref.read(missionSyncControllerProvider.notifier).clear();
       state = const [];
       if (next != null) _loadForCurrentQuests();
     });
@@ -148,6 +152,7 @@ class MissionController extends Notifier<List<Mission>> {
     bool isOptional = false,
     String sourceRequirement = 'none',
     double confidence = 0.5,
+    bool persist = true,
   }) {
     final titleError = const MissionContractService().validateTitle(
       questTitle: quest.title,
@@ -206,24 +211,31 @@ class MissionController extends Notifier<List<Mission>> {
       mission,
       for (final current in state) clearedById[current.id] ?? current,
     ];
-    for (final cleared in clearedToday) {
+    if (persist) {
+      for (final cleared in clearedToday) {
+        unawaited(
+          _persistMission(
+            cleared,
+            sourceType: ArcMemorySourceType.missionCreated,
+            recordJourney: false,
+          ),
+        );
+      }
+    }
+    _syncQuestProgress(quest.id, persist: persist);
+    _recordMissionEmotion(mission, trigger: ArcActionTrigger.missionCreated);
+    if (persist) {
       unawaited(
         _persistMission(
-          cleared,
+          mission,
           sourceType: ArcMemorySourceType.missionCreated,
-          recordJourney: false,
         ),
       );
     }
-    _syncQuestProgress(quest.id);
-    _recordMissionEmotion(mission, trigger: ArcActionTrigger.missionCreated);
-    unawaited(
-      _persistMission(mission, sourceType: ArcMemorySourceType.missionCreated),
-    );
     return mission;
   }
 
-  void updateMission(Mission updatedMission) {
+  void updateMission(Mission updatedMission, {bool persist = true}) {
     final titleError = const MissionContractService().validateTitle(
       questTitle: updatedMission.questTitle,
       missionTitle: updatedMission.title,
@@ -253,13 +265,15 @@ class MissionController extends Notifier<List<Mission>> {
             properties: {'status': updatedMission.status.name},
           ),
     );
-    unawaited(
-      _persistMission(
-        updatedMission,
-        sourceType: ArcMemorySourceType.missionCreated,
-        recordJourney: false,
-      ),
-    );
+    if (persist) {
+      unawaited(
+        _persistMission(
+          updatedMission,
+          sourceType: ArcMemorySourceType.missionCreated,
+          recordJourney: false,
+        ),
+      );
+    }
   }
 
   void _recalculateForAvailability(
@@ -376,35 +390,39 @@ class MissionController extends Notifier<List<Mission>> {
       );
     }
     if (questId != null) _syncQuestProgress(questId);
-    unawaited(_deleteMission(missionId));
+    unawaited(_deleteMission(missionId, mission));
   }
 
-  void archiveForRoute(String missionId) {
+  void archiveForRoute(String missionId, {bool persist = true}) {
     final mission = state.where((item) => item.id == missionId).firstOrNull;
     if (mission == null || mission.status == MissionStatus.completed) return;
     final archived = mission.copyWith(routeState: MissionRouteState.removed);
     state = state.where((item) => item.id != missionId).toList();
-    _syncQuestProgress(mission.questId);
-    unawaited(
-      _persistMission(
-        archived,
-        sourceType: ArcMemorySourceType.missionCreated,
-        recordJourney: false,
-      ),
-    );
+    _syncQuestProgress(mission.questId, persist: persist);
+    if (persist) {
+      unawaited(
+        _persistMission(
+          archived,
+          sourceType: ArcMemorySourceType.missionCreated,
+          recordJourney: false,
+        ),
+      );
+    }
   }
 
-  void restoreForRoute(Mission mission) {
+  void restoreForRoute(Mission mission, {bool persist = true}) {
     final restored = mission.copyWith(routeState: MissionRouteState.active);
     state = [restored, ...state.where((item) => item.id != restored.id)];
-    _syncQuestProgress(restored.questId);
-    unawaited(
-      _persistMission(
-        restored,
-        sourceType: ArcMemorySourceType.missionCreated,
-        recordJourney: false,
-      ),
-    );
+    _syncQuestProgress(restored.questId, persist: persist);
+    if (persist) {
+      unawaited(
+        _persistMission(
+          restored,
+          sourceType: ArcMemorySourceType.missionCreated,
+          recordJourney: false,
+        ),
+      );
+    }
   }
 
   void reorderForQuest(String questId, int oldIndex, int newIndex) {
@@ -442,7 +460,7 @@ class MissionController extends Notifier<List<Mission>> {
     );
   }
 
-  void setToday(String questId, String missionId) {
+  void setToday(String questId, String missionId, {bool persist = true}) {
     final changed = <Mission>[];
     state = [
       for (final mission in state)
@@ -455,15 +473,111 @@ class MissionController extends Notifier<List<Mission>> {
         else
           mission,
     ];
-    for (final mission in changed) {
-      unawaited(
-        _persistMission(
-          mission,
-          sourceType: ArcMemorySourceType.missionCreated,
-          recordJourney: false,
-        ),
-      );
+    if (persist) {
+      for (final mission in changed) {
+        unawaited(
+          _persistMission(
+            mission,
+            sourceType: ArcMemorySourceType.missionCreated,
+            recordJourney: false,
+          ),
+        );
+      }
     }
+  }
+
+  Future<bool> persistRouteChanges(String questId, List<Mission> before) async {
+    final userId = ref.read(authControllerProvider).profile?.id;
+    if (userId == null) return false;
+    final current = state
+        .where((mission) => mission.questId == questId)
+        .toList(growable: false);
+    final currentIds = current.map((mission) => mission.id).toSet();
+    final desired = <Mission>[
+      ...current,
+      for (final mission in before)
+        if (!currentIds.contains(mission.id))
+          mission.copyWith(routeState: MissionRouteState.removed),
+    ];
+    final sync = ref.read(missionSyncControllerProvider.notifier);
+    sync.loading(
+      '航路のMissionを保存しています...',
+      operation: PersistenceSyncOperation.save,
+    );
+    try {
+      final repository = ref.read(missionRepositoryProvider);
+      final saved = <Mission>[];
+      for (final mission in desired) {
+        saved.add(await repository.save(mission));
+      }
+      if (ref.read(authControllerProvider).profile?.id != userId) return false;
+      final savedById = {for (final mission in saved) mission.id: mission};
+      state = [
+        for (final mission in state)
+          if (mission.questId == questId)
+            savedById[mission.id] ?? mission
+          else
+            mission,
+      ];
+      sync.saved('航路のMissionを保存しました。');
+      return true;
+    } catch (error) {
+      sync.failed(
+        '航路のMission保存',
+        error,
+        retryAvailable: false,
+        inputPreserved: true,
+      );
+      return false;
+    }
+  }
+
+  Future<bool> restoreRouteSnapshot(
+    String questId,
+    List<Mission> snapshot,
+  ) async {
+    final userId = ref.read(authControllerProvider).profile?.id;
+    if (userId == null) return false;
+    final current = state
+        .where((mission) => mission.questId == questId)
+        .toList(growable: false);
+    final snapshotIds = snapshot.map((mission) => mission.id).toSet();
+    final retainedAsRemoved = current
+        .where((mission) => !snapshotIds.contains(mission.id))
+        .map(
+          (mission) => mission.copyWith(routeState: MissionRouteState.removed),
+        )
+        .toList(growable: false);
+    state = [
+      ...state.where((mission) => mission.questId != questId),
+      ...snapshot,
+    ];
+    _syncQuestProgress(questId, persist: false);
+    final repository = ref.read(missionRepositoryProvider);
+    Object? firstError;
+    for (final mission in [...retainedAsRemoved, ...snapshot]) {
+      try {
+        await repository.save(mission);
+      } catch (error) {
+        firstError ??= error;
+      }
+    }
+    if (ref.read(authControllerProvider).profile?.id != userId) return false;
+    if (firstError != null) {
+      ref
+          .read(missionSyncControllerProvider.notifier)
+          .failed(
+            '航路のMission復旧',
+            firstError,
+            retryAvailable: false,
+            inputPreserved: true,
+          );
+      return false;
+    }
+    ref
+        .read(missionSyncControllerProvider.notifier)
+        .saved('航路のMissionを元に戻しました。');
+    return true;
   }
 
   Future<void> loadForQuests(List<String> questIds) async {
@@ -501,9 +615,16 @@ class MissionController extends Notifier<List<Mission>> {
       sync.clear();
     } catch (error) {
       if (ref.read(authControllerProvider).profile?.id != ownerId) return;
-      sync.failed('Missionの読み込み', error);
+      sync.failed(
+        'Missionの読み込み',
+        error,
+        retryAvailable: true,
+        inputPreserved: false,
+      );
     }
   }
+
+  Future<bool> retryPending() => _retrySlot.retry();
 
   void _loadForCurrentQuests() {
     final questIds = ref
@@ -513,13 +634,13 @@ class MissionController extends Notifier<List<Mission>> {
     unawaited(loadForQuests(questIds));
   }
 
-  void _syncQuestProgress(String questId) {
+  void _syncQuestProgress(String questId, {bool persist = true}) {
     final snapshot = const QuestProgressService().calculate(
       state.where((mission) => mission.questId == questId),
     );
     ref
         .read(questControllerProvider.notifier)
-        .updateProgress(questId, snapshot.value);
+        .updateProgress(questId, snapshot.value, persist: persist);
   }
 
   Future<void> _persistMission(
@@ -528,11 +649,12 @@ class MissionController extends Notifier<List<Mission>> {
     bool recordJourney = true,
     bool confirmOutcome = false,
   }) async {
+    final mutationSerial = _retrySlot.begin();
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
       ref
           .read(missionSyncControllerProvider.notifier)
-          .failed('Mission save', 'ログインが必要です。');
+          .failed('Missionの保存', 'ログインが必要です。', inputPreserved: true);
       _recordMissionEmotion(
         mission,
         trigger: ArcActionTrigger.unauthenticated,
@@ -562,9 +684,24 @@ class MissionController extends Notifier<List<Mission>> {
         _growBond(sourceType, savedMission);
         await _rememberMission(savedMission, sourceType);
       }
+      _retrySlot.resolve(mutationSerial);
       sync.saved('Missionを保存しました。');
     } catch (error) {
-      sync.failed('Missionの保存', error);
+      _retrySlot.remember(
+        mutationSerial,
+        () => _persistMission(
+          mission,
+          sourceType: sourceType,
+          recordJourney: recordJourney,
+          confirmOutcome: confirmOutcome,
+        ),
+      );
+      sync.failed(
+        'Missionの保存',
+        error,
+        retryAvailable: true,
+        inputPreserved: true,
+      );
       _recordMissionEmotion(
         mission,
         trigger: ArcActionTrigger.saveFailure,
@@ -573,7 +710,8 @@ class MissionController extends Notifier<List<Mission>> {
     }
   }
 
-  Future<void> _deleteMission(String missionId) async {
+  Future<void> _deleteMission(String missionId, Mission? removedMission) async {
+    final mutationSerial = _retrySlot.begin();
     final sync = ref.read(missionSyncControllerProvider.notifier);
     sync.loading(
       'Missionを削除しています...',
@@ -581,9 +719,27 @@ class MissionController extends Notifier<List<Mission>> {
     );
     try {
       await ref.read(missionRepositoryProvider).delete(missionId);
+      _retrySlot.resolve(mutationSerial);
       sync.saved('Missionを削除しました。');
     } catch (error) {
-      sync.failed('Missionの削除', error);
+      if (removedMission != null &&
+          !state.any((mission) => mission.id == removedMission.id)) {
+        state = [removedMission, ...state];
+        _syncQuestProgress(removedMission.questId);
+      }
+      _retrySlot.remember(mutationSerial, () async {
+        state = state.where((mission) => mission.id != missionId).toList();
+        if (removedMission != null) {
+          _syncQuestProgress(removedMission.questId);
+        }
+        await _deleteMission(missionId, removedMission);
+      });
+      sync.failed(
+        'Missionの削除',
+        error,
+        retryAvailable: true,
+        inputPreserved: true,
+      );
     }
   }
 

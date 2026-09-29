@@ -1,6 +1,6 @@
 version: 1
 status: review_pending_external_beta_blocked
-updated_at: "2026-08-25"
+updated_at: "2026-09-13"
 policy_version: "2026-08-25.v1"
 product_owner_approval: pending
 legal_reviewer_approval: pending
@@ -37,6 +37,13 @@ systems:
   - system: local_device
     data_class: session_and_non_authoritative_cache
     deletion_behavior: sign_out_and_account_deletion_cleanup
+    retention_duration_verified: false
+    backup_exclusion_verified: false
+    restoration_exclusion_verified: false
+    reviewer: pending
+  - system: questra_ai_budget_reconciliation
+    data_class: provider_execution_and_billing_metadata
+    deletion_behavior: account_deletion_cascade_or_versioned_policy_expiry
     retention_duration_verified: false
     backup_exclusion_verified: false
     restoration_exclusion_verified: false

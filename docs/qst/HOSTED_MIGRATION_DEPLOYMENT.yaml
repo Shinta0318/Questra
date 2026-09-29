@@ -8,8 +8,8 @@ executed_at_utc: null
 cli_version: null
 migrations:
   remote_head_before: "202608080006_route_proposal_stale_conflict_guard.sql"
-  latest_local: "202609030001_explicit_server_only_table_grants.sql"
-  pending_at_plan: 21
+  latest_local: "202609150006_immutable_compensating_ai_budget_correction.sql"
+  pending_at_plan: 36
   pending_at_execution: null
   applied_during_run: null
   remote_head_after: null
@@ -36,6 +36,21 @@ migrations:
     - "202608250008_privacy_safe_runtime_observability.sql"
     - "202608250009_runtime_observability_exact_operator_drill.sql"
     - "202609030001_explicit_server_only_table_grants.sql"
+    - "202609120001_fallback_ai_budget_reservation.sql"
+    - "202609120002_ai_budget_idempotent_recovery.sql"
+    - "202609130001_ai_pricing_effective_date_rollover.sql"
+    - "202609130002_ai_budget_settlement_reconciliation.sql"
+    - "202609130003_ai_provider_receipt_retention.sql"
+    - "202609130004_ai_budget_reconciliation_operator_queue.sql"
+    - "202609130005_auth_bound_reconciliation_operator_identity.sql"
+    - "202609130006_ai_budget_reconciliation_scheduler.sql"
+    - "202609130007_grounding_query_cost_ledger.sql"
+    - "202609150001_ai_cost_anomaly_detection.sql"
+    - "202609150002_provider_receipt_authenticity_replay_guard.sql"
+    - "202609150003_privacy_safe_ai_budget_incident_export.sql"
+    - "202609150004_tool_continuation_cost_attribution.sql"
+    - "202609150005_approval_safe_ai_route_replacement.sql"
+    - "202609150006_immutable_compensating_ai_budget_correction.sql"
 execution:
   runner: tools/qst/run_hosted_migration_deployment.ps1
   requires:

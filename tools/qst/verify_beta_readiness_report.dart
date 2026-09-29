@@ -5,14 +5,14 @@ const reportPath = 'docs/product/beta_readiness_report.md';
 const requiredSnippets = [
   'Beta Launch Readiness Report',
   'NO-GO for tester distribution',
-  '66 / 100',
+  '70 / 100',
   'Automated Evidence',
   'Open P0 Blockers',
   'BLK-001 Supabase Project Evidence',
   'BLK-005 Legal Sign-Off',
   'Recommended QSTs',
-  'QST-159 Beta Candidate Manifest Automation',
-  'QST-167 Beta Go-Live Review',
+  'QST-283 Candidate Device and Artifact Evidence Closure',
+  'QST-293 Decennial Cross Review',
   'Technical Beta Candidate',
   'Operational Beta',
 ];

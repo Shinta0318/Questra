@@ -9,6 +9,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../widgets/navigation/questra_route_back_button.dart';
+import '../arc/arc_remote_status_controller.dart';
+import '../auth/auth_controller.dart';
 import '../arc_memory/arc_memory_management_preview_service.dart';
 import '../onboarding/onboarding_tour_controller.dart';
 import '../onboarding/onboarding_tour_feature_flags.dart';
@@ -16,9 +19,11 @@ import '../trust/consent_purpose_registry_service.dart';
 import '../trust/consent_controller.dart';
 import '../trust/data_request_copy_service.dart';
 import '../trust/trust_privacy_review_service.dart';
+import 'connection_status_service.dart';
 import 'settings_information_architecture_service.dart';
 import 'widgets/arc_memory_management_preview_card.dart';
 import 'widgets/beta_feedback_entry_card.dart';
+import 'widgets/connection_status_card.dart';
 import 'widgets/experience_settings_card.dart';
 import 'widgets/planning_preferences_card.dart';
 import 'widgets/settings_tutorial_card.dart';
@@ -31,6 +36,8 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authControllerProvider);
+    final arcRemoteStatus = ref.watch(arcRemoteStatusProvider);
     final trustReview = const TrustPrivacyReviewService().buildReview();
     final memoryPreview = const ArcMemoryManagementPreviewService()
         .buildPreview();
@@ -38,7 +45,17 @@ class SettingsScreen extends ConsumerWidget {
     final consentRegistry = const ConsentPurposeRegistryService()
         .buildRegistry();
     final settingsMap = const SettingsInformationArchitectureService()
-        .buildOverview(remotePersistenceConnected: SupabaseConfig.isConfigured);
+        .buildOverview(
+          remotePersistenceConnected: SupabaseConfig.isConfigured,
+          authenticated: auth.isAuthenticated,
+          localMockPreview: SupabaseConfig.isLocalMockPreview,
+        );
+    final connectionStatus = const ConnectionStatusService().build(
+      remoteConfigured: SupabaseConfig.isConfigured,
+      authenticated: auth.isAuthenticated,
+      localMockPreview: SupabaseConfig.isLocalMockPreview,
+      arcRemoteStatus: arcRemoteStatus,
+    );
     const featureFlags = SettingsFeatureFlags();
     final selected = _selectedSection(settingsMap, initialSection);
 
@@ -63,6 +80,11 @@ class SettingsScreen extends ConsumerWidget {
       onReturnToQuest: () => context.go(AppRoutes.quest),
     );
     final legacySections = <Widget>[
+      ConnectionStatusCard(
+        snapshot: connectionStatus,
+        onOpenArc: () => context.go(AppRoutes.arc),
+      ),
+      const SizedBox(height: AppSpacing.lg),
       const ExperienceSettingsCard(),
       const SizedBox(height: AppSpacing.lg),
       const PlanningPreferencesCard(),
@@ -86,6 +108,12 @@ class SettingsScreen extends ConsumerWidget {
       _ConsentPurposeRegistryCard(registry: consentRegistry),
     ];
     final detail = switch (initialSection) {
+      'connection' => <Widget>[
+        ConnectionStatusCard(
+          snapshot: connectionStatus,
+          onOpenArc: () => context.go(AppRoutes.arc),
+        ),
+      ],
       'experience' => const <Widget>[ExperienceSettingsCard()],
       'planning' => const <Widget>[PlanningPreferencesCard()],
       'tutorial' => <Widget>[tutorialCard],
@@ -105,7 +133,15 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
-      appBar: AppBar(title: Text(selected?.title ?? '設定')),
+      appBar: AppBar(
+        leading: QuestraRouteBackButton(
+          fallbackRoute: initialSection == null
+              ? AppRoutes.profile
+              : AppRoutes.settings,
+          fallbackTooltip: initialSection == null ? 'プロフィールへ戻る' : '設定へ戻る',
+        ),
+        title: Text(selected?.title ?? '設定'),
+      ),
       body: DecoratedBox(
         decoration: const BoxDecoration(gradient: AppGradients.adventure),
         child: SafeArea(
@@ -918,6 +954,7 @@ IconData _consentPurposeIcon(ConsentPurpose purpose) {
 
 IconData _settingsSectionIcon(SettingsSectionType type) {
   return switch (type) {
+    SettingsSectionType.connection => Icons.cloud_sync_outlined,
     SettingsSectionType.experience => Icons.tune_outlined,
     SettingsSectionType.planning => Icons.calendar_month_outlined,
     SettingsSectionType.tutorial => Icons.auto_awesome_outlined,

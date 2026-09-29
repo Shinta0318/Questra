@@ -68,12 +68,18 @@ jobs:
           dart run tools/qst/verify_data_rights_fulfillment_drill.dart
           dart run tools/qst/verify_rls_readiness.dart
           dart run tools/qst/verify_supabase_beta_bootstrap.dart
+          dart run tools/qst/verify_connected_preview_launcher.dart
+          pwsh -NoProfile -File tools/qst/test_connected_preview.ps1
           dart run tools/qst/verify_beta_release_notes_readiness.dart
       - name: Build Web artifact
         working-directory: apps/mobile
         run: flutter build web --release --no-pub
-      - name: Exclude test-only plugins from Android release
-        run: dart run tools/qst/prepare_android_release_registrant.dart
+      # Flutter can leave dev-only plugins in GeneratedPluginRegistrant when a
+      # release follows `pub get` with `--no-pub`. Regenerate release build
+      # configuration first so the registrant matches the release classpath.
+      - name: Configure Android release plugins
+        working-directory: apps/mobile
+        run: flutter build apk --config-only
       - name: Build Android artifact
         working-directory: apps/mobile
         run: flutter build apk --release --no-pub
@@ -100,6 +106,7 @@ jobs:
 
   web-e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -123,6 +130,7 @@ jobs:
 
   android-e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -136,9 +144,13 @@ jobs:
       - name: Resolve Flutter dependencies
         working-directory: apps/mobile
         run: flutter pub get
-      - name: Build debug APK for Android journey
-        working-directory: apps/mobile
-        run: flutter build apk --debug --no-pub
+      - name: Enable KVM acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          test -r /dev/kvm && test -w /dev/kvm
       - name: Run candidate Android journey
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -150,5 +162,5 @@ jobs:
           # API 35 hosted images have intermittently failed APK installs inside
           # PackageInstallerService before Dart tests start. Keep this gate on a
           # stable API image and wait for package/storage services to settle.
-          disable-animations: false
+          disable-animations: true
           script: bash "$GITHUB_WORKSPACE/.github/scripts/run_android_e2e.sh"

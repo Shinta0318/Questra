@@ -54,6 +54,7 @@ $$;
 \set owner_private_trail_id '00000000-0000-4000-8000-000000024101'
 \set owner_public_trail_id '00000000-0000-4000-8000-000000024102'
 \set other_private_trail_id '00000000-0000-4000-8000-000000024201'
+\set owner_validated_trail_id '00000000-0000-4000-8000-000000024103'
 \set owner_memory_id '00000000-0000-4000-8000-000000034101'
 \set other_memory_id '00000000-0000-4000-8000-000000034201'
 \set owner_media_id '00000000-0000-4000-8000-000000044101'
@@ -270,6 +271,35 @@ select pg_temp.qst_assert_eq((select count(*) from public.missions where id = :'
 select pg_temp.qst_assert_eq((select count(*) from public.missions where id = :'other_private_mission_id'), 0, 'owner cannot read another private Mission');
 select pg_temp.qst_assert_eq((select count(*) from public.trails where id = :'owner_private_trail_id'), 1, 'owner can read own private Trail');
 select pg_temp.qst_assert_eq((select count(*) from public.trails where id = :'other_private_trail_id'), 0, 'owner cannot read another private Trail');
+insert into public.trails (
+  id, owner_id, quest_id, mission_id, title, summary, content, visibility, trail_type
+) values (
+  :'owner_validated_trail_id', :'owner_id', :'owner_private_quest_id',
+  :'owner_private_mission_id', 'Validated owner Trail', 'Valid parent pair.',
+  'Owner can save a Trail under a Mission belonging to the selected Quest.',
+  'private', 'mission_record'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.trails where id = :'owner_validated_trail_id'),
+  1,
+  'owner can create a Trail with matching Quest and Mission parents'
+);
+select pg_temp.qst_assert_raises(
+  format(
+    'insert into public.trails (owner_id, quest_id, mission_id, title, visibility, trail_type) values (%L, %L, %L, %L, %L, %L)',
+    :'owner_id', :'owner_private_quest_id', :'owner_public_mission_id',
+    'Invalid cross-Quest Trail', 'private', 'mission_record'
+  ),
+  'owner cannot create a Trail with a Mission from another Quest'
+);
+select pg_temp.qst_assert_raises(
+  format(
+    'insert into public.trails (owner_id, quest_id, mission_id, title, visibility, trail_type) values (%L, %L, %L, %L, %L, %L)',
+    :'owner_id', :'other_private_quest_id', :'other_private_mission_id',
+    'Invalid cross-account Trail', 'private', 'mission_record'
+  ),
+  'owner cannot create a Trail under another owner journey'
+);
 select pg_temp.qst_assert_eq((select count(*) from public.arc_memories where id = :'owner_memory_id'), 1, 'owner can read own Arc Memory');
 select pg_temp.qst_assert_eq((select count(*) from public.arc_memories where id = :'other_memory_id'), 0, 'owner cannot read another Arc Memory');
 select pg_temp.qst_assert_eq((select count(*) from public.media where id = :'owner_media_id'), 1, 'owner can read own private media row');

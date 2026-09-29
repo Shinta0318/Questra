@@ -17,6 +17,9 @@ import '../task/task_model.dart';
 import '../trail/trail_model.dart';
 import 'arc_quest_change_proposal.dart';
 import 'arc_quick_action.dart';
+import 'arc_remote_status_controller.dart';
+
+enum ArcChatDeliveryMode { remoteVerified, localPreview, degraded }
 
 class ArcChatMessage {
   const ArcChatMessage({
@@ -59,6 +62,10 @@ class ArcChatResponse {
     this.showQuestCta = false,
     this.relatedQuestIds = const [],
     this.requiresClarification = false,
+    this.deliveryMode = ArcChatDeliveryMode.localPreview,
+    this.traceId,
+    this.latencyClass,
+    this.failureReason,
   });
 
   final String message;
@@ -72,6 +79,13 @@ class ArcChatResponse {
   final bool showQuestCta;
   final List<String> relatedQuestIds;
   final bool requiresClarification;
+  final ArcChatDeliveryMode deliveryMode;
+  final String? traceId;
+  final ArcRemoteLatencyClass? latencyClass;
+  final String? failureReason;
+
+  bool get canProposeJourneyChanges =>
+      deliveryMode != ArcChatDeliveryMode.degraded;
 }
 
 enum ArcConversationIntent {
@@ -231,12 +245,10 @@ class LocalArcChatService implements ArcChatService {
 class SupabaseArcChatService implements ArcChatService {
   const SupabaseArcChatService({
     required this.client,
-    this.fallback = const LocalArcChatService(),
     this.evidenceSink = const NoopRuntimeEvidenceSink(),
   });
 
   final SupabaseClient client;
-  final ArcChatService fallback;
   final RuntimeEvidenceSink evidenceSink;
 
   @override
@@ -246,13 +258,11 @@ class SupabaseArcChatService implements ArcChatService {
     required ArcChatContext context,
   }) async {
     if (!SupabaseConfig.isConfigured) {
-      return fallback.send(
-        userMessage: userMessage,
-        history: history,
-        context: context,
-      );
+      return degradedResponse(failureReason: 'remote_failure');
     }
 
+    final stopwatch = Stopwatch()..start();
+    final traceId = const Uuid().v4();
     try {
       final response = await client.functions.invoke(
         'arc-chat',
@@ -260,6 +270,7 @@ class SupabaseArcChatService implements ArcChatService {
           userMessage: userMessage,
           history: history,
           context: context,
+          traceId: traceId,
         ),
       );
 
@@ -271,6 +282,7 @@ class SupabaseArcChatService implements ArcChatService {
         allowedMissionIds: context.recentMissions
             .map((mission) => mission.id)
             .toSet(),
+        latencyClass: arcRemoteLatencyClass(stopwatch.elapsed),
       );
     } on Object catch (error) {
       await evidenceSink.record(
@@ -298,12 +310,22 @@ class SupabaseArcChatService implements ArcChatService {
           fallbackUsed: true,
         ),
       );
-      return fallback.send(
-        userMessage: userMessage,
-        history: history,
-        context: context,
+      return degradedResponse(
+        failureReason: error is TimeoutException ? 'timeout' : 'remote_failure',
       );
     }
+  }
+
+  static ArcChatResponse degradedResponse({required String failureReason}) {
+    return ArcChatResponse(
+      message: '今はオンラインの応答を受け取れなかったよ。入力は残してあるので、もう一度試せます。',
+      sourceType: 'remote_degraded',
+      quickActions: const ['もう一度試す', '入力を編集する', 'あとで続ける'],
+      deliveryMode: ArcChatDeliveryMode.degraded,
+      intentType: ArcConversationIntent.conversationSupport,
+      requiresClarification: false,
+      failureReason: sanitizeArcFailureReason(failureReason),
+    );
   }
 
   static const _fallbackMessage = '今はうまく答えをまとめられなかった。もう一度、短く聞かせてくれる？';
@@ -313,11 +335,17 @@ class SupabaseArcChatService implements ArcChatService {
     required String sourceInput,
     Set<String> allowedQuestIds = const {},
     Set<String> allowedMissionIds = const {},
+    ArcRemoteLatencyClass? latencyClass,
   }) {
+    final sourceType = data['source_type'] as String? ?? 'arc_chat_fallback';
+    final traceId = sanitizeArcTraceId(data['trace_id'] as String?);
+    final deliveryMode = _deliveryModeForSource(sourceType, traceId: traceId);
+    final planningAllowed = deliveryMode == ArcChatDeliveryMode.remoteVerified;
     final suggestionData = data['quest_suggestion'];
     final intent = arcConversationIntentFromStorage(data['intent_type']);
     final ctaData = data['quest_cta'];
     final showQuestCta =
+        planningAllowed &&
         intent == ArcConversationIntent.questIntent &&
         ctaData is Map &&
         ctaData['show'] == true &&
@@ -336,14 +364,18 @@ class SupabaseArcChatService implements ArcChatService {
             targetDate: null,
           );
     return ArcChatResponse(
-      message: data['message'] as String? ?? _fallbackMessage,
-      sourceType: data['source_type'] as String? ?? 'arc_chat',
-      quickActions:
-          (data['quick_actions'] as List?)?.whereType<String>().toList() ??
-          const [],
+      message: deliveryMode == ArcChatDeliveryMode.degraded
+          ? '今はオンラインの応答を確認できなかったよ。入力は残してあるので、もう一度試せます。'
+          : data['message'] as String? ?? _fallbackMessage,
+      sourceType: sourceType,
+      quickActions: deliveryMode == ArcChatDeliveryMode.degraded
+          ? const ['もう一度試す', '入力を編集する', 'あとで続ける']
+          : (data['quick_actions'] as List?)?.whereType<String>().toList() ??
+                const [],
       questSuggestion: suggestion,
       clarificationQuestions: clarificationQuestions,
-      questChanges: intent == ArcConversationIntent.activeQuestSupport
+      questChanges:
+          planningAllowed && intent == ArcConversationIntent.activeQuestSupport
           ? _questChangesFromData(
               data,
               allowedQuestIds: allowedQuestIds,
@@ -366,7 +398,26 @@ class SupabaseArcChatService implements ArcChatService {
           showQuestCta &&
           suggestion != null &&
           data['requires_clarification'] == true,
+      deliveryMode: deliveryMode,
+      traceId: traceId,
+      latencyClass: latencyClass,
+      failureReason: deliveryMode == ArcChatDeliveryMode.degraded
+          ? 'invalid_response'
+          : null,
     );
+  }
+
+  static ArcChatDeliveryMode _deliveryModeForSource(
+    String sourceType, {
+    required String? traceId,
+  }) {
+    return traceId != null &&
+            const {
+              'gemini_interactions',
+              'openai_responses',
+            }.contains(sourceType)
+        ? ArcChatDeliveryMode.remoteVerified
+        : ArcChatDeliveryMode.degraded;
   }
 
   static List<ArcQuestChangeProposal> _questChangesFromData(
@@ -506,8 +557,10 @@ class SupabaseArcChatService implements ArcChatService {
     required String userMessage,
     required List<ArcChatMessage> history,
     required ArcChatContext context,
+    String? traceId,
   }) {
     return {
+      'trace_id': ?sanitizeArcTraceId(traceId),
       'message': _limitText(
         userMessage.trim(),
         limit: InputLimits.arcChatMessage,

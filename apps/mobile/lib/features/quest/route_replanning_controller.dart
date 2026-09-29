@@ -202,6 +202,21 @@ class RouteReplanningController
     RouteChangeProposal proposal,
     Set<String> acceptedItemIds,
   ) async {
+    final tracked = state[proposal.questId];
+    if (proposal.status != RouteProposalStatus.pending ||
+        (tracked?.id == proposal.id &&
+            tracked?.status != RouteProposalStatus.pending)) {
+      final current = tracked?.id == proposal.id ? tracked! : proposal;
+      return RouteMutationResult(
+        proposalId: proposal.id,
+        questId: proposal.questId,
+        routeVersionId: proposal.routeVersionId,
+        status: current.status,
+        persistedAtomically: false,
+        staleReason: current.staleReason,
+        conflictSnapshot: current.conflictSnapshot,
+      );
+    }
     final selected = proposal.items
         .where((item) => acceptedItemIds.contains(item.id))
         .toList(growable: false);
@@ -239,24 +254,24 @@ class RouteReplanningController
         conflictSnapshot: currentSnapshot,
       );
     }
-    final result = await ref
-        .read(routeReplanningRepositoryProvider)
-        .applyProposal(
-          proposal: proposal,
-          acceptedItemIds: selected.map((item) => item.id).toList(),
-        );
-    if (result.status == RouteProposalStatus.stale) {
-      state = {
-        ...state,
-        proposal.questId: proposal.copyWith(
-          status: RouteProposalStatus.stale,
-          staleReason: result.staleReason,
-          conflictSnapshot: result.conflictSnapshot,
-        ),
-      };
-      return result;
-    }
-    if (result.persistedAtomically) {
+    final repository = ref.read(routeReplanningRepositoryProvider);
+    late RouteMutationResult result;
+    if (repository.appliesProposalAtomically) {
+      result = await repository.applyProposal(
+        proposal: proposal,
+        acceptedItemIds: selected.map((item) => item.id).toList(),
+      );
+      if (result.status == RouteProposalStatus.stale) {
+        state = {
+          ...state,
+          proposal.questId: proposal.copyWith(
+            status: RouteProposalStatus.stale,
+            staleReason: result.staleReason,
+            conflictSnapshot: result.conflictSnapshot,
+          ),
+        };
+        return result;
+      }
       await _reloadOwnedRoute();
     } else {
       _undoMissions[proposal.id] = List<Mission>.of(missions);
@@ -265,8 +280,85 @@ class RouteReplanningController
           .read(taskControllerProvider)
           .where((task) => task.questId == quest.id)
           .toList(growable: false);
-      for (final item in selected) {
-        await _applyItem(quest, missions, item);
+      try {
+        for (final item in selected) {
+          await _applyItem(quest, missions, item);
+        }
+        final stagedQuest =
+            ref
+                .read(questControllerProvider)
+                .where((item) => item.id == quest.id)
+                .firstOrNull ??
+            quest;
+        final stagedSnapshot = const RouteSnapshotService().capture(
+          quest: stagedQuest,
+          missions: ref.read(missionControllerProvider),
+          tasks: ref.read(taskControllerProvider),
+        );
+        final stagedChanges = const RouteSnapshotService().compare(
+          currentSnapshot,
+          stagedSnapshot,
+        );
+        final missionChanged = selected.any(_changesMissionRoute);
+        if ((stagedChanges.changedEntityIds.contains('quest') ||
+                missionChanged) &&
+            !await ref
+                .read(questControllerProvider.notifier)
+                .persistRouteUpdate(stagedQuest)) {
+          throw StateError('Questの航路変更を保存できませんでした。');
+        }
+        if (missionChanged &&
+            !await ref
+                .read(missionControllerProvider.notifier)
+                .persistRouteChanges(quest.id, missions)) {
+          throw StateError('Missionの航路変更を保存できませんでした。');
+        }
+        result = await repository.applyProposal(
+          proposal: proposal,
+          acceptedItemIds: selected.map((item) => item.id).toList(),
+        );
+        if (result.status == RouteProposalStatus.stale) {
+          throw StateError('航路変更案が最新の状態と一致しません。');
+        }
+      } catch (_) {
+        final restored = await _restoreLocalSnapshot(
+          quest: quest,
+          missions: missions,
+          tasks: tasks,
+        );
+        final latestQuest = ref
+            .read(questControllerProvider)
+            .where((item) => item.id == quest.id)
+            .firstOrNull;
+        final latestSnapshot = const RouteSnapshotService().capture(
+          quest: latestQuest ?? quest,
+          missions: ref.read(missionControllerProvider),
+          tasks: ref.read(taskControllerProvider),
+        );
+        final reason = restored
+            ? '航路を更新できなかったため、承認前の内容へ戻しました。最新の航路で提案を作り直してください。'
+            : '航路の復旧を完了できませんでした。現在の内容を確認し、提案を作り直してください。';
+        final stale = proposal.copyWith(
+          status: RouteProposalStatus.stale,
+          staleReason: reason,
+          conflictSnapshot: latestSnapshot,
+        );
+        state = {...state, proposal.questId: stale};
+        _undoMissions.remove(proposal.id);
+        _undoQuests.remove(proposal.id);
+        _undoTasks.remove(proposal.id);
+        await ref
+            .read(routeReplanningRepositoryProvider)
+            .resolveProposal(proposal.id, RouteProposalStatus.stale);
+        return RouteMutationResult(
+          proposalId: proposal.id,
+          questId: proposal.questId,
+          routeVersionId: proposal.routeVersionId,
+          status: RouteProposalStatus.stale,
+          persistedAtomically: false,
+          staleReason: reason,
+          conflictSnapshot: latestSnapshot,
+        );
       }
     }
     _undoProposals[proposal.id] = proposal;
@@ -283,6 +375,57 @@ class RouteReplanningController
     );
     state = Map.of(state)..remove(proposal.questId);
     return result;
+  }
+
+  Future<bool> _restoreLocalSnapshot({
+    required Quest quest,
+    required List<Mission> missions,
+    required List<QuestraTask> tasks,
+  }) async {
+    var questRestored = false;
+    var missionsRestored = false;
+    var tasksRestored = false;
+    try {
+      questRestored = await ref
+          .read(questControllerProvider.notifier)
+          .restoreRouteSnapshot(quest);
+    } catch (_) {
+      questRestored = false;
+    }
+    try {
+      missionsRestored = await ref
+          .read(missionControllerProvider.notifier)
+          .restoreRouteSnapshot(quest.id, missions);
+    } catch (_) {
+      missionsRestored = false;
+    }
+    try {
+      await ref
+          .read(taskControllerProvider.notifier)
+          .restoreRouteSnapshot(quest.id, tasks);
+      tasksRestored = true;
+    } catch (_) {
+      tasksRestored = false;
+    }
+    return questRestored && missionsRestored && tasksRestored;
+  }
+
+  bool _changesMissionRoute(RouteChangeItem item) {
+    if (item.targetTaskId != null || item.targetMissionId == null) {
+      return false;
+    }
+    return switch (item.action) {
+      RouteChangeAction.reorder ||
+      RouteChangeAction.split ||
+      RouteChangeAction.pause ||
+      RouteChangeAction.remove ||
+      RouteChangeAction.resume ||
+      RouteChangeAction.replace => true,
+      RouteChangeAction.add ||
+      RouteChangeAction.merge ||
+      RouteChangeAction.reschedule ||
+      RouteChangeAction.reestimate => false,
+    };
   }
 
   Future<RouteChangeProposal?> refreshStale(
@@ -308,40 +451,58 @@ class RouteReplanningController
               .read(taskControllerProvider)
               .where((entry) => entry.id == item.targetTaskId)
               .firstOrNull;
-    if (task?.status == TaskStatus.completed) return;
+    if (item.targetTaskId != null && task == null) {
+      throw StateError('変更対象のTaskが見つかりません。');
+    }
+    if (task?.status == TaskStatus.completed) {
+      throw StateError('完了済みTaskは変更できません。');
+    }
     switch (item.action) {
       case RouteChangeAction.reschedule:
         if (task != null) {
           final value = item.afterData['scheduledDate'] as String?;
           final date = value == null ? null : DateTime.tryParse(value);
-          if (date != null) await taskController.reschedule(task.id, date);
+          if (date == null || !await taskController.reschedule(task.id, date)) {
+            throw StateError('Taskの日程を変更できませんでした。');
+          }
           break;
         }
         final value = item.afterData['targetDate'] as String?;
         if (value != null) {
           ref
               .read(questControllerProvider.notifier)
-              .update(quest.copyWith(targetDate: DateTime.tryParse(value)));
+              .stageRouteUpdate(
+                quest.copyWith(targetDate: DateTime.tryParse(value)),
+              );
         }
         break;
       case RouteChangeAction.reorder:
         if (task != null) {
           final order = item.afterData['orderIndex'] as int?;
-          if (order != null) {
-            await taskController.updateTask(task.copyWith(orderIndex: order));
+          if (order == null ||
+              !await taskController.updateTask(
+                task.copyWith(orderIndex: order),
+              )) {
+            throw StateError('Taskの順番を変更できませんでした。');
           }
           break;
         }
         final missionId = item.targetMissionId;
-        if (missionId != null) missionController.setToday(quest.id, missionId);
+        if (missionId != null) {
+          missionController.setToday(quest.id, missionId, persist: false);
+        }
         break;
       case RouteChangeAction.split:
         if (task != null) {
           final values = item.afterData['tasks'] as List?;
-          if (values == null || values.isEmpty) return;
-          await taskController.updateTask(
+          if (values == null || values.isEmpty) {
+            throw StateError('Taskの分割内容がありません。');
+          }
+          if (!await taskController.updateTask(
             task.copyWith(status: TaskStatus.cancelled),
-          );
+          )) {
+            throw StateError('Taskを分割できませんでした。');
+          }
           await taskController.addTasks([
             for (final (index, value) in values.indexed)
               () {
@@ -372,7 +533,7 @@ class RouteReplanningController
             .firstOrNull;
         final values = item.afterData['missions'] as List?;
         if (original == null || values == null) return;
-        missionController.archiveForRoute(original.id);
+        missionController.archiveForRoute(original.id, persist: false);
         for (final (index, value) in values.indexed) {
           final data = Map<String, Object?>.from(value as Map);
           missionController.addMissionDraft(
@@ -384,19 +545,24 @@ class RouteReplanningController
             sortOrder: original.sortOrder + index,
             parentMissionId: original.id,
             estimatedDurationDays: data['estimatedDays'] as int?,
+            persist: false,
           );
         }
         break;
       case RouteChangeAction.pause:
       case RouteChangeAction.remove:
         final missionId = item.targetMissionId;
-        if (missionId != null) missionController.archiveForRoute(missionId);
+        if (missionId != null) {
+          missionController.archiveForRoute(missionId, persist: false);
+        }
         break;
       case RouteChangeAction.resume:
         final mission = missions
             .where((entry) => entry.id == item.targetMissionId)
             .firstOrNull;
-        if (mission != null) missionController.restoreForRoute(mission);
+        if (mission != null) {
+          missionController.restoreForRoute(mission, persist: false);
+        }
         break;
       case RouteChangeAction.add:
         final data = item.afterData['task'] as Map?;
@@ -447,6 +613,7 @@ class RouteReplanningController
             sourceRequirement: item.afterData['sourceRequirement'] as String?,
             confidence: (item.afterData['confidence'] as num?)?.toDouble(),
           ),
+          persist: false,
         );
         break;
     }

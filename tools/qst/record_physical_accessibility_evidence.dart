@@ -47,6 +47,10 @@ Future<void> main(List<String> arguments) async {
   for (final name in _Options.requiredEvidence) {
     output.writeln('  $name: passed');
   }
+  output.writeln('journey_scenarios:');
+  for (final name in _Options.requiredTrailScenarios) {
+    output.writeln('  $name: passed');
+  }
   output.writeln('evidence:');
   for (final entry in evidence.entries) {
     output
@@ -85,6 +89,13 @@ class _Options {
     'compact_layout',
     'reduced_motion_and_haptics',
   ];
+  static const requiredTrailScenarios = [
+    'trail_quest_mission_selection',
+    'trail_japanese_ime_composition',
+    'trail_large_text_200',
+    'trail_talkback_reading_order',
+    'trail_error_and_save_feedback',
+  ];
 
   final String candidateSha;
   final String testerRole;
@@ -110,11 +121,12 @@ class _Options {
       }
       evidence[key] = value;
     }
-    for (final key in [
-      'candidate-sha',
-      'tester-role',
-      'device-id',
-    ]) {
+    for (final key in requiredTrailScenarios) {
+      if (values[key] != 'true') {
+        _fail('Missing confirmed Trail scenario --$key=true.');
+      }
+    }
+    for (final key in ['candidate-sha', 'tester-role', 'device-id']) {
       if ((values[key] ?? '').trim().isEmpty) _fail('Missing required --$key.');
     }
     return _Options(

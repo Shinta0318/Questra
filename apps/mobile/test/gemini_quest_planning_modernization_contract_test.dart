@@ -8,7 +8,8 @@ void main() {
       ? Directory.current.parent.parent
       : Directory.current;
 
-  String read(String path) => File('${root.path}/$path').readAsStringSync();
+  String read(String path) => File('${root.path}/$path')
+      .readAsStringSync().replaceAll('\r\n', '\n');
 
   test(
     'new Quest Planning uses Interactions and pinned stable model routing',
@@ -27,6 +28,7 @@ void main() {
       expect(adapter, contains('toGeminiSchema(request.responseSchema)'));
       expect(adapter, contains('key === "properties"'));
       expect(adapter, contains('if (attempt === 1)'));
+      expect(adapter, contains('resolveFallbackModel('));
       expect(
         adapter,
         isNot(contains('"minItems", "maxItems", "minimum", "maximum"')),
@@ -45,6 +47,13 @@ void main() {
         ),
       );
       expect(models, contains('defaultThinkingLevel: "minimal"'));
+      expect(
+        models,
+        contains(r'GEMINI_FALLBACK_MODEL_${role.toUpperCase()}'),
+      );
+      expect(models, contains('candidate === primaryModelName'));
+      expect(models, contains('definition.releaseType === "latest"'));
+      expect(models, contains('definition.releaseType === "experimental"'));
     },
   );
 
@@ -127,6 +136,40 @@ void main() {
       expect(endpoint, contains('approved: false'));
     },
   );
+
+  test('function calls continue statelessly through read-only tools', () {
+    final orchestrator = read(
+      'supabase/functions/_shared/quest_planning/'
+      'tool_interaction_orchestrator.ts',
+    );
+    final adapter = read(
+      'supabase/functions/_shared/quest_planning/interactions_adapter.ts',
+    );
+    final pipeline = read(
+      'supabase/functions/_shared/quest_planning/pipeline.ts',
+    );
+    final toolServer = read(
+      'supabase/functions/_shared/quest_planning/tool_server.ts',
+    );
+    final budget = read(
+      'supabase/functions/_shared/quest_planning/ai_budget_admission.ts',
+    );
+    expect(orchestrator, contains('interactionHistory: [...history]'));
+    expect(orchestrator, contains('type: "function_result"'));
+    expect(orchestrator, contains('definition.access !== "read"'));
+    expect(orchestrator, contains('Repeated tool call cycle detected'));
+    expect(orchestrator, contains('maxToolCalls'));
+    expect(orchestrator, contains('approved: context.approved === true'));
+    expect(adapter, contains('request.interactionHistory ??'));
+    expect(adapter, contains('extractContinuationSteps(data)'));
+    expect(pipeline, contains('callGeminiInteractionWithTools'));
+    expect(pipeline, contains('get_relevant_arc_memory'));
+    expect(toolServer, contains('validateJsonSchema(args'));
+    expect(
+      budget,
+      contains('request.interactionHistory ?? request.input'),
+    );
+  });
 
   test(
     'release gate requires 200 provider-backed cases and zero safety violations',

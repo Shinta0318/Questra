@@ -179,6 +179,16 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
                 icon: const Icon(Icons.travel_explore_outlined),
                 label: const Text('実行サポート'),
               ),
+              OutlinedButton.icon(
+                onPressed: () => context.go(
+                  AppRoutes.trailComposerForQuest(
+                    mission.questId,
+                    missionId: mission.id,
+                  ),
+                ),
+                icon: const Icon(Icons.timeline_outlined),
+                label: const Text('Trailを残す'),
+              ),
             ],
           ),
           const SizedBox(height: 20),

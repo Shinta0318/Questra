@@ -8,6 +8,8 @@ class QuestraPerformanceLimits {
   static const journeyPageMaxLimit = 100;
   static const taskPerMissionListLimit = 50;
   static const trailListLimit = 40;
+  static const trailLoadedItemBudget = 400;
+  static const trailJourneyProjectionBudgetMs = 16;
   static const questGuideLimit = 6;
   static const trailEventLimit = 20;
   static const guildTrailPreviewLimit = 3;

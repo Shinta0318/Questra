@@ -3,11 +3,74 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:questra/core/router/app_routes.dart';
+import 'package:questra/core/theme/app_colors.dart';
+import 'package:questra/core/theme/app_theme.dart';
+import 'package:questra/features/auth/auth_entry_switcher.dart';
 import 'package:questra/features/auth/login_screen.dart';
 import 'package:questra/features/auth/signup_screen.dart';
 import 'package:questra/features/splash/splash_screen.dart';
 
 void main() {
+  testWidgets('auth entry choices remain visible on the dark journey surface', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          backgroundColor: AppColors.deepNavy,
+          body: AuthEntrySwitcher(
+            selected: AuthEntryMode.login,
+            onLogin: () {},
+            onSignup: () {},
+          ),
+        ),
+      ),
+    );
+
+    final loginLabel = tester.widget<Text>(
+      find.byKey(const Key('auth-entry-login-label')),
+    );
+    final signupLabel = tester.widget<Text>(
+      find.byKey(const Key('auth-entry-signup-label')),
+    );
+
+    expect(loginLabel.style?.color, AppColors.deepNavy);
+    expect(signupLabel.style?.color, AppColors.white);
+    expect(find.text('ログイン'), findsOneWidget);
+    expect(find.text('新規登録'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('auth entry contrast follows the selected signup state', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          backgroundColor: AppColors.deepNavy,
+          body: AuthEntrySwitcher(
+            selected: AuthEntryMode.signup,
+            onLogin: () {},
+            onSignup: () {},
+          ),
+        ),
+      ),
+    );
+
+    final loginLabel = tester.widget<Text>(
+      find.byKey(const Key('auth-entry-login-label')),
+    );
+    final signupLabel = tester.widget<Text>(
+      find.byKey(const Key('auth-entry-signup-label')),
+    );
+
+    expect(loginLabel.style?.color, AppColors.white);
+    expect(signupLabel.style?.color, AppColors.deepNavy);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('first run shows login and signup choices without jargon', (
     tester,
   ) async {
@@ -60,7 +123,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(router.routeInformationProvider.value.uri.path, AppRoutes.signup);
-    expect(find.text('はじめに確認すること'), findsOneWidget);
+    expect(find.text('はじめに確認すること'), findsNothing);
+    expect(find.textContaining('年齢とデータの扱い'), findsOneWidget);
   });
 
   testWidgets('login remains scrollable with large text on a small screen', (

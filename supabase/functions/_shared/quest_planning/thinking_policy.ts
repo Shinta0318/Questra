@@ -1,5 +1,6 @@
-import { ModelRole, ThinkingLevel } from "./contracts.ts";
-import { ModelDefinition, modelSupportsThinking } from "./model_registry.ts";
+import type { ModelRole, ThinkingLevel } from "./contracts.ts";
+import { modelSupportsThinking } from "./model_registry.ts";
+import type { ModelDefinition } from "./model_registry.ts";
 
 const DEFAULT_LEVELS: Record<ModelRole, ThinkingLevel> = {
   lightweight_classifier: "low",

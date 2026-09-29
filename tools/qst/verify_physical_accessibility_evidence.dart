@@ -1,6 +1,13 @@
 import 'dart:io';
 
 const evidencePath = 'docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml';
+const trailJourneyScenarios = [
+  'trail_quest_mission_selection',
+  'trail_japanese_ime_composition',
+  'trail_large_text_200',
+  'trail_talkback_reading_order',
+  'trail_error_and_save_feedback',
+];
 
 Future<void> main(List<String> arguments) async {
   final requirePhysical = arguments.contains('--require-physical');
@@ -15,6 +22,12 @@ Future<void> main(List<String> arguments) async {
     'credential_or_token_recorded: false',
   ]) {
     _expect(content, required);
+  }
+  for (final scenario in trailJourneyScenarios) {
+    if (!content.contains('$scenario: pending') &&
+        !content.contains('$scenario: passed')) {
+      _fail('Missing Trail physical accessibility scenario: $scenario');
+    }
   }
   if (!requirePhysical) {
     if (!content.contains('status: pending_physical_execution') &&
@@ -40,6 +53,9 @@ Future<void> main(List<String> arguments) async {
     'privacy_reviewed: true',
   ]) {
     _expect(content, required);
+  }
+  for (final scenario in trailJourneyScenarios) {
+    _expect(content, '$scenario: passed');
   }
   final candidateSha = RegExp(
     r'^candidate_sha: "([a-f0-9]{40})"$',

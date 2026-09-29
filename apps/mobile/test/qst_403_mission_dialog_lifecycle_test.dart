@@ -299,9 +299,9 @@ class _MissionController extends MissionController {
   void clearForTest() => state = [];
   void seedForTest() => state = [_mission()];
   @override
-  void updateMission(Mission mission) {
+  void updateMission(Mission mission, {bool persist = true}) {
     if (failUpdate) throw StateError('test mutation failure');
     successfulUpdates++;
-    super.updateMission(mission);
+    super.updateMission(mission, persist: persist);
   }
 }

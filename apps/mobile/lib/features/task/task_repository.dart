@@ -4,7 +4,7 @@ import '../../core/performance/performance_limits.dart';
 import 'task_model.dart';
 
 const _taskColumns =
-    'id,quest_id,mission_id,title,action,purpose,done_condition,expected_output,estimated_effort_minutes,status,required,order_index,dependency_ids,scheduled_date,due_date,completed_at,verification_type,generated_by,origin,version,generation_version,created_at,updated_at,missions!inner(title,quests!inner(title))';
+    'id,quest_id,mission_id,title,action,purpose,done_condition,expected_output,estimated_effort_minutes,status,required,order_index,dependency_ids,scheduled_date,due_date,completed_at,verification_type,generated_by,origin,version,generation_version,created_at,updated_at,missions!inner(title,route_state,quests!inner(title))';
 
 abstract interface class TaskRepository {
   bool get supportsAtomicCompletion;
@@ -115,6 +115,7 @@ class SupabaseTaskRepository implements TaskRepository {
         .from('tasks')
         .select(_taskColumns)
         .inFilter('quest_id', questIds)
+        .neq('missions.route_state', 'removed')
         .order('mission_id')
         .order('order_index')
         .limit(limit);

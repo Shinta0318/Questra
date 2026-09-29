@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../widgets/navigation/questra_route_back_button.dart';
 import '../auth/auth_controller.dart';
 import '../trust/consent_controller.dart';
 import '../trust/consent_purpose_registry_service.dart';
@@ -21,7 +23,13 @@ class ArcMemoryControlScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.deepNavy,
-      appBar: AppBar(title: const Text('Arc Memory')),
+      appBar: AppBar(
+        leading: const QuestraRouteBackButton(
+          fallbackRoute: AppRoutes.settings,
+          fallbackTooltip: '設定へ戻る',
+        ),
+        title: const Text('Arc Memory'),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),

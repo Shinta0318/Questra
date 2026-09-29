@@ -66,7 +66,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get trailHistoryDescription => '進んだ日ごとに、旅の記録を振り返れます。';
 
   @override
-  String trailCount(int count) => 'Trail $count件';
+  String trailCount(int count) {
+    return 'Trail $count件';
+  }
 
   @override
   String get reflection => '振り返り';
@@ -78,16 +80,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get image => '画像';
 
   @override
-  String questContext(String title) => 'Quest：$title';
+  String questContext(String title) {
+    return 'Quest：$title';
+  }
 
   @override
-  String missionContext(String title) => 'Mission：$title';
+  String missionContext(String title) {
+    return 'Mission：$title';
+  }
 
   @override
-  String taskContext(String title) => 'Task：$title';
+  String taskContext(String title) {
+    return 'Task：$title';
+  }
 
   @override
-  String starMemoryCandidate(String reason) => '大切な記録の候補：$reason';
+  String starMemoryCandidate(String reason) {
+    return '大切な記録の候補：$reason';
+  }
 
   @override
   String get trailTypeQuest => 'Questの記録';

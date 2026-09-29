@@ -28,6 +28,8 @@ export type ProviderRequest = {
   input: unknown;
   responseSchema?: Record<string, unknown>;
   tools?: ProviderTool[];
+  // Stateless Interactions continuation history. This remains in memory only.
+  interactionHistory?: unknown[];
   thinkingLevel?: ThinkingLevel;
   timeoutMs?: number;
   maxOutputTokens?: number;
@@ -47,12 +49,20 @@ export type ProviderToolCall = {
 
 export type ProviderUsage = {
   inputTokens?: number;
+  // Billable output: visible model output plus thinking tokens.
   outputTokens?: number;
   totalTokens?: number;
+  generatedOutputTokens?: number;
+  thoughtTokens?: number;
+  cachedTokens?: number;
+  toolUseTokens?: number;
+  // Sum of provider-billable Grounding queries across requests/turns.
+  groundingQueries?: number;
 };
 
 export type ProviderResponse = {
   provider: AiProviderName;
+  providerInteractionId?: string;
   model: string;
   modelVersion: string;
   thinkingLevel: ThinkingLevel;
@@ -65,6 +75,10 @@ export type ProviderResponse = {
   finishReason: string;
   traceId: string;
   error: ProviderError | null;
+  // Ordered provider attempts for cost attribution. Contains no prompt/output.
+  attemptedModels?: string[];
+  // Raw model steps needed to continue store=false function calls. Never persist.
+  continuation?: { steps: unknown[] };
 };
 
 export type ProviderErrorCode =

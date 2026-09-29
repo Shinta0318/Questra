@@ -9,6 +9,7 @@ import '../../widgets/layout/questra_journey_scaffold.dart';
 import '../../widgets/questra_card.dart';
 import '../quest/quest_controller.dart';
 import 'task_availability_service.dart';
+import 'task_achievement_flow.dart';
 import 'task_controller.dart';
 import 'task_model.dart';
 import 'task_mutation_banner.dart';
@@ -119,9 +120,7 @@ class _TaskCard extends ConsumerWidget {
               const Spacer(),
               FilledButton.icon(
                 onPressed: availability.canComplete
-                    ? () => ref
-                          .read(taskControllerProvider.notifier)
-                          .complete(task.id)
+                    ? () => _completeAndCelebrate(context, ref)
                     : availability.canStart
                     ? () => ref
                           .read(taskControllerProvider.notifier)
@@ -149,6 +148,24 @@ class _TaskCard extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _completeAndCelebrate(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final controller = ref.read(taskControllerProvider.notifier);
+    final completed = await controller.complete(task.id);
+    if (!context.mounted || !completed) return;
+    final tasks = ref.read(taskControllerProvider);
+    final savedTask = tasks.where((item) => item.id == task.id).firstOrNull;
+    if (savedTask == null) return;
+    await showTaskAchievementJourney(
+      context: context,
+      completedTask: savedTask,
+      allTasks: tasks,
+      onUndo: () => controller.reopen(savedTask.id),
     );
   }
 }

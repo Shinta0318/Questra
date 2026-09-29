@@ -15,6 +15,7 @@ final routeReplanningRepositoryProvider = Provider<RouteReplanningRepository>((
 });
 
 abstract interface class RouteReplanningRepository {
+  bool get appliesProposalAtomically;
   Future<void> saveProposal(RouteChangeProposal proposal);
   Future<void> resolveProposal(
     String proposalId,
@@ -38,6 +39,9 @@ abstract interface class RouteReplanningRepository {
 
 class InMemoryRouteReplanningRepository implements RouteReplanningRepository {
   final List<RouteChangeProposal> _proposals = [];
+
+  @override
+  bool get appliesProposalAtomically => false;
 
   @override
   Future<void> saveProposal(RouteChangeProposal proposal) async {
@@ -119,6 +123,9 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
   const SupabaseRouteReplanningRepository(this.client);
 
   final SupabaseClient client;
+
+  @override
+  bool get appliesProposalAtomically => true;
 
   @override
   Future<void> saveProposal(RouteChangeProposal proposal) async {

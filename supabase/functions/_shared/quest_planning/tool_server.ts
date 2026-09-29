@@ -1,4 +1,5 @@
 import { authorizeToolCall, QUESTRA_TOOLS } from "./tool_registry.ts";
+import { validateJsonSchema } from "./json_schema_validator.ts";
 
 export type ToolExecutionContext = {
   userId: string;
@@ -17,6 +18,10 @@ export async function executeQuestraTool(name: string, args: Record<string, unkn
   if (!definition || !authorizeToolCall(name, { authenticated: Boolean(context.userId), approved: context.approved })) {
     await audit(name, args, context, "denied");
     return { ok: false, error: "tool_not_allowed" };
+  }
+  if (!definition.parameters || validateJsonSchema(args, definition.parameters).length > 0) {
+    await audit(name, args, context, "invalid_arguments");
+    return { ok: false, error: "invalid_arguments" };
   }
   const questId = typeof args.questId === "string" ? args.questId : null;
   if (questId && !await ownsQuest(questId, context.userId)) {

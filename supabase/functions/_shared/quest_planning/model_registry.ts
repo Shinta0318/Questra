@@ -1,4 +1,4 @@
-import { ModelRole, ThinkingLevel } from "./contracts.ts";
+import type { ModelRole, ThinkingLevel } from "./contracts.ts";
 
 export type ModelReleaseType = "stable" | "preview" | "latest" | "experimental";
 
@@ -81,19 +81,37 @@ const ROUTES: Record<ModelRole, ModelRoute> = {
   schema_repair: { primary: "gemini-3.5-flash-lite", fallback: "gemini-3.5-flash" },
 };
 
-export function resolveModel(role: ModelRole, options: { fallback?: boolean; allowPreview?: boolean } = {}) {
+export function resolveModel(role: ModelRole, options: { allowPreview?: boolean } = {}) {
   const route = ROUTES[role];
-  const configured = Deno.env.get(`GEMINI_MODEL_${role.toUpperCase()}`);
-  const candidate = configured || (options.allowPreview && route.preview) ||
-    (options.fallback ? route.fallback : route.primary);
-  const definition = GEMINI_MODELS[candidate];
-  if (!definition) return GEMINI_MODELS[route.primary];
-  if (definition.releaseType === "preview" && !options.allowPreview) return GEMINI_MODELS[route.primary];
-  if (definition.releaseType === "latest" || definition.releaseType === "experimental") return GEMINI_MODELS[route.primary];
-  if (!definition.enabled && definition.releaseType !== "preview") return GEMINI_MODELS[route.fallback];
-  return definition;
+  const configured = Deno.env.get(`GEMINI_MODEL_${role.toUpperCase()}`)?.trim();
+  const candidate = configured || (options.allowPreview && route.preview) || route.primary;
+  return allowedModel(candidate, options.allowPreview ?? false) ?? GEMINI_MODELS[route.primary];
+}
+
+export function resolveFallbackModel(
+  role: ModelRole,
+  primaryModelName: string,
+  options: { allowPreview?: boolean } = {},
+) {
+  const route = ROUTES[role];
+  const configured = Deno.env.get(`GEMINI_FALLBACK_MODEL_${role.toUpperCase()}`)?.trim();
+  const candidates = [configured, route.fallback, route.primary];
+  for (const candidate of candidates) {
+    if (!candidate || candidate === primaryModelName) continue;
+    const definition = allowedModel(candidate, options.allowPreview ?? false);
+    if (definition) return definition;
+  }
+  return GEMINI_MODELS[route.primary];
 }
 
 export function modelSupportsThinking(model: ModelDefinition, level: ThinkingLevel) {
   return model.supportedThinkingLevels.includes(level);
+}
+
+function allowedModel(name: string, allowPreview: boolean) {
+  const definition = GEMINI_MODELS[name];
+  if (!definition?.enabled) return null;
+  if (definition.releaseType === "preview" && !allowPreview) return null;
+  if (definition.releaseType === "latest" || definition.releaseType === "experimental") return null;
+  return definition;
 }

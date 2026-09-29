@@ -142,6 +142,8 @@ void main() {
       tester.widget<NavigationRail>(find.byType(NavigationRail)).extended,
       isFalse,
     );
+    expect(find.text('自分'), findsOneWidget);
+    expect(find.text('プロフィール'), findsNothing);
   });
 
   testWidgets('expanded width uses the labeled navigation rail', (
@@ -290,7 +292,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    await tester.tap(find.byTooltip('ArcとQuestを考える'));
+    expect(find.byTooltip('ArcとQuestを考える'), findsNothing);
+    expect(find.text('ArcとQuestを考える'), findsOneWidget);
+    await tester.tap(find.text('ArcとQuestを考える'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 

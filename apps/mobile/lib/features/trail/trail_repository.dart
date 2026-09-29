@@ -7,6 +7,7 @@ abstract interface class TrailRepository {
   Future<List<Trail>> findByUser(
     String userId, {
     int limit = QuestraPerformanceLimits.trailListLimit,
+    TrailPageCursor? before,
   });
   Future<Trail> save({
     required String ownerId,
@@ -16,6 +17,17 @@ abstract interface class TrailRepository {
   Future<void> delete({required String ownerId, required String trailId});
 }
 
+class TrailPageCursor {
+  const TrailPageCursor({required this.createdAt, required this.id});
+
+  factory TrailPageCursor.fromTrail(Trail trail) {
+    return TrailPageCursor(createdAt: trail.createdAt, id: trail.id);
+  }
+
+  final DateTime createdAt;
+  final String id;
+}
+
 class InMemoryTrailRepository implements TrailRepository {
   final List<_OwnedTrail> _trails = [];
 
@@ -23,12 +35,19 @@ class InMemoryTrailRepository implements TrailRepository {
   Future<List<Trail>> findByUser(
     String userId, {
     int limit = QuestraPerformanceLimits.trailListLimit,
+    TrailPageCursor? before,
   }) async {
-    return _trails
-        .where((entry) => entry.ownerId == userId)
-        .map((entry) => entry.trail)
-        .take(limit)
-        .toList(growable: false);
+    final trails =
+        _trails
+            .where((entry) => entry.ownerId == userId)
+            .map((entry) => entry.trail)
+            .where((trail) => _isBeforeCursor(trail, before))
+            .toList(growable: false)
+          ..sort((a, b) {
+            final created = b.createdAt.compareTo(a.createdAt);
+            return created == 0 ? b.id.compareTo(a.id) : created;
+          });
+    return trails.take(limit).toList(growable: false);
   }
 
   @override
@@ -37,7 +56,9 @@ class InMemoryTrailRepository implements TrailRepository {
     required Trail trail,
     String visibility = 'private',
   }) async {
-    _trails.removeWhere((entry) => entry.trail.id == trail.id);
+    _trails.removeWhere(
+      (entry) => entry.ownerId == ownerId && entry.trail.id == trail.id,
+    );
     _trails.insert(0, _OwnedTrail(ownerId: ownerId, trail: trail));
     return trail;
   }
@@ -62,14 +83,23 @@ class SupabaseTrailRepository implements TrailRepository {
   Future<List<Trail>> findByUser(
     String userId, {
     int limit = QuestraPerformanceLimits.trailListLimit,
+    TrailPageCursor? before,
   }) async {
-    final rows = await client
+    var query = client
         .from('trails')
         .select(
           'id,quest_id,mission_id,task_id,title,summary,content,trail_type,source_type,created_at',
         )
-        .eq('owner_id', userId)
+        .eq('owner_id', userId);
+    if (before != null) {
+      final createdAt = before.createdAt.toUtc().toIso8601String();
+      query = query.or(
+        'created_at.lt.$createdAt,and(created_at.eq.$createdAt,id.lt.${before.id})',
+      );
+    }
+    final rows = await query
         .order('created_at', ascending: false)
+        .order('id', ascending: false)
         .limit(limit);
 
     return rows
@@ -146,6 +176,13 @@ class SupabaseTrailRepository implements TrailRepository {
       createdAt: DateTime.parse(row['created_at'] as String),
     );
   }
+}
+
+bool _isBeforeCursor(Trail trail, TrailPageCursor? cursor) {
+  if (cursor == null) return true;
+  final createdComparison = trail.createdAt.compareTo(cursor.createdAt);
+  if (createdComparison != 0) return createdComparison < 0;
+  return trail.id.compareTo(cursor.id) < 0;
 }
 
 class _OwnedTrail {

@@ -1,4 +1,4 @@
-import { ProviderTool } from "./contracts.ts";
+import type { ProviderTool } from "./contracts.ts";
 
 export type ToolAccess = "read" | "preview_write" | "approved_write";
 export type QuestraToolDefinition = ProviderTool & { access: ToolAccess; requiresApproval: boolean };
@@ -17,8 +17,8 @@ export const QUESTRA_TOOLS: Record<string, QuestraToolDefinition> = {
   get_quest_dna: { type: "function", name: "get_quest_dna", description: "Gets the current owner-scoped Quest DNA version.", parameters: questIdParameters, access: "read", requiresApproval: false },
   get_relevant_arc_memory: { type: "function", name: "get_relevant_arc_memory", description: "Gets a bounded set of consented, relevant Arc Memories.", parameters: { ...questIdParameters, properties: { ...(questIdParameters.properties as object), limit: { type: "integer", minimum: 1, maximum: 5 } } }, access: "read", requiresApproval: false },
   validate_plan: { type: "function", name: "validate_plan", description: "Validates a plan without saving it.", parameters: questIdParameters, access: "read", requiresApproval: false },
-  save_plan_preview: { type: "function", name: "save_plan_preview", description: "Saves an expiring owner-scoped preview only.", parameters: { type: "object", properties: { questId: { type: "string" }, idempotencyKey: { type: "string" } }, required: ["questId", "idempotencyKey"] }, access: "preview_write", requiresApproval: false },
-  approve_plan_transaction: { type: "function", name: "approve_plan_transaction", description: "Persists a previously reviewed preview transactionally.", parameters: { type: "object", properties: { previewId: { type: "string" }, approvalToken: { type: "string" } }, required: ["previewId", "approvalToken"] }, access: "approved_write", requiresApproval: true },
+  save_plan_preview: { type: "function", name: "save_plan_preview", description: "Saves an expiring owner-scoped preview only.", parameters: { type: "object", additionalProperties: false, properties: { questId: { type: "string", minLength: 1, maxLength: 100 }, idempotencyKey: { type: "string", minLength: 8, maxLength: 200 } }, required: ["questId", "idempotencyKey"] }, access: "preview_write", requiresApproval: false },
+  approve_plan_transaction: { type: "function", name: "approve_plan_transaction", description: "Persists a previously reviewed preview transactionally.", parameters: { type: "object", additionalProperties: false, properties: { previewId: { type: "string", minLength: 1, maxLength: 100 }, approvalToken: { type: "string", minLength: 1, maxLength: 200 } }, required: ["previewId", "approvalToken"] }, access: "approved_write", requiresApproval: true },
 };
 
 export function planningTools(names: string[]): ProviderTool[] {

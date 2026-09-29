@@ -12,7 +12,7 @@ void main() {
       const ProviderScope(child: MaterialApp(home: LoginScreen())),
     );
 
-    expect(find.text('おかえりなさい'), findsOneWidget);
+    expect(find.text('おかえりなさい'), findsNothing);
     expect(find.text('ログインIDまたはメールアドレス'), findsOneWidget);
     expect(find.text('パスワード'), findsOneWidget);
     expect(find.text('ログイン'), findsWidgets);
@@ -37,7 +37,7 @@ void main() {
       const ProviderScope(child: MaterialApp(home: SignupScreen())),
     );
 
-    expect(find.text('はじめに確認すること'), findsOneWidget);
+    expect(find.text('はじめに確認すること'), findsNothing);
     expect(find.text('アカウントを作成'), findsNothing);
     expect(find.text('Arcからの呼び名'), findsNothing);
 

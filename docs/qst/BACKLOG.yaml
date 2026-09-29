@@ -3687,7 +3687,8 @@ items:
     evidence: [State matrix screenshots, Fixture absence test, Query profile, QST Report]
   - id: QST-321
     title: Canonical Navigation and Return Contract
-    status: Planned
+    status: Superseded
+    superseded_by: QST-503
     priority: P1
     epic: INFORMATION-ARCHITECTURE
     background: QST-197のBeta Navigationと古いarchitecture文書が競合し、Settings系画面には見える戻る操作がない。
@@ -3724,7 +3725,8 @@ items:
     evidence: [Route inventory, Back behavior recording, Responsive navigation screenshots, QST Report]
   - id: QST-322
     title: Arc-First Quest Entry Consolidation
-    status: Planned
+    status: Superseded
+    superseded_by: QST-504
     priority: P1
     epic: QUEST-CREATION-UX
     background: Quest作成面はArc相談、manual form、category templateを同時に強く表示し、入口の優先順位が不明瞭である。
@@ -3761,7 +3763,8 @@ items:
     evidence: [Entry screenshots, CTA hierarchy golden, Intent transfer test, QST Report]
   - id: QST-323
     title: Onboarding Journey Controls and Resume
-    status: Planned
+    status: Superseded
+    superseded_by: QST-505
     priority: P1
     epic: ONBOARDING
     background: Onboardingの言葉とArc表現は良いが、進捗、戻る、Skip、resumeが初期画面から理解できない。
@@ -4132,7 +4135,8 @@ items:
     evidence: [reports/qst/QST-337.md]
   - id: QST-338
     title: External Release Truth and Authenticated Router Guard
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: 認証、mock、出荷capability、candidate SHAを実際の利用状態と一致させる。
@@ -4141,7 +4145,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, docs/qst/RELEASE_CAPABILITIES.yaml, reports/qst/QUESTRA_10M_PRODUCT_AUDIT_20260818.md, reports/qst/QST-338.md]
   - id: QST-339
     title: Age AI Disclosure and Regional Legal Gate
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: 18歳以上、規約version、AI透明性、地域法務を個人入力前のrelease gateにする。
@@ -4150,7 +4155,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, docs/qst/BETA_LEGAL_SIGNOFF.yaml, supabase/migrations/202608180001_versioned_legal_eligibility_gate.sql, reports/qst/QST-339.md]
   - id: QST-340
     title: Arc Memory Consent and User Control Center
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: Arc Memoryの全read writeを目的別同意へ拘束し、確認、訂正、削除、無効化を提供する。
@@ -4159,7 +4165,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, supabase/migrations/202608180002_arc_memory_consent_control.sql, reports/qst/QST-340.md]
   - id: QST-341
     title: Gemini Fail-Closed Planning and Semantic Evaluation
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: schema、semantic、critic、groundingを通過しない計画を確定しない。
@@ -4168,7 +4175,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, supabase/migrations/202608240001_ai_planning_fail_closed_gate.sql, reports/qst/QST-341.md]
   - id: QST-342
     title: Atomic AI Budget Admission and Cost Ledger
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: AI call前後のatomic reserve settleでquotaと実原価を強制し監査する。
@@ -4177,7 +4185,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, supabase/migrations/202608240002_atomic_ai_budget_ledger.sql, supabase/tests/qst_342_ai_budget_concurrency.sql, reports/qst/QST-342.md]
   - id: QST-343
     title: Exact-SHA Supabase Deployment and RLS Evidence Gate
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: app、migration、Edge Function、RLS、Geminiの証拠を一つのcandidate SHAへ固定する。
@@ -4186,7 +4195,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-343.md]
   - id: QST-344
     title: First Ten Minutes Activation Journey
-    status: Implemented
+    status: Validated
+    evidence_state: local_verified
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: 理解、同意、Quest確認、最初のTask開始を10分以内の一続きの体験にする。
@@ -4195,7 +4205,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-344.md]
   - id: QST-345
     title: Unified Today Focus and Completion Loop
-    status: Implemented
+    status: Validated
+    evidence_state: local_verified
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: Home、Quest、Taskで同じToday FocusとTask Trail Horizon完了ループを共有する。
@@ -4204,7 +4215,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-345.md]
   - id: QST-346
     title: Gentle Recovery and Non-Coercive Arc Policy
-    status: Implemented
+    status: Validated
+    evidence_state: local_verified
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: 停滞を航路調整として扱い、罪悪感、依存、通知圧力を防ぐ。
@@ -4213,7 +4225,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-346.md]
   - id: QST-347
     title: Meaningful Progress Metrics and Experimentation
-    status: Implemented
+    status: Validated
+    evidence_state: local_verified
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: WMPU、Activation、D7 D30、Trust、Wellbeing、AI原価を計測する。
@@ -4222,7 +4235,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-347.md]
   - id: QST-348
     title: Cursor-Paginated Journey Data Plane
-    status: ImplementedFoundation
+    status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: core journey dataを欠落させないcursor paginationとbatch mediaへ移行する。
@@ -4231,7 +4245,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-348.md]
   - id: QST-349
     title: Unified Durable Mutation and Conflict Recovery
-    status: ImplementedFoundation
+    status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: Quest Mission Trail Mediaへdurable outbox、version、conflict recoveryを適用する。
@@ -4240,7 +4255,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-349.md]
   - id: QST-350
     title: Quest Branch IA and Accessibility Closure
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: shipped routeのIA、responsive、TalkBack、IME、focus、motion、hapticを物理端末で閉じる。
@@ -4249,7 +4265,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-350.md]
   - id: QST-351
     title: Japan Wedge Plain Language and Pricing Validation
-    status: ImplementedValidationPending
+    status: Implemented
+    evidence_state: local_partial
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: 日本の最初のcohort、平易な表現、Arc tone、価格仮説をユーザー証拠で選ぶ。
@@ -4258,7 +4275,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-351.md]
   - id: QST-352
     title: English Productization and International Format Matrix
-    status: ImplementedFoundation
+    status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: en-US en-GBを完全なUI AI journeyとして成立させ、地域format基盤を作る。
@@ -4267,7 +4285,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-352.md]
   - id: QST-353
     title: Consentful Trail Sharing and Ethical Referral
-    status: ImplementedFoundation
+    status: InProgress
+    evidence_state: local_partial
     priority: P2
     epic: TEN-MILLION-READINESS
     goal: revocable snapshot共有と紹介の増分効果をprivacy firstで検証する。
@@ -4276,7 +4295,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-353.md]
   - id: QST-354
     title: Guild Quest Library Controlled Pilot
-    status: ImplementedFoundation
+    status: InProgress
+    evidence_state: local_partial
     priority: P2
     epic: TEN-MILLION-READINESS
     goal: curated cohortでdiscover copy adapt first progressの閉ループと安全運用を検証する。
@@ -4285,7 +4305,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, reports/qst/QST-354.md]
   - id: QST-355
     title: Premium Boundary and Unit Economics Validation
-    status: ImplementedValidationPending
+    status: Implemented
+    evidence_state: local_partial
     priority: P2
     epic: TEN-MILLION-READINESS
     goal: 無料Coreを守る一つのPremium packageと価格、原価、継続意図を検証する。
@@ -4294,7 +4315,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, docs/product/premium_readiness_flags.md, docs/product/premium_unit_economics_validation.md, reports/qst/QST-355.md]
   - id: QST-356
     title: IP Data Rights and M&A Proof Pack
-    status: ImplementedValidationPending
+    status: Implemented
+    evidence_state: local_partial
     priority: P1
     epic: TEN-MILLION-READINESS
     goal: asset、data、model、Quest DNA、Graphの権利とclaims-to-evidenceを譲渡可能な形で整理する。
@@ -4303,7 +4325,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, docs/qst/IP_DATA_RIGHTS_PROOF_PACK.yaml, docs/product/ip_data_rights_proof_pack.md, reports/qst/QST-356.md]
   - id: QST-357
     title: 10M Scale Observability Backlog SSOT and Phase Gate Review
-    status: ImplementedFoundation
+    status: InProgress
+    evidence_state: local_partial
     priority: P0
     epic: TEN-MILLION-READINESS
     goal: runtime observability、scale stage、唯一のBacklog、固定100点再監査で次phaseを判定する。
@@ -4312,7 +4335,8 @@ items:
     evidence: [docs/qst/QST-338-357_10M_PRODUCT_BACKLOG.md, docs/qst/QST_STATUS_TAXONOMY.yaml, docs/product/scale_observability_phase_gates.md, reports/qst/QUESTRA_10M_PRODUCT_AUDIT_20260818.md, reports/qst/QST-357.md]
   - id: QST-358
     title: Privacy-Safe Runtime Evidence Adapter
-    status: ImplementedFoundation
+    status: InProgress
+    evidence_state: local_partial
     priority: P0
     epic: BETA-EVIDENCE-CLOSURE
     goal: crash persistence auth media AI failureを本文やPIIなしの共通証跡へ正規化する。
@@ -4321,7 +4345,8 @@ items:
     evidence: [docs/product/beta_crash_error_capture_plan.md, reports/qst/QST-358.md]
   - id: QST-359
     title: User Data Export and Deletion Operations
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: BETA-EVIDENCE-CLOSURE
     goal: export deletion correction consent withdrawalをowner-scopedで実行し監査できるようにする。
@@ -4330,7 +4355,8 @@ items:
     evidence: [docs/qst/BETA_LEGAL_SIGNOFF.yaml, docs/product/ip_data_rights_proof_pack.md, reports/qst/QST-359.md]
   - id: QST-360
     title: Hosted Supabase Evidence Automation
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: BETA-EVIDENCE-CLOSURE
     goal: current SHAのmigration function RLS dual-account証拠をhosted projectから再現可能に収集する。
@@ -4339,7 +4365,8 @@ items:
     evidence: [docs/qst/BETA_SUPABASE_PROJECT.yaml, docs/qst/BETA_RLS_EVIDENCE.yaml, docs/qst/HOSTED_EVIDENCE_RUN.yaml, reports/qst/QST-360.md]
   - id: QST-361
     title: Arc Asset Provenance Release Guard
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: BETA-EVIDENCE-CLOSURE
     goal: Arcとmock assetの出所 permitted-use hash approvalをmanifest化し未確認assetをreleaseから除外する。
@@ -4348,7 +4375,8 @@ items:
     evidence: [docs/qst/IP_DATA_RIGHTS_PROOF_PACK.yaml, docs/qst/ARC_ASSET_PROVENANCE.yaml, reports/qst/QST-361.md]
   - id: QST-362
     title: QST-353 to QST-361 Cross-Functional Review
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: BETA-EVIDENCE-CLOSURE
     goal: Growth Premium rights observability data operations hosted evidenceを再監査し次phaseを判定する。
@@ -4357,7 +4385,8 @@ items:
     evidence: [reports/qst/QST-345-352-CROSS-REVIEW.md, reports/qst/QST-353-362-CROSS-REVIEW.md, reports/qst/QST-362.md]
   - id: QST-363
     title: Guild Pilot Operations and Safety Metrics
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P1
     epic: BETA-EVIDENCE-CLOSURE
     goal: curated Guild pilotの供給 moderation appeal adoption first-progressを運用可能にする。
@@ -4366,7 +4395,8 @@ items:
     evidence: [reports/qst/QST-354.md, reports/qst/QST-363.md]
   - id: QST-364
     title: Trail Share Recipient UX and Abuse Controls
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P1
     epic: BETA-EVIDENCE-CLOSURE
     goal: revocable Trail snapshotの受信UX rate limit report abuse計測を閉じる。
@@ -4375,7 +4405,8 @@ items:
     evidence: [reports/qst/QST-353.md, reports/qst/QST-364.md]
   - id: QST-365
     title: Runtime SLO Dashboard and Alert Drill
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: BETA-EVIDENCE-CLOSURE
     goal: privacy-safe eventからS0 S1 alert SLO burn rollback drillを実証する。
@@ -4384,7 +4415,8 @@ items:
     evidence: [docs/product/scale_observability_phase_gates.md, docs/product/runtime_slo_dashboard_and_drill.md, docs/qst/RUNTIME_SLO_DRILL.yaml, reports/qst/QST-365.md]
   - id: QST-366
     title: Dependency License Notice Automation
-    status: ImplementedValidationPending
+    status: Implemented
+    evidence_state: local_partial
     priority: P1
     epic: BETA-EVIDENCE-CLOSURE
     goal: Flutter server tool dependenciesのlicenseとnoticeをcandidate SHAごとに生成しレビューする。
@@ -4393,7 +4425,8 @@ items:
     evidence: [docs/product/ip_data_rights_proof_pack.md, docs/legal/THIRD_PARTY_NOTICES.md, docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml, reports/qst/QST-366.md]
   - id: QST-367
     title: External Beta Evidence Go-No-Go Refresh
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: BETA-EVIDENCE-CLOSURE
     goal: candidate legal RLS device accessibility AI cost incident rights evidenceを固定基準で再判定する。
@@ -4402,7 +4435,8 @@ items:
     evidence: [docs/qst/BETA_CANDIDATE.yaml, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml, tools/qst/verify_external_beta_go_no_go.dart, reports/qst/QST-367.md]
   - id: QST-368
     title: Data Rights Fulfillment and Retention Drill
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: BETA-EVIDENCE-CLOSURE
     goal: correction deletion withdrawal requestをSLA付きで処理しbackup provider retentionまで監査証拠を残す。
@@ -4411,7 +4445,8 @@ items:
     evidence: [supabase/migrations/202608250007_data_rights_fulfillment_sla.sql, docs/qst/DATA_RIGHTS_FULFILLMENT_DRILL.yaml, docs/qst/DATA_RIGHTS_RETENTION_REGISTER.yaml, docs/product/data_rights_fulfillment_runbook.md, reports/qst/QST-368.md]
   - id: QST-369
     title: Candidate Asset Package Hygiene and Ownership Workflow
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P1
     epic: BETA-EVIDENCE-CLOSURE
     goal: runtime assetだけをcandidateへ同梱しchain of title review approval hash変更を一つのworkflowで管理する。
@@ -4420,7 +4455,8 @@ items:
     evidence: [docs/qst/ARC_ASSET_PROVENANCE.yaml, docs/qst/CANDIDATE_ASSET_PACKAGE.yaml, docs/product/arc_asset_ownership_workflow.md, tools/qst/verify_candidate_asset_package.dart, reports/qst/QST-369.md]
   - id: QST-370
     title: Privacy-Safe Observability Sink Integration
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: BETA-EVIDENCE-CLOSURE
     goal: runtime evidenceをPIIなしowner isolation retention制御付きsinkへ接続し失敗時もjourneyを壊さない。
@@ -4429,7 +4465,8 @@ items:
     evidence: [supabase/migrations/202608250008_privacy_safe_runtime_observability.sql, apps/mobile/lib/core/observability/runtime_evidence_sink.dart, docs/qst/OBSERVABILITY_SINK_EVIDENCE.yaml, docs/product/privacy_safe_observability_sink.md, reports/qst/QST-370.md]
   - id: QST-371
     title: Physical Device Accessibility and Japanese IME Evidence
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: BETA-EVIDENCE-CLOSURE
     goal: Android実端末でArc Quest Mission Trailの日本語IME TalkBack 200% text tap targetをcandidate SHAへ紐づけて実証する。
@@ -4438,7 +4475,8 @@ items:
     evidence: [docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml, tools/qst/record_physical_accessibility_evidence.dart, tools/qst/verify_physical_accessibility_evidence.dart, docs/product/accessibility_release_gate.md, reports/qst/QST-371.md]
   - id: QST-372
     title: QST-363 to QST-371 Cross-Functional Review
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: BETA-EVIDENCE-CLOSURE
     goal: pilot safety recipient rights SLO license asset observability device evidenceを横断監査しExternal Beta判定を更新する。
@@ -4447,7 +4485,8 @@ items:
     evidence: [reports/qst/QST-363-372-CROSS-REVIEW.md, reports/qst/QST-372.md, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml]
   - id: QST-373
     title: Hosted Evidence Runner V2
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
     goal: Data Rights observability Guild Trail shareを含む最新migrationとEdge Functionを一つのclean SHA runnerで配備検証する。
@@ -4456,7 +4495,8 @@ items:
     evidence: [tools/qst/run_hosted_evidence_gate.ps1, tools/qst/verify_hosted_evidence_runner_v2.dart, supabase/tests/rls_behavior.sql, docs/product/hosted_evidence_runner_v2.md, reports/qst/QST-373.md]
   - id: QST-374
     title: Hosted Data Rights Operator Drill
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
     goal: correction withdrawal deletion cancellation retry receipt retentionを二accountで実証し本文なし証跡を生成する。
@@ -4465,7 +4505,8 @@ items:
     evidence: [tools/qst/run_data_rights_hosted_drill.ps1, docs/qst/DATA_RIGHTS_FULFILLMENT_DRILL.yaml, docs/qst/DATA_RIGHTS_RETENTION_REGISTER.yaml, reports/qst/QST-374.md]
   - id: QST-375
     title: Hosted Observability Alert and Retention Drill
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
     goal: owner isolation rate limit 30日purge S0停止 S1pause sink失敗継続をhosted sinkで実証する。
@@ -4474,7 +4515,8 @@ items:
     evidence: [tools/qst/run_observability_hosted_drill.ps1, docs/qst/OBSERVABILITY_SINK_EVIDENCE.yaml, docs/qst/RUNTIME_SLO_DRILL.yaml, reports/qst/QST-375.md]
   - id: QST-376
     title: Physical Android Accessibility Evidence Session
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
     goal: clean candidate実端末でTalkBack日本語IME 200パーセント文字compact layout reduced motionを記録する。
@@ -4483,7 +4525,8 @@ items:
     evidence: [tools/qst/record_physical_accessibility_evidence.dart, tools/qst/verify_physical_accessibility_evidence.dart, docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml, docs/product/accessibility_release_gate.md, reports/qst/QST-376.md]
   - id: QST-377
     title: Exact Server Dependency Pinning and License Review Pack
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
     goal: Edge Function npm importをexact versionへ固定しregistry license hash noticeをcandidateへ結合する。
@@ -4492,7 +4535,8 @@ items:
     evidence: [tools/qst/server_dependency_registry.json, docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml, docs/legal/THIRD_PARTY_NOTICES.md, reports/qst/QST-377.md]
   - id: QST-378
     title: Arc Asset Chain-of-Title Evidence Intake
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
     goal: Arc原本生成条件利用権review参照をSHA単位で受け付け未承認差替えをfail closedにする。
@@ -4501,7 +4545,8 @@ items:
     evidence: [tools/qst/intake_arc_asset_chain_of_title.dart, docs/qst/arc_asset_chain_of_title/README.md, docs/qst/ARC_ASSET_PROVENANCE.yaml, docs/qst/CANDIDATE_ASSET_PACKAGE.yaml, reports/qst/QST-378.md]
   - id: QST-379
     title: Beta Feedback and Incident Operations Activation
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
     goal: tester受付先daily owner SLA S0 S1 countと停止連絡経路を実運用証跡へ結合する。
@@ -4510,7 +4555,8 @@ items:
     evidence: [tools/qst/activate_beta_feedback_operations.dart, docs/qst/BETA_FEEDBACK_OPERATIONS.yaml, docs/qst/BETA_ISSUE_REGISTER.yaml, reports/qst/QST-379.md]
   - id: QST-380
     title: Provider-Backed AI 200-Case Quality and Cost Gate
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
     goal: 実Gemini応答200件を同一version設定で評価し品質安全latency token cost上限を証明する。
@@ -4519,7 +4565,8 @@ items:
     evidence: [tools/qst/run_provider_backed_ai_eval.ps1, reports/qst/QST-256-REGRESSION.json, tools/qst/quest_planning_release_gate.ps1, reports/qst/QST-380.md]
   - id: QST-381
     title: Clean Candidate Evidence Orchestrator
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
     goal: artifact checksum hosted device legal rights asset license operations SLO AI evidenceを同一SHAで一括照合する。
@@ -4528,7 +4575,8 @@ items:
     evidence: [tools/qst/run_clean_candidate_evidence_gate.ps1, tools/qst/verify_clean_candidate_evidence.dart, docs/qst/BETA_CANDIDATE.yaml, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml, reports/qst/QST-381.md]
   - id: QST-382
     title: QST-373 to QST-381 Cross-Functional Review
-    status: Implemented
+    status: Validated
+    evidence_state: local_verified
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-CLOSURE-V2
     goal: hosted rights observability device dependency asset operations AI candidate証跡を横断監査しGo No-Goを更新する。
@@ -4537,7 +4585,8 @@ items:
     evidence: [reports/qst/QST-373-382-CROSS-REVIEW.md, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml]
   - id: QST-383
     title: Beta Preview Login and Release Surface Reconciliation
-    status: Implemented
+    status: Validated
+    evidence_state: local_verified
     priority: P0
     epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
     goal: local mock loginの継続先を安定化し、Guild pilotを含む実装済みsurfaceとBeta release notesを一致させる。
@@ -4546,7 +4595,8 @@ items:
     evidence: [apps/mobile/test/local_mock_login_test.dart, tools/qst/verify_beta_release_notes_readiness.dart, reports/qst/QST-383.md]
   - id: QST-384
     title: Candidate Change Scope and Secret Hygiene Preflight
-    status: ImplementedValidationPending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
     goal: candidate作成前に変更範囲、dirty state、秘密情報混入、生成物境界をfail closedで点検する。
@@ -4555,7 +4605,8 @@ items:
     evidence: [docs/qst/CANDIDATE_PREFLIGHT.yaml, tools/qst/verify_candidate_preflight.dart, reports/qst/QST-384.md]
   - id: QST-385
     title: Supabase Migration Drift Reconciliation
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
     goal: local migration head、hosted head、candidate、RLS証跡の食い違いを一つのdrift contractで検出する。
@@ -4564,7 +4615,8 @@ items:
     evidence: [docs/qst/SUPABASE_MIGRATION_DRIFT.yaml, tools/qst/verify_migration_drift.dart, reports/qst/QST-385.md]
   - id: QST-386
     title: Dynamic RLS Coverage Manifest
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
     goal: migrationからclient-facing tableを抽出し、RLS enablementとpolicy coverageの固定リスト漏れを検出する。
@@ -4573,7 +4625,8 @@ items:
     evidence: [docs/qst/RLS_COVERAGE_MANIFEST.yaml, tools/qst/verify_dynamic_rls_coverage.dart, reports/qst/QST-386.md]
   - id: QST-387
     title: Physical Device Evidence Session Preflight
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
     goal: AndroidとWebの実機session開始前にcandidate SHA、端末class、IME、accessibility、evidence pathを検証する。
@@ -4582,7 +4635,8 @@ items:
     evidence: [docs/qst/DEVICE_SESSION_PREFLIGHT.yaml, tools/qst/verify_device_session_preflight.dart, reports/qst/QST-387.md]
   - id: QST-388
     title: Legal Consent Version Reconciliation
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
     goal: アプリ、migration、privacy文書、signoff manifestの規約・privacy・AI disclosure versionを照合する。
@@ -4591,7 +4645,8 @@ items:
     evidence: [docs/qst/LEGAL_VERSION_RECONCILIATION.yaml, tools/qst/verify_legal_version_reconciliation.dart, reports/qst/QST-388.md]
   - id: QST-389
     title: Arc Asset Release Replacement Readiness
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
     goal: provenance未確認Arc assetを公開候補へ混入させず、承認済み差替えの入力条件を機械検証する。
@@ -4600,7 +4655,8 @@ items:
     evidence: [docs/qst/ARC_ASSET_REPLACEMENT_READINESS.yaml, tools/qst/verify_arc_asset_replacement_readiness.dart, reports/qst/QST-389.md]
   - id: QST-390
     title: Incident Stop and Rollback Tabletop
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
     goal: S0/S1発生時の配布停止、feature pause、連絡、rollback判断を非破壊tabletopで検証する。
@@ -4609,7 +4665,8 @@ items:
     evidence: [docs/qst/INCIDENT_TABLETOP.yaml, tools/qst/verify_incident_tabletop.dart, reports/qst/QST-390.md]
   - id: QST-391
     title: Provider Evaluation Corpus Integrity Gate
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
     goal: 200件planning corpusとsafety corpusのID、カテゴリ、persona、重複、grounding対象をprovider実行前に検証する。
@@ -4618,7 +4675,8 @@ items:
     evidence: [tools/qst/verify_provider_eval_corpus.dart, reports/qst/QST-391.md]
   - id: QST-392
     title: QST-383 to QST-391 Cross-Functional Review
-    status: Implemented
+    status: Validated
+    evidence_state: local_verified
     priority: P0
     epic: EXTERNAL-BETA-EXECUTION-READINESS-V3
     goal: preview、candidate、Supabase、RLS、device、legal、asset、incident、AI corpusを横断監査し次の10件へ反映する。
@@ -4627,7 +4685,8 @@ items:
     evidence: [reports/qst/QST-383-392-CROSS-REVIEW.md, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml]
   - id: QST-393
     title: Clean Candidate Scope Partition
-    status: ImplementedValidationPending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
     goal: 現在の大規模dirty worktreeを意図別に棚卸しし、秘密情報や無関係差分を含まない再現可能なcandidate SHAへ分離する。
@@ -4636,7 +4695,8 @@ items:
     evidence: [docs/qst/CANDIDATE_PREFLIGHT.yaml, docs/qst/CANDIDATE_SCOPE_PARTITION.yaml, tools/qst/verify_candidate_scope_partition.dart, docs/qst/BETA_CANDIDATE.yaml, reports/qst/QST-393.md]
   - id: QST-394
     title: Hosted Migration Deployment Execution
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
     goal: clean candidate SHAから未適用migrationを実Supabaseへ順序通り配備し、local headとhosted headを一致させる。
@@ -4645,7 +4705,8 @@ items:
     evidence: [docs/qst/SUPABASE_MIGRATION_DRIFT.yaml, docs/qst/HOSTED_MIGRATION_DEPLOYMENT.yaml, tools/qst/run_hosted_migration_deployment.ps1, tools/qst/verify_hosted_migration_deployment.dart, docs/qst/HOSTED_EVIDENCE_RUN.yaml, reports/qst/QST-394.md]
   - id: QST-395
     title: Hosted Dynamic RLS Inventory and Two-Account Replay
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
     goal: migration由来の全public tableをhosted環境で再列挙し、二accountによる所有境界とserver-only拒否を同一SHAで実証する。
@@ -4654,7 +4715,8 @@ items:
     evidence: [docs/qst/RLS_COVERAGE_MANIFEST.yaml, supabase/tests/hosted_rls_inventory.sql, tools/qst/capture_cloud_rls_evidence.ps1, tools/qst/verify_cloud_rls_evidence.dart, docs/qst/BETA_RLS_EVIDENCE.yaml, docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml, reports/qst/QST-395.md]
   - id: QST-396
     title: Supported Web Candidate Session Evidence
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
     goal: supported browserとclean candidate artifactで認証、Quest、Mission、Task、Trail、Arcの主要航路と日本語IMEを記録する。
@@ -4663,7 +4725,8 @@ items:
     evidence: [docs/qst/DEVICE_SESSION_PREFLIGHT.yaml, docs/qst/WEB_CANDIDATE_SESSION.yaml, tools/qst/record_web_candidate_evidence.dart, tools/qst/verify_web_candidate_evidence.dart, docs/qst/BETA_DEVICE_VALIDATION.yaml, reports/qst/QST-396.md]
   - id: QST-397
     title: Physical Android Candidate Session Evidence
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
     goal: 物理Android端末で認証、主要航路、日本語IME、TalkBack、200パーセント文字、reduced motionを同一candidate SHAで記録する。
@@ -4672,7 +4735,8 @@ items:
     evidence: [docs/qst/DEVICE_SESSION_PREFLIGHT.yaml, docs/qst/ANDROID_CANDIDATE_SESSION.yaml, tools/qst/record_android_candidate_evidence.dart, tools/qst/verify_android_candidate_evidence.dart, docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml, reports/qst/QST-397.md]
   - id: QST-398
     title: Product Legal Operator and Contact Sign-off Intake
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
     goal: Product、Legal、Release、Engineeringの実名owner、support/privacy連絡先、同意versionを同一candidateへ署名付きで固定する。
@@ -4681,7 +4745,8 @@ items:
     evidence: [docs/qst/LEGAL_VERSION_RECONCILIATION.yaml, docs/qst/LEGAL_SIGNOFF_INTAKE.yaml, docs/qst/BETA_LEGAL_SIGNOFF.yaml, tools/qst/record_beta_legal_signoff.dart, tools/qst/verify_legal_signoff_intake.dart, reports/qst/QST-398.md]
   - id: QST-399
     title: Arc Asset Provenance Completion or Release-safe Replacement
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
     goal: Arc assetのchain of titleを承認証跡で完結させるか、公開可能な代替assetへ差し替えてcandidate packageを再生成する。
@@ -4690,7 +4755,8 @@ items:
     evidence: [docs/qst/ARC_ASSET_REPLACEMENT_READINESS.yaml, docs/qst/ARC_ASSET_RELEASE_DECISION.yaml, docs/qst/CANDIDATE_ASSET_PACKAGE.yaml, tools/qst/finalize_arc_asset_release.dart, tools/qst/verify_arc_asset_release_workflow.dart, reports/qst/QST-399.md]
   - id: QST-400
     title: Provider-backed 200-case Planning and Safety Evaluation
-    status: ImplementedValidationPending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
     goal: 固定versionの実Gemini経路で200 planning caseと10 safety caseを実行し、人手評価、品質、latency、token、costをrelease gateへ結合する。
@@ -4699,7 +4765,8 @@ items:
     evidence: [tools/qst/quest_planning_eval_200.json, tools/qst/quest_planning_safety_eval_cases.json, tools/qst/run_provider_backed_ai_eval.ps1, tools/qst/record_provider_eval_human_review.dart, tools/qst/verify_provider_eval_run.dart, tools/qst/prepare_provider_human_review.dart, tools/qst/verify_provider_human_review.dart, tools/qst/test_provider_review_contract.dart, tools/qst/test_provider_eval_material.ps1, docs/qst/PROVIDER_HUMAN_REVIEW.md, docs/qst/PROVIDER_EVAL_RUN.yaml, reports/qst/QST-400.md]
   - id: QST-401
     title: Incident Live Stop and Rollback Drill Execution
-    status: ImplementedExternalEvidencePending
+    status: Implemented
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
     goal: named ownerとclean candidateを用いてS0停止、S1 feature pause、連絡、artifact rollback、非破壊DB判断を時刻付きで実演する。
@@ -4709,6 +4776,7 @@ items:
   - id: QST-402
     title: QST-393 to QST-401 Cross-Functional Review
     status: InProgress
+    evidence_state: local_partial
     priority: P0
     epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V4
     goal: candidate、hosted DB、RLS、Web、Android、legal、asset、AI、incident証跡を横断監査しExternal BetaのGo No-Goと次の10件を決定する。
@@ -4718,6 +4786,7 @@ items:
   - id: QST-403
     title: Mission Dialog Lifecycle and Safe Close
     status: InProgress
+    evidence_state: local_partial
     priority: P0
     epic: UI-UX-AUDIT-REMEDIATION
     goal: Mission追加と編集のcontroller寿命をDialogのWidgetへ一致させ、閉鎖中の例外、二重操作、入力喪失を防止する。
@@ -4734,6 +4803,7 @@ items:
   - id: QST-404
     title: Semantic Surface and Contrast Reconciliation
     status: InProgress
+    evidence_state: local_partial
     priority: P0
     epic: UI-UX-AUDIT-REMEDIATION
     goal: 明暗Surfaceと本文・操作色を一組で適用し、Workspaceと設定・支援画面の読めない文字を解消する。
@@ -4750,6 +4820,7 @@ items:
   - id: QST-405
     title: Modal Surface Focus and Keyboard Contract
     status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: UI-UX-AUDIT-REMEDIATION
     goal: TrailとArcの入力シートへ不透明Surface、focus復帰、破棄確認、キーボード余白、保存中の多重操作防止を適用する。
@@ -4766,6 +4837,7 @@ items:
   - id: QST-406
     title: Onboarding Replay Recovery and Accessible Overlay
     status: InProgress
+    evidence_state: local_partial
     priority: P0
     epic: UI-UX-AUDIT-REMEDIATION
     goal: 初回と設定からの再表示を、低い画面や文字拡大でも必ず読めて閉じられ、元画面へ戻れるツアーにする。
@@ -4783,6 +4855,7 @@ items:
   - id: QST-407
     title: Trail Single Timeline and Low-Friction Capture
     status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: UI-UX-AUDIT-REMEDIATION
     goal: Trailを一つの時系列へ統合し、0件情報や重複表示を除き、短い記録だけで安全に残せるようにする。
@@ -4801,6 +4874,7 @@ items:
   - id: QST-408
     title: Home One Next Step Information Architecture
     status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: UI-UX-AUDIT-REMEDIATION
     goal: 初回・継続・休息のHome状態を分け、現在の一歩へ迷わず進める主操作を一つにする。
@@ -4819,6 +4893,7 @@ items:
   - id: QST-409
     title: Quest Header and List Density Refresh
     status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: UI-UX-AUDIT-REMEDIATION
     goal: Quest一覧と詳細Headerの重複・0値・由来不明な推定表示を減らし、目的・目標年月・次の行動を素早く読めるようにする。
@@ -4837,6 +4912,7 @@ items:
   - id: QST-410
     title: Arc Quest Handoff and Honest Planning Recovery UX
     status: InProgress
+    evidence_state: local_partial
     priority: P0
     epic: UI-UX-AUDIT-REMEDIATION
     goal: Arcとの相談を再入力させずQuest作成へ引き継ぎ、航路生成に失敗してもMissionを捏造せず安全に再試行・手動保存できるようにする。
@@ -4854,6 +4930,7 @@ items:
   - id: QST-411
     title: Quest Mission Task Action Hierarchy Closure
     status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: UI-UX-AUDIT-REMEDIATION
     goal: Questを最終目的、Missionを中間成果、Taskを具体行動として、親関係と現在の主操作を視覚・読み上げの双方で一貫して伝える。
@@ -4871,6 +4948,7 @@ items:
   - id: QST-412
     title: Notification and Persistence Banner Unification
     status: InProgress
+    evidence_state: local_partial
     priority: P2
     epic: UI-UX-AUDIT-REMEDIATION
     goal: 読込・保存・失敗通知の役割、寿命、再試行対象を共通化し、通常操作を妨げず失敗から安全に回復できるようにする。
@@ -4889,6 +4967,7 @@ items:
   - id: QST-413
     title: Settings Actionable Index and Truthful Capabilities
     status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: UI-UX-AUDIT-REMEDIATION
     goal: 設定トップを実際に移動できる索引へ整理し、接続状態と提供中の機能を利用者が誤解しない言葉で示す。
@@ -4908,6 +4987,7 @@ items:
   - id: QST-414
     title: First Run and Authentication Plain-Language UX
     status: InProgress
+    evidence_state: local_partial
     priority: P2
     epic: UI-UX-AUDIT-REMEDIATION
     goal: 初回価値とログイン、新規登録、パスワード再設定の選択を短い日本語で伝え、モバイルの最初の画面から迷わず進めるようにする。
@@ -4927,6 +5007,7 @@ items:
   - id: QST-415
     title: Japanese Copy and Accessible Field Localization
     status: InProgress
+    evidence_state: local_partial
     priority: P2
     epic: UI-UX-AUDIT-REMEDIATION
     goal: 主要導線の表示語と入力名をロケール辞書へ移し、内部値を見せず、視覚と読み上げで同じ意味を一貫して伝える。
@@ -4945,6 +5026,7 @@ items:
   - id: QST-416
     title: Height-Aware Navigation and Escape Routes
     status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: UI-UX-AUDIT-REMEDIATION
     goal: 幅だけでなく利用可能な高さとキーボードを考慮し、主要Navigationと独立Routeから必ず安全な画面へ戻れるようにする。
@@ -4958,6 +5040,2071 @@ items:
       - NAVIGATION_HEIGHT_AWARE_V2で高さ判定を切り戻せる。
       - WebとAndroidで横画面、戻る、SafeArea、キーボード、文字拡大を検証し、未確認を完了扱いしない。
     evidence: [apps/mobile/test/qst_416_height_aware_navigation_test.dart, reports/qst/QST-416.md]
+
+  - id: QST-417
+    title: Connected External Preview Bootstrap
+    status: Implemented
+    evidence_state: external_pending
+    priority: P0
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V5
+    goal: 公開用Supabase設定だけを安全に読み込み、mockを無効化してAuth、Data API、Edge Function経由GeminiをレビューできるWeb版を再現可能に起動する。
+    depends_on: [QST-338, QST-393, QST-410]
+    blocks: [Connected Preview Evidence, External Beta Distribution]
+    acceptance:
+      - 設定ファイルをリポジトリ外に限定し、キー値をログへ表示しない。
+      - publishableまたはanonキーだけを許可し、secretとservice roleを拒否する。
+      - Supabase AuthとData APIをprobeしてからproduction設定でFlutter Webを起動する。
+      - Geminiキーをclientへ渡さず、認証済みEdge Function経路を利用する。
+      - mock persistenceを無効化し、未配備migrationを利用可能と誤認させない。
+      - 正常と危険な設定の自動テストをRelease Gateで実行する。
+    evidence: [tools/qst/run_connected_preview.ps1, tools/qst/test_connected_preview.ps1, tools/qst/verify_connected_preview_launcher.dart, docs/product/connected_preview_runbook.md, reports/qst/QST-417.md]
+
+  - id: QST-418
+    title: Honest External Capability Status
+    status: Implemented
+    evidence_state: external_pending
+    priority: P1
+    epic: EXTERNAL-BETA-EVIDENCE-EXECUTION-V5
+    goal: 接続設定、ログイン、端末内プレビュー、Arcのオンライン応答確認を分離し、未確認の外部機能を利用可能と誤認させない。
+    depends_on: [QST-413, QST-417]
+    blocks: [Connected Preview Evidence, External Beta Distribution]
+    acceptance:
+      - Settingsでデータ保存とArcとの相談を別々に表示する。
+      - 接続設定済みでもArc応答を確認するまでは確認済みと表示しない。
+      - 端末内プレビューをオンライン応答として表示しない。
+      - 未ログインと未設定を異なる状態として案内する。
+      - provider名、APIキー、内部エラーを利用者向け表示へ露出しない。
+      - 320幅と文字拡大で状態名、説明、操作が欠けない。
+      - 実WebとAndroidで接続、未接続、プレビューを確認し、未確認を完了扱いしない。
+    evidence: [apps/mobile/test/qst_418_connection_status_test.dart, apps/mobile/lib/features/settings/connection_status_service.dart, apps/mobile/lib/features/settings/widgets/connection_status_card.dart, reports/qst/QST-418.md]
+
+  - id: QST-419
+    title: Current Candidate Baseline Refresh
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: QST-417と418を含む意図した変更だけをclean SHAへ固定し、artifact、rollback、candidate manifestを現在化する。
+    depends_on: [QST-393, QST-417, QST-418]
+    blocks: [QST-420, QST-421, QST-422, QST-423, QST-425, External Beta Distribution]
+    acceptance:
+      - 意図した変更と既存変更を棚卸しし、秘密情報と一時生成物を候補へ含めない。
+      - source SHA、rollback SHA、artifact SHA-256、build versionを一つのcandidate manifestへ固定する。
+      - candidate作成前後のworktree cleanlinessを機械検証する。
+      - stale evidenceをcurrent evidenceとして採用しない。
+      - 失敗時はcandidateをdraftのまま保ち、配布可能と表示しない。
+    evidence: [docs/qst/BETA_CANDIDATE.yaml, docs/qst/CANDIDATE_PREFLIGHT.yaml, reports/qst/QST-419.md]
+
+  - id: QST-420
+    title: Hosted Supabase Drift Closure
+    status: Planned
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: QST-419のcandidateから未適用migrationとEdge Functionを配備し、local、hosted、manifestのheadを一致させる。
+    depends_on: [QST-394, QST-419]
+    blocks: [QST-421, QST-422, QST-425, External Beta Distribution]
+    acceptance:
+      - dry-runとbackup確認後にmigrationを順序通り適用する。
+      - process-data-rights-requestsを含むcandidate対象Functionを配備する。
+      - hosted headがlatest local migrationと一致する。
+      - secret値をログ、artifact、reportへ保存しない。
+      - 失敗時はschemaを破壊的に巻き戻さず、停止点とforward fixを記録する。
+    evidence: [docs/qst/BETA_SUPABASE_PROJECT.yaml, docs/qst/HOSTED_EVIDENCE_RUN.yaml, reports/qst/QST-420.md]
+
+  - id: QST-421
+    title: Current-SHA RLS and Data Rights Acceptance
+    status: Planned
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 配備済みcandidateで二account所有境界、Storage、Route transaction、Data Rights処理を実証する。
+    depends_on: [QST-395, QST-420]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - Quest、Mission、Task、Trail、Memory、Route、Mediaのowner操作が成功する。
+      - 別accountのread、write、RPC、Storage object操作が拒否される。
+      - export、correction、consent withdrawal、deletionをfixture限定で実行する。
+      - idempotency、stale conflict、rollback、cleanupを検証する。
+      - account識別子とprivate contentを証拠へ残さない。
+    evidence: [docs/qst/BETA_RLS_EVIDENCE.yaml, docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml, docs/qst/HOSTED_EVIDENCE_RUN.yaml, reports/qst/QST-421.md]
+
+  - id: QST-422
+    title: Supported Web Connected Journey Evidence
+    status: Planned
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: supported browserでmockを無効化し、Auth、Quest、Mission、Task、Trail、Arcの主要航路をcurrent candidateで実証する。
+    depends_on: [QST-396, QST-419, QST-420, QST-424]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - QST-417のlauncherからproduction設定で起動し、保存先とArc応答sourceを確認する。
+      - 登録、login、reload、logout、再login後も本人データが復元される。
+      - Arc相談からQuest確認、Mission/Task、完了、Trailまでを通す。
+      - 日本語IME、keyboard、360/390/430幅、失敗と再試行を確認する。
+      - credential、token、個人データをscreenshotとlogへ残さない。
+    evidence: [docs/qst/WEB_CANDIDATE_SESSION.yaml, reports/qst/QST-422.md]
+
+  - id: QST-423
+    title: Physical Android Accessibility Evidence
+    status: Planned
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 物理Androidへcurrent candidateを導入し、主要航路、日本語IME、TalkBack、200%文字、motion設定を実証する。
+    depends_on: [QST-397, QST-419, QST-420, QST-424]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - emulatorではなく識別済み物理端末でinstall、launch、return、resumeを確認する。
+      - Arc、Quest、Mission、Task、TrailをTalkBackと自然なfocus順で操作できる。
+      - 200%文字、compact width、keyboard、safe areaでoverflowしない。
+      - reduced motionとhaptics opt-outが反映される。
+      - privacy review済みのcandidate-bound evidenceだけを保存する。
+    evidence: [docs/qst/ANDROID_CANDIDATE_SESSION.yaml, docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml, reports/qst/QST-423.md]
+
+  - id: QST-424
+    title: Arc Remote Provenance and Degraded Mode Boundary
+    status: Implemented
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: Arcのremote成功、local preview、timeout、provider失敗をruntimeで区別し、fallbackからQuestや航路変更を確定できないようにする。
+    depends_on: [QST-410, QST-418]
+    blocks: [QST-422, QST-423, QST-425, External Beta Distribution]
+    acceptance:
+      - remote応答成功時だけsanitized source、時刻、traceをsession状態へ記録する。
+      - Settingsは実成功後だけArc応答確認済みへ表示へ更新する。
+      - remote失敗時のfallbackはQuest候補、Mission、Route変更操作を返さない。
+      - 入力を保持し、再試行、手動継続、後での選択肢を表示する。
+      - provider名、prompt、秘密情報、内部例外を利用者向け表示へ露出しない。
+    evidence: [apps/mobile/test/qst_424_arc_remote_provenance_test.dart, reports/qst/QST-424.md]
+
+  - id: QST-425
+    title: Provider-backed Planning Quality Gate Execution
+    status: Planned
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: fixed model、prompt、schema、thinkingで200 case planningとsafetyを実行し、品質、費用、latency、fallbackを人手評価と共に判定する。
+    depends_on: [QST-400, QST-420, QST-424]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - 200 planning caseとsafety corpusをcurrent candidate設定で実行する。
+      - relevance、specificity、done condition、personalization、duplicate、schema、safety gateを集計する。
+      - model、prompt、schema、thinking、grounding、usage、latencyを各結果へ結合する。
+      - 事前固定sampleを人手評価し、自動自己採点だけに依存しない。
+      - release gate未達時はprovider設定をactive化せず、固定Missionへfallbackしない。
+    evidence: [reports/qst/QST-256-REGRESSION.json, reports/qst/QST-425.md]
+
+  - id: QST-426
+    title: Legal Asset and License Release Closure
+    status: InProgress
+    evidence_state: human_approval_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: Product、Legal、Release owner、連絡先、同意version、Arc asset権利、dependency noticeをcandidateへ結合する。
+    depends_on: [QST-398, QST-399, QST-419]
+    blocks: [External Beta Distribution, Public Release]
+    acceptance:
+      - supportとprivacy連絡先、運用owner、規約とprivacy versionを実在情報で承認する。
+      - bundled Arc assetすべてのchain of titleを完結するかrelease-safe assetへ差し替える。
+      - dependency license manifestとThird Party Noticesを人手確認する。
+      - 未承認assetまたはlicenseが一つでもあればrelease packageをblockする。
+      - approvalは署名日、candidate SHA、artifact hashへ結合する。
+    evidence: [docs/qst/BETA_LEGAL_SIGNOFF.yaml, docs/qst/ARC_ASSET_PROVENANCE.yaml, docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml, reports/qst/QST-426.md]
+
+  - id: QST-427
+    title: Runtime Operations and Evidence Status Normalization
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: feedback、incident、SLO、rollbackを実演し、Backlogの多数statusを共通lifecycleとevidence stateへ正規化する。
+    depends_on: [QST-401, QST-419, QST-420]
+    blocks: [QST-428, External Beta Distribution]
+    acceptance:
+      - named owner、tester channel、S0/S1 count、acknowledgement SLAを実在情報で記録する。
+      - privacy-safe observability sink、alert receipt、feature pause、artifact rollbackを実演する。
+      - QST statusをPlanned、InProgress、Implemented、Validated、Completed、Blocked、Supersededへ正規化する。
+      - deployment、device、legal、providerなどのevidence stateはstatusと分離する。
+      - 既存履歴を失わず、SSOT verifierと集計を更新する。
+    evidence: [docs/qst/BETA_FEEDBACK_OPERATIONS.yaml, docs/qst/RUNTIME_SLO_DRILL.yaml, tools/qst/verify_backlog_ssot.dart, reports/qst/QST-427.md]
+
+  - id: QST-428
+    title: QST-419 to QST-427 Completion Review
+    status: InProgress
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: candidate、hosted、RLS、Web、Android、AI、法務、asset、operationsを同一SHAで横断評価し、完成度とGo No-Goを更新する。
+    depends_on: [QST-419, QST-420, QST-421, QST-422, QST-423, QST-424, QST-425, QST-426, QST-427]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - Questra Completion Level Evaluation Promptを変更せず同一基準で再実行する。
+      - 既存QST-394から401の未完了状態を新しい証拠から更新する。
+      - すべてのevidence SHA、artifact hash、environment、timestampを照合する。
+      - blocked gateが一つでもあればExternal BetaをGOにしない。
+      - score、finding、残余risk、次のQSTをレポートへ出力する。
+    evidence: [docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml, reports/qst/QST-419-428-CROSS-REVIEW.md]
+
+  - id: QST-429
+    title: Gemini Model Router Failover Integrity
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 環境変数でprimary modelを上書きした場合も、再試行で別の許可済みmodelへ確実に切り替わるようModel Routerを修正する。
+    depends_on: [QST-249, QST-425]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - primaryとfallbackの環境変数を独立して設定できる。
+      - provider再試行時に失敗したprimaryと同じmodelを再選択しない。
+      - unknown、disabled、latest、experimental modelをproduction経路へ採用しない。
+      - Preview modelは明示feature flagなしで採用しない。
+      - model切替後も同じidempotency keyを維持し、重複保存を発生させない。
+      - RouterとInteractions Adapterの契約テストが通る。
+    evidence: [supabase/functions/_shared/quest_planning/model_registry_test.ts, apps/mobile/test/gemini_quest_planning_modernization_contract_test.dart, reports/qst/QST-429.md]
+
+  - id: QST-430
+    title: Gemini Executed Model Attribution Integrity
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: fallbackを含む各Provider試行で実際に使われたmodelとthinking levelを成功・失敗の両方へ正確に記録する。
+    depends_on: [QST-249, QST-429]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - fallback失敗時のProviderResponseへ実行したfallback modelを記録する。
+      - modelが決定済みの失敗で既定thinking levelへ誤って置換しない。
+      - HTTP失敗、schema失敗、例外、settlement失敗で同じattribution契約を使う。
+      - trace IDとidempotency keyを試行間で維持する。
+      - 実Provider URLをmockしたDenoテストで異なる2 modelの試行と最終証跡を検証する。
+    evidence: [supabase/functions/_shared/quest_planning/interactions_adapter_test.ts, reports/qst/QST-430.md]
+
+  - id: QST-431
+    title: Fallback AI Budget Reservation Integrity
+    status: Implemented
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: primaryとfallbackの候補modelすべてを考慮し、最も高い有効単価でAI利用予算を原子的に予約する。
+    depends_on: [QST-342, QST-429, QST-430]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - primaryとfallbackの候補modelを一つの予約RPCへ渡す。
+      - 有効な価格がない候補modelを含む場合はprovider呼び出し前にfail closedする。
+      - 候補中で最大の推定費用を使い、既存の月次上限と冪等予約を維持する。
+      - 実利用量の精算は実際に実行したmodelとtoken数で行う。
+      - 予約RPCはservice role以外から実行できない。
+      - migrationとadapterの契約テスト、およびfallback mock testが通る。
+      - hosted migration配備前はExternal BetaをGOにしない。
+    evidence: [supabase/migrations/202609120001_fallback_ai_budget_reservation.sql, supabase/functions/_shared/quest_planning/interactions_adapter_test.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-431.md]
+
+  - id: QST-432
+    title: Provider Payload Token Reservation Accuracy
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: AI予算予約の入力token見積りへsystem instruction、schema、tool定義、日本語特性を含め、月次費用上限の過小予約を防ぐ。
+    depends_on: [QST-342, QST-431]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - 実provider payloadに含まれるinput、system instruction、response schema、toolsを見積り対象にする。
+      - 英数字と非ASCII文字を同じ4文字/tokenとして過小評価しない。
+      - 固定overheadと安全marginを加える。
+      - providerへ送らない上限超過inputを予約対象へ含めない。
+      - 実利用量はprovider usageと実行modelで精算する。
+      - model候補別の最大費用予約を維持する。
+      - 見積り契約と既存fallback挙動の回帰テストが通る。
+    evidence: [supabase/functions/_shared/quest_planning/ai_budget_admission.ts, supabase/functions/_shared/quest_planning/interactions_adapter_test.ts, reports/qst/QST-432.md]
+
+  - id: QST-433
+    title: AI Budget Admission Timeout Boundary
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: Supabase予算RPCの無応答がArcとQuest Planningを無期限に停止させないよう、provider呼び出し前のtimeout境界を実装する。
+    depends_on: [QST-431, QST-432]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - reserve、settle、releaseの全予算RPCへAbortSignalを設定する。
+      - timeout既定値をserver環境変数で変更できる。
+      - 異常値を500msから10秒へ制限する。
+      - timeout timerを成功、失敗の両方で必ず解放する。
+      - 予約失敗時はGemini providerを呼ばない。
+      - timeout時に秘密情報やraw promptをlogへ出さない。
+      - timeout動作と静的契約をテストする。
+    evidence: [supabase/functions/_shared/quest_planning/ai_budget_admission.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-433.md]
+
+  - id: QST-434
+    title: AI Budget Idempotent Reservation Recovery
+    status: Implemented
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: DB予約完了後のHTTP応答喪失から同一予約を安全に回収し、二重課金とArc生成停止を防ぐ。
+    depends_on: [QST-431, QST-433]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - 同一user、operation、idempotency keyの有効なreserved行だけを再利用する。
+      - 再利用前にproviderと必要予約費用が既存予約で満たされることを検証する。
+      - settled、released、expired、費用不足の予約を再利用しない。
+      - advisory transaction lockで初回予約と再試行の競合を直列化する。
+      - reserve、settle、releaseを最大2回までtimeout付きで再試行する。
+      - retry後もprovider呼び出しは一度だけにする。
+      - service role以外から回収RPCを実行できない。
+      - hosted配備と同時実行テスト前はExternal BetaをGOにしない。
+    evidence: [supabase/migrations/202609120002_ai_budget_idempotent_recovery.sql, supabase/functions/_shared/quest_planning/ai_budget_admission.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-434.md]
+
+  - id: QST-435
+    title: Gemini Empty Output Fail-Closed Handling
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: HTTP成功でも本文が空のGemini応答を成功・課金済みArc回答として返さない。
+    depends_on: [QST-430, QST-434]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - tool callを含まない空文字、空steps、text抽出不能を成功扱いしない。
+      - primaryの空応答は許可済みfallback modelで一度だけ再試行する。
+      - fallbackも空ならmalformed_outputとして予約を解放する。
+      - 空応答をDBへ生成結果として保存しない。
+      - 実行model、thinking level、trace IDを失敗証跡へ維持する。
+      - 利用者向けUIへprovider内部情報を露出しない。
+      - 空応答と既存fallbackの契約テストが通る。
+    evidence: [supabase/functions/_shared/quest_planning/interactions_adapter.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-435.md]
+
+  - id: QST-436
+    title: Gemini Interactions Usage Settlement Contract
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: Interactions API正式usage fieldを解析し、thinkingを含む実課金tokenで予算を精算する。
+    depends_on: [QST-430, QST-432, QST-435]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - total_input_tokens、total_output_tokens、total_thought_tokensを優先して解析する。
+      - output課金へvisible outputとthinking tokenを一度だけ加算する。
+      - cached tokenとtool-use tokenを別内訳として保持する。
+      - legacy usage fieldとの移行互換性を維持する。
+      - 負数、小数、非数値tokenを精算へ渡さない。
+      - 正式usageがある成功応答をbudget settlement失敗へ誤分類しない。
+      - usage解析の実行テストとFlutter契約テストが通る。
+    evidence: [supabase/functions/_shared/quest_planning/contracts.ts, supabase/functions/_shared/quest_planning/interactions_adapter.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-436.md]
+
+  - id: QST-437
+    title: Gemini Tool-only Interaction Boundary
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 本文を伴わない正当なFunction Calling応答を空回答と誤判定せず、未承認の書き込みから分離して上位層へ返す。
+    depends_on: [QST-254, QST-435, QST-436]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - text抽出前後でfunction callを構造化して保持する。
+      - tool callがある場合だけ本文なし応答を許可する。
+      - tool-only応答へStructured OutputのJSON解析を適用しない。
+      - interaction statusをfinish reasonへ保持する。
+      - Adapter自身はtoolを実行せず、DB書き込みもしない。
+      - usageを精算し、trace、model、thinkingを維持する。
+      - toolなし空応答のfail-closed挙動を維持する。
+      - tool-onlyと空応答のruntime mockが通る。
+    evidence: [supabase/functions/_shared/quest_planning/interactions_adapter.ts, apps/mobile/test/qst_431_fallback_ai_budget_reservation_test.dart, reports/qst/QST-437.md]
+
+  - id: QST-438
+    title: QST-429 to QST-437 Cross-functional Integrity Review
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 10件のAI基盤変更をコード、UI/UX、AI、DB、Security、Master Specの観点で横断評価し、証跡gateの偽陽性を排除する。
+    depends_on: [QST-429, QST-430, QST-431, QST-432, QST-433, QST-434, QST-435, QST-436, QST-437]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - 各変更のmodel、usage、budget、fallback、tool境界を横断確認する。
+      - External Beta gateのstatusを各gate block内で照合する。
+      - gate IDの欠落、重複、余分なIDを拒否する。
+      - summary件数と実評価を一致させる。
+      - draft candidateをpassedとして表示しない。
+      - hosted、physical device、legal、provider-backed証拠をlocal testで代替しない。
+      - 次のQSTへ残課題を反映する。
+    evidence: [tools/qst/verify_external_beta_go_no_go.dart, docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml, reports/qst/QST-438.md]
+
+  - id: QST-439
+    title: Gemini Function Call Continuation Orchestrator
+    status: Validated
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: requires_action応答を認可済みQuestra Tool Serverで処理し、同じInteractionを安全に継続して最終Structured Outputを得る。
+    depends_on: [QST-254, QST-437, QST-438]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - allowlist済みfunctionだけを実行する。
+      - tool引数、user、quest ownership、RLSを検証する。
+      - write toolは利用者の明示承認前に実行しない。
+      - tool結果から同じInteractionを継続する。
+      - 最大step数、timeout、循環、重複書き込みを制限する。
+      - 最終Structured Outputをschemaとsemantic validatorへ通す。
+      - tool callと結果をprivacy-safe auditへ記録する。
+    evidence: [supabase/functions/_shared/quest_planning/tool_interaction_orchestrator.ts, supabase/functions/_shared/quest_planning/tool_interaction_orchestrator_test.ts, supabase/functions/_shared/quest_planning/tool_server.ts, supabase/functions/_shared/quest_planning/pipeline.ts, reports/qst/QST-439.md]
+
+  - id: QST-440
+    title: Gemini Pricing Effective-date Rollover
+    status: Validated
+    evidence_state: local_verified
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: model価格の将来変更をeffective date付きで登録し、予約と精算が実行日時の正しいrateを選ぶようにする。
+    depends_on: [QST-249, QST-431, QST-436, QST-438]
+    blocks: [QST-425]
+    acceptance:
+      - 公式価格の現行rateと次期rateを重複なく登録する。
+      - rate間の空白期間と重複期間をverifierで拒否する。
+      - 予約時刻と精算時刻のrate境界を定義する。
+      - 過去のreservationを新価格で再計算しない。
+      - unknown modelと期限切れrateはfail closedする。
+      - 価格source、確認日、通貨、単位を証跡へ残す。
+      - 境界日時のDB testを追加する。
+    evidence: [supabase/migrations/202609130001_ai_pricing_effective_date_rollover.sql, supabase/tests/qst_440_ai_pricing_rollover.sql, tools/qst/verify_ai_pricing_windows.dart, apps/mobile/test/qst_440_ai_pricing_rollover_test.dart, reports/qst/QST-440.md]
+
+  - id: QST-441
+    title: AI Budget Settlement Reconciliation
+    status: Validated
+    evidence_state: local_verified
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: provider成功後に精算応答を失ったreservationを安全に再照合し、二重課金や永続reservedを防ぐ。
+    depends_on: [QST-434, QST-436, QST-440]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - stale reserved rowを期限とprovider execution evidenceで分類する。
+      - provider成功が確認できる場合だけ同一token usageで冪等精算する。
+      - provider実行不明時は課金確定せずoperator reviewへ送る。
+      - settled/released rowを二重更新しない。
+      - reconciliation attempt、結果、理由を監査する。
+      - service role以外は実行できない。
+      - hosted recovery drill手順とrollbackを文書化する。
+    evidence: [supabase/migrations/202609130002_ai_budget_settlement_reconciliation.sql, supabase/functions/_shared/quest_planning/ai_budget_admission.ts, supabase/functions/_shared/quest_planning/ai_budget_reconciliation_test.ts, apps/mobile/test/qst_441_ai_budget_reconciliation_test.dart, supabase/tests/qst_441_ai_budget_reconciliation.sql, reports/qst/QST-441.md]
+
+  - id: QST-442
+    title: AI Provider Receipt Retention and Privacy Lifecycle
+    status: Validated
+    evidence_state: local_verified
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: AI provider実行証跡を必要最小限の期間だけ保持し、監査可能性と利用者プライバシーを両立する。
+    depends_on: [QST-377, QST-441]
+    blocks: [QST-425]
+    acceptance:
+      - receipt、attempt、caseごとに保持期間と削除条件を定義する。
+      - open caseに必要な証跡を解決前に削除しない。
+      - provider interaction IDを保持期限後に削除または不可逆化する。
+      - 利用者のデータ削除要求と法的保持例外を明確に分離する。
+      - retention workerはservice role限定かつ冪等にする。
+      - 削除件数、除外件数、理由を内容非保持の監査ログへ残す。
+      - hosted retention drillとrollback手順を文書化する。
+    evidence: [supabase/migrations/202609130003_ai_provider_receipt_retention.sql, apps/mobile/test/qst_442_ai_provider_receipt_retention_test.dart, supabase/tests/qst_442_ai_provider_receipt_retention.sql, docs/product/ai_provider_receipt_retention.md, reports/qst/QST-442.md]
+
+  - id: QST-443
+    title: AI Budget Reconciliation Operator Queue
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: 未解決のAI精算caseを最小権限でclaim、調査、解決し、利用者課金を勝手に変更しない運用境界を作る。
+    depends_on: [QST-441, QST-442]
+    blocks: [QST-425]
+    acceptance:
+      - open caseをservice roleのoperatorだけがclaimできる。
+      - claim競合をskip lockedで防ぎ、担当と期限を監査する。
+      - 解決理由をallowlistし、自由文へ個人情報を保存しない。
+      - 課金変更は別の明示的な補正transactionと承認を要求する。
+      - 未解決件数、経過時間、SLA違反を識別子なしで集計できる。
+      - client roleはqueue、receipt、attemptを参照できない。
+      - hosted operator drillとrollback手順を文書化する。
+    evidence: [supabase/migrations/202609130004_ai_budget_reconciliation_operator_queue.sql, apps/mobile/test/qst_443_ai_budget_reconciliation_operator_queue_test.dart, supabase/tests/qst_443_ai_budget_reconciliation_operator_queue.sql, docs/product/ai_budget_reconciliation_operator_queue.md, reports/qst/QST-443.md]
+
+  - id: QST-444
+    title: QST-434 to QST-443 Cross-functional Integrity Review
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: AI provider、budget、reconciliation、retention、operator境界をコード、DB、セキュリティ、運用、Master Specの観点で再監査し、次の10件へ反映する。
+    depends_on: [QST-434, QST-435, QST-436, QST-437, QST-438, QST-439, QST-440, QST-441, QST-442, QST-443]
+    blocks: [QST-445]
+    acceptance:
+      - 実装証拠と外部未検証を分離する。
+      - Critical、High、Mediumの残件を重複なく整理する。
+      - SecurityとMaster Specの非交渉原則を確認する。
+      - 次の10件に依存関係と検証境界を設定する。
+    evidence: [reports/qst/QST-444.md]
+
+  - id: QST-445
+    title: Auth-bound Reconciliation Operator Identity
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: operatorをSupabase Auth主体へ一意に結合し、ID引数のなりすましと同一人物による補正自己承認をDB境界で防ぐ。
+    depends_on: [QST-443, QST-444]
+    blocks: [QST-446, QST-447]
+    acceptance:
+      - enabled operatorは一意なauth userへ結合される。
+      - 人間operator向けRPCはoperator IDを引数に取らずauth.uidから解決する。
+      - 一般authenticated userはqueueをclaimまたは閲覧できない。
+      - requesterとapproverは異なるauth userでなければならない。
+      - service worker経路と人間operator経路を監査上区別する。
+      - hosted二operator drillと非破壊rollbackを文書化する。
+    evidence: [supabase/migrations/202609130005_auth_bound_reconciliation_operator_identity.sql, apps/mobile/test/qst_445_auth_bound_reconciliation_operator_test.dart, supabase/tests/qst_445_auth_bound_reconciliation_operator.sql, docs/product/ai_budget_operator_identity.md, reports/qst/QST-445.md]
+
+  - id: QST-446
+    title: AI Reconciliation Scheduler and SLA Alerts
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: stale reservation分類、queue監視、期限切れclaim回収、SLA違反通知を冪等なserver workerで自動化する。
+    depends_on: [QST-445]
+    blocks: [QST-447]
+    acceptance:
+      - schedule重複でcaseやattemptを二重作成しない。
+      - lease切れclaimを安全に再取得できる。
+      - SLA違反通知は識別子や内容を含まない。
+      - worker失敗を再試行し、provider実行や利用量を推測しない。
+      - kill switchとrunbookを備える。
+    evidence: [supabase/migrations/202609130006_ai_budget_reconciliation_scheduler.sql, supabase/functions/reconcile-ai-budget/index.ts, supabase/functions/_shared/ai_budget_reconciliation_worker.ts, apps/mobile/test/qst_446_ai_reconciliation_scheduler_test.dart, supabase/tests/qst_446_ai_reconciliation_scheduler.sql, docs/product/ai_budget_reconciliation_scheduler.md, reports/qst/QST-446.md]
+
+  - id: QST-447
+    title: Hosted AI Budget Chain Deployment and Recovery Drill
+    status: Planned
+    evidence_state: external_pending
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: QST-420のdrift closureに続き、AI予算予約からoperator補正までを同一candidate SHAの実Supabaseで検証する。
+    depends_on: [QST-420, QST-441, QST-442, QST-445, QST-446, QST-448, QST-449, QST-450, QST-451, QST-452, QST-453, QST-454]
+    blocks: [QST-425, External Beta Distribution]
+    acceptance:
+      - latest migration headとcandidate SHAを固定する。
+      - 応答喪失、receipt競合、同時claim、自己承認拒否、補正適用を実行する。
+      - 二重counter加算がないことをSQLで証明する。
+      - Service Role Keyと利用者識別子を証跡へ残さない。
+      - rollback演習後もopen caseと監査証跡を保持する。
+      - receipt binding、tool continuation attribution、schedulerをcanary確認後に段階的に有効化し、失敗時は証跡を消さず直前のflag状態へ戻す。
+      - QST-453のproperty／並行claim testとQST-454の全tabletop scenarioを同一candidateで実行する。
+    evidence: [reports/qst/QST-447.md]
+
+  - id: QST-448
+    title: Gemini Grounding Query Cost Ledger
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: token費用とは別体系のGoogle Search grounding利用量を予約、精算、監査し、最新情報Questの実原価を欠落させない。
+    depends_on: [QST-436, QST-440, QST-441]
+    blocks: [QST-425]
+    acceptance:
+      - grounding query件数と価格単位をversion付きで保持する。
+      - provider metadataから検証済み件数だけを精算する。
+      - 検索文、URL、個人情報を費用ledgerへ保存しない。
+      - Groundingなし処理へ費用を誤加算しない。
+      - 価格不明時は課金推測せずfail closedする。
+    evidence: [supabase/migrations/202609130007_grounding_query_cost_ledger.sql, supabase/functions/_shared/quest_planning/interactions_adapter.ts, supabase/functions/_shared/quest_planning/grounding.ts, supabase/functions/_shared/quest_planning/ai_budget_admission.ts, supabase/functions/_shared/quest_planning/tool_interaction_orchestrator.ts, apps/mobile/test/qst_448_grounding_query_cost_ledger_test.dart, supabase/tests/qst_448_grounding_query_cost_ledger.sql, docs/product/grounding_query_cost_ledger.md, reports/qst/QST-448.md]
+
+  - id: QST-449
+    title: AI Cost Anomaly Detection
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: model、operation、thinking、grounding別の原価急増をprivacy-safeな集計で検出し、利用者体験を壊す前に運用停止できるようにする。
+    depends_on: [QST-448]
+    blocks: [QST-425]
+    acceptance:
+      - 日次baselineと急増率をaggregateだけで計算する。
+      - 個人のQuest、会話、user IDをalertへ保存しない。
+      - anomalyだけで利用者課金や権利を変更しない。
+      - operation kill switchへの手動導線を持つ。
+      - false positiveと復旧を監査できる。
+    evidence: [supabase/migrations/202609150001_ai_cost_anomaly_detection.sql, supabase/functions/_shared/quest_planning/ai_budget_admission.ts, apps/mobile/test/qst_449_ai_cost_anomaly_detection_test.dart, supabase/tests/qst_449_ai_cost_anomaly_detection.sql, docs/product/ai_cost_anomaly_detection.md, reports/qst/QST-449.md]
+
+  - id: QST-450
+    title: Provider Receipt Authenticity and Replay Guard
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: provider receiptとreservation、trace、model routeの対応を強化し、偽造、cross-reservation replay、古い応答の再利用を拒否する。
+    depends_on: [QST-439, QST-441]
+    blocks: [QST-447]
+    acceptance:
+      - receiptは発行したserver request nonceへ結合される。
+      - provider interaction IDのcross-reservation再利用を拒否する。
+      - trace、operation、model route不一致をoperator caseへ送る。
+      - raw provider outputや秘密情報を保存しない。
+      - duplicate deliveryがcounterを二重更新しない。
+    evidence: [supabase/migrations/202609150002_provider_receipt_authenticity_replay_guard.sql, supabase/functions/_shared/quest_planning/ai_budget_admission.ts, supabase/functions/_shared/quest_planning/interactions_adapter.ts, apps/mobile/test/qst_450_provider_receipt_authenticity_test.dart, supabase/tests/qst_450_provider_receipt_authenticity.sql, docs/product/provider_receipt_authenticity.md, reports/qst/QST-450.md]
+
+  - id: QST-451
+    title: Privacy-safe AI Budget Incident Export
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: BETA-COMPLETION-SPRINT
+    goal: 障害調査に必要な集計証拠を内容と利用者識別子なしでexportし、サポートや監査へ安全に共有できるようにする。
+    depends_on: [QST-446, QST-449]
+    blocks: [QST-447]
+    acceptance:
+      - exportは期間、件数、reason、latency、costの集計に限定する。
+      - prompt、response、Quest、user ID、provider interaction IDを含めない。
+      - export生成者、期間、schema versionを監査する。
+      - 期限付き保存と削除手順を持つ。
+      - 小集団の再識別を抑止する閾値を設定する。
+    evidence: [supabase/migrations/202609150003_privacy_safe_ai_budget_incident_export.sql, apps/mobile/test/qst_451_privacy_safe_ai_budget_incident_export_test.dart, supabase/tests/qst_451_privacy_safe_ai_budget_incident_export.sql, docs/product/ai_budget_incident_export.md, reports/qst/QST-451.md]
+
+  - id: QST-452
+    title: Tool Continuation Multi-turn Cost Attribution Drill
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: stateless Function Callingの複数turn、fallback、thinking、tool resultが一つの利用量へ欠落・重複なく帰属することを検証する。
+    depends_on: [QST-439, QST-441, QST-448]
+    blocks: [QST-425]
+    acceptance:
+      - turn別usage合計と最終settlementが一致する。
+      - fallback前後のmodel attributionを保持する。
+      - tool result本文をcost evidenceへ保存しない。
+      - 中断、timeout、duplicate continuationを冪等に処理する。
+      - provider-backed mockとhosted drill手順を備える。
+    evidence: [supabase/functions/_shared/quest_planning/tool_interaction_orchestrator.ts, supabase/functions/_shared/quest_planning/tool_interaction_orchestrator_test.ts, supabase/migrations/202609150004_tool_continuation_cost_attribution.sql, supabase/tests/qst_452_tool_continuation_cost_attribution.sql, apps/mobile/test/qst_452_tool_continuation_cost_attribution_test.dart, docs/product/tool_continuation_cost_attribution.md, reports/qst/QST-452.md]
+
+  - id: QST-453
+    title: AI Budget SQL Property and Concurrency Tests
+    status: Implemented
+    evidence_state: external_pending
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: reservation、settlement、reconciliation、claim、correctionの不変条件を実PostgreSQLのpropertyと並行testで検証する。
+    depends_on: [QST-445, QST-448, QST-450]
+    blocks: [QST-447]
+    acceptance:
+      - counterがreservation合計と一致する。
+      - 同一idempotency keyとreceipt replayで二重精算しない。
+      - 並行claimは一operatorだけが取得する。
+      - stale correction snapshotは全変更をrollbackする。
+      - random sequence後も非負、状態遷移、owner境界を保つ。
+    evidence: [supabase/tests/qst_453_ai_budget_properties.sql, tools/qst/run_ai_budget_concurrency_drill.ps1, apps/mobile/test/qst_453_ai_budget_property_concurrency_test.dart, docs/product/ai_budget_property_concurrency_testing.md, reports/qst/QST-453.md]
+
+  - id: QST-454
+    title: AI Budget Operations Tabletop and Recovery SLO
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: BETA-COMPLETION-SPRINT
+    goal: provider障害、精算応答喪失、queue滞留、誤補正のtabletopを行い、検知・復旧・証拠保持のSLOを確定する。
+    depends_on: [QST-446, QST-451, QST-453]
+    blocks: [QST-455]
+    acceptance:
+      - 重大度、owner、検知時間、復旧時間、停止判断を定義する。
+      - 利用者へ技術用語や内部費用を露出しない通知方針を持つ。
+      - 誤補正は別requestで相殺し監査履歴を消さない。
+      - tabletop結果を次回QSTへ反映する。
+      - External Beta gateと矛盾しない。
+    evidence: [docs/qst/AI_BUDGET_OPERATIONS_TABLETOP.yaml, docs/product/ai_budget_operations_recovery.md, tools/qst/verify_ai_budget_operations_tabletop.dart, apps/mobile/test/qst_454_ai_budget_operations_tabletop_test.dart, reports/qst/QST-454.md]
+
+  - id: QST-455
+    title: QST-445 to QST-454 Cross-functional Integrity Review
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: BETA-COMPLETION-SPRINT
+    goal: 次の10件をコード、UI/UX、AI、DB、セキュリティ、Master Spec、外部証拠で横断レビューし、後続QSTへ反映する。
+    depends_on: [QST-445, QST-446, QST-447, QST-448, QST-449, QST-450, QST-451, QST-452, QST-453, QST-454]
+    blocks: []
+    acceptance:
+      - 各QSTの完了証拠と未検証を再分類する。
+      - Critical、High、Mediumの残差を根拠付きで示す。
+      - UI/UX対象外を実画面確認済みと扱わない。
+      - 次のBacklogを重複なく更新する。
+    evidence: [apps/mobile/test/qst_455_ai_budget_cross_functional_review_test.dart, reports/qst/QST-447.md, reports/qst/QST-455.md]
+
+  - id: QST-456
+    title: Approval-safe AI Route Replacement after Manual Missions
+    status: Implemented
+    evidence_state: external_pending
+    priority: P0
+    epic: QUEST-PLANNING-V2
+    goal: 手動Mission作成後も、完了済み成果を保護し、未完了の残り航路だけをGemini案へ明示承認後に置き換えられるようにする。
+    depends_on: [QST-185, QST-252, QST-258, QST-341]
+    blocks: [External Beta Distribution]
+    acceptance:
+      - Geminiへ現在のMission、状態、順序を所有者境界内で渡す。
+      - 完了済みMissionを維持し、AI候補として重複生成しない。
+      - 未完了Missionは承認後だけ新しい航路へ置き換える。
+      - プレビュー後にMissionが変わった場合はtransaction全体を拒否する。
+      - 旧Missionを物理削除せず履歴として保持する。
+      - UIで維持件数と置換件数を示し、明示承認を求める。
+      - Gemini障害時に固定Missionを作成しない。
+      - Local testとHosted二アカウントdrillの証跡を分離する。
+    evidence: [supabase/migrations/202609150005_approval_safe_ai_route_replacement.sql, supabase/functions/quest-planning-v2/index.ts, supabase/functions/_shared/quest_planning/existing_route_context.ts, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/lib/features/quest_journey/quest_journey_workspace.dart, apps/mobile/lib/features/task/task_repository.dart, apps/mobile/test/qst_456_approval_safe_ai_route_replacement_test.dart, supabase/tests/qst_456_approval_safe_ai_route_replacement.sql, docs/product/approval_safe_ai_route_replacement.md, reports/qst/QST-456.md]
+
+  - id: QST-457
+    title: Trail Quest and Mission Linking Flow
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail画面からQuestを選び、そのQuestに属するMissionを選択して、親子関係が明確なTrailを保存できるようにする。
+    depends_on: [QST-204, QST-258, QST-285]
+    blocks: []
+    acceptance:
+      - Trail画面の作成シートでQuestを先に選択する。
+      - Mission候補は選択したQuestに属するものだけを表示する。
+      - removed Missionとarchived Questを新規紐づけ候補へ表示しない。
+      - QuestとMissionを選ぶまでTrailを保存しない。
+      - 保存したTrailへquest_idとmission_idを設定する。
+      - Task起点など既存の親コンテキスト付き作成を維持する。
+      - DBのTrail階層整合性Triggerと矛盾しない。
+      - Flutter analyzeと関連Widget testが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_457_trail_quest_mission_linking_test.dart, apps/mobile/test/qst_268_trail_first_record_test.dart, supabase/migrations/202608080003_trail_parent_delete_integrity_fix.sql, reports/qst/QST-457.md]
+
+  - id: QST-458
+    title: Immutable Compensating AI Budget Correction
+    status: Implemented
+    evidence_state: external_pending
+    priority: P1
+    epic: BETA-COMPLETION-SPRINT
+    goal: 適用済みの誤補正を改ざんせず、現在snapshotから監査可能な別requestとして相殺し、既存の二人承認transactionでのみ反映する。
+    depends_on: [QST-445, QST-453, QST-454, QST-455]
+    blocks: [QST-447]
+    acceptance:
+      - 適用済み補正requestとaudit recordを更新または削除しない。
+      - 元request、相殺request、対象reservationの関連を型付きIDで保持する。
+      - 現在snapshotが元request適用後の値と一致しない場合はstaleとして全変更を拒否する。
+      - 相殺requestの作成者と承認者を別のauth-bound operatorに限定する。
+      - request作成だけではcounterを変更せず、既存の承認済みtransactionでのみ反映する。
+      - 同じ元requestへの重複相殺をidempotency keyとDB制約で防止する。
+      - owner境界、自己承認拒否、rollback、並行作成を実PostgreSQL testで検証する。
+      - hosted drillでは秘密情報、利用者識別子、Quest内容を証跡へ残さない。
+    evidence: [supabase/migrations/202609150006_immutable_compensating_ai_budget_correction.sql, supabase/tests/qst_458_immutable_compensating_correction.sql, apps/mobile/test/qst_458_immutable_compensating_correction_test.dart, docs/product/immutable_compensating_ai_budget_correction.md, reports/qst/QST-458.md]
+
+  - id: QST-459
+    title: Trail Parent Correction and History Protection
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 手動TrailのQuest／Mission選択ミスを後から修正できるようにし、Task起点Trailの親履歴は変更不能として保護する。
+    depends_on: [QST-278, QST-285, QST-457]
+    blocks: []
+    acceptance:
+      - Trail編集画面に現在のQuestとMissionを表示する。
+      - 手動Trailだけ明示操作後にQuestとMissionを再選択できる。
+      - Mission候補は選択したactive Questに属し、removedでないものに限定する。
+      - Task起点TrailではQuest、Mission、Taskの親関係を変更できない。
+      - 親変更時にtask_idを解除し、mission_recordとして保存する。
+      - 保存失敗時に本文と選択を保持して再試行できる。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/lib/features/trail/trail_model.dart, apps/mobile/test/qst_459_trail_parent_editing_test.dart, reports/qst/QST-459.md]
+
+  - id: QST-460
+    title: Trail Parent Navigation
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: TrailカードのQuest／Mission階層から対応する親詳細へ戻れるようにし、記録と航路の往復を短くする。
+    depends_on: [QST-411, QST-457, QST-459]
+    blocks: []
+    acceptance:
+      - TrailカードのQuestチップから親Quest詳細へ遷移できる。
+      - Missionチップから正しいQuest配下のMission詳細へ遷移できる。
+      - 作成／編集sheet内のbreadcrumbは表示専用を維持する。
+      - 操作可能なチップをbutton semanticsで読み上げる。
+      - 親が解決できないTrailへ壊れた遷移を表示しない。
+      - Widget router testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_460_trail_parent_navigation_test.dart, reports/qst/QST-460.md]
+
+  - id: QST-461
+    title: Trail Journey Filter
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: TrailをQuestからMissionの順で絞り込み、記録が増えても目的の航路を短時間で見返せるようにする。
+    depends_on: [QST-077, QST-457, QST-460]
+    blocks: []
+    acceptance:
+      - TrailのあるQuestだけを絞り込み候補へ表示する。
+      - Mission候補を選択Quest配下かつTrailのある項目に限定する。
+      - Quest変更時にMission filterを解除する。
+      - 集計、画像、highlightを表示中のTrailへ一致させる。
+      - 一操作ですべてのTrail表示へ戻れる。
+      - 360pxで1カラム、広い画面で2カラムになりoverflowしない。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_461_trail_journey_filter_test.dart, reports/qst/QST-461.md]
+
+  - id: QST-462
+    title: Trail Scoped Entry
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Quest／Mission詳細からTrailへ移動した際に親の航路文脈をURLと初期フィルターで維持し、目的の記録へ直接到達できるようにする。
+    depends_on: [QST-460, QST-461]
+    blocks: []
+    acceptance:
+      - Quest詳細からそのQuestに絞り込んだTrailへ遷移できる。
+      - Mission詳細からそのMissionに絞り込んだTrailへ遷移できる。
+      - URLがQuest IDと任意のMission IDを保持する。
+      - 不正または古い親IDでは壊れず全Trailへ戻る。
+      - Task起点の親固定composerを維持する。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/core/router/app_routes.dart, apps/mobile/lib/core/router/app_router.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/lib/features/mission/mission_detail_screen.dart, apps/mobile/test/qst_462_trail_scoped_entry_test.dart, reports/qst/QST-462.md]
+
+  - id: QST-463
+    title: Trail Contextual Create
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: 表示中のQuest／MissionフィルターをTrail作成へ引き継ぎ、再選択負担と誤紐づけを減らす。
+    depends_on: [QST-457, QST-461, QST-462]
+    blocks: []
+    acceptance:
+      - Mission絞り込み中の作成sheetへQuestとMissionを初期選択する。
+      - Quest絞り込み中はQuestだけを初期選択し、Mission選択を残す。
+      - Task起点の固定親contextを変更可能にしない。
+      - 古い親IDを保存へ利用しない。
+      - 保存時にQuestとMissionの階層整合性を維持する。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_463_trail_contextual_create_test.dart, reports/qst/QST-463.md]
+
+  - id: QST-464
+    title: Empty Journey Trail Recovery
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trailが0件のQuest／Missionへ文脈付きで入ってもDropdown例外を起こさず、その航路の最初の記録を作れるようにする。
+    depends_on: [QST-461, QST-462, QST-463]
+    blocks: []
+    acceptance:
+      - 選択中のQuestをTrail 0件でもfilter候補へ保持する。
+      - 選択中のMissionをTrail 0件でもfilter候補へ保持する。
+      - Dropdown初期値が候補不在で例外にならない。
+      - 空状態から選択航路を引き継いでTrail作成を開始できる。
+      - 全Trail表示へ戻る導線を維持する。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_464_empty_journey_trail_test.dart, reports/qst/QST-464.md]
+
+  - id: QST-465
+    title: QST-456 to QST-464 Cross-functional Integrity Review
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: QST-456〜464をコード、UI/UX、AI、DB、セキュリティ、Master Spec、証跡境界で横断レビューし、発見した不整合を修正する。
+    depends_on: [QST-456, QST-457, QST-458, QST-459, QST-460, QST-461, QST-462, QST-463, QST-464]
+    blocks: []
+    acceptance:
+      - 同名CTAの挙動差を調査して統一する。
+      - archived／removed航路へ無効な作成操作を表示しない。
+      - AI航路置換が承認前に永続化されないことを再確認する。
+      - DB／RLSのlocal証跡とhosted未検証を混同しない。
+      - Master SpecのQuest階層と履歴保護に整合する。
+      - 次のBacklog方向を重複なく提示する。
+      - Flutter analyze、関連test、SSOT gateが通る。
+    evidence: [apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_465_cross_functional_integrity_review_test.dart, reports/qst/QST-465.md]
+
+  - id: QST-466
+    title: Trail Filter URL Synchronization
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: TrailのQuest／Mission絞り込みをURLへ同期し、再読み込みや画面復帰でも航路文脈を維持する。
+    depends_on: [QST-461, QST-462, QST-465]
+    blocks: []
+    acceptance:
+      - Quest filterをquestId queryへ反映する。
+      - Mission filterをquestIdとmissionId queryへ反映する。
+      - Quest変更時に古いMission queryを残さない。
+      - 解除時にqueryのないTrail URLへ戻る。
+      - Trail widgetをRouter非依存に保つ。
+      - 不正queryを表示または保存へ利用しない。
+      - Router Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/lib/core/router/app_router.dart, apps/mobile/test/qst_466_trail_filter_url_sync_test.dart, reports/qst/QST-466.md]
+
+  - id: QST-467
+    title: Trail Incremental Pagination
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 初回Trail取得を40件に保ちながら、重複やowner越境なく過去のページを追加表示できるようにする。
+    depends_on: [QST-067, QST-077, QST-465]
+    blocks: []
+    acceptance:
+      - 初回表示を40件以内に制限する。
+      - 41件目の存在から追加ページ有無を判定する。
+      - 追加取得をowner境界内で行う。
+      - created_atとidで決定的に並べる。
+      - 既存IDを重複追加しない。
+      - 失敗時に既存Trailを消さず再試行できる。
+      - 利用者切替時にpagination stateを破棄する。
+      - Repository testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_repository.dart, apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/lib/features/trail/trail_pagination_state.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_467_trail_pagination_test.dart, reports/qst/QST-467.md]
+
+  - id: QST-468
+    title: Trail Parent Domain Validation
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: UI以外のTrail作成経路でもQuest／Mission／Task階層の不整合をstate変更前に拒否する。
+    depends_on: [QST-278, QST-457, QST-465]
+    blocks: []
+    acceptance:
+      - cross-Quest Missionを拒否する。
+      - cross-Mission Taskを拒否する。
+      - archived Questとremoved Missionを新規親として拒否する。
+      - 不正TrailをController stateへ追加しない。
+      - 親データ未ロードを不整合と混同しない。
+      - DB triggerとRLSを最終防衛線として維持する。
+      - Domain testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_parent_validator.dart, apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_468_trail_parent_domain_validation_test.dart, supabase/migrations/202608080003_trail_parent_delete_integrity_fix.sql, reports/qst/QST-468.md]
+
+  - id: QST-469
+    title: Trail Parent Mutation Policy
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail編集APIでTask起点履歴や未解決のQuest／Mission親を変更できないようにする。
+    depends_on: [QST-459, QST-468]
+    blocks: []
+    acceptance:
+      - 親を変えない本文編集を維持する。
+      - Task起点Trailの親変更を拒否する。
+      - 手動Trailの親変更を解決済みの有効階層だけに限定する。
+      - 未解決親への変更を拒否する。
+      - 拒否時にoptimistic stateとDBを変更しない。
+      - 同期／非同期更新APIへ同じpolicyを適用する。
+      - Domain testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_parent_validator.dart, apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_469_trail_parent_mutation_policy_test.dart, reports/qst/QST-469.md]
+
+  - id: QST-470
+    title: Trail Update Rejection Feedback
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Trail親policy拒否と通信保存失敗を型付き結果で区別し、入力を保持したまま適切な回復操作を案内する。
+    depends_on: [QST-459, QST-469]
+    blocks: []
+    acceptance:
+      - 更新結果をsaved／rejected／failedで区別する。
+      - 親policy拒否でQuestとMissionの再選択を案内する。
+      - Trail不在時に画面更新を案内する。
+      - 保存失敗時に入力を保持して再試行できる。
+      - 拒否時にController stateを変更しない。
+      - 既存bool API互換を維持する。
+      - Widget／unit testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_470_trail_update_feedback_test.dart, reports/qst/QST-470.md]
+
+  - id: QST-471
+    title: Trail Owner-scoped Idempotency
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 同一Trail IDの再送をowner内だけで収束させ、別ownerの記録を変更しない。
+    depends_on: [QST-199, QST-285, QST-467]
+    blocks: []
+    acceptance:
+      - upsert置換条件へownerIdとtrailIdを使う。
+      - 同一ownerの再送を一件へ収束させる。
+      - 異なるownerの同一IDを相互に削除しない。
+      - find／save／deleteでowner境界を統一する。
+      - Supabase RLSの意味と矛盾しない。
+      - Repository testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_repository.dart, apps/mobile/test/qst_471_trail_owner_scoped_idempotency_test.dart, reports/qst/QST-471.md]
+
+  - id: QST-472
+    title: Trail Delete Recovery
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail削除を待機可能にし、失敗時に重複なく元の表示位置へ復元する。
+    depends_on: [QST-041, QST-471]
+    blocks: []
+    acceptance:
+      - 削除成否をawaitして取得できる。
+      - 失敗時に削除Trailを元の位置へ復元する。
+      - 同じIDを重複復元しない。
+      - 存在しないTrail削除でstateを変更しない。
+      - ローカル未ログイン動作を維持する。
+      - 削除確認UIが完了を待つ。
+      - Unit testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_472_trail_delete_recovery_test.dart, reports/qst/QST-472.md]
+
+  - id: QST-473
+    title: Trail Media Batch Loading
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail画像metadataをowner-boundな一括queryで取得し、追加ページでは未取得IDだけを読み込む。
+    depends_on: [QST-051, QST-467]
+    blocks: []
+    acceptance:
+      - Trail ID配列を一括取得するRepository契約を持つ。
+      - owner_idとTrail関連だけにqueryを限定する。
+      - Trailごとに最新画像一件だけを採用する。
+      - 取得済み画像を再問い合わせしない。
+      - 利用者切替時に前利用者のstateを即時破棄する。
+      - 古い非同期responseを適用しない。
+      - Repository testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/media/media_repository.dart, apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_473_trail_media_batch_loading_test.dart, reports/qst/QST-473.md]
+
+  - id: QST-474
+    title: Trail Media Stale Response Guard
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail削除や利用者切替後に古い画像responseがattachment stateを再投入しないようにする。
+    depends_on: [QST-473]
+    blocks: []
+    acceptance:
+      - 全画像load開始時にgenerationを更新する。
+      - 空Trail一覧が処理中requestを無効化する。
+      - 未ログイン状態が処理中requestを無効化する。
+      - response適用前にownerとgenerationを再確認する。
+      - stale response後も空stateを維持する。
+      - Race testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_474_trail_media_stale_response_test.dart, reports/qst/QST-474.md]
+
+  - id: QST-475
+    title: Trail Filter Pagination Disclosure
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 未読込ページが残るfilter空状態でTrail不在を断定せず、過去のTrail追加読込へ案内する。
+    depends_on: [QST-461, QST-467]
+    blocks: []
+    acceptance:
+      - 未読込ページがある場合は現在の読込範囲だけが空であると表示する。
+      - 過去のTrailに一致する可能性を説明する。
+      - 追加読込操作を同じ状態で利用できる。
+      - 全ページ読込後だけ航路にTrailがないと断定する。
+      - Quest／Mission filterを維持したまま追加読込できる。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_475_trail_filter_pagination_disclosure_test.dart, reports/qst/QST-475.md]
+
+  - id: QST-476
+    title: Trail Cross-functional Integrity Review II
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: QST-466〜475を横断レビューし、ページング、owner切替、画像raceの整合性を修正する。
+    depends_on: [QST-466, QST-467, QST-468, QST-469, QST-470, QST-471, QST-472, QST-473, QST-474, QST-475]
+    blocks: []
+    acceptance:
+      - ローカル追加がremote pagination offsetを進めない。
+      - refresh後に古い追加読込responseを適用しない。
+      - owner切替後に旧ownerの削除失敗Trailを復元しない。
+      - 画像変更後に古いbatch responseを適用しない。
+      - Quest→Mission→Task→Trail階層を維持する。
+      - AI／DB／security／Master Spec境界をレビューする。
+      - Trail回帰、Flutter analyze、QST gateが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_476_cross_functional_trail_review_test.dart, reports/qst/QST-476.md]
+
+  - id: QST-477
+    title: Trail Keyset Pagination
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail追加読込をcreated_atとidのcursorへ移行し、閲覧中の新規投稿による重複・欠落を防ぐ。
+    depends_on: [QST-467, QST-476]
+    blocks: []
+    acceptance:
+      - Repository契約がoffsetではなくcursorを受け取る。
+      - created_atとidの複合降順を安定した境界に使う。
+      - owner_id境界と取得上限を維持する。
+      - 閲覧中の新規投稿が次ページをずらさない。
+      - 同一created_atではidをtie-breakに使う。
+      - ローカル追加件数をremote cursorへ混ぜない。
+      - Repository／Controller回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_repository.dart, apps/mobile/lib/features/trail/trail_controller.dart, apps/mobile/test/qst_477_trail_cursor_pagination_test.dart, reports/qst/QST-477.md]
+
+  - id: QST-478
+    title: Trail Composer Draft Recovery
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail作成中の親選択と本文をowner別に保護し、安全に復元・破棄できるようにする。
+    depends_on: [QST-405, QST-457]
+    blocks: []
+    acceptance:
+      - Trail下書きをowner別のsecure storageへ保存する。
+      - Quest／Mission選択と入力内容を復元する。
+      - 復元前に現在の親階層を再検証する。
+      - 異なる呼出contextの下書きを自動適用しない。
+      - 期限切れ、破損、owner不一致をfail-closedで削除する。
+      - 保存成功または明示破棄後に下書きを削除する。
+      - Repository／Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_draft_repository.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/lib/widgets/forms/questra_modal_sheet.dart, apps/mobile/test/qst_478_trail_draft_recovery_test.dart, reports/qst/QST-478.md]
+
+  - id: QST-479
+    title: Trail Parent Selection Preview
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Trail保存前に選択したQuest→Mission階層を視覚・読み上げの両方で確認できるようにする。
+    depends_on: [QST-457, QST-478]
+    blocks: []
+    acceptance:
+      - QuestとMission選択後に保存先階層を表示する。
+      - Quest→Missionの親子関係を明示する。
+      - 読み上げ用の一つの意味的ラベルを提供する。
+      - 内部IDを利用者へ表示しない。
+      - 360pxと430pxでoverflowしない。
+      - 既存の固定parent作成フローを維持する。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_479_trail_parent_selection_preview_test.dart, reports/qst/QST-479.md]
+
+  - id: QST-480
+    title: Trail Missing Mission Recovery
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 選択したQuestにMissionがないTrail作成状態を、対象QuestのMission作成導線へ回復可能にする。
+    depends_on: [QST-457, QST-479]
+    blocks: []
+    acceptance:
+      - Missionがない選択済みQuestに回復CTAを表示する。
+      - CTAが対象Quest IDを保持する。
+      - Trail Modalを閉じてQuest詳細へ遷移する。
+      - 未完了Modalをnavigation historyへ残さない。
+      - Missionがある場合は回復CTAを表示しない。
+      - 実タップのWidget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/core/router/app_routes.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_480_trail_missing_mission_recovery_test.dart, reports/qst/QST-480.md]
+
+  - id: QST-481
+    title: Trail Mission Creation Return Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail作成中に不足Missionを追加した後、同じQuestを保持したTrail作成へ安全に戻れるようにする。
+    depends_on: [QST-480]
+    blocks: []
+    acceptance:
+      - Trailから対象QuestのMission作成へ安全なreturnToを渡す。
+      - Mission作成成功時だけTrail作成へ戻る。
+      - 戻ったTrail作成で対象Questを選択済みにする。
+      - 新しいMissionを含む対応Mission一覧から選択できる。
+      - 外部URL、別Quest、create指定のない戻り先を拒否する。
+      - 通常のQuest詳細からのMission作成は従来どおり画面に留まる。
+      - Route契約／Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/core/router/app_routes.dart, apps/mobile/lib/core/router/app_router.dart, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_481_trail_mission_return_contract_test.dart, reports/qst/QST-481.md]
+
+  - id: QST-482
+    title: Trail Draft Context Conflict Guard
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 別のQuestに保存中のTrail下書きを、新しい航路の入力で無言に上書きしない。
+    depends_on: [QST-478, QST-481]
+    blocks: []
+    acceptance:
+      - 呼出Questと保存済み下書きのQuest不一致を検出する。
+      - 利用者が判断するまで競合下書きを自動適用しない。
+      - 利用者が判断するまで新しい入力を下書きへ自動保存しない。
+      - 下書きを開く操作で元のQuest／Mission／本文を復元する。
+      - 明示破棄後だけ新しい航路の下書き保存を開始する。
+      - 固定parent作成では既存下書きを残して閉じられる。
+      - Draft／Widget回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_482_trail_draft_context_conflict_test.dart, reports/qst/QST-482.md]
+
+  - id: QST-483
+    title: Trail Newly Created Mission Selection
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Trailから追加したMissionを戻り先で自動選択し、同じMissionを探し直す操作をなくす。
+    depends_on: [QST-481]
+    blocks: []
+    acceptance:
+      - Mission作成結果から新しいMission IDを取得する。
+      - Mission作成成功後のTrail routeへQuest IDとMission IDを渡す。
+      - Trail composerが対象Questと新規Missionを選択済みにする。
+      - Mission作成キャンセル時はTrailへ遷移しない。
+      - 通常のQuest詳細からのMission作成は画面に留まる。
+      - Route／Widget回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/core/router/app_routes.dart, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/test/qst_481_trail_mission_return_contract_test.dart, apps/mobile/test/qst_483_trail_created_mission_selection_test.dart, reports/qst/QST-483.md]
+
+  - id: QST-484
+    title: Mission Scoped Trail Direct Entry
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Mission詳細から、そのMissionを選択済みにしたTrail作成へ一操作で進めるようにする。
+    depends_on: [QST-462, QST-483]
+    blocks: []
+    acceptance:
+      - Mission詳細にTrail記録の明確なCTAを表示する。
+      - CTAがQuest IDとMission IDをTrail routeへ渡す。
+      - Trail composerを開いた状態で遷移する。
+      - composerを閉じた後も同じMissionで絞り込んだTrail一覧を表示する。
+      - 内部IDを利用者向けcopyへ露出しない。
+      - 実タップのWidget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/mission/mission_detail_screen.dart, apps/mobile/test/qst_484_mission_trail_direct_entry_test.dart, reports/qst/QST-484.md]
+
+  - id: QST-485
+    title: Trail Composer URL Lifecycle
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Routeから開いたTrail composer終了後にcreate指定を除去し、再読込による意図しない再表示を防ぐ。
+    depends_on: [QST-466, QST-481]
+    blocks: []
+    acceptance:
+      - URLのcreate=1からTrail composerを一度だけ開く。
+      - composer終了後にcreate queryを除去する。
+      - Quest／Mission filter queryは維持する。
+      - Mission作成へのhandoff時は戻り先正規化で遷移を上書きしない。
+      - URL再読込で閉じたcomposerを再表示しない。
+      - 保存成功を含むWidget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_485_trail_composer_url_lifecycle_test.dart, reports/qst/QST-485.md]
+
+  - id: QST-486
+    title: Trail Journey Cross-functional Review II
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: QST-477〜485のページング、下書き、親階層、往復導線、URL lifecycleを横断再検証する。
+    depends_on: [QST-477, QST-478, QST-479, QST-480, QST-481, QST-482, QST-483, QST-484, QST-485]
+    blocks: []
+    acceptance:
+      - QST-477〜485のfocused regressionがすべて通る。
+      - Flutter analyzeが警告を含めて0件になる。
+      - Backlog SSOTとcandidate manifestが通る。
+      - RLS readinessとmigration driftが通る。
+      - External Beta判定を実証済み証拠だけで維持する。
+      - Critical／High findingsを次のQSTへ反映する。
+      - レビュー結果と残余リスクをQST Reportへ記録する。
+    evidence: [apps/mobile/test/qst_477_trail_cursor_pagination_test.dart, apps/mobile/test/qst_478_trail_draft_recovery_test.dart, apps/mobile/test/qst_479_trail_parent_selection_preview_test.dart, apps/mobile/test/qst_480_trail_missing_mission_recovery_test.dart, apps/mobile/test/qst_481_trail_mission_return_contract_test.dart, apps/mobile/test/qst_482_trail_draft_context_conflict_test.dart, apps/mobile/test/qst_483_trail_created_mission_selection_test.dart, apps/mobile/test/qst_484_mission_trail_direct_entry_test.dart, apps/mobile/test/qst_485_trail_composer_url_lifecycle_test.dart, reports/qst/QST-486.md]
+
+  - id: QST-487
+    title: Trail Journey Analytics Privacy Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail作成導線の改善効果を、本文・名称・URL・entity IDを収集せず計測できるようにする。
+    depends_on: [QST-486]
+    blocks: []
+    acceptance:
+      - composer open、parent selection、Mission recovery、draft conflict resolution、save successを区別する。
+      - Trail本文、title、summary、Quest名、Mission名を送信しない。
+      - Quest ID、Mission ID、Route IDを送信しない。
+      - allowlist済みのsurface、outcome、source、booleanだけを利用する。
+      - Analytics失敗がTrail操作を止めない。
+      - Privacy contract／回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/core/analytics/analytics_event.dart, apps/mobile/lib/core/analytics/analytics_service.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_487_trail_journey_analytics_privacy_test.dart, reports/qst/QST-487.md]
+
+  - id: QST-488
+    title: Trail Composer Accessibility Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: TrailのQuest／Mission選択と回復導線を読み上げ可能にし、compact画面の200%文字表示でも操作可能にする。
+    depends_on: [QST-479, QST-480, QST-487]
+    blocks: []
+    acceptance:
+      - Quest selectorに目的を示すSemantics labelがある。
+      - Mission selectorがQuest選択前後の状態を読み上げる。
+      - Mission作成への回復CTAが遷移先を読み上げる。
+      - 360px、200%文字表示でoverflowしない。
+      - 長いQuest／Mission名をlayout内へ収める。
+      - Semantics／responsive回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_488_trail_accessibility_contract_test.dart, reports/qst/QST-488.md]
+
+  - id: QST-489
+    title: Trail Filter Result Feedback
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: TrailのQuest／Mission絞り込み結果件数を画面表示と読み上げで明示し、解除結果を理解しやすくする。
+    depends_on: [QST-461, QST-466, QST-488]
+    blocks: []
+    acceptance:
+      - QuestとMission filterの目的をSemanticsで示す。
+      - filter適用中に表示Trail件数を示す。
+      - 件数変更をlive regionで読み上げる。
+      - filter解除後に件数表示を除去し全Trailへ戻す。
+      - compact layoutを維持する。
+      - Filter／URL回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_489_trail_filter_result_feedback_test.dart, reports/qst/QST-489.md]
+
+  - id: QST-490
+    title: Trail Draft Save Status
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail入力中のsecure draft保存状態を明示し、保存失敗時も入力が保持されていることを伝える。
+    depends_on: [QST-478, QST-482]
+    blocks: []
+    acceptance:
+      - debounce待機中と保存中に保存状態を示す。
+      - secure draft保存成功を表示する。
+      - 保存失敗を表示し入力内容を維持する。
+      - 状態変更をlive regionで読み上げる。
+      - 連続入力では最新writeだけが表示状態を更新する。
+      - Draft回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_490_trail_draft_save_status_test.dart, reports/qst/QST-490.md]
+
+  - id: QST-491
+    title: Trail Parent Availability Feedback
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trail作成中に選択済みQuest／Missionが利用不可になった場合、古い親へ保存せず再選択を案内する。
+    depends_on: [QST-468, QST-481]
+    blocks: []
+    acceptance:
+      - 選択済みQuestのarchived／missing状態を検出する。
+      - 選択済みMissionのremoved／missing状態を検出する。
+      - 利用不可状態をlive regionで通知する。
+      - stale parentを保存対象にしない。
+      - 入力本文とdraft IDを維持したまま再選択できる。
+      - Domain／Widget回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_491_trail_parent_availability_feedback_test.dart, reports/qst/QST-491.md]
+
+  - id: QST-492
+    title: Trail Parent Navigation Touch Target
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: TrailカードのQuest／Mission親階層navigationを44px以上の安定したタップ対象にする。
+    depends_on: [QST-460, QST-488]
+    blocks: []
+    acceptance:
+      - tappable Quest chipの高さが44px以上ある。
+      - tappable Mission chipの高さが44px以上ある。
+      - 非interactive preview chipは余計なbutton semanticsを持たない。
+      - 親Quest／Missionへの既存遷移を維持する。
+      - compact幅で階層chipがWrapする。
+      - Navigation／size回帰テストとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_492_trail_parent_touch_target_test.dart, reports/qst/QST-492.md]
+
+  - id: QST-493
+    title: Completed Mission Trail Guidance
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: 完了済みMissionにも振り返りや学びのTrailを残せることを明示する。
+    depends_on: [QST-457, QST-488]
+    blocks: []
+    acceptance:
+      - 完了MissionをTrail親として選択できる。
+      - selector上で完了状態を示す。
+      - 選択後に振り返り記録が可能な理由を短く示す。
+      - 完了Missionの状態を変更しない。
+      - 通常Missionでは追加説明を表示しない。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_493_completed_mission_trail_guidance_test.dart, reports/qst/QST-493.md]
+
+  - id: QST-494
+    title: Trail Quest Selector Journey Ordering
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Trail作成時のQuest候補を旅の継続性に沿って並べ、現在進めているQuestを素早く選べるようにする。
+    depends_on: [QST-457, QST-488, QST-493]
+    blocks: []
+    acceptance:
+      - 進行中Questを候補の先頭に表示する。
+      - 下書きQuestを進行中Questの後に表示する。
+      - 完了Questを後方へ配置し完了状態を明示する。
+      - archived Questを選択候補へ含めない。
+      - 同じ状態ではタイトル順で安定して表示する。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_494_trail_quest_selector_order_test.dart, reports/qst/QST-494.md]
+
+  - id: QST-495
+    title: Trail Mission Selector Journey Ordering
+    status: Completed
+    evidence_state: local_verified
+    priority: P2
+    epic: QUEST-JOURNEY
+    goal: Trail作成・編集時のMission候補を現在の航路順に整理し、次に記録するMissionを見つけやすくする。
+    depends_on: [QST-457, QST-488, QST-493, QST-494]
+    blocks: []
+    acceptance:
+      - 未完了Missionを完了Missionより先に表示する。
+      - 未完了Mission内ではorderIndexとsortOrderを維持する。
+      - 完了Missionを後方へ配置し完了状態を明示する。
+      - removed Missionを選択候補へ含めない。
+      - Trail新規作成と編集で同じ並びを使う。
+      - Widget testとFlutter analyzeが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_495_trail_mission_selector_order_test.dart, reports/qst/QST-495.md]
+
+  - id: QST-496
+    title: Trail Journey Cross-functional Review III
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: QST-487からQST-495の分析、アクセシビリティ、下書き、親選択、旅程順を横断監査し次の改善判断へ反映する。
+    depends_on: [QST-487, QST-488, QST-489, QST-490, QST-491, QST-492, QST-493, QST-494, QST-495]
+    blocks: []
+    acceptance:
+      - Trail集中回帰テストが通る。
+      - Flutter analyzeが警告なしで通る。
+      - Analytics payloadに本文やentity IDを含めない。
+      - QuestからMission、Trailへの親子関係を維持する。
+      - Backlog、candidate、RLS、migration、Beta readiness gateを再検証する。
+      - 外部証跡不足を実装完了と混同せずGo／No-Goを更新する。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_487_trail_journey_analytics_privacy_test.dart, apps/mobile/test/qst_488_trail_accessibility_contract_test.dart, apps/mobile/test/qst_489_trail_filter_result_feedback_test.dart, apps/mobile/test/qst_490_trail_draft_save_status_test.dart, apps/mobile/test/qst_491_trail_parent_availability_feedback_test.dart, apps/mobile/test/qst_492_trail_parent_touch_target_test.dart, apps/mobile/test/qst_493_completed_mission_trail_guidance_test.dart, apps/mobile/test/qst_494_trail_quest_selector_order_test.dart, apps/mobile/test/qst_495_trail_mission_selector_order_test.dart, tools/qst/verify_beta_readiness_report.dart, reports/qst/QST-496.md]
+
+  - id: QST-497
+    title: Trail Physical Accessibility Evidence Contract
+    status: Completed
+    evidence_state: external_pending
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: TrailのQuest／Mission選択と保存導線を物理Androidで検証する必須シナリオをcandidate-bound evidence gateへ追加する。
+    depends_on: [QST-376, QST-488, QST-496]
+    blocks: []
+    acceptance:
+      - QuestからMissionを選ぶTrail導線を物理確認項目に含める。
+      - Trail日本語IME compositionを物理確認項目に含める。
+      - Trailの200%文字拡大とTalkBack reading orderを確認項目に含める。
+      - 保存成功と親availability errorを色だけに依存せず確認する。
+      - recorderが各Trail scenarioの明示確認なしでは証跡を作成しない。
+      - 実機未実施をpendingのまま維持し自動テストで代替しない。
+    evidence: [docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml, tools/qst/record_physical_accessibility_evidence.dart, tools/qst/verify_physical_accessibility_evidence.dart, docs/product/accessibility_release_gate.md, apps/mobile/test/qst_497_trail_physical_accessibility_contract_test.dart, reports/qst/QST-497.md]
+
+  - id: QST-498
+    title: Trail Hosted Ownership Evidence Contract
+    status: Completed
+    evidence_state: external_pending
+    priority: P0
+    epic: QUEST-JOURNEY
+    goal: Trailが選択QuestとそのMissionにだけ保存され、別Quest・別owner親への書き込みが拒否されるHosted証跡契約を整備する。
+    depends_on: [QST-199, QST-468, QST-496]
+    blocks: []
+    acceptance:
+      - ownerが一致するQuest／Mission親へTrailを書けるSQL assertionを持つ。
+      - 同一ownerでも別QuestのMissionを指定したTrailを拒否する。
+      - 別ownerのQuest／Missionを親にしたTrailを拒否する。
+      - behavior testをtransaction rollbackする。
+      - capture toolがTrail親境界の結果をsanitized evidenceへ記録する。
+      - 現candidateのHosted再実行前はpendingを維持する。
+    evidence: [supabase/tests/rls_behavior.sql, docs/qst/BETA_RLS_EVIDENCE.yaml, tools/qst/capture_cloud_rls_evidence.ps1, tools/qst/verify_cloud_rls_evidence.dart, apps/mobile/test/qst_498_trail_hosted_ownership_contract_test.dart, reports/qst/QST-498.md]
+
+  - id: QST-499
+    title: Trail Journey Performance Budget
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: Trailの親filter、pagination、DB indexへ明示的な性能予算を設け、大量の旅程記録でも一覧操作を安定させる。
+    depends_on: [QST-467, QST-477, QST-489, QST-496]
+    blocks: []
+    acceptance:
+      - Quest／Mission filterを1パスでprojectionする。
+      - ローカル表示対象を400件の明示予算内で処理する。
+      - projectionを16ms budgetで回帰検証する。
+      - repository pageを40件へ制限しowner境界を維持する。
+      - Supabaseにowner＋Quest／Mission＋cursor indexを要求する。
+      - performance verifierとfilter／cursor回帰テストが通る。
+    evidence: [apps/mobile/lib/core/performance/performance_limits.dart, apps/mobile/lib/features/trail/trail_journey_projection.dart, apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_499_trail_journey_performance_budget_test.dart, tools/qst/verify_performance_readiness.dart, reports/qst/QST-499.md]
+
+  - id: QST-500
+    title: Trail Filtered Pagination Discovery CTA
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-JOURNEY
+    goal: 絞り込み結果が現在pageで0件でも、過去pageを探せることを空状態の直下で明確にする。
+    depends_on: [QST-475, QST-489, QST-499]
+    blocks: []
+    acceptance:
+      - 読み込み済み範囲だけが0件であることを明示する。
+      - 過去Trailの読み込みCTAを説明文の直下へ表示する。
+      - load more CTAを画面内で重複表示しない。
+      - この航路へのTrail作成と全件表示を維持する。
+      - hasMoreがない場合は本当に未記録の空状態を表示する。
+      - pagination disclosure Widget testsが通る。
+    evidence: [apps/mobile/lib/features/trail/trail_screen.dart, apps/mobile/test/qst_475_trail_filter_pagination_disclosure_test.dart, apps/mobile/test/qst_500_trail_filtered_pagination_cta_test.dart, reports/qst/QST-500.md]
+
+  - id: QST-501
+    title: Profile Dark Journey Surface Alignment
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: UI-UX-POLISH
+    goal: Profileの大型light cardをQuestra共通dark surfaceへ揃え、Home・Arcとの視覚的連続性を高める。
+    depends_on: [QST-404, QST-442]
+    blocks: []
+    acceptance:
+      - Account、Arc Bond、Navigator Rank、旅の現在地をdark paletteへ統一する。
+      - surface上の文字とiconをColorSchemeから解決する。
+      - progress backgroundをdark surface上で読み取れる強さにする。
+      - 390px／200%文字で全カードへ到達できoverflowしない。
+      - light／dark themeのcontrast回帰を維持する。
+      - Profile／surface Widget testsが通る。
+    evidence: [apps/mobile/lib/features/profile/profile_screen.dart, apps/mobile/test/qst_501_profile_dark_surface_alignment_test.dart, apps/mobile/test/qst_404_surface_contrast_test.dart, reports/qst/QST-501.md]
+
+  - id: QST-502
+    title: Home Desktop Journey Composition
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: UI-UX-POLISH
+    goal: Home初期状態を説明やカードで埋めず、desktopで落ち着いて読める中央journey columnへ整える。
+    depends_on: [QST-408, QST-442]
+    blocks: []
+    acceptance:
+      - wide desktopのHome本文を920px以内へ制約する。
+      - compact mobileでは利用可能幅を維持する。
+      - 初回HomeのArc説明と単一CTA契約を維持する。
+      - 空のQuest／Trail sectionを初回表示へ追加しない。
+      - 再訪時のToday Task導線を変更しない。
+      - desktop／mobile／Home next-step testsが通る。
+    evidence: [apps/mobile/lib/features/home/home_screen.dart, apps/mobile/test/qst_502_home_desktop_composition_test.dart, apps/mobile/test/qst_408_home_next_step_test.dart, reports/qst/QST-502.md]
+
+  - id: QST-503
+    title: Canonical Navigation Return Contract Closure
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: INFORMATION-ARCHITECTURE
+    goal: 実装済みの五つのPrimary destinationと直リンク時の安全な戻り先を一つのnavigation契約へ統一する。
+    depends_on: [QST-197, QST-299, QST-321, QST-502]
+    blocks: []
+    acceptance:
+      - Primary NavigationをHome、Quest、Arc、Trail、Profileの順で正本化する。
+      - MissionとTaskをQuest branch内の文脈画面として明記する。
+      - Settings、Feedback、Data Rights、Arc Memory、Guildへ共通の戻る操作を適用する。
+      - navigation stackがある場合は元画面へ戻る。
+      - 直リンクでstackがない場合は文書化した安全な親画面へ遷移する。
+      - tooltip、semantic action、既存Bottom Navigation契約を回帰検証する。
+    evidence: [docs/architecture/mvp-navigation.md, apps/mobile/lib/widgets/navigation/questra_route_back_button.dart, apps/mobile/lib/features/settings/settings_screen.dart, apps/mobile/lib/features/feedback/beta_feedback_screen.dart, apps/mobile/lib/features/trust/data_rights_screen.dart, apps/mobile/lib/features/arc_memory/arc_memory_control_screen.dart, apps/mobile/lib/features/guild/guild_discovery_screen.dart, apps/mobile/test/qst_503_canonical_navigation_return_test.dart, apps/mobile/test/bottom_navigation_v2_test.dart, reports/qst/QST-503.md]
+
+  - id: QST-504
+    title: Arc-First Quest Entry Return Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: QUEST-CREATION-UX
+    goal: Quest一覧からArc相談を主入口として開き、相談後もQuestへ迷わず復帰できる文脈を保つ。
+    depends_on: [QST-322, QST-410, QST-503]
+    blocks: []
+    acceptance:
+      - Quest一覧の全作成CTAがArc Quest entry routeを使う。
+      - Quest起点のArc画面にQuestへ戻る操作を表示する。
+      - Mission起点ではMissionへ戻る表現を維持する。
+      - returnToは内部Quest routeだけを許可し外部URLやHomeを拒否する。
+      - AI計画失敗時の手動Quest fallbackでMissionを捏造しない。
+      - QuestからArc、Questへの往復をWidget Testで確認する。
+    evidence: [apps/mobile/lib/core/router/app_routes.dart, apps/mobile/lib/features/quest/quest_screen.dart, apps/mobile/lib/features/arc/arc_screen.dart, apps/mobile/test/qst_504_arc_first_quest_return_test.dart, apps/mobile/test/qst_410_arc_quest_handoff_recovery_test.dart, reports/qst/QST-504.md]
+
+  - id: QST-505
+    title: Onboarding Journey Controls and Secure Resume
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: ACTIVATION-UX
+    goal: 3画面の短いOnboardingに進捗、戻る、後で設定、owner別途中再開を追加し離脱不安を下げる。
+    depends_on: [QST-323, QST-406, QST-504]
+    blocks: []
+    acceptance:
+      - 各画面で現在のstepと全3stepを視覚・Semanticsの両方で示す。
+      - 2画面目以降から入力を失わず前画面へ戻れる。
+      - 後で設定を選ぶと架空のQuestを生成せずArcへ進む。
+      - 未完了stepと入力をowner別の暗号化local storageへ保存する。
+      - draftを7日で失効し、壊れた値や別owner値をfail closedする。
+      - 完了またはSkip時にdraftを削除する。
+      - 保存失敗時に入力を維持し色だけに依存しないエラーを示す。
+    evidence: [apps/mobile/lib/features/onboarding/onboarding_draft_repository.dart, apps/mobile/lib/features/onboarding/onboarding_screen.dart, apps/mobile/test/qst_505_onboarding_resume_controls_test.dart, apps/mobile/test/onboarding_experience_preset_test.dart, apps/mobile/test/qst_406_onboarding_replay_test.dart, reports/qst/QST-505.md]
+
+  - id: QST-506
+    title: Journey Entry and Evidence Cross-functional Review IV
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: CROSS-FUNCTIONAL-REVIEW
+    goal: QST-497からQST-505のTrail、Profile、Home、Navigation、Arc Quest entry、Onboardingを横断監査し次cycleへ反映する。
+    depends_on: [QST-497, QST-498, QST-499, QST-500, QST-501, QST-502, QST-503, QST-504, QST-505]
+    blocks: []
+    acceptance:
+      - 集中回帰テストとFlutter analyzeが通る。
+      - UIのPrimary hierarchy、戻り先、Onboarding入力保持を確認する。
+      - AI失敗時に固定Missionを生成しない契約を回帰する。
+      - owner境界、RLS、migration drift、安全なreturn URLを検証する。
+      - Story禁止とArc表現をMaster Specへ照合する。
+      - Backlog、candidate、performance、accessibility、Beta readiness gateを再検証する。
+      - 外部証跡不足を自動テストで代替せずExternal BetaのNo-Goを維持する。
+    evidence: [apps/mobile/test/qst_497_trail_physical_accessibility_contract_test.dart, apps/mobile/test/qst_498_trail_hosted_ownership_contract_test.dart, apps/mobile/test/qst_499_trail_journey_performance_budget_test.dart, apps/mobile/test/qst_500_trail_filtered_pagination_cta_test.dart, apps/mobile/test/qst_501_profile_dark_surface_alignment_test.dart, apps/mobile/test/qst_502_home_desktop_composition_test.dart, apps/mobile/test/qst_503_canonical_navigation_return_test.dart, apps/mobile/test/qst_504_arc_first_quest_return_test.dart, apps/mobile/test/qst_505_onboarding_resume_controls_test.dart, reports/qst/QST-506.md]
+
+  - id: QST-507
+    title: Primary Screen State Matrix Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: UI-UX-QUALITY
+    goal: 主要画面の目的、最重要CTA、状態、Widget／Golden／物理証跡を機械検証可能な正本へ揃える。
+    depends_on: [QST-326, QST-506]
+    blocks: []
+    acceptance:
+      - Home、Arc、Quest、Trail、Profile、Onboardingをmatrixへ含める。
+      - empty、content、loading、saving、error、offline、AI状態を画面責務に応じて列挙する。
+      - 各画面へ既存Widget Test evidenceを紐づける。
+      - Goldenのviewport、文字倍率、locale、theme、motion、font条件を固定する。
+      - Goldenを物理TalkBack、IME、実通信証跡の代替にしない。
+      - verifierが画面、route、契約token、test file欠落をfail closedする。
+    evidence: [docs/qst/PRIMARY_SCREEN_STATE_MATRIX.yaml, docs/product/SCREEN_STATE_MATRIX_V1.md, tools/qst/verify_primary_screen_state_matrix.dart, apps/mobile/test/qst_507_primary_screen_state_matrix_test.dart, apps/mobile/test/responsive_viewport_matrix_test.dart, reports/qst/QST-507.md]
+
+  - id: QST-508
+    title: Mutation Recovery Contract
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: Quest、Mission、Task、Trailの保存失敗時に入力を失わず、重複を避けて安全に再試行できる共通契約を完成する。
+    depends_on: [QST-277, QST-412, QST-470, QST-506]
+    blocks: []
+    acceptance:
+      - 保存失敗時に内部例外を出さず入力保持を明示する。
+      - QuestとMissionの最新保存操作を同じentityで再試行できる。
+      - QuestとMissionの削除失敗時にentityを画面へ復元する。
+      - Taskのowner-scoped durable queueとidempotency keyを維持する。
+      - Trail作成と編集はdraftを維持し一覧読込だけ共通Bannerから再試行する。
+      - 古い成功応答が新しい失敗操作のretry slotを消さない。
+      - owner切替時にpending retryと同期表示を破棄する。
+      - 再試行可能な通知を誤って閉じられない。
+    evidence: [docs/product/PERSISTENCE_RECOVERY_CONTRACT.md, apps/mobile/lib/core/persistence/persistence_sync_state.dart, apps/mobile/lib/widgets/persistence_sync_banner.dart, apps/mobile/lib/features/quest/quest_controller.dart, apps/mobile/lib/features/mission/mission_controller.dart, apps/mobile/lib/features/task/task_mutation_state.dart, apps/mobile/lib/features/trail/trail_sync_state.dart, apps/mobile/test/qst_508_mutation_recovery_contract_test.dart, reports/qst/QST-508.md]
+
+  - id: QST-509
+    title: Achievement Loop Closure
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: RETENTION-UX
+    goal: Task完了からArcの祝福、親付きTrail記録、次TaskまたはMission成果確認までを一つの回復可能な体験へ接続する。
+    depends_on: [QST-258, QST-277, QST-457, QST-508]
+    blocks: []
+    acceptance:
+      - Remote保存成功後だけTask完了モーメントを表示する。
+      - ArcがTaskの前進を祝い、Trailを自動生成しない。
+      - Trail作成へQuest、Mission、Taskの親情報を渡す。
+      - 同じMissionの依存関係を満たす次Taskを優先する。
+      - 必須Task完了時はMission成果確認を優先する。
+      - Task完了だけでMissionを自動完了しない。
+      - Task一覧、詳細、Quest Journey Workspaceで共通体験を使う。
+      - 完了取り消しと200%文字でのCTA到達性を維持する。
+    evidence: [docs/product/ACHIEVEMENT_LOOP_CONTRACT.md, apps/mobile/lib/features/arc/arc_celebration_service.dart, apps/mobile/lib/features/task/task_achievement_flow.dart, apps/mobile/lib/features/task/task_screen.dart, apps/mobile/lib/features/task/task_detail_screen.dart, apps/mobile/lib/features/quest_journey/quest_journey_workspace.dart, apps/mobile/test/qst_509_task_achievement_loop_test.dart, reports/qst/QST-509.md]
+
+  - id: QST-510
+    title: Task Mutation Owner Switch Race Guard
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: Task保存中の認証主体切替後に旧ownerの遅延応答が新ownerのTask、同期状態、Mission進捗へ反映されないようにする。
+    depends_on: [QST-277, QST-287, QST-508, QST-509]
+    blocks: []
+    acceptance:
+      - Task保存開始時のowner世代を保持する。
+      - 保存成功・失敗がowner切替後に返っても新ownerのstateや同期表示を変更しない。
+      - Task並び替えの遅延応答にも同じowner境界を適用する。
+      - 旧ownerの未確定操作はdurable queueに保持し、新ownerへ再試行操作を漏らさない。
+      - 遅延成功、遅延失敗、遅延並び替えの回帰テストを通す。
+    evidence: [apps/mobile/lib/features/task/task_controller.dart, apps/mobile/test/qst_510_task_owner_switch_race_test.dart, reports/qst/QST-510.md]
+
+  - id: QST-511
+    title: Owner-scoped Task Mutation Serialization
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: 同一ownerのTask保存、並び替え、再試行、破棄を順に処理し、1件のdurable queueが並行操作で失われないようにする。
+    depends_on: [QST-277, QST-287, QST-508, QST-510]
+    blocks: []
+    acceptance:
+      - 同一ownerのTask保存は先行操作の完了までrepositoryとdurable queueへ進めない。
+      - 先行保存が失敗した場合、再試行待ちを保持し後続の通常保存を拒否する。
+      - 再試行と破棄を保存と同じowner queueに入れ、実行時にpendingを再確認する。
+      - Task並び替えと通常保存も同じ順序契約を使う。
+      - owner切替中も旧ownerの遅延結果を新ownerへ反映しない。
+      - 二重保存、失敗後再試行、並び替え競合の回帰テストを通す。
+    evidence: [apps/mobile/lib/features/task/task_controller.dart, apps/mobile/test/qst_511_task_mutation_serialization_test.dart, reports/qst/QST-511.md]
+
+  - id: QST-512
+    title: Stale Task Snapshot Mutation Guard
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: 先行Task保存の待機中に作られた古いTask snapshotで、後続保存が先行変更を上書きしないようにする。
+    depends_on: [QST-510, QST-511]
+    scope: Taskの状態変更、日程更新、並び替えについて、実行時の最新状態との競合を検知し安全に再評価または拒否する。
+    likely_files:
+      - apps/mobile/lib/features/task/task_controller.dart
+      - apps/mobile/lib/features/task/task_model.dart
+      - apps/mobile/test/qst_512_stale_task_snapshot_test.dart
+      - reports/qst/QST-512.md
+    acceptance:
+      - 保存待機中の別操作が古いTask値を丸ごと上書きしない。
+      - 状態遷移は最新の依存関係とTask statusで再評価する。
+      - 再評価できない競合は入力を失わず明示的に拒否する。
+      - 失敗後のretryは同じownerと意図した変更だけを再適用する。
+      - 並び替えと通常更新の交差操作を遅延repositoryで検証する。
+    evidence: [apps/mobile/lib/features/task/task_controller.dart, apps/mobile/lib/features/task/task_model.dart, apps/mobile/test/qst_512_stale_task_snapshot_test.dart, reports/qst/QST-512.md]
+
+  - id: QST-513
+    title: Route Approval Task Failure Propagation
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: 航路変更の承認中にTask更新が失敗した場合、成功扱いや提案の消失を防ぎ、利用者が安全に再確認できるようにする。
+    depends_on: [QST-512]
+    scope: ローカル航路承認経路のTask mutation結果、提案状態、部分反映時の復旧を検証する。Supabase RPCの原子性契約とは境界を分ける。
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - apps/mobile/test/qst_513_route_approval_task_failure_test.dart
+      - reports/qst/QST-513.md
+    acceptance:
+      - Task更新がfalseまたは例外を返した場合に承認成功と表示しない。
+      - 変更案と失敗理由を保持し、重複適用せずに再確認できる。
+      - 複数変更の途中失敗で部分反映を検知し、復旧方針を明示する。
+      - 古いTask snapshotの競合を含む回帰テストを通す。
+    evidence: [apps/mobile/lib/features/quest/route_replanning_controller.dart, apps/mobile/lib/features/quest/quest_route_screen.dart, apps/mobile/lib/features/quest/quest_detail_screen.dart, apps/mobile/test/qst_513_route_approval_task_failure_test.dart, reports/qst/QST-513.md]
+
+  - id: QST-514
+    title: Local Route Approval Atomic Recovery
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: Supabase未接続時の複数航路変更を、途中失敗しても元のQuest・Mission・Taskへ戻せる原子的な操作として扱う。
+    depends_on: [QST-513]
+    scope: ローカル航路承認の変更適用順、補償復旧、Repository statusの確定順、Undo snapshotを一つの契約として整備する。
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - apps/mobile/lib/features/quest/route_replanning_repository.dart
+      - apps/mobile/test/qst_514_local_route_atomic_recovery_test.dart
+      - reports/qst/QST-514.md
+    acceptance:
+      - ローカルの複数変更は全件成功するまで提案をacceptedへ確定しない。
+      - 途中失敗時にQuest・Mission・Taskを承認前snapshotへ復旧する。
+      - 復旧失敗時は部分反映を隠さず、手動復旧に必要な情報を保持する。
+      - 成功、途中失敗、復旧失敗、再試行の回帰テストを通す。
+    evidence: [apps/mobile/lib/features/quest/route_replanning_controller.dart, apps/mobile/lib/features/quest/route_replanning_repository.dart, apps/mobile/test/qst_514_local_route_atomic_recovery_test.dart, reports/qst/QST-514.md]
+
+  - id: QST-515
+    title: Route Mutation Persistence Acknowledgement
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: ローカル航路承認でQuest・Missionの保存完了を待ち、永続化失敗を承認成功として扱わない。
+    depends_on: [QST-514]
+    scope: 航路変更専用のawait可能なQuest・Mission mutation APIを追加し、state更新とRepository保存の結果を承認処理へ返す。
+    likely_files:
+      - apps/mobile/lib/features/quest/quest_controller.dart
+      - apps/mobile/lib/features/mission/mission_controller.dart
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - apps/mobile/test/qst_515_route_persistence_ack_test.dart
+      - reports/qst/QST-515.md
+    acceptance:
+      - Quest期限変更の保存完了を航路承認が待つ。
+      - Mission追加・変更・削除・順序変更の保存失敗を検知する。
+      - 永続化失敗時はQST-514の補償復旧へ進み、成功通知を出さない。
+      - 通常のQuest・Mission操作契約を壊さない回帰テストを通す。
+    evidence: [apps/mobile/lib/features/quest/quest_controller.dart, apps/mobile/lib/features/mission/mission_controller.dart, apps/mobile/lib/features/quest/route_replanning_controller.dart, apps/mobile/lib/features/quest/route_snapshot_service.dart, apps/mobile/test/qst_515_route_persistence_ack_test.dart, reports/qst/QST-515.md]
+
+  - id: QST-516
+    title: QST-507-515 Cross-functional Quality Review
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: QUALITY-REVIEW
+    goal: QST-507〜515をコード、UI/UX、AI、DB、セキュリティ、Master Spec準拠で横断レビューし、次のQST群へ結果を反映する。
+    depends_on: [QST-515]
+    scope: Task達成導線、mutation回復、owner境界、直列化、stale snapshot、航路承認と永続化を証拠ベースで再評価する。
+    likely_files:
+      - docs/qst/BACKLOG.yaml
+      - reports/qst/QST-516.md
+    acceptance:
+      - 6観点の評価と未解決リスクを証拠付きで記録する。
+      - Critical/High findingsを重複確認後に採番する。
+      - Master Specとの矛盾、UI文言、DB/RLS、AI承認境界を確認する。
+      - 次の10件へ優先順位と依存関係を反映する。
+    evidence: [reports/qst/QST-516.md]
+
+  - id: QST-517
+    title: Route Snapshot Schema V2 Alignment
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: FlutterとSupabaseの航路snapshotをversion付きの同一契約へ揃え、再読込した未変更提案を偽staleにしない。
+    depends_on: [QST-196, QST-286, QST-515, QST-516]
+    blocks: [QST-518, QST-525]
+    likely_files:
+      - apps/mobile/lib/features/quest/route_snapshot_service.dart
+      - apps/mobile/lib/features/quest/route_replanning_repository.dart
+      - supabase/migrations
+      - apps/mobile/test/qst_517_route_snapshot_schema_v2_test.dart
+      - reports/qst/QST-517.md
+    acceptance:
+      - Flutter captureとSQL captureが同じsnapshotVersionとfield集合を使う。
+      - DBから再読込した未変更proposalをfreshとして承認できる。
+      - Mission内容、Task進捗、Quest期限の実変更はstaleとして拒否する。
+      - 旧version proposalは明示的な理由でfail closedまたは安全に移行する。
+      - schema parityと再読込回帰テストを通す。
+    evidence: []
+
+  - id: QST-518
+    title: Awaitable Route Undo Result Contract
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: 航路の元に戻す操作をawait可能にし、成功・stale・失敗・部分復旧をUIへ正確に返す。
+    depends_on: [QST-517]
+    blocks: [QST-519, QST-523]
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - apps/mobile/lib/features/quest/quest_route_screen.dart
+      - apps/mobile/lib/features/quest/quest_detail_screen.dart
+      - apps/mobile/test/qst_518_route_undo_result_test.dart
+      - reports/qst/QST-518.md
+    acceptance:
+      - Undo結果を呼出元がawaitし、成功確認後だけ成功通知を出す。
+      - 例外、stale、部分復旧を握りつぶさず再試行可能な状態を表示する。
+      - Undo中の二重操作を防ぎ、画面離脱後のcontext利用を行わない。
+      - Supabase RPCとローカル経路を同一の結果型で扱う。
+      - 成功、失敗、二重tap、画面破棄の回帰テストを通す。
+    evidence: []
+
+  - id: QST-519
+    title: Route Undo Snapshot Retention and Compensating Recovery
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: Undo用snapshotを復旧完了まで保持し、Quest・Mission・Taskを保存確認付きで一貫して復元する。
+    depends_on: [QST-518]
+    blocks: [QST-520, QST-525]
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - apps/mobile/lib/features/quest/quest_controller.dart
+      - apps/mobile/lib/features/mission/mission_controller.dart
+      - apps/mobile/lib/features/task/task_controller.dart
+      - apps/mobile/test/qst_519_route_undo_compensation_test.dart
+      - reports/qst/QST-519.md
+    acceptance:
+      - Undo snapshotは全Repository復元成功まで破棄しない。
+      - Quest、Mission、Task復元の保存完了を待つ。
+      - 中途失敗時にsnapshotと失敗対象を保持し、重複適用せず再試行できる。
+      - 完了済みTaskを未完了へ戻さない既存DB契約を維持する。
+      - localとSupabaseのRollback回帰を通す。
+    evidence: []
+
+  - id: QST-520
+    title: Crash-safe Local Route Mutation Journal
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: PERSISTENCE-QUALITY
+    goal: ローカル航路承認・Undoの途中状態をowner単位で安全に記録し、強制終了後に復旧判断できるようにする。
+    depends_on: [QST-349, QST-519]
+    blocks: [QST-524]
+    likely_files:
+      - apps/mobile/lib/features/quest
+      - apps/mobile/lib/core/persistence
+      - apps/mobile/test/qst_520_route_mutation_journal_test.dart
+      - reports/qst/QST-520.md
+    acceptance:
+      - journalがowner、proposal、段階、before snapshot、attemptを最小限で保持する。
+      - 別ownerへjournal内容や再試行操作を漏らさない。
+      - 再起動後に適用済み、復旧必要、不明を判別し勝手に再適用しない。
+      - 成功時にjournalを消去し、期限切れと破損はfail closedにする。
+      - Mock previewはremote保存保証ではないことを明示する。
+    evidence: []
+
+  - id: QST-521
+    title: Remote Task Optimistic Concurrency RPC
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: PERSISTENCE-QUALITY
+    goal: 別端末・再読込前のTask通常編集が新しいremote状態を上書きしないよう、version条件付き保存をDB正本にする。
+    depends_on: [QST-287, QST-512, QST-516]
+    blocks: [QST-525]
+    likely_files:
+      - apps/mobile/lib/features/task/task_repository.dart
+      - apps/mobile/lib/features/task/task_controller.dart
+      - supabase/migrations
+      - supabase/tests/rls_behavior.sql
+      - apps/mobile/test/qst_521_remote_task_cas_test.dart
+      - reports/qst/QST-521.md
+    acceptance:
+      - 通常Task更新はexpected versionを検証し、成功時だけversionを進める。
+      - version不一致を上書きせずconflict結果として返す。
+      - owner、Quest、Missionの親整合性をRPC内で再検証する。
+      - retryは同じoperationを冪等に扱い、別内容を同じkeyで受け付けない。
+      - 二端末競合、owner越境、応答喪失のテストを通す。
+    evidence: []
+
+  - id: QST-522
+    title: Route Proposal Provenance and Generation Contract
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: AI-TRANSPARENCY
+    goal: 航路提案がrules、Gemini、手動のどの経路で生成されたかを監査可能にし、Arcの自然なUIを保ちながら透明性を高める。
+    depends_on: [QST-249, QST-257, QST-516]
+    blocks: [QST-525]
+    likely_files:
+      - apps/mobile/lib/features/quest/route_replanning_model.dart
+      - apps/mobile/lib/features/quest/route_replanning_repository.dart
+      - apps/mobile/lib/features/quest/route_replanning_presentation.dart
+      - supabase/migrations
+      - apps/mobile/test/qst_522_route_provenance_test.dart
+      - reports/qst/QST-522.md
+    acceptance:
+      - proposalへgenerator type、modelまたはruleset version、prompt/schema version、grounding有無を保存する。
+      - provider失敗やlocal heuristicをGemini生成と偽らない。
+      - 監査情報へAPI key、会話全文、不要な個人情報を保存しない。
+      - ユーザー向けにはArcをAI Assistantと呼ばず、必要な透明性だけを自然に表示する。
+      - legacy proposalを安全に読める。
+    evidence: []
+
+  - id: QST-523
+    title: Route Recovery UX and Accessibility States
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: UX-QUALITY
+    goal: 航路の適用、Undo、競合、復旧失敗を視覚・音声読み上げ・操作状態で理解できるようにする。
+    depends_on: [QST-507, QST-518, QST-519]
+    blocks: [QST-524]
+    likely_files:
+      - apps/mobile/lib/features/quest/quest_route_screen.dart
+      - apps/mobile/lib/features/quest/quest_detail_screen.dart
+      - apps/mobile/lib/widgets
+      - apps/mobile/test/qst_523_route_recovery_accessibility_test.dart
+      - reports/qst/QST-523.md
+    acceptance:
+      - 適用中とUndo中は進行中labelを示し重複操作を無効化する。
+      - stale、保存失敗、復旧失敗を色だけで区別せず、次の行動を提示する。
+      - Snackbar action以外からも復旧状態を再確認できる。
+      - 320px、200% text、keyboard focus、SemanticsのWidget testを通す。
+      - 日本語copyが責任追及や失敗感を与えない。
+    evidence: []
+
+  - id: QST-524
+    title: Primary State Golden and Physical Evidence Closure
+    status: Planned
+    evidence_state: not_started
+    priority: P1
+    epic: QUALITY-EVIDENCE
+    goal: 主要画面と航路回復のloading、empty、error、offline、permission、AI失敗をGoldenと物理確認手順で閉じる。
+    depends_on: [QST-507, QST-509, QST-520, QST-523]
+    blocks: [QST-526]
+    likely_files:
+      - docs/qst/PRIMARY_SCREEN_STATE_MATRIX.yaml
+      - docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml
+      - apps/mobile/test
+      - reports/qst/QST-524.md
+    acceptance:
+      - Home、Arc、Quest、Mission、Task、Trail、航路Reviewの必須状態にcurrent-SHA証跡がある。
+      - 360、390、430pxと200% textのGoldenまたは同等証跡を保存する。
+      - TalkBack、keyboard、reduce motion、hapticの未確認をPass扱いしない。
+      - backend error、offline、permission、AI fallback fixtureを再現できる。
+      - 証跡欠落時にrelease gateが失敗する。
+    evidence: []
+
+  - id: QST-525
+    title: Current-SHA Hosted Route RLS and Failure Injection Gate
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: RELEASE-MANAGEMENT
+    goal: snapshot V2、Undo、Task CASを含むcurrent candidate SHAをHosted Supabaseで二アカウント・失敗注入付きで実証する。
+    depends_on: [QST-343, QST-349, QST-517, QST-519, QST-521, QST-522]
+    blocks: [QST-526, External Beta]
+    likely_files:
+      - docs/qst/BETA_SUPABASE_PROJECT.yaml
+      - docs/qst/BETA_RLS_EVIDENCE.yaml
+      - docs/qst/HOSTED_EVIDENCE_RUN.yaml
+      - supabase/tests/rls_behavior.sql
+      - tools/qst
+      - reports/qst/QST-525.md
+    acceptance:
+      - candidate SHA、migration head、function version、project refが一致する。
+      - Account BがAccount AのTask、Route、snapshot、journalへread/writeできない。
+      - snapshot再読込、apply、Undo、version conflict、応答喪失をHosted環境で実行する。
+      - test dataを削除し、秘密値とprivate journey本文を証跡へ残さない。
+      - working tree dirtyまたはSHA不一致でgateが失敗する。
+    evidence: []
+
+  - id: QST-526
+    title: QST-517-525 Cross-functional Quality Review
+    status: Planned
+    evidence_state: not_started
+    priority: P0
+    epic: QUALITY-REVIEW
+    goal: QST-517〜525をコード、UI/UX、AI、DB、セキュリティ、Master Spec準拠で横断レビューし、次の10件へ反映する。
+    depends_on: [QST-517, QST-518, QST-519, QST-520, QST-521, QST-522, QST-523, QST-524, QST-525]
+    blocks: []
+    likely_files:
+      - docs/qst/BACKLOG.yaml
+      - reports/qst/QST-526.md
+    acceptance:
+      - snapshot、Undo、CAS、provenance、UX、current-SHA evidenceを6観点で再評価する。
+      - CriticalとHighの未解決を重複確認後に採番する。
+      - 自動テストと外部証跡を区別し、未確認をPass扱いしない。
+      - 次の10件へ優先順位、依存関係、rollbackを反映する。
+    evidence: []
 
 deferred_existing_items:
   - id: QST-044

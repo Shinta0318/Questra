@@ -8,6 +8,7 @@ abstract final class AppRoutes {
   static const onboarding = '/onboarding';
   static const home = '/home';
   static const quest = '/quest';
+  static String questDetail(String questId) => '$quest/$questId';
   static const mission = '/mission';
   static const task = '/task';
   static String missionDetail(String questId, String missionId) =>
@@ -31,6 +32,43 @@ abstract final class AppRoutes {
   static const trail = '/trail';
   static const trailShare = '/share/trail';
   static String trailShareLink(String token) => '$trailShare/$token';
+  static String trailForJourney({required String questId, String? missionId}) {
+    final query = <String, String>{'questId': questId};
+    if (missionId case final value?) query['missionId'] = value;
+    return Uri(path: trail, queryParameters: query).toString();
+  }
+
+  static String trailComposerForQuest(String questId, {String? missionId}) =>
+      Uri(
+        path: trail,
+        queryParameters: {
+          'questId': questId,
+          'missionId': ?missionId,
+          'create': '1',
+        },
+      ).toString();
+
+  static String questDetailForTrailMission(String questId) => Uri(
+    path: questDetail(questId),
+    queryParameters: {'returnTo': trailComposerForQuest(questId)},
+  ).toString();
+
+  static String? safeTrailComposerReturnLocation(
+    String? location, {
+    required String questId,
+  }) {
+    final uri = location == null ? null : Uri.tryParse(location);
+    if (uri == null ||
+        uri.hasScheme ||
+        uri.hasAuthority ||
+        uri.path != trail ||
+        uri.queryParameters['questId'] != questId ||
+        uri.queryParameters['create'] != '1') {
+      return null;
+    }
+    return uri.toString();
+  }
+
   static String trailForTask({
     required String questId,
     required String questTitle,
@@ -51,6 +89,9 @@ abstract final class AppRoutes {
     },
   ).toString();
   static const arc = '/arc';
+  static String arcForQuestCreation({String returnTo = quest}) =>
+      Uri(path: arc, queryParameters: {'returnTo': returnTo}).toString();
+
   static String arcForMission({
     required String questId,
     required String missionId,
@@ -65,6 +106,17 @@ abstract final class AppRoutes {
       'returnTo': returnTo,
     },
   ).toString();
+
+  static String? safeArcReturnLocation(String? location) {
+    final value = location?.trim();
+    final uri = value == null ? null : Uri.tryParse(value);
+    if (uri == null || uri.hasScheme || uri.hasAuthority) return null;
+    if (uri.path == quest || uri.path.startsWith('$quest/')) {
+      return uri.toString();
+    }
+    return null;
+  }
+
   static const guild = '/guild';
   static const profile = '/profile';
   static const settings = '/settings';

@@ -164,44 +164,124 @@ abstract class AppLocalizations {
   /// **'破棄して閉じる'**
   String get discardAndClose;
 
+  /// No description provided for @requiredField.
+  ///
+  /// In ja, this message translates to:
+  /// **'必須'**
   String get requiredField;
 
+  /// No description provided for @profileCompact.
+  ///
+  /// In ja, this message translates to:
+  /// **'自分'**
   String get profileCompact;
 
+  /// No description provided for @trailEmptyTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'まだTrailはありません'**
   String get trailEmptyTitle;
 
+  /// No description provided for @trailEmptyMessage.
+  ///
+  /// In ja, this message translates to:
+  /// **'今日進んだことを、短い言葉から残してみよう。'**
   String get trailEmptyMessage;
 
+  /// No description provided for @createFirstTrail.
+  ///
+  /// In ja, this message translates to:
+  /// **'最初のTrailを残す'**
   String get createFirstTrail;
 
+  /// No description provided for @createTrail.
+  ///
+  /// In ja, this message translates to:
+  /// **'Trailを残す'**
   String get createTrail;
 
+  /// No description provided for @trailHistoryTitle.
+  ///
+  /// In ja, this message translates to:
+  /// **'これまでのTrail'**
   String get trailHistoryTitle;
 
+  /// No description provided for @trailHistoryDescription.
+  ///
+  /// In ja, this message translates to:
+  /// **'進んだ日ごとに、旅の記録を振り返れます。'**
   String get trailHistoryDescription;
 
+  /// No description provided for @trailCount.
+  ///
+  /// In ja, this message translates to:
+  /// **'Trail {count}件'**
   String trailCount(int count);
 
+  /// No description provided for @reflection.
+  ///
+  /// In ja, this message translates to:
+  /// **'振り返り'**
   String get reflection;
 
+  /// No description provided for @starCandidate.
+  ///
+  /// In ja, this message translates to:
+  /// **'大切な記録の候補'**
   String get starCandidate;
 
+  /// No description provided for @image.
+  ///
+  /// In ja, this message translates to:
+  /// **'画像'**
   String get image;
 
+  /// No description provided for @questContext.
+  ///
+  /// In ja, this message translates to:
+  /// **'Quest：{title}'**
   String questContext(String title);
 
+  /// No description provided for @missionContext.
+  ///
+  /// In ja, this message translates to:
+  /// **'Mission：{title}'**
   String missionContext(String title);
 
+  /// No description provided for @taskContext.
+  ///
+  /// In ja, this message translates to:
+  /// **'Task：{title}'**
   String taskContext(String title);
 
+  /// No description provided for @starMemoryCandidate.
+  ///
+  /// In ja, this message translates to:
+  /// **'大切な記録の候補：{reason}'**
   String starMemoryCandidate(String reason);
 
+  /// No description provided for @trailTypeQuest.
+  ///
+  /// In ja, this message translates to:
+  /// **'Questの記録'**
   String get trailTypeQuest;
 
+  /// No description provided for @trailTypeMission.
+  ///
+  /// In ja, this message translates to:
+  /// **'Missionの記録'**
   String get trailTypeMission;
 
+  /// No description provided for @trailTypeArcReflection.
+  ///
+  /// In ja, this message translates to:
+  /// **'Arcとの振り返り'**
   String get trailTypeArcReflection;
 
+  /// No description provided for @trailTypeManual.
+  ///
+  /// In ja, this message translates to:
+  /// **'自分のメモ'**
   String get trailTypeManual;
 }
 

@@ -15,6 +15,12 @@ checks:
   large_text_200: pending
   compact_layout: pending
   reduced_motion_and_haptics: pending
+journey_scenarios:
+  trail_quest_mission_selection: pending
+  trail_japanese_ime_composition: pending
+  trail_large_text_200: pending
+  trail_talkback_reading_order: pending
+  trail_error_and_save_feedback: pending
 evidence: []
 guardrails:
   privacy_reviewed: false

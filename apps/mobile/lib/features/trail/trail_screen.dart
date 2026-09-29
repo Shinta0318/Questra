@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/performance/performance_limits.dart';
+import '../../core/analytics/analytics_event.dart';
+import '../../core/analytics/analytics_service.dart';
 import '../../core/feature_flags/trail_feature_flags.dart';
 import '../../core/persistence/persistence_sync_state.dart';
 import '../../core/router/app_routes.dart';
@@ -26,11 +31,16 @@ import '../auth/auth_controller.dart';
 import '../media/media_model.dart';
 import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
+import '../quest/quest_controller.dart';
+import '../quest/quest_model.dart';
 import '../task/task_controller.dart';
 import '../task/task_model.dart';
 import 'trail_controller.dart';
+import 'trail_draft_repository.dart';
 import 'trail_highlight_service.dart';
+import 'trail_journey_projection.dart';
 import 'trail_model.dart';
+import 'trail_pagination_state.dart';
 import 'trail_share_policy.dart';
 import 'trail_share_providers.dart';
 import 'trail_share_repository.dart';
@@ -41,10 +51,23 @@ final trailHighlightServiceProvider = Provider<TrailHighlightService>((ref) {
   return const TrailHighlightService();
 });
 
+typedef TrailFilterRouteChanged =
+    void Function(String? questId, String? missionId);
+
 class TrailScreen extends ConsumerStatefulWidget {
-  const TrailScreen({super.key, this.initialParent, this.openComposer = false});
+  const TrailScreen({
+    super.key,
+    this.initialParent,
+    this.initialFilterQuestId,
+    this.initialFilterMissionId,
+    this.onFilterRouteChanged,
+    this.openComposer = false,
+  });
 
   final TrailParentContext? initialParent;
+  final String? initialFilterQuestId;
+  final String? initialFilterMissionId;
+  final TrailFilterRouteChanged? onFilterRouteChanged;
   final bool openComposer;
 
   @override
@@ -53,14 +76,51 @@ class TrailScreen extends ConsumerStatefulWidget {
 
 class _TrailScreenState extends ConsumerState<TrailScreen> {
   bool _didOpenComposer = false;
+  String? _filterQuestId;
+  String? _filterMissionId;
+
+  @override
+  void initState() {
+    super.initState();
+    _applyInitialFilter();
+  }
+
+  @override
+  void didUpdateWidget(covariant TrailScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialFilterQuestId != widget.initialFilterQuestId ||
+        oldWidget.initialFilterMissionId != widget.initialFilterMissionId) {
+      _applyInitialFilter();
+    }
+  }
+
+  void _applyInitialFilter() {
+    _filterQuestId = widget.initialFilterQuestId;
+    _filterMissionId = widget.initialFilterQuestId == null
+        ? null
+        : widget.initialFilterMissionId;
+  }
+
+  void _setJourneyFilter(String? questId, String? missionId) {
+    setState(() {
+      _filterQuestId = questId;
+      _filterMissionId = questId == null ? null : missionId;
+    });
+    widget.onFilterRouteChanged?.call(
+      questId,
+      questId == null ? null : missionId,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final trails = ref.watch(trailControllerProvider);
+    final quests = ref.watch(questControllerProvider);
     final missions = ref.watch(missionControllerProvider);
     final tasks = ref.watch(taskControllerProvider);
     final trailMedia = ref.watch(trailMediaControllerProvider);
     final syncState = ref.watch(trailSyncControllerProvider);
+    final paginationState = ref.watch(trailPaginationControllerProvider);
     final profile = ref.watch(authControllerProvider).profile;
     final controller = ref.read(trailControllerProvider.notifier);
     final singleTimelineEnabled =
@@ -80,6 +140,52 @@ class _TrailScreenState extends ConsumerState<TrailScreen> {
       final parent = _parentForTrail(trail, missions, tasks);
       if (parent != null) hierarchyByTrailId[trail.id] = parent;
     }
+    final filterQuestId = quests.any((quest) => quest.id == _filterQuestId)
+        ? _filterQuestId
+        : null;
+    final filterMissionId =
+        missions.any(
+          (mission) =>
+              mission.id == _filterMissionId &&
+              mission.questId == filterQuestId,
+        )
+        ? _filterMissionId
+        : null;
+    final filterQuest = quests
+        .where((quest) => quest.id == filterQuestId)
+        .firstOrNull;
+    final selectableFilterMissions = missions
+        .where(
+          (mission) =>
+              mission.questId == filterQuestId &&
+              mission.routeState != MissionRouteState.removed,
+        )
+        .toList(growable: false);
+    final filterMission = selectableFilterMissions
+        .where((mission) => mission.id == filterMissionId)
+        .firstOrNull;
+    final canCreateInFilter =
+        filterQuest != null &&
+        filterQuest.status != QuestStatus.archived &&
+        (filterMissionId == null
+            ? selectableFilterMissions.isNotEmpty
+            : filterMission != null);
+    final journeyProjection = projectTrailJourney(
+      trails,
+      questId: filterQuestId,
+      missionId: filterMissionId,
+    );
+    final visibleTrails = journeyProjection.trails;
+    final visibleTrailIds = journeyProjection.trailIds;
+    final visibleTrailMedia = <String, MediaAttachment>{
+      for (final entry in trailMedia.entries)
+        if (visibleTrailIds.contains(entry.key)) entry.key: entry.value,
+    };
+    final visibleHighlights = <String, TrailHighlight>{
+      for (final highlight in trailHighlights)
+        if (visibleTrailIds.contains(highlight.trailId))
+          highlight.trailId: highlight,
+    };
 
     if (widget.openComposer && !_didOpenComposer) {
       _didOpenComposer = true;
@@ -89,6 +195,8 @@ class _TrailScreenState extends ConsumerState<TrailScreen> {
           context,
           ref.read(trailControllerProvider.notifier),
           parent: widget.initialParent,
+          initialQuestId: filterQuestId,
+          initialMissionId: filterMissionId,
         );
       });
     }
@@ -116,33 +224,78 @@ class _TrailScreenState extends ConsumerState<TrailScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                TrailTimelineWidget(
-                  trails: trails,
-                  attachments: trailMedia,
-                  highlights: {
-                    for (final highlight in trailHighlights)
-                      highlight.trailId: highlight,
-                  },
-                  hierarchyByTrailId: hierarchyByTrailId,
-                  onCreateTrail: () => _showCreateTrailSheet(
-                    context,
-                    controller,
-                    parent: widget.initialParent,
+                if (trails.isNotEmpty) ...[
+                  _TrailJourneyFilter(
+                    quests: quests,
+                    missions: missions,
+                    trails: trails,
+                    resultCount: visibleTrails.length,
+                    selectedQuestId: filterQuestId,
+                    selectedMissionId: filterMissionId,
+                    onQuestChanged: (value) => _setJourneyFilter(value, null),
+                    onMissionChanged: (value) =>
+                        _setJourneyFilter(filterQuestId, value),
+                    onClear: () => _setJourneyFilter(null, null),
                   ),
-                  itemBuilder: (context, trail) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _buildTrailCard(
+                  const SizedBox(height: 16),
+                ],
+                if (visibleTrails.isEmpty && trails.isNotEmpty)
+                  _TrailFilterEmpty(
+                    mayHaveOlderTrails: paginationState.canRequestMore,
+                    loadMoreButton:
+                        profile != null && paginationState.canRequestMore
+                        ? _TrailLoadMoreButton(
+                            state: paginationState,
+                            onPressed: () =>
+                                controller.loadMoreForUser(profile.id),
+                          )
+                        : null,
+                    onClear: () => _setJourneyFilter(null, null),
+                    onCreate: !canCreateInFilter
+                        ? null
+                        : () => _showCreateTrailSheet(
+                            context,
+                            controller,
+                            initialQuestId: filterQuestId,
+                            initialMissionId: filterMissionId,
+                          ),
+                  )
+                else
+                  TrailTimelineWidget(
+                    trails: visibleTrails,
+                    attachments: visibleTrailMedia,
+                    highlights: visibleHighlights,
+                    hierarchyByTrailId: hierarchyByTrailId,
+                    onCreateTrail: () => _showCreateTrailSheet(
                       context,
-                      ref,
                       controller,
-                      trail,
-                      missions,
-                      trailMedia,
-                      hierarchyByTrailId,
-                      shareRepository,
+                      parent: widget.initialParent,
+                      initialQuestId: filterQuestId,
+                      initialMissionId: filterMissionId,
+                    ),
+                    itemBuilder: (context, trail) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _buildTrailCard(
+                        context,
+                        ref,
+                        controller,
+                        trail,
+                        missions,
+                        trailMedia,
+                        hierarchyByTrailId,
+                        shareRepository,
+                      ),
                     ),
                   ),
-                ),
+                if (profile != null &&
+                    paginationState.canRequestMore &&
+                    visibleTrails.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _TrailLoadMoreButton(
+                    state: paginationState,
+                    onPressed: () => controller.loadMoreForUser(profile.id),
+                  ),
+                ],
               ]
             : [
                 ArcPresence(
@@ -157,6 +310,8 @@ class _TrailScreenState extends ConsumerState<TrailScreen> {
                     context,
                     controller,
                     parent: widget.initialParent,
+                    initialQuestId: filterQuestId,
+                    initialMissionId: filterMissionId,
                   ),
                   icon: const Icon(Icons.add),
                   label: Text(trails.isEmpty ? '最初のTrailを残す' : 'Trailを残す'),
@@ -175,19 +330,53 @@ class _TrailScreenState extends ConsumerState<TrailScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                _TrailOverview(trails: trails),
+                if (trails.isNotEmpty) ...[
+                  _TrailJourneyFilter(
+                    quests: quests,
+                    missions: missions,
+                    trails: trails,
+                    resultCount: visibleTrails.length,
+                    selectedQuestId: filterQuestId,
+                    selectedMissionId: filterMissionId,
+                    onQuestChanged: (value) => _setJourneyFilter(value, null),
+                    onMissionChanged: (value) =>
+                        _setJourneyFilter(filterQuestId, value),
+                    onClear: () => _setJourneyFilter(null, null),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                _TrailOverview(trails: visibleTrails),
                 const SizedBox(height: 16),
-                TrailTimelineWidget(
-                  trails: trails,
-                  attachments: trailMedia,
-                  highlights: {
-                    for (final highlight in trailHighlights)
-                      highlight.trailId: highlight,
-                  },
-                  hierarchyByTrailId: hierarchyByTrailId,
-                ),
+                if (visibleTrails.isEmpty && trails.isNotEmpty)
+                  _TrailFilterEmpty(
+                    mayHaveOlderTrails: paginationState.canRequestMore,
+                    loadMoreButton:
+                        profile != null && paginationState.canRequestMore
+                        ? _TrailLoadMoreButton(
+                            state: paginationState,
+                            onPressed: () =>
+                                controller.loadMoreForUser(profile.id),
+                          )
+                        : null,
+                    onClear: () => _setJourneyFilter(null, null),
+                    onCreate: !canCreateInFilter
+                        ? null
+                        : () => _showCreateTrailSheet(
+                            context,
+                            controller,
+                            initialQuestId: filterQuestId,
+                            initialMissionId: filterMissionId,
+                          ),
+                  )
+                else
+                  TrailTimelineWidget(
+                    trails: visibleTrails,
+                    attachments: visibleTrailMedia,
+                    highlights: visibleHighlights,
+                    hierarchyByTrailId: hierarchyByTrailId,
+                  ),
                 const SizedBox(height: 16),
-                ...trails.map(
+                ...visibleTrails.map(
                   (trail) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _buildTrailCard(
@@ -202,6 +391,13 @@ class _TrailScreenState extends ConsumerState<TrailScreen> {
                     ),
                   ),
                 ),
+                if (profile != null &&
+                    paginationState.canRequestMore &&
+                    visibleTrails.isNotEmpty)
+                  _TrailLoadMoreButton(
+                    state: paginationState,
+                    onPressed: () => controller.loadMoreForUser(profile.id),
+                  ),
               ],
       ),
     );
@@ -217,10 +413,19 @@ class _TrailScreenState extends ConsumerState<TrailScreen> {
     Map<String, TrailParentContext> hierarchyByTrailId,
     TrailShareRepository? shareRepository,
   ) {
+    final parent = hierarchyByTrailId[trail.id];
     return _TrailCard(
       trail: trail,
-      parent: hierarchyByTrailId[trail.id],
+      parent: parent,
       attachment: trailMedia[trail.id],
+      onOpenQuest: parent == null
+          ? null
+          : () => context.push('${AppRoutes.quest}/${parent.questId}'),
+      onOpenMission: parent?.missionId == null
+          ? null
+          : () => context.push(
+              AppRoutes.missionDetail(parent!.questId, parent.missionId!),
+            ),
       onEdit: () => _showEditTrailSheet(context, controller, trail),
       onReflect: () => _showReflectTrailSheet(
         context,
@@ -372,24 +577,88 @@ class _TrailScreenState extends ConsumerState<TrailScreen> {
     }
   }
 
-  void _showCreateTrailSheet(
+  Future<void> _showCreateTrailSheet(
     BuildContext context,
     TrailController controller, {
     TrailParentContext? parent,
-  }) {
-    showQuestraModalSheet<void>(
+    String? initialQuestId,
+    String? initialMissionId,
+  }) async {
+    final ownerId = ref.read(authControllerProvider).profile?.id;
+    var handedOffToQuest = false;
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .trailJourney(
+            name: AnalyticsEventName.trailComposerOpened,
+            surface: parent != null
+                ? 'task_parent'
+                : widget.openComposer
+                ? 'route'
+                : 'trail',
+            outcome: 'opened',
+            hasQuest: parent?.questId != null || initialQuestId != null,
+            hasMission: parent?.missionId != null || initialMissionId != null,
+          ),
+    );
+    TrailComposerDraft? restoredDraft;
+    if (ownerId != null) {
+      try {
+        restoredDraft = await ref
+            .read(trailDraftRepositoryProvider)
+            .load(ownerId);
+      } catch (_) {
+        // Draft recovery is best effort and must not block Trail creation.
+      }
+    }
+    if (!context.mounted) return;
+    final saved = await showQuestraModalSheet<bool>(
       context: context,
-      builder: (context) => _CreateTrailSheet(
+      builder: (_) => _CreateTrailSheet(
         parent: parent,
+        initialQuestId: initialQuestId,
+        initialMissionId: initialMissionId,
+        draftOwnerId: ownerId,
+        restoredDraft: restoredDraft,
+        onOpenQuest: (questId) {
+          handedOffToQuest = true;
+          unawaited(
+            ref
+                .read(analyticsServiceProvider)
+                .trailJourney(
+                  name: AnalyticsEventName.trailMissionRecoveryOpened,
+                  surface: 'trail_composer',
+                  outcome: 'mission_missing',
+                  hasQuest: true,
+                  hasMission: false,
+                ),
+          );
+          context.go(AppRoutes.questDetailForTrailMission(questId));
+        },
         onSubmit: (draft) => controller.addManualTrailAndWait(
           trailId: draft.id,
           title: draft.title,
           summary: draft.summary,
           content: draft.content,
-          parent: parent,
+          parent: parent ?? draft.parent,
         ),
       ),
     );
+    if (saved == true) {
+      unawaited(
+        ref
+            .read(analyticsServiceProvider)
+            .trailJourney(
+              name: AnalyticsEventName.trailComposerCompleted,
+              surface: widget.openComposer ? 'route' : 'trail',
+              outcome: 'saved',
+              hasQuest: true,
+              hasMission: true,
+            ),
+      );
+    }
+    if (!mounted || handedOffToQuest || !widget.openComposer) return;
+    widget.onFilterRouteChanged?.call(_filterQuestId, _filterMissionId);
   }
 
   void _showEditTrailSheet(
@@ -401,7 +670,7 @@ class _TrailScreenState extends ConsumerState<TrailScreen> {
       context: context,
       builder: (context) => _EditTrailSheet(
         trail: trail,
-        onSubmit: controller.updateTrailAndWait,
+        onSubmit: controller.updateTrailWithResult,
       ),
     );
   }
@@ -490,7 +759,7 @@ class _TrailScreenState extends ConsumerState<TrailScreen> {
     );
 
     if (shouldDelete == true) {
-      controller.removeTrail(trail.id);
+      await controller.removeTrailAndWait(trail.id);
     }
   }
 
@@ -661,42 +930,355 @@ class _TrailShareSelection {
   final int lifetimeDays;
 }
 
+class _TrailJourneyFilter extends StatelessWidget {
+  const _TrailJourneyFilter({
+    required this.quests,
+    required this.missions,
+    required this.trails,
+    required this.resultCount,
+    required this.selectedQuestId,
+    required this.selectedMissionId,
+    required this.onQuestChanged,
+    required this.onMissionChanged,
+    required this.onClear,
+  });
+
+  final List<Quest> quests;
+  final List<Mission> missions;
+  final List<Trail> trails;
+  final int resultCount;
+  final String? selectedQuestId;
+  final String? selectedMissionId;
+  final ValueChanged<String?> onQuestChanged;
+  final ValueChanged<String?> onMissionChanged;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final questIds = trails
+        .map((trail) => trail.questId)
+        .whereType<String>()
+        .toSet();
+    final filterQuests = quests
+        .where(
+          (quest) => questIds.contains(quest.id) || quest.id == selectedQuestId,
+        )
+        .toList(growable: false);
+    final missionIds = trails
+        .where((trail) => trail.questId == selectedQuestId)
+        .map((trail) => trail.missionId)
+        .whereType<String>()
+        .toSet();
+    final filterMissions = missions
+        .where(
+          (mission) =>
+              mission.questId == selectedQuestId &&
+              (missionIds.contains(mission.id) ||
+                  mission.id == selectedMissionId),
+        )
+        .toList(growable: false);
+    final hasFilter = selectedQuestId != null || selectedMissionId != null;
+
+    Widget questField() => QuestraFieldLabel(
+      label: 'Quest',
+      child: Semantics(
+        container: true,
+        label: '表示するQuestを選択',
+        child: DropdownButtonFormField<String?>(
+          key: const ValueKey('trail-filter-quest'),
+          initialValue: selectedQuestId,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            hintText: 'すべてのQuest',
+            border: OutlineInputBorder(),
+          ),
+          items: [
+            const DropdownMenuItem<String?>(
+              value: null,
+              child: Text('すべてのQuest'),
+            ),
+            for (final quest in filterQuests)
+              DropdownMenuItem<String?>(
+                value: quest.id,
+                child: Text(
+                  quest.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+          onChanged: onQuestChanged,
+        ),
+      ),
+    );
+    Widget missionField() => QuestraFieldLabel(
+      label: 'Mission',
+      child: Semantics(
+        container: true,
+        label: selectedQuestId == null ? '先に表示するQuestを選択' : '表示するMissionを選択',
+        child: DropdownButtonFormField<String?>(
+          key: ValueKey('trail-filter-mission-${selectedQuestId ?? 'all'}'),
+          initialValue: selectedMissionId,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            hintText: 'すべてのMission',
+            border: OutlineInputBorder(),
+          ),
+          items: [
+            const DropdownMenuItem<String?>(
+              value: null,
+              child: Text('すべてのMission'),
+            ),
+            for (final mission in filterMissions)
+              DropdownMenuItem<String?>(
+                value: mission.id,
+                child: Text(
+                  mission.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+          onChanged: selectedQuestId == null ? null : onMissionChanged,
+        ),
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '表示する航路',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            if (hasFilter)
+              IconButton(
+                key: const ValueKey('trail-filter-clear'),
+                onPressed: onClear,
+                tooltip: '絞り込みを解除',
+                icon: const Icon(Icons.filter_alt_off_outlined),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 560) {
+              return Column(
+                children: [
+                  questField(),
+                  const SizedBox(height: 10),
+                  missionField(),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(child: questField()),
+                const SizedBox(width: 12),
+                Expanded(child: missionField()),
+              ],
+            );
+          },
+        ),
+        if (hasFilter) ...[
+          const SizedBox(height: 8),
+          Semantics(
+            liveRegion: true,
+            label: '絞り込み結果、Trailを$resultCount件表示しています',
+            child: ExcludeSemantics(
+              child: Text(
+                '$resultCount件のTrailを表示',
+                key: const ValueKey('trail-filter-result-count'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _TrailFilterEmpty extends StatelessWidget {
+  const _TrailFilterEmpty({
+    required this.mayHaveOlderTrails,
+    required this.onClear,
+    this.loadMoreButton,
+    this.onCreate,
+  });
+
+  final bool mayHaveOlderTrails;
+  final VoidCallback onClear;
+  final Widget? loadMoreButton;
+  final VoidCallback? onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        children: [
+          const Icon(Icons.route_outlined, size: 36),
+          const SizedBox(height: 8),
+          Text(
+            mayHaveOlderTrails
+                ? '読み込んだ範囲には、この航路のTrailがありません。'
+                : 'この航路にはまだTrailがありません。',
+            textAlign: TextAlign.center,
+          ),
+          if (mayHaveOlderTrails) ...[
+            const SizedBox(height: 4),
+            Text(
+              '過去のTrailを読み込むと見つかる可能性があります。',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+          if (loadMoreButton case final button?) ...[
+            const SizedBox(height: 8),
+            button,
+          ],
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              if (onCreate != null)
+                FilledButton.icon(
+                  key: const ValueKey('trail-filter-empty-create'),
+                  onPressed: onCreate,
+                  icon: const Icon(Icons.add),
+                  label: const Text('この航路にTrailを残す'),
+                ),
+              TextButton(onPressed: onClear, child: const Text('すべてのTrailを見る')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrailLoadMoreButton extends StatelessWidget {
+  const _TrailLoadMoreButton({required this.state, required this.onPressed});
+
+  final TrailPaginationState state;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        if (state.errorMessage case final message?) ...[
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+          const SizedBox(height: 8),
+        ],
+        OutlinedButton.icon(
+          key: const ValueKey('trail-load-more'),
+          onPressed: state.isLoading ? null : onPressed,
+          icon: state.isLoading
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.expand_more),
+          label: Text(state.isLoading ? '読み込んでいます...' : '過去のTrailをさらに表示'),
+        ),
+      ],
+    );
+  }
+}
+
 class _TrailDraft {
   const _TrailDraft({
     required this.id,
     required this.title,
     required this.summary,
     required this.content,
+    required this.parent,
   });
 
   final String id;
   final String title;
   final String summary;
   final String content;
+  final TrailParentContext? parent;
 }
 
-class _CreateTrailSheet extends StatefulWidget {
-  const _CreateTrailSheet({required this.onSubmit, this.parent});
+class _CreateTrailSheet extends ConsumerStatefulWidget {
+  const _CreateTrailSheet({
+    required this.onSubmit,
+    this.parent,
+    this.initialQuestId,
+    this.initialMissionId,
+    this.draftOwnerId,
+    this.restoredDraft,
+    this.onOpenQuest,
+  });
 
   final Future<bool> Function(_TrailDraft) onSubmit;
   final TrailParentContext? parent;
+  final String? initialQuestId;
+  final String? initialMissionId;
+  final String? draftOwnerId;
+  final TrailComposerDraft? restoredDraft;
+  final ValueChanged<String>? onOpenQuest;
 
   @override
-  State<_CreateTrailSheet> createState() => _CreateTrailSheetState();
+  ConsumerState<_CreateTrailSheet> createState() => _CreateTrailSheetState();
 }
 
-class _CreateTrailSheetState extends State<_CreateTrailSheet> {
+enum _TrailDraftSaveStatus { idle, saving, saved, failed }
+
+class _CreateTrailSheetState extends ConsumerState<_CreateTrailSheet> {
   final _formKey = GlobalKey<FormState>();
-  final String _draftId = Trail.createId();
+  late String _draftId;
   final _titleController = TextEditingController();
   final _summaryController = TextEditingController();
   final _contentController = TextEditingController();
+  Timer? _draftSaveTimer;
+  Future<void> _pendingDraftWrite = Future.value();
   bool _isSaving = false;
   bool _showDetails = false;
+  bool _draftRestored = false;
+  TrailComposerDraft? _conflictingDraft;
+  _TrailDraftSaveStatus _draftSaveStatus = _TrailDraftSaveStatus.idle;
+  int _draftWriteVersion = 0;
   String? _errorMessage;
+  String? _selectedQuestId;
+  String? _selectedMissionId;
+
+  @override
+  void initState() {
+    super.initState();
+    _draftId = Trail.createId();
+    if (widget.parent == null) {
+      _selectedQuestId = widget.initialQuestId;
+      _selectedMissionId = widget.initialQuestId == null
+          ? null
+          : widget.initialMissionId;
+    }
+    _applyRestoredDraft(widget.restoredDraft);
+    _titleController.addListener(_scheduleDraftSave);
+    _summaryController.addListener(_scheduleDraftSave);
+    _contentController.addListener(_scheduleDraftSave);
+  }
 
   @override
   void dispose() {
+    _draftSaveTimer?.cancel();
     _titleController.dispose();
     _summaryController.dispose();
     _contentController.dispose();
@@ -705,13 +1287,46 @@ class _CreateTrailSheetState extends State<_CreateTrailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final selectableQuests =
+        ref
+            .watch(questControllerProvider)
+            .where((quest) => quest.status != QuestStatus.archived)
+            .toList(growable: false)
+          ..sort(_compareTrailQuestChoice);
+    final selectedQuest = selectableQuests
+        .where((quest) => quest.id == _selectedQuestId)
+        .firstOrNull;
+    final selectableMissions =
+        ref
+            .watch(missionControllerProvider)
+            .where(
+              (mission) =>
+                  mission.questId == selectedQuest?.id &&
+                  mission.routeState != MissionRouteState.removed,
+            )
+            .toList(growable: false)
+          ..sort(_compareTrailMissionChoice);
+    final selectedMission = selectableMissions
+        .where((mission) => mission.id == _selectedMissionId)
+        .firstOrNull;
+    final unavailableParentMessage =
+        _selectedQuestId != null && selectedQuest == null
+        ? '選択していたQuestが利用できなくなりました。別のQuestを選択してください。'
+        : _selectedMissionId != null && selectedMission == null
+        ? '選択していたMissionが更新されました。もう一度Missionを選択してください。'
+        : null;
+
     return QuestraModalSheet(
       title: 'Trailを残す',
-      hasUnsavedChanges: () => [
-        _titleController,
-        _summaryController,
-        _contentController,
-      ].any((controller) => controller.text.isNotEmpty),
+      onDiscarded: _clearDraft,
+      hasUnsavedChanges: () =>
+          [
+            _titleController,
+            _summaryController,
+            _contentController,
+          ].any((controller) => controller.text.isNotEmpty) ||
+          _selectedQuestId != null ||
+          _selectedMissionId != null,
       isBusy: _isSaving,
       child: Form(
         key: _formKey,
@@ -722,8 +1337,298 @@ class _CreateTrailSheetState extends State<_CreateTrailSheet> {
             if (widget.parent case final parent?) ...[
               const SizedBox(height: 12),
               _TrailParentBreadcrumb(parent: parent),
+            ] else ...[
+              const SizedBox(height: 12),
+              if (unavailableParentMessage case final message?) ...[
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    message,
+                    key: const ValueKey('trail-parent-unavailable'),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              QuestraFieldLabel(
+                label: '1. Questを選ぶ',
+                helper: '今回の一歩を残すQuestを選びます。',
+                required: true,
+                child: Semantics(
+                  container: true,
+                  label: 'Trailを紐づけるQuestを選択',
+                  child: DropdownButtonFormField<String>(
+                    key: const ValueKey('trail-quest-selector'),
+                    initialValue: selectedQuest?.id,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      hintText: 'Questを選択',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      for (final quest in selectableQuests)
+                        DropdownMenuItem(
+                          value: quest.id,
+                          child: Text(
+                            quest.status == QuestStatus.completed
+                                ? '${quest.title}（完了）'
+                                : quest.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                    onChanged: selectableQuests.isEmpty
+                        ? null
+                        : (value) {
+                            setState(() {
+                              _selectedQuestId = value;
+                              _selectedMissionId = null;
+                              _errorMessage = null;
+                            });
+                            _scheduleDraftSave();
+                          },
+                    validator: (value) =>
+                        value == null ? 'Trailを紐づけるQuestを選択してください。' : null,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              QuestraFieldLabel(
+                label: '2. Missionを選ぶ',
+                helper: '選んだQuestに紐づくMissionだけを表示します。',
+                required: true,
+                child: Semantics(
+                  container: true,
+                  label: selectedQuest == null
+                      ? '先にTrailを紐づけるQuestを選択'
+                      : '選択したQuestに紐づくMissionを選択',
+                  child: DropdownButtonFormField<String>(
+                    key: ValueKey(
+                      'trail-mission-selector-${selectedQuest?.id ?? 'none'}',
+                    ),
+                    initialValue: selectedMission?.id,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      hintText: selectedQuest == null
+                          ? '先にQuestを選択'
+                          : selectableMissions.isEmpty
+                          ? '紐づけられるMissionがありません'
+                          : 'Missionを選択',
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      for (final mission in selectableMissions)
+                        DropdownMenuItem(
+                          value: mission.id,
+                          child: Text(
+                            mission.status == MissionStatus.completed
+                                ? '${mission.title}（完了）'
+                                : mission.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                    onChanged: selectableMissions.isEmpty
+                        ? null
+                        : (value) {
+                            setState(() {
+                              _selectedMissionId = value;
+                              _errorMessage = null;
+                            });
+                            unawaited(
+                              ref
+                                  .read(analyticsServiceProvider)
+                                  .trailJourney(
+                                    name:
+                                        AnalyticsEventName.trailParentSelected,
+                                    surface: 'trail_composer',
+                                    outcome: 'selected',
+                                    hasQuest: selectedQuest != null,
+                                    hasMission: value != null,
+                                  ),
+                            );
+                            _scheduleDraftSave();
+                          },
+                    validator: (value) =>
+                        value == null ? 'Questに紐づくMissionを選択してください。' : null,
+                  ),
+                ),
+              ),
+              if (selectedQuest != null && selectedMission != null) ...[
+                const SizedBox(height: 12),
+                Semantics(
+                  container: true,
+                  label:
+                      '保存先はQuest「${selectedQuest.title}」、Mission「${selectedMission.title}」です',
+                  child: Column(
+                    key: const ValueKey('trail-parent-selection-preview'),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'この航路に記録します',
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ExcludeSemantics(
+                        child: _TrailParentBreadcrumb(
+                          parent: TrailParentContext(
+                            questId: selectedQuest.id,
+                            questTitle: selectedQuest.title,
+                            missionId: selectedMission.id,
+                            missionTitle: selectedMission.title,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (selectedMission.status == MissionStatus.completed) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '完了したMissionにも、振り返りや学びとしてTrailを残せます。',
+                    key: const ValueKey('trail-completed-mission-guidance'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+              if (selectableQuests.isEmpty ||
+                  (selectedQuest != null && selectableMissions.isEmpty)) ...[
+                const SizedBox(height: 10),
+                Text(
+                  selectableQuests.isEmpty
+                      ? '先にQuestとMissionを作成すると、その航路へTrailを残せます。'
+                      : 'このQuestには利用できるMissionがありません。Quest画面でMissionを作成してください。',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                if (selectedQuest != null &&
+                    selectableMissions.isEmpty &&
+                    widget.onOpenQuest != null) ...[
+                  const SizedBox(height: 8),
+                  Semantics(
+                    button: true,
+                    label: '選択したQuestでMission作成画面を開く',
+                    child: TextButton.icon(
+                      key: const ValueKey('trail-open-quest-for-mission'),
+                      onPressed: () {
+                        QuestraModalSheet.finish(context);
+                        widget.onOpenQuest!(selectedQuest.id);
+                      },
+                      icon: const Icon(Icons.route_outlined),
+                      label: const Text('QuestでMissionを作る'),
+                    ),
+                  ),
+                ],
+              ],
             ],
             const SizedBox(height: 16),
+            if (_conflictingDraft != null) ...[
+              Semantics(
+                container: true,
+                liveRegion: true,
+                label: '別のQuestに保存中のTrail下書きがあります。',
+                child: Container(
+                  key: const ValueKey('trail-draft-context-conflict'),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.secondaryContainer.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '別の航路に保存中の下書きがあります',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'どちらを続けるか選ぶまで、この画面から下書きを上書きしません。',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (widget.parent == null)
+                            OutlinedButton(
+                              key: const ValueKey(
+                                'trail-open-conflicting-draft',
+                              ),
+                              onPressed: _openConflictingDraft,
+                              child: const Text('下書きを開く'),
+                            )
+                          else
+                            OutlinedButton(
+                              onPressed: () =>
+                                  QuestraModalSheet.finish(context),
+                              child: const Text('下書きを残して閉じる'),
+                            ),
+                          TextButton(
+                            key: const ValueKey(
+                              'trail-discard-conflicting-draft',
+                            ),
+                            onPressed: _discardConflictingDraft,
+                            child: const Text('破棄してこの航路で続ける'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (_draftRestored) ...[
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  '保存中の下書きを復元しました。',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (widget.draftOwnerId != null &&
+                _draftSaveStatus != _TrailDraftSaveStatus.idle) ...[
+              Semantics(
+                liveRegion: true,
+                label: _draftSaveStatus.message,
+                child: Text(
+                  _draftSaveStatus.message,
+                  key: const ValueKey('trail-draft-save-status'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: _draftSaveStatus == _TrailDraftSaveStatus.failed
+                        ? Theme.of(context).colorScheme.error
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             QuestraFieldLabel(
               label: '今日の記録',
               required: true,
@@ -749,7 +1654,10 @@ class _CreateTrailSheetState extends State<_CreateTrailSheet> {
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
-                onPressed: () => setState(() => _showDetails = !_showDetails),
+                onPressed: () {
+                  setState(() => _showDetails = !_showDetails);
+                  _scheduleDraftSave();
+                },
                 icon: Icon(
                   _showDetails ? Icons.expand_less : Icons.expand_more,
                 ),
@@ -842,12 +1750,39 @@ class _CreateTrailSheetState extends State<_CreateTrailSheet> {
       final summary = _summaryController.text.trim();
       final title = _titleController.text.trim();
       final content = _contentController.text.trim();
+      final selectedQuest = ref
+          .read(questControllerProvider)
+          .where((quest) => quest.id == _selectedQuestId)
+          .firstOrNull;
+      final selectedMission = ref
+          .read(missionControllerProvider)
+          .where(
+            (mission) =>
+                mission.id == _selectedMissionId &&
+                mission.questId == selectedQuest?.id &&
+                mission.routeState != MissionRouteState.removed,
+          )
+          .firstOrNull;
+      final parent =
+          widget.parent ??
+          (selectedQuest != null && selectedMission != null
+              ? TrailParentContext(
+                  questId: selectedQuest.id,
+                  questTitle: selectedQuest.title,
+                  missionId: selectedMission.id,
+                  missionTitle: selectedMission.title,
+                )
+              : null);
+      if (parent == null) {
+        throw StateError('Trail parent selection is incomplete.');
+      }
       saved = await widget.onSubmit(
         _TrailDraft(
           id: _draftId,
           title: title.isEmpty ? _deriveTitle(summary) : title,
           summary: summary,
           content: content.isEmpty ? summary : content,
+          parent: parent,
         ),
       );
     } catch (_) {
@@ -855,7 +1790,9 @@ class _CreateTrailSheetState extends State<_CreateTrailSheet> {
     }
     if (!mounted) return;
     if (saved) {
-      QuestraModalSheet.finish(context);
+      await _clearDraft();
+      if (!mounted) return;
+      QuestraModalSheet.finish(context, true);
       return;
     }
     setState(() {
@@ -872,6 +1809,198 @@ class _CreateTrailSheetState extends State<_CreateTrailSheet> {
     final compact = firstLine.replaceAll(RegExp(r'\s+'), ' ');
     return String.fromCharCodes(compact.runes.take(InputLimits.trailTitle));
   }
+
+  void _applyRestoredDraft(TrailComposerDraft? draft) {
+    if (draft == null) return;
+    final quests = ref.read(questControllerProvider);
+    final missions = ref.read(missionControllerProvider);
+    final quest = draft.questId == null
+        ? null
+        : quests
+              .where(
+                (item) =>
+                    item.id == draft.questId &&
+                    item.status != QuestStatus.archived,
+              )
+              .firstOrNull;
+    final mission = draft.missionId == null
+        ? null
+        : missions
+              .where(
+                (item) =>
+                    item.id == draft.missionId &&
+                    item.questId == quest?.id &&
+                    item.routeState != MissionRouteState.removed,
+              )
+              .firstOrNull;
+    final hasInvalidParent =
+        (draft.questId != null && quest == null) ||
+        (draft.missionId != null && mission == null);
+    final fixedParent = widget.parent;
+    final conflictsWithContext = fixedParent != null
+        ? draft.questId != fixedParent.questId ||
+              draft.missionId != fixedParent.missionId
+        : widget.initialQuestId != null &&
+              draft.questId != widget.initialQuestId;
+    if (hasInvalidParent) {
+      unawaited(_clearDraft());
+      return;
+    }
+    if (conflictsWithContext) {
+      _conflictingDraft = draft;
+      return;
+    }
+
+    _restoreDraftValues(draft, fixedParent: fixedParent);
+  }
+
+  void _restoreDraftValues(
+    TrailComposerDraft draft, {
+    TrailParentContext? fixedParent,
+  }) {
+    _draftId = draft.id;
+    if (fixedParent == null) {
+      _selectedQuestId = draft.questId ?? _selectedQuestId;
+      _selectedMissionId = draft.missionId ?? _selectedMissionId;
+    }
+    _titleController.text = draft.title;
+    _summaryController.text = draft.summary;
+    _contentController.text = draft.content;
+    _showDetails =
+        draft.showDetails || draft.title.isNotEmpty || draft.content.isNotEmpty;
+    _draftRestored = true;
+  }
+
+  void _openConflictingDraft() {
+    final draft = _conflictingDraft;
+    if (draft == null || widget.parent != null) return;
+    setState(() {
+      _conflictingDraft = null;
+      _restoreDraftValues(draft);
+      _errorMessage = null;
+    });
+    _trackDraftConflict(outcome: 'opened_existing');
+  }
+
+  Future<void> _discardConflictingDraft() async {
+    await _clearDraft();
+    if (!mounted) return;
+    setState(() {
+      _conflictingDraft = null;
+      _draftId = Trail.createId();
+    });
+    _trackDraftConflict(outcome: 'discarded_existing');
+    _scheduleDraftSave();
+  }
+
+  void _trackDraftConflict({required String outcome}) {
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .trailJourney(
+            name: AnalyticsEventName.trailDraftConflictResolved,
+            surface: 'trail_composer',
+            outcome: outcome,
+            hasQuest: _selectedQuestId != null,
+            hasMission: _selectedMissionId != null,
+          ),
+    );
+  }
+
+  void _scheduleDraftSave() {
+    if (_isSaving || _conflictingDraft != null || widget.draftOwnerId == null) {
+      return;
+    }
+    _draftSaveTimer?.cancel();
+    if (_draftSaveStatus != _TrailDraftSaveStatus.saving) {
+      setState(() => _draftSaveStatus = _TrailDraftSaveStatus.saving);
+    }
+    _draftSaveTimer = Timer(const Duration(milliseconds: 300), _saveDraft);
+  }
+
+  void _saveDraft() {
+    final ownerId = widget.draftOwnerId;
+    if (ownerId == null) return;
+    final parent = widget.parent;
+    final draft = TrailComposerDraft(
+      id: _draftId,
+      questId: parent?.questId ?? _selectedQuestId,
+      missionId: parent?.missionId ?? _selectedMissionId,
+      title: _titleController.text,
+      summary: _summaryController.text,
+      content: _contentController.text,
+      showDetails: _showDetails,
+      updatedAt: DateTime.now(),
+    );
+    final repository = ref.read(trailDraftRepositoryProvider);
+    final writeVersion = ++_draftWriteVersion;
+    final operation = _pendingDraftWrite.then(
+      (_) => repository.save(ownerId, draft),
+    );
+    _pendingDraftWrite = operation.catchError((_) {});
+    unawaited(
+      operation
+          .then((_) {
+            if (!mounted || writeVersion != _draftWriteVersion) return;
+            setState(() => _draftSaveStatus = _TrailDraftSaveStatus.saved);
+          })
+          .catchError((_) {
+            if (!mounted || writeVersion != _draftWriteVersion) return;
+            setState(() => _draftSaveStatus = _TrailDraftSaveStatus.failed);
+          }),
+    );
+  }
+
+  Future<void> _clearDraft() async {
+    final ownerId = widget.draftOwnerId;
+    if (ownerId == null) return;
+    _draftSaveTimer?.cancel();
+    try {
+      await _pendingDraftWrite;
+      await ref.read(trailDraftRepositoryProvider).clear(ownerId);
+      if (mounted) {
+        setState(() => _draftSaveStatus = _TrailDraftSaveStatus.idle);
+      }
+    } catch (_) {
+      // Draft cleanup must not block save or explicit dismissal.
+    }
+  }
+}
+
+extension on _TrailDraftSaveStatus {
+  String get message => switch (this) {
+    _TrailDraftSaveStatus.idle => '',
+    _TrailDraftSaveStatus.saving => '下書きを保存しています...',
+    _TrailDraftSaveStatus.saved => '下書きを保存しました。',
+    _TrailDraftSaveStatus.failed => '下書きを保存できません。入力は画面に残っています。',
+  };
+}
+
+int _compareTrailQuestChoice(Quest left, Quest right) {
+  int rank(QuestStatus status) => switch (status) {
+    QuestStatus.active => 0,
+    QuestStatus.draft => 1,
+    QuestStatus.completed => 2,
+    QuestStatus.archived => 3,
+  };
+
+  final statusOrder = rank(left.status).compareTo(rank(right.status));
+  if (statusOrder != 0) return statusOrder;
+  return left.title.compareTo(right.title);
+}
+
+int _compareTrailMissionChoice(Mission left, Mission right) {
+  final statusOrder = (left.status == MissionStatus.completed ? 1 : 0)
+      .compareTo(right.status == MissionStatus.completed ? 1 : 0);
+  if (statusOrder != 0) return statusOrder;
+
+  final order = left.orderIndex.compareTo(right.orderIndex);
+  if (order != 0) return order;
+
+  final sortOrder = left.sortOrder.compareTo(right.sortOrder);
+  if (sortOrder != 0) return sortOrder;
+
+  return left.title.compareTo(right.title);
 }
 
 class _TrailOverview extends StatelessWidget {
@@ -962,6 +2091,8 @@ class _TrailCard extends StatelessWidget {
     required this.onRemoveImage,
     required this.onShare,
     required this.onDelete,
+    this.onOpenQuest,
+    this.onOpenMission,
   });
 
   final Trail trail;
@@ -974,6 +2105,8 @@ class _TrailCard extends StatelessWidget {
   final VoidCallback? onRemoveImage;
   final VoidCallback? onShare;
   final VoidCallback onDelete;
+  final VoidCallback? onOpenQuest;
+  final VoidCallback? onOpenMission;
 
   @override
   Widget build(BuildContext context) {
@@ -1082,7 +2215,12 @@ class _TrailCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(trail.summary),
           const SizedBox(height: 8),
-          if (parent != null) _TrailParentBreadcrumb(parent: parent!),
+          if (parent != null)
+            _TrailParentBreadcrumb(
+              parent: parent!,
+              onOpenQuest: onOpenQuest,
+              onOpenMission: onOpenMission,
+            ),
           if (attachment != null) ...[
             const SizedBox(height: 10),
             _TrailImageAttachment(attachment: attachment!),
@@ -1094,9 +2232,15 @@ class _TrailCard extends StatelessWidget {
 }
 
 class _TrailParentBreadcrumb extends StatelessWidget {
-  const _TrailParentBreadcrumb({required this.parent});
+  const _TrailParentBreadcrumb({
+    required this.parent,
+    this.onOpenQuest,
+    this.onOpenMission,
+  });
 
   final TrailParentContext parent;
+  final VoidCallback? onOpenQuest;
+  final VoidCallback? onOpenMission;
 
   @override
   Widget build(BuildContext context) {
@@ -1107,10 +2251,20 @@ class _TrailParentBreadcrumb extends StatelessWidget {
         runSpacing: 6,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          _HierarchyChip(label: 'Quest', value: parent.questTitle),
+          _HierarchyChip(
+            key: ValueKey('trail-parent-quest-${parent.questId}'),
+            label: 'Quest',
+            value: parent.questTitle,
+            onTap: onOpenQuest,
+          ),
           if (parent.missionTitle case final title?) ...[
             const Icon(Icons.chevron_right, size: 16),
-            _HierarchyChip(label: 'Mission', value: title),
+            _HierarchyChip(
+              key: ValueKey('trail-parent-mission-${parent.missionId}'),
+              label: 'Mission',
+              value: title,
+              onTap: onOpenMission,
+            ),
           ],
           if (parent.taskTitle case final title?) ...[
             const Icon(Icons.chevron_right, size: 16),
@@ -1123,14 +2277,20 @@ class _TrailParentBreadcrumb extends StatelessWidget {
 }
 
 class _HierarchyChip extends StatelessWidget {
-  const _HierarchyChip({required this.label, required this.value});
+  const _HierarchyChip({
+    super.key,
+    required this.label,
+    required this.value,
+    this.onTap,
+  });
 
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final content = Container(
       constraints: const BoxConstraints(maxWidth: 260),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
@@ -1147,6 +2307,19 @@ class _HierarchyChip extends StatelessWidget {
         style: const TextStyle(
           color: QuestraColors.deepNavy,
           fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+    if (onTap == null) return content;
+    return Semantics(
+      button: true,
+      label: '$label「$value」を開く',
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 44),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: content,
         ),
       ),
     );
@@ -1340,23 +2513,26 @@ class _ReflectTrailSheetState extends State<_ReflectTrailSheet> {
   }
 }
 
-class _EditTrailSheet extends StatefulWidget {
+class _EditTrailSheet extends ConsumerStatefulWidget {
   const _EditTrailSheet({required this.trail, required this.onSubmit});
 
   final Trail trail;
-  final Future<bool> Function(Trail) onSubmit;
+  final Future<TrailUpdateResult> Function(Trail) onSubmit;
 
   @override
-  State<_EditTrailSheet> createState() => _EditTrailSheetState();
+  ConsumerState<_EditTrailSheet> createState() => _EditTrailSheetState();
 }
 
-class _EditTrailSheetState extends State<_EditTrailSheet> {
+class _EditTrailSheetState extends ConsumerState<_EditTrailSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
   late final TextEditingController _summaryController;
   late final TextEditingController _contentController;
   bool _isSaving = false;
+  bool _isChangingParent = false;
   String? _errorMessage;
+  late String? _selectedQuestId;
+  late String? _selectedMissionId;
 
   @override
   void initState() {
@@ -1364,6 +2540,8 @@ class _EditTrailSheetState extends State<_EditTrailSheet> {
     _titleController = TextEditingController(text: widget.trail.title);
     _summaryController = TextEditingController(text: widget.trail.summary);
     _contentController = TextEditingController(text: widget.trail.content);
+    _selectedQuestId = widget.trail.questId;
+    _selectedMissionId = widget.trail.missionId;
   }
 
   @override
@@ -1376,12 +2554,58 @@ class _EditTrailSheetState extends State<_EditTrailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final quests = ref.watch(questControllerProvider);
+    final missions = ref.watch(missionControllerProvider);
+    final currentQuest = quests
+        .where((quest) => quest.id == widget.trail.questId)
+        .firstOrNull;
+    final currentMission = missions
+        .where(
+          (mission) =>
+              mission.id == widget.trail.missionId &&
+              mission.questId == widget.trail.questId,
+        )
+        .firstOrNull;
+    final currentParent = currentQuest == null
+        ? null
+        : TrailParentContext(
+            questId: currentQuest.id,
+            questTitle: currentQuest.title,
+            missionId: currentMission?.id,
+            missionTitle: currentMission?.title,
+          );
+    final selectableQuests =
+        quests
+            .where((quest) => quest.status != QuestStatus.archived)
+            .toList(growable: false)
+          ..sort(_compareTrailQuestChoice);
+    final selectedQuest = selectableQuests
+        .where((quest) => quest.id == _selectedQuestId)
+        .firstOrNull;
+    final selectableMissions =
+        missions
+            .where(
+              (mission) =>
+                  mission.questId == selectedQuest?.id &&
+                  mission.routeState != MissionRouteState.removed,
+            )
+            .toList(growable: false)
+          ..sort(_compareTrailMissionChoice);
+    final selectedMission = selectableMissions
+        .where((mission) => mission.id == _selectedMissionId)
+        .firstOrNull;
+    final parentChanged =
+        _isChangingParent &&
+        (_selectedQuestId != widget.trail.questId ||
+            _selectedMissionId != widget.trail.missionId);
+
     return QuestraModalSheet(
       title: 'Trailを編集',
       hasUnsavedChanges: () =>
           _titleController.text != widget.trail.title ||
           _summaryController.text != widget.trail.summary ||
-          _contentController.text != widget.trail.content,
+          _contentController.text != widget.trail.content ||
+          parentChanged,
       isBusy: _isSaving,
       child: Form(
         key: _formKey,
@@ -1389,6 +2613,117 @@ class _EditTrailSheetState extends State<_EditTrailSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (currentParent != null) ...[
+              QuestraFieldLabel(
+                label: '紐づけ先',
+                helper: widget.trail.taskId == null
+                    ? 'このTrailを残したQuestとMissionです。'
+                    : 'Taskから残したTrailの航路は、履歴保護のため変更できません。',
+                child: _TrailParentBreadcrumb(parent: currentParent),
+              ),
+              if (widget.trail.taskId == null && !_isChangingParent)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    key: const ValueKey('trail-edit-change-parent'),
+                    onPressed: () => setState(() {
+                      _isChangingParent = true;
+                      _errorMessage = null;
+                    }),
+                    icon: const Icon(Icons.swap_horiz),
+                    label: const Text('紐づけ先を変更'),
+                  ),
+                ),
+              const SizedBox(height: 12),
+            ],
+            if (_isChangingParent && widget.trail.taskId == null) ...[
+              QuestraFieldLabel(
+                label: '変更後のQuest',
+                required: true,
+                child: DropdownButtonFormField<String>(
+                  key: const ValueKey('trail-edit-quest-selector'),
+                  initialValue: selectedQuest?.id,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    hintText: 'Questを選択',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    for (final quest in selectableQuests)
+                      DropdownMenuItem(
+                        value: quest.id,
+                        child: Text(
+                          quest.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                  onChanged: (value) => setState(() {
+                    _selectedQuestId = value;
+                    _selectedMissionId = null;
+                    _errorMessage = null;
+                  }),
+                  validator: (value) =>
+                      value == null ? '変更後のQuestを選択してください。' : null,
+                ),
+              ),
+              const SizedBox(height: 12),
+              QuestraFieldLabel(
+                label: '変更後のMission',
+                helper: '選んだQuestに紐づくMissionだけを表示します。',
+                required: true,
+                child: DropdownButtonFormField<String>(
+                  key: ValueKey(
+                    'trail-edit-mission-selector-${selectedQuest?.id ?? 'none'}',
+                  ),
+                  initialValue: selectedMission?.id,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: selectedQuest == null
+                        ? '先にQuestを選択'
+                        : selectableMissions.isEmpty
+                        ? '紐づけられるMissionがありません'
+                        : 'Missionを選択',
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: [
+                    for (final mission in selectableMissions)
+                      DropdownMenuItem(
+                        value: mission.id,
+                        child: Text(
+                          mission.status == MissionStatus.completed
+                              ? '${mission.title}（完了）'
+                              : mission.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                  onChanged: selectableMissions.isEmpty
+                      ? null
+                      : (value) => setState(() {
+                          _selectedMissionId = value;
+                          _errorMessage = null;
+                        }),
+                  validator: (value) =>
+                      value == null ? '変更後のMissionを選択してください。' : null,
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => setState(() {
+                    _isChangingParent = false;
+                    _selectedQuestId = widget.trail.questId;
+                    _selectedMissionId = widget.trail.missionId;
+                    _errorMessage = null;
+                  }),
+                  child: const Text('変更をやめる'),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             QuestraFieldLabel(
               label: 'Trailの名前',
               required: true,
@@ -1461,26 +2796,51 @@ class _EditTrailSheetState extends State<_EditTrailSheet> {
       _isSaving = true;
       _errorMessage = null;
     });
-    var saved = false;
+    TrailUpdateResult? result;
     try {
-      saved = await widget.onSubmit(
-        widget.trail.copyWith(
-          title: _titleController.text.trim(),
-          summary: _summaryController.text.trim(),
-          content: _contentController.text.trim(),
-        ),
+      var updatedTrail = widget.trail.copyWith(
+        title: _titleController.text.trim(),
+        summary: _summaryController.text.trim(),
+        content: _contentController.text.trim(),
       );
+      if (_isChangingParent && widget.trail.taskId == null) {
+        final selectedQuest = ref
+            .read(questControllerProvider)
+            .where(
+              (quest) =>
+                  quest.id == _selectedQuestId &&
+                  quest.status != QuestStatus.archived,
+            )
+            .firstOrNull;
+        final selectedMission = ref
+            .read(missionControllerProvider)
+            .where(
+              (mission) =>
+                  mission.id == _selectedMissionId &&
+                  mission.questId == selectedQuest?.id &&
+                  mission.routeState != MissionRouteState.removed,
+            )
+            .firstOrNull;
+        if (selectedQuest == null || selectedMission == null) {
+          throw StateError('Trail parent selection is incomplete.');
+        }
+        updatedTrail = updatedTrail.copyWithParent(
+          questId: selectedQuest.id,
+          missionId: selectedMission.id,
+        );
+      }
+      result = await widget.onSubmit(updatedTrail);
     } catch (_) {
       // Keep the edited fields visible for an explicit retry.
     }
     if (!mounted) return;
-    if (saved) {
+    if (result?.isSaved ?? false) {
       QuestraModalSheet.finish(context);
       return;
     }
     setState(() {
       _isSaving = false;
-      _errorMessage = '保存できませんでした。入力を残したまま再試行できます。';
+      _errorMessage = result?.message ?? '保存できませんでした。入力を残したまま再試行できます。';
     });
   }
 }
@@ -1503,6 +2863,9 @@ PersistenceSyncState _toPersistenceState(TrailSyncState state) {
     status: status,
     message: state.message,
     operation: operation,
+    retryAvailable: state.retryAvailable,
+    inputPreserved: state.inputPreserved,
+    offline: state.offline,
   );
 }
 

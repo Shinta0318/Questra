@@ -1,5 +1,7 @@
 import { callGeminiInteraction } from "./interactions_adapter.ts";
-import { ProviderRequest, ProviderResponse, ValidationIssue } from "./contracts.ts";
+import type { ProviderRequest, ProviderResponse, ValidationIssue } from "./contracts.ts";
+import { callGeminiInteractionWithTools } from "./tool_interaction_orchestrator.ts";
+import { planningTools } from "./tool_registry.ts";
 import { activePrompt, PROMPTS } from "./prompt_registry.ts";
 import { decideGrounding, validateGroundedMissionReferences, validateGroundingEvidence } from "./grounding.ts";
 import { validateMissionArchitectureSemantics, validateRouteMissionPlan, validateTaskPlan } from "./validators.ts";
@@ -14,6 +16,7 @@ export type PlanningInput = {
   location?: string | null;
   constraints?: string[];
   approvedContext?: Record<string, unknown>;
+  existingRoute?: Record<string, unknown>;
   userId?: string | null;
   abuseKeyHash?: string | null;
   idempotencyKey: string;
@@ -62,7 +65,17 @@ export async function runQuestPlanningPipeline(input: PlanningInput): Promise<Pl
   if (!domains.response || domains.response.error) return failed(traceId, passes, prompts, domains.response?.error?.retryable);
 
   const grounding = decideGrounding(`${input.wish}\n${JSON.stringify(success.response.output)}`);
-  const strategy = await runPass("strategic_plan", { understanding: understandingOutput, successContract: success.response.output, achievementDomains: domains.response.output, groundingDecision: grounding }, input, traceId, prompts, grounding.required ? [{ type: "google_search" }] : []);
+  const strategyTools = [
+    ...planningTools([
+      "get_quest_context",
+      "get_mission_progress",
+      "get_user_planning_preferences",
+      "get_quest_dna",
+      "get_relevant_arc_memory",
+    ]),
+    ...(grounding.required ? [{ type: "google_search" as const }] : []),
+  ];
+  const strategy = await runPass("strategic_plan", { understanding: understandingOutput, successContract: success.response.output, achievementDomains: domains.response.output, groundingDecision: grounding, existingRoute: input.existingRoute }, input, traceId, prompts, strategyTools);
   passes.push(strategy.pass);
   if (!strategy.response || strategy.response.error) return failed(traceId, passes, prompts, strategy.response?.error?.retryable);
   const groundingValidation = validateGroundingEvidence(grounding, strategy.response.groundingMetadata);
@@ -71,7 +84,7 @@ export async function runQuestPlanningPipeline(input: PlanningInput): Promise<Pl
     return result(traceId, "retryable_error", passes, null, [{ path: "$.grounding", code: "grounding_failed", message: "Current facts could not be verified with traceable sources" }], prompts);
   }
 
-  const generated = await runPass("route_mission_generation", { questId: input.questId, understanding: understandingOutput, successContract: success.response.output, achievementDomains: domains.response.output, strategicPlan: strategy.response.output, groundingMetadata: strategy.response.groundingMetadata }, input, traceId, prompts);
+  const generated = await runPass("route_mission_generation", { questId: input.questId, understanding: understandingOutput, successContract: success.response.output, achievementDomains: domains.response.output, strategicPlan: strategy.response.output, groundingMetadata: strategy.response.groundingMetadata, existingRoute: input.existingRoute }, input, traceId, prompts);
   passes.push(generated.pass);
   if (!generated.response || generated.response.error) return failed(traceId, passes, prompts, generated.response?.error?.retryable);
   let plan = generated.response.output;
@@ -138,6 +151,14 @@ export async function runQuestPlanningPipeline(input: PlanningInput): Promise<Pl
     currentTaskPlan: taskPlan,
     currentTaskCritic: finalTaskCritic,
     groundingMetadata: strategy.response.groundingMetadata,
+    routeApplication: input.existingRoute ?? {
+      applicationMode: "initial",
+      baseMissions: [],
+      completedMissionIds: [],
+      existingMissionCount: 0,
+      completedMissionCount: 0,
+      replaceableMissionCount: 0,
+    },
     qualityGate: {
       status: "passed",
       version: "qst-341-v1",
@@ -298,7 +319,7 @@ async function evaluateMissionPlan(
 async function runPass(key: keyof typeof PROMPTS, payload: unknown, input: PlanningInput, traceId: string, versions: Record<string, number>, tools: ProviderRequest["tools"] = []) {
   const prompt = activePrompt(key);
   versions[key] = prompt.version;
-  const response = await callGeminiInteraction({
+  const request: ProviderRequest = {
     operation: `quest_planning.${key}`,
     modelRole: prompt.modelRole,
     promptVersion: `${prompt.key}.v${prompt.version}`,
@@ -315,9 +336,45 @@ async function runPass(key: keyof typeof PROMPTS, payload: unknown, input: Plann
     traceId,
     userId: input.userId,
     abuseKeyHash: input.abuseKeyHash,
-  });
-  const { output: _, text: __, groundingMetadata: ___, ...provider } = response;
+  };
+  const response = tools.some((tool) => tool.type === "function")
+    ? input.userId
+      ? await callGeminiInteractionWithTools(request, {
+        userId: input.userId,
+        approved: false,
+      })
+      : missingUserForTools(request)
+    : await callGeminiInteraction(request);
+  const {
+    output: _,
+    text: __,
+    groundingMetadata: ___,
+    continuation: ____,
+    ...provider
+  } = response;
   return { response, pass: { name: key, status: response.error ? "failed" : "completed", output: response.output, provider } as PlanningPass };
+}
+
+function missingUserForTools(request: ProviderRequest): ProviderResponse {
+  return {
+    provider: "gemini",
+    model: "unresolved",
+    modelVersion: "unresolved",
+    thinkingLevel: request.thinkingLevel ?? "low",
+    output: null,
+    text: "",
+    toolCalls: [],
+    groundingMetadata: null,
+    usage: {},
+    latencyMs: 0,
+    finishReason: "error",
+    traceId: request.traceId,
+    error: {
+      code: "tool_failed",
+      retryable: false,
+      message: "Authenticated user context is required for planning tools",
+    },
+  };
 }
 
 function criticFailedIds(value: unknown, issues: ValidationIssue[], granularity: unknown, coverage: unknown) {

@@ -38,7 +38,9 @@ class QuestraCard extends StatelessWidget {
               : null,
           borderRadius: tokens?.glassCardRadius ?? AppRadius.glassCard,
           border: Border.all(
-            color: QuestraColors.white.withValues(alpha: 0.72),
+            color: palette == QuestraSurfacePalette.light
+                ? QuestraColors.white.withValues(alpha: 0.72)
+                : QuestraColors.skyBlue.withValues(alpha: 0.22),
           ),
           boxShadow: tokens?.glassShadow ?? AppShadows.glassCard,
         ),

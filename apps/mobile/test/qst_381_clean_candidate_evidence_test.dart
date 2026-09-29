@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../tools/qst/verify_external_beta_go_no_go.dart' as gate_verifier;
+
 void main() {
   final repo = Directory.current.parent.parent;
 
@@ -68,5 +70,52 @@ void main() {
     );
     expect(verifier, contains('decision.distributionReady'));
     expect(verifier, contains('A GO decision must be bound to current HEAD.'));
+    expect(verifier, contains('externalBetaGateBlock(content, gate.id)'));
+    expect(
+      verifier,
+      contains('Gate IDs are missing, duplicated, or unexpected.'),
+    );
+    expect(
+      verifier,
+      contains(r'Passed gate ${gate.id} must not declare a blocker.'),
+    );
+    expect(verifier, contains('_yaml(gate.blocker)'));
+    expect(
+      verifier,
+      contains('decision.gates.where((gate) => !gate.passed).length'),
+    );
+  });
+
+  test('external beta statuses are scoped to their own gate block', () {
+    const content = '''
+gates:
+  - id: first_gate
+    title: "First"
+    status: passed
+    evidence:
+      - "first.txt"
+  - id: second_gate
+    title: "Second"
+    status: blocked
+    evidence:
+      - "second.txt"
+    blocker: "Missing external evidence"
+guardrails:
+  static_test_is_external_evidence: false
+''';
+
+    final first = gate_verifier.externalBetaGateBlock(content, 'first_gate');
+    final second = gate_verifier.externalBetaGateBlock(content, 'second_gate');
+
+    expect(first, contains('status: passed'));
+    expect(first, isNot(contains('status: blocked')));
+    expect(first, isNot(contains('second.txt')));
+    expect(second, contains('status: blocked'));
+    expect(second, isNot(contains('status: passed')));
+    expect(second, contains('Missing external evidence'));
+    expect(
+      gate_verifier.externalBetaGateBlock(content, 'missing_gate'),
+      isNull,
+    );
   });
 }

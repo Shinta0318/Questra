@@ -1,6 +1,6 @@
 version: 2
 status: local_migration_pending_deployment
-updated_at_utc: "2026-08-24T00:00:00Z"
+updated_at_utc: "2026-09-13T00:00:00Z"
 candidate_source_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
 working_tree_clean_at_deploy: false
 project:
@@ -13,7 +13,7 @@ project:
   cli_version: "2.111.0"
 migrations:
   status: local_pending_deployment
-  latest_local: "202609030001_explicit_server_only_table_grants.sql"
+  latest_local: "202609150006_immutable_compensating_ai_budget_correction.sql"
   remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   command: "supabase migration list --linked"
   applied_at_utc: "2026-08-08T14:29:40Z"
@@ -71,6 +71,10 @@ functions:
     status: local_pending_deployment
     deployed_at_utc: null
     version: null
+  - name: reconcile-ai-budget
+    status: local_pending_deployment
+    deployed_at_utc: null
+    version: null
 secrets:
   status: verified
   storage: server_side_only
@@ -92,6 +96,14 @@ secrets:
     - AI_REQUEST_TIMEOUT_MS
     - OPENAI_API_KEY
     - OPENAI_MODEL
+    - AI_RECONCILIATION_WORKER_SECRET
+    - AI_RECONCILIATION_TIMEOUT_MS
+    - AI_RECONCILIATION_ALERT_WEBHOOK_URL
+    - AI_RECONCILIATION_ALERT_WEBHOOK_SECRET
+    - AI_GROUNDING_MAX_QUERIES_PER_REQUEST
+    - AI_RECEIPT_BINDING_ENABLED
+    - AI_RECEIPT_NONCE_SECRET
+    - AI_TOOL_CONTINUATION_ATTRIBUTION_ENABLED
 client_configuration:
   status: not_verified
   allowed_dart_defines:
@@ -104,7 +116,7 @@ client_configuration:
 deployment_smoke:
   status: passed
   verified_at_utc: "2026-08-08T14:29:40Z"
-  edge_function_options: "quest-planning-v2 v14 and 10 supporting functions active"
+  edge_function_options: "11 deployed functions and 2 local pending functions"
   auth_login_invalid_input: "401"
   authenticated_owner_flows: "passed with ephemeral two-account Task, Trail hierarchy, Mission completion RPC, Route, Memory and Media acceptance"
   task_expansion_owner: passed

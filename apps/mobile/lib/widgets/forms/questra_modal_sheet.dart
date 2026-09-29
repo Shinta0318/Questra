@@ -33,6 +33,7 @@ class QuestraModalSheet extends StatefulWidget {
     required this.title,
     required this.child,
     required this.hasUnsavedChanges,
+    this.onDiscarded,
     this.isBusy = false,
     this.dark = false,
     super.key,
@@ -41,6 +42,7 @@ class QuestraModalSheet extends StatefulWidget {
   final String title;
   final Widget child;
   final bool Function() hasUnsavedChanges;
+  final Future<void> Function()? onDiscarded;
   final bool isBusy;
   final bool dark;
 
@@ -93,6 +95,7 @@ class _QuestraModalSheetState extends State<QuestraModalSheet> {
           ),
         );
         if (discard != true) return;
+        await widget.onDiscarded?.call();
       }
       if (mounted && !widget.isBusy) _finish(null);
     } finally {

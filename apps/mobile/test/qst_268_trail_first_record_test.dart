@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:questra/features/mission/mission_controller.dart';
+import 'package:questra/features/mission/mission_model.dart';
+import 'package:questra/features/quest/quest_controller.dart';
+import 'package:questra/features/quest/quest_guide_model.dart';
+import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/trail/trail_controller.dart';
 import 'package:questra/features/trail/trail_model.dart';
 import 'package:questra/features/trail/trail_screen.dart';
@@ -27,7 +32,12 @@ void main() {
   });
 
   testWidgets('短い記録だけで保存し、単一の時系列へすぐ反映される', (tester) async {
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [
+        questControllerProvider.overrideWith(_TrailQuestController.new),
+        missionControllerProvider.overrideWith(_TrailMissionController.new),
+      ],
+    );
     addTearDown(container.dispose);
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -40,10 +50,13 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('trail-primary-create')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
+    await _selectParent(tester);
 
     final fields = find.byType(TextFormField);
     expect(fields, findsOneWidget);
     await tester.enterText(fields.at(0), '今日の一歩を残した。小さく始められたので、明日も続けたい。');
+    await tester.ensureVisible(find.text('Trailを保存'));
+    await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(find.text('Trailを保存'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
@@ -65,6 +78,8 @@ void main() {
       ProviderScope(
         overrides: [
           trailControllerProvider.overrideWith(_FailingTrailController.new),
+          questControllerProvider.overrideWith(_TrailQuestController.new),
+          missionControllerProvider.overrideWith(_TrailMissionController.new),
         ],
         child: const MaterialApp(home: TrailScreen()),
       ),
@@ -74,9 +89,12 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('trail-primary-create')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
+    await _selectParent(tester);
     final fields = find.byType(TextFormField);
     expect(fields, findsOneWidget);
     await tester.enterText(fields.at(0), '消えない入力。失敗時も保持する。');
+    await tester.ensureVisible(find.text('Trailを保存'));
+    await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(find.text('Trailを保存'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
@@ -88,6 +106,53 @@ void main() {
       findsOneWidget,
     );
   });
+}
+
+Future<void> _selectParent(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('trail-quest-selector')));
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.tap(find.text('シンガポールへ行く').last);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.tap(
+    find.byKey(const ValueKey('trail-mission-selector-quest-1')),
+  );
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.tap(find.text('旅行日程を決める').last);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
+class _TrailQuestController extends QuestController {
+  @override
+  List<Quest> build() => [
+    Quest(
+      id: 'quest-1',
+      title: 'シンガポールへ行く',
+      description: '家族旅行を実現する',
+      difficulty: QuestDifficulty.normal,
+      status: QuestStatus.active,
+      visibility: QuestVisibility.private,
+    ),
+  ];
+}
+
+class _TrailMissionController extends MissionController {
+  @override
+  List<Mission> build() => [
+    Mission(
+      id: 'mission-1',
+      questId: 'quest-1',
+      questTitle: 'シンガポールへ行く',
+      title: '旅行日程を決める',
+      description: '候補日を比較する',
+      guideType: GuideType.route,
+      difficulty: MissionDifficulty.easy,
+      status: MissionStatus.todo,
+    ),
+  ];
 }
 
 class _FailingTrailController extends TrailController {

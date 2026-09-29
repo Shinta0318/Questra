@@ -1,6 +1,11 @@
 import { classifyProviderError, shouldRetry } from "./errors.ts";
-import { resolveModel } from "./model_registry.ts";
-import { ProviderErrorCode, ProviderRequest, ProviderResponse, ProviderToolCall } from "./contracts.ts";
+import { resolveFallbackModel, resolveModel } from "./model_registry.ts";
+import type {
+  ProviderErrorCode,
+  ProviderRequest,
+  ProviderResponse,
+  ProviderToolCall,
+} from "./contracts.ts";
 import { resolveThinkingLevel } from "./thinking_policy.ts";
 import { validateJsonSchema } from "./json_schema_validator.ts";
 import { releaseAiBudget, reserveAiBudget, settleAiBudget } from "./ai_budget_admission.ts";
@@ -13,7 +18,15 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
   if (!apiKey) return failure(request, startedAt, "unknown", "GEMINI_API_KEY is not configured");
   const allowPreview = Deno.env.get("AI_ALLOW_PREVIEW_MODELS") === "true";
   const primaryModel = resolveModel(request.modelRole, { allowPreview });
-  const reservation = await reserveAiBudget(request, primaryModel.name);
+  const fallbackModel = resolveFallbackModel(
+    request.modelRole,
+    primaryModel.name,
+    { allowPreview },
+  );
+  const reservation = await reserveAiBudget(request, [
+    primaryModel.name,
+    fallbackModel.name,
+  ]);
   if (!reservation.allowed || !reservation.reservationId) {
     return failure(
       request,
@@ -23,15 +36,24 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
     );
   }
   let lastError = classifyProviderError();
+  let lastModelName = primaryModel.name;
+  let lastThinkingLevel = request.thinkingLevel ??
+    resolveThinkingLevel(request.modelRole, primaryModel);
+  const attemptedModels: string[] = [];
   for (let attempt = 1; attempt <= 2; attempt++) {
-    const model = resolveModel(request.modelRole, { fallback: attempt > 1, allowPreview });
+    const model = attempt === 1
+      ? primaryModel
+      : fallbackModel;
     const thinkingLevel = request.thinkingLevel ?? resolveThinkingLevel(request.modelRole, model);
+    lastModelName = model.name;
+    lastThinkingLevel = thinkingLevel;
+    attemptedModels.push(model.name);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), bounded(request.timeoutMs, 25_000, 5_000, 60_000));
     try {
       const body: Record<string, unknown> = {
         model: model.name,
-        input: boundedJson(request.input),
+        input: request.interactionHistory ?? boundedJson(request.input),
         system_instruction: request.systemInstruction,
         store: false,
         generation_config: {
@@ -74,12 +96,32 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           providerMessage ?? lastError.message,
           response.status,
           model.name,
+          thinkingLevel,
+          attemptedModels,
         );
       }
       const data = await response.json() as Record<string, unknown>;
       const text = extractText(data);
-      let output: unknown = text;
-      if (request.responseSchema) {
+      const toolCalls = extractToolCalls(data);
+      if (!text && toolCalls.length === 0) {
+        if (attempt === 1) {
+          await delay(400);
+          continue;
+        }
+        return await releaseAndFail(
+          request,
+          startedAt,
+          reservation.reservationId,
+          "malformed_output",
+          "Provider output was empty",
+          undefined,
+          model.name,
+          thinkingLevel,
+          attemptedModels,
+        );
+      }
+      let output: unknown = text || null;
+      if (request.responseSchema && toolCalls.length === 0) {
         try {
           output = JSON.parse(text);
         } catch (_) {
@@ -88,7 +130,17 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
             await delay(400);
             continue;
           }
-          return await releaseAndFail(request, startedAt, reservation.reservationId, "malformed_output", "Structured output was not valid JSON", undefined, model.name);
+          return await releaseAndFail(
+            request,
+            startedAt,
+            reservation.reservationId,
+            "malformed_output",
+            "Structured output was not valid JSON",
+            undefined,
+            model.name,
+            thinkingLevel,
+            attemptedModels,
+          );
         }
         const schemaIssues = validateJsonSchema(output, request.responseSchema);
         if (schemaIssues.length > 0) {
@@ -104,25 +156,50 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
             `Structured output failed schema validation at ${schemaIssues[0].path}`,
             undefined,
             model.name,
+            thinkingLevel,
+            attemptedModels,
           );
         }
       }
+      const groundingMetadata = extractGroundingMetadata(data);
+      const usage = extractUsage(data);
+      usage.groundingQueries = groundingMetadata === null
+        ? 0
+        : Array.isArray(groundingMetadata.queries)
+        ? new Set(
+          groundingMetadata.queries.filter((value) =>
+            typeof value === "string" && value.trim().length > 0
+          ).map((value) => (value as string).trim()),
+        ).size
+        : undefined;
       const result: ProviderResponse = {
         provider: "gemini",
+        providerInteractionId: stringValue(data.id) ?? undefined,
         model: model.name,
         modelVersion: model.family,
         thinkingLevel,
         output,
         text,
-        toolCalls: extractToolCalls(data),
-        groundingMetadata: extractGroundingMetadata(data),
-        usage: extractUsage(data),
+        toolCalls,
+        groundingMetadata,
+        usage,
         latencyMs: Date.now() - startedAt,
-        finishReason: stringValue(data.finish_reason) ?? "completed",
+        finishReason: stringValue(data.status) ??
+          stringValue(data.finish_reason) ?? "completed",
         traceId: request.traceId,
         error: null,
+        attemptedModels: [...attemptedModels],
+        continuation: toolCalls.length > 0
+          ? { steps: extractContinuationSteps(data) }
+          : undefined,
       };
-      if (!await settleAiBudget(reservation.reservationId, result)) {
+      if (
+        !await settleAiBudget(
+          reservation.reservationId,
+          result,
+          reservation.receiptBinding,
+        )
+      ) {
         return failure(
           request,
           startedAt,
@@ -130,6 +207,8 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           "AI usage settlement failed",
           undefined,
           model.name,
+          thinkingLevel,
+          attemptedModels,
         );
       }
       return result;
@@ -142,6 +221,10 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
           reservation.reservationId,
           lastError.code,
           lastError.message,
+          undefined,
+          model.name,
+          thinkingLevel,
+          attemptedModels,
         );
       }
       await delay(attempt * 400);
@@ -155,6 +238,10 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
     reservation.reservationId,
     lastError.code,
     lastError.message,
+    undefined,
+    lastModelName,
+    lastThinkingLevel,
+    attemptedModels,
   );
 }
 
@@ -166,9 +253,20 @@ async function releaseAndFail(
   message: string,
   status?: number,
   model = "unresolved",
+  thinkingLevel?: ProviderResponse["thinkingLevel"],
+  attemptedModels: string[] = [],
 ) {
   await releaseAiBudget(reservationId, code);
-  return failure(request, startedAt, code, message, status, model);
+  return failure(
+    request,
+    startedAt,
+    code,
+    message,
+    status,
+    model,
+    thinkingLevel,
+    attemptedModels,
+  );
 }
 
 function budgetErrorCode(reason: string): ProviderErrorCode {
@@ -179,12 +277,21 @@ function budgetErrorCode(reason: string): ProviderErrorCode {
   return "budget_unavailable";
 }
 
-function failure(request: ProviderRequest, startedAt: number, code: ProviderErrorCode, message: string, status?: number, model = "unresolved"): ProviderResponse {
+function failure(
+  request: ProviderRequest,
+  startedAt: number,
+  code: ProviderErrorCode,
+  message: string,
+  status?: number,
+  model = "unresolved",
+  thinkingLevel?: ProviderResponse["thinkingLevel"],
+  attemptedModels: string[] = [],
+): ProviderResponse {
   return {
     provider: "gemini",
     model,
     modelVersion: model,
-    thinkingLevel: request.thinkingLevel ?? "low",
+    thinkingLevel: thinkingLevel ?? request.thinkingLevel ?? "low",
     output: null,
     text: "",
     toolCalls: [],
@@ -204,6 +311,7 @@ function failure(request: ProviderRequest, startedAt: number, code: ProviderErro
       status,
       message,
     },
+    attemptedModels: [...attemptedModels],
   };
 }
 
@@ -231,16 +339,32 @@ function extractToolCalls(data: Record<string, unknown>) {
   return calls;
 }
 
-function extractGroundingMetadata(data: Record<string, unknown>) {
+export function extractContinuationSteps(data: Record<string, unknown>) {
+  if (!Array.isArray(data.steps)) return [];
+  return data.steps.filter((step) => {
+    if (!isRecord(step)) return false;
+    return step.type !== "user_input" && step.type !== "function_result";
+  });
+}
+
+export function extractGroundingMetadata(data: Record<string, unknown>) {
   const searches: Record<string, unknown>[] = [];
   const queries = new Set<string>();
   const sourceByUri = new Map<string, { id: string; title: string; uri: string }>();
   visit(data.steps, (item) => {
     if (item.type !== "google_search_call" && item.type !== "google_search_result") return;
     searches.push({ type: item.type, id: stringValue(item.id), status: stringValue(item.status) });
-    for (const key of ["query", "search_query", "searchQuery"] as const) {
-      const query = stringValue(item[key]);
-      if (query) queries.add(query.slice(0, 500));
+    if (item.type === "google_search_call") {
+      for (const key of ["query", "search_query", "searchQuery"] as const) {
+        const query = stringValue(item[key]);
+        if (query) queries.add(query.slice(0, 500));
+      }
+      if (Array.isArray(item.queries)) {
+        for (const value of item.queries) {
+          const query = stringValue(value);
+          if (query) queries.add(query.slice(0, 500));
+        }
+      }
     }
     collectGroundingSources(item, sourceByUri);
   });
@@ -248,6 +372,7 @@ function extractGroundingMetadata(data: Record<string, unknown>) {
     ? {
       steps: searches,
       queries: [...queries],
+      billableQueryCount: queries.size,
       sources: [...sourceByUri.values()],
       retrievedAt: new Date().toISOString(),
     }
@@ -291,16 +416,31 @@ function safeDomain(value: string) {
   }
 }
 
-function extractUsage(data: Record<string, unknown>) {
+export function extractUsage(data: Record<string, unknown>) {
   const usage = isRecord(data.usage)
     ? data.usage
     : isRecord(data.usage_metadata)
     ? data.usage_metadata
     : {};
+  const generatedOutputTokens = tokenValue(usage.total_output_tokens) ??
+    tokenValue(usage.output_tokens) ??
+    tokenValue(usage.candidates_token_count);
+  const thoughtTokens = tokenValue(usage.total_thought_tokens) ??
+    tokenValue(usage.thoughts_token_count) ?? 0;
   return {
-    inputTokens: numberValue(usage.input_tokens) ?? numberValue(usage.prompt_token_count),
-    outputTokens: numberValue(usage.output_tokens) ?? numberValue(usage.candidates_token_count),
-    totalTokens: numberValue(usage.total_tokens) ?? numberValue(usage.total_token_count),
+    inputTokens: tokenValue(usage.total_input_tokens) ??
+      tokenValue(usage.input_tokens) ??
+      tokenValue(usage.prompt_token_count),
+    outputTokens: generatedOutputTokens === undefined
+      ? (thoughtTokens || undefined)
+      : generatedOutputTokens + thoughtTokens,
+    totalTokens: tokenValue(usage.total_tokens) ??
+      tokenValue(usage.total_token_count),
+    generatedOutputTokens,
+    thoughtTokens,
+    cachedTokens: tokenValue(usage.total_cached_tokens) ??
+      tokenValue(usage.cached_content_token_count),
+    toolUseTokens: tokenValue(usage.total_tool_use_tokens),
   };
 }
 
@@ -349,4 +489,9 @@ function bounded(value: number | undefined, fallback: number, min: number, max: 
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null; }
 function stringValue(value: unknown) { return typeof value === "string" && value.trim() ? value.trim() : null; }
 function numberValue(value: unknown) { return typeof value === "number" && Number.isFinite(value) ? value : undefined; }
+function tokenValue(value: unknown) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0
+    ? value
+    : undefined;
+}
 function delay(ms: number) { return new Promise((resolve) => setTimeout(resolve, ms)); }

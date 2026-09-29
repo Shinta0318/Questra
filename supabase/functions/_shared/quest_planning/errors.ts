@@ -1,4 +1,4 @@
-import { ProviderError, ProviderErrorCode } from "./contracts.ts";
+import type { ProviderError, ProviderErrorCode } from "./contracts.ts";
 
 export function classifyProviderError(status?: number, error?: unknown): ProviderError {
   const name = error instanceof Error ? error.name : "";

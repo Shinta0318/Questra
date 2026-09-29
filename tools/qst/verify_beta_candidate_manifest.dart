@@ -37,7 +37,6 @@ const requiredManifestSnippets = [
   'matches_candidate_sha:',
   'status: "evidence_missing"',
   'artifacts:',
-  'status: not_built',
   'local_fallback_is_cloud_evidence: false',
 ];
 
@@ -46,6 +45,7 @@ void main() {
   _checkFile(generatorPath, requiredGeneratorSnippets, failures);
   _checkFile(manifestPath, requiredManifestSnippets, failures);
   _checkInventory(failures);
+  _checkArtifacts(failures);
 
   if (failures.isNotEmpty) {
     stderr.writeln('Beta candidate manifest verification failed:');
@@ -57,6 +57,34 @@ void main() {
 
   stdout.writeln('Beta candidate manifest verification passed.');
   stdout.writeln('Candidate is draft and not distribution-ready.');
+}
+
+void _checkArtifacts(List<String> failures) {
+  final content = File(manifestPath).readAsStringSync();
+  if (content.contains('  - status: not_built')) return;
+
+  final entries = RegExp(
+    r'  - status: found\r?\n'
+    r'    path: "[^"]+"\r?\n'
+    r'    bytes: ([1-9][0-9]*)\r?\n'
+    r'    sha256: "[a-f0-9]{64}"',
+  ).allMatches(content).toList();
+  if (entries.isEmpty) {
+    failures.add(
+      'Artifacts must be not_built or include a path, positive byte count, '
+      'and SHA-256.',
+    );
+  }
+
+  final declaredFound = RegExp(
+    r'^  - status: found$',
+    multiLine: true,
+  ).allMatches(content).length;
+  if (declaredFound != entries.length) {
+    failures.add(
+      'Every found artifact must include complete checksum evidence.',
+    );
+  }
 }
 
 void _checkInventory(List<String> failures) {

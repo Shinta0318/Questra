@@ -52,6 +52,11 @@ enum AnalyticsEventName {
   userHelpfulnessSubmitted,
   refundOrCancellationRecorded,
   trailPosted,
+  trailComposerOpened,
+  trailParentSelected,
+  trailMissionRecoveryOpened,
+  trailDraftConflictResolved,
+  trailComposerCompleted,
   arcChatSent,
   guildDraftCreated,
   mediaAttached,
@@ -194,6 +199,13 @@ extension AnalyticsEventNameStorage on AnalyticsEventName {
       AnalyticsEventName.refundOrCancellationRecorded =>
         'refund_or_cancellation_recorded',
       AnalyticsEventName.trailPosted => 'trail_posted',
+      AnalyticsEventName.trailComposerOpened => 'trail_composer_opened',
+      AnalyticsEventName.trailParentSelected => 'trail_parent_selected',
+      AnalyticsEventName.trailMissionRecoveryOpened =>
+        'trail_mission_recovery_opened',
+      AnalyticsEventName.trailDraftConflictResolved =>
+        'trail_draft_conflict_resolved',
+      AnalyticsEventName.trailComposerCompleted => 'trail_composer_completed',
       AnalyticsEventName.arcChatSent => 'arc_chat_sent',
       AnalyticsEventName.guildDraftCreated => 'guild_draft_created',
       AnalyticsEventName.mediaAttached => 'media_attached',
