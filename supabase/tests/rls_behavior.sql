@@ -629,7 +629,8 @@ select pg_temp.qst_assert_eq(
 select count(*) as completion_events_before_recomplete
 from public.task_progress_events
 where owner_id = :'owner_id' and task_id = :'owner_qst534_task_id'
-  and event_name = 'task_completed' \gset
+  and event_name = 'task_completed'
+  and event_key like ('task_completed:' || :'owner_qst534_task_id' || ':%') \gset
 select pg_temp.qst_assert_eq(
   (public.complete_task_journey(:'owner_qst534_task_id'::uuid, 'qst535-recomplete', 7)->>'version')::bigint,
   8, 'QST-535 Task may complete again after reopen'
@@ -637,9 +638,16 @@ select pg_temp.qst_assert_eq(
 select pg_temp.qst_assert_eq(
   (select count(*) from public.task_progress_events
    where owner_id = :'owner_id' and task_id = :'owner_qst534_task_id'
-     and event_name = 'task_completed'),
+     and event_name = 'task_completed'
+     and event_key like ('task_completed:' || :'owner_qst534_task_id' || ':%')),
   :'completion_events_before_recomplete'::integer + 1,
-  'rapid Task re-completion records another progress event'
+  'rapid Task re-completion records another status transition'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.task_progress_events
+   where owner_id = :'owner_id' and task_id = :'owner_qst534_task_id'
+     and event_key = 'journey:qst535-recomplete'),
+  1, 'rapid Task re-completion records one idempotent journey operation'
 );
 select pg_temp.qst_assert_eq(
   (select count(*) from public.task_progress_events
