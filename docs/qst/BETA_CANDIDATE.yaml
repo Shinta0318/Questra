@@ -2,10 +2,10 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "a14bca0d121c5351cea61d2eae8c960e6409c6e4"
-rollback_commit: "7a693123019723ff05a36b40ba4b0697ac8d900a"
+source_commit: "c42cb35dc968d4fcd325f09cfacf0d4613ae2f69"
+rollback_commit: "6948a81f28fd1365e873928a0031b7c615556975"
 branch: "codex/initial-questra-structure-pr"
-generated_at_utc: "2026-10-24T22:59:28.100232Z"
+generated_at_utc: "2026-10-24T23:05:14.740524Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
