@@ -2,14 +2,14 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "dfda025fe53b41abce4d6a5075f27442e57216a0"
-rollback_commit: "f28dca45a35f9c5d058d8042f9c25f4945d44d14"
+source_commit: "82a5a9e71027746e9a679166889a3330499a7965"
+rollback_commit: "20ad0b13fbd97929db187439089f439149540428"
 branch: "codex/initial-questra-structure-pr"
-generated_at_utc: "2026-10-24T22:33:56.618737Z"
+generated_at_utc: "2026-10-24T22:43:24.851227Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
-  latest_local_migration: "202610180001_ai_legal_consent_gate.sql"
+  latest_local_migration: "202610250001_task_progress_event_unique_key.sql"
   remote_migration_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   edge_function_count: 13
   edge_functions:
