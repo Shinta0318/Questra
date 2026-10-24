@@ -8,8 +8,8 @@ executed_at_utc: null
 cli_version: null
 migrations:
   remote_head_before: "202608080006_route_proposal_stale_conflict_guard.sql"
-  latest_local: "202610250001_task_progress_event_unique_key.sql"
-  pending_at_plan: 46
+  latest_local: "202610250002_runtime_operator_role_guard.sql"
+  pending_at_plan: 47
   pending_at_execution: null
   applied_during_run: null
   remote_head_after: null
@@ -61,6 +61,7 @@ migrations:
     - "202610160001_auth_free_tier_token_lock.sql"
     - "202610180001_ai_legal_consent_gate.sql"
     - "202610250001_task_progress_event_unique_key.sql"
+    - "202610250002_runtime_operator_role_guard.sql"
 execution:
   runner: tools/qst/run_hosted_migration_deployment.ps1
   requires:
