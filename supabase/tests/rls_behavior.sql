@@ -626,6 +626,10 @@ select pg_temp.qst_assert_eq(
   (public.reopen_task_journey(:'owner_qst534_task_id'::uuid, 'qst535-reopen', 5)->>'status' = 'conflict')::integer,
   1, 'QST-535 stale replay does not hide later Task edit'
 );
+select count(*) as completion_events_before_recomplete
+from public.task_progress_events
+where owner_id = :'owner_id' and task_id = :'owner_qst534_task_id'
+  and event_name = 'task_completed' \gset
 select pg_temp.qst_assert_eq(
   (public.complete_task_journey(:'owner_qst534_task_id'::uuid, 'qst535-recomplete', 7)->>'version')::bigint,
   8, 'QST-535 Task may complete again after reopen'
@@ -634,7 +638,17 @@ select pg_temp.qst_assert_eq(
   (select count(*) from public.task_progress_events
    where owner_id = :'owner_id' and task_id = :'owner_qst534_task_id'
      and event_name = 'task_completed'),
-  2, 'rapid Task re-completion records distinct progress events'
+  :'completion_events_before_recomplete'::integer + 1,
+  'rapid Task re-completion records another progress event'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.task_progress_events
+   where owner_id = :'owner_id' and task_id = :'owner_qst534_task_id'
+     and event_name = 'task_completed'),
+  (select count(distinct event_key)::integer from public.task_progress_events
+   where owner_id = :'owner_id' and task_id = :'owner_qst534_task_id'
+     and event_name = 'task_completed'),
+  'rapid Task re-completion keeps unique progress event keys'
 );
 select pg_temp.qst_assert_eq(
   (select count(*) from public.missions where id = :'owner_public_mission_id'
