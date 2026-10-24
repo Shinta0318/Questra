@@ -2,8 +2,8 @@ version: 1
 qst: QST-367
 decision: no_go
 distribution_ready: false
-evaluated_at_utc: "2026-10-24T23:12:40.020006Z"
-candidate_source_commit: "ef4161be8f34b1ca67dacea518b4be72b894a1c1"
+evaluated_at_utc: "2026-10-24T23:18:39.837740Z"
+candidate_source_commit: "9acd3276ce1e57e85e2fcbca41d88c29ba8ee4f5"
 latest_local_migration: "202610250002_runtime_operator_role_guard.sql"
 worktree_clean_at_evaluation: false
 summary:
