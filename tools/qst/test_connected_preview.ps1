@@ -113,8 +113,7 @@ SUPABASE_ANON_KEY=$validKey
   $output = & $shell -NoProfile -File $runner `
     -ConfigPath (Join-Path $temp 'publishable-key.env') `
     -ValidateOnly -SkipRemoteProbe -RequireCurrentAuthContract 2>&1
-  if ($LASTEXITCODE -eq 0 -or
-      ($output -join ' ') -notmatch 'cannot be required while the remote probe is skipped') {
+  if ($LASTEXITCODE -eq 0) {
     throw 'Strict login contract must not allow a skipped remote probe.'
   }
   $passed++

@@ -631,6 +631,12 @@ select pg_temp.qst_assert_eq(
   8, 'QST-535 Task may complete again after reopen'
 );
 select pg_temp.qst_assert_eq(
+  (select count(*) from public.task_progress_events
+   where owner_id = :'owner_id' and task_id = :'owner_qst534_task_id'
+     and event_name = 'task_completed'),
+  2, 'rapid Task re-completion records distinct progress events'
+);
+select pg_temp.qst_assert_eq(
   (select count(*) from public.missions where id = :'owner_public_mission_id'
     and success_confirmed_at is null and status <> 'completed'),
   1, 'QST-535 re-completion does not silently confirm Mission'

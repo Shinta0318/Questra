@@ -5,7 +5,7 @@ executed_at_utc: null
 candidate_source_commit: null
 working_tree_clean_at_start: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
-latest_migration: "202610180001_ai_legal_consent_gate.sql"
+latest_migration: "202610250001_task_progress_event_unique_key.sql"
 gates:
   migrations_and_functions: pending
   rls_behavior: pending

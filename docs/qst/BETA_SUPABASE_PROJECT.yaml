@@ -13,7 +13,7 @@ project:
   cli_version: "2.111.0"
 migrations:
   status: local_pending_deployment
-  latest_local: "202610180001_ai_legal_consent_gate.sql"
+  latest_local: "202610250001_task_progress_event_unique_key.sql"
   remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   remote_head_checked_at_utc: "2026-10-17T23:09:06Z"
   command: "supabase migration list --linked"
