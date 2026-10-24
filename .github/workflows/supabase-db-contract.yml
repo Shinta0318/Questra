@@ -42,7 +42,8 @@ jobs:
           version=$(psql --host 127.0.0.1 --port 54322 --username postgres \
             --dbname postgres --tuples-only --no-align \
             --command 'select max(version) from supabase_migrations.schema_migrations')
-          test "$version" = '202610180001'
+          latest_file=$(find supabase/migrations -maxdepth 1 -type f -name '*.sql' -printf '%f\n' | sort | tail -1)
+          test "$version" = "${latest_file%%_*}"
           rpc_ready=$(psql --host 127.0.0.1 --port 54322 --username postgres \
             --dbname postgres --tuples-only --no-align \
             --command "select to_regprocedure('public.record_auth_login_failure_v2(uuid)') is not null and to_regprocedure('public.record_auth_login_success_v2(uuid)') is not null and to_regprocedure('public.hook_questra_access_token(jsonb)') is not null and to_regclass('public.legal_acceptances') is not null and to_regclass('public.legal_release_policies') is not null and to_regprocedure('public.accept_current_legal_policy(text,text,text,text,text,boolean,timestamptz)') is not null and to_regprocedure('public.has_current_ai_legal_acceptance(uuid)') is not null")
