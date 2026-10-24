@@ -116,6 +116,9 @@ values
   (:'other_id', 'QST41 Other')
 on conflict (id) do nothing;
 
+insert into public.guild_pilot_members (user_id, enabled, enabled_at)
+values (:'other_id', true, now());
+
 insert into public.quests (id, owner_id, title, description, status, visibility)
 values
   (:'owner_private_quest_id', :'owner_id', 'Owner private Quest', 'RLS private owner Quest.', 'active', 'private'),
