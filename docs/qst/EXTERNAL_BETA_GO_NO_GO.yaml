@@ -2,8 +2,8 @@ version: 1
 qst: QST-367
 decision: no_go
 distribution_ready: false
-evaluated_at_utc: "2026-10-24T22:48:57.926052Z"
-candidate_source_commit: "c28d561739d0b75dbcf2989f471534261b4f44a1"
+evaluated_at_utc: "2026-10-24T22:53:25.758215Z"
+candidate_source_commit: "6dcb8907ae842c7060dbd408817b26de05cb1208"
 latest_local_migration: "202610250001_task_progress_event_unique_key.sql"
 worktree_clean_at_evaluation: false
 summary:
