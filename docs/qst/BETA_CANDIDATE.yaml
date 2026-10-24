@@ -2,10 +2,10 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "3e38ba1c9fd89e5df5505841cb8ec25e511a3494"
-rollback_commit: "a9d83bcb551e6c974b9c3fdf8a9d1a51a401c61c"
+source_commit: "dfda025fe53b41abce4d6a5075f27442e57216a0"
+rollback_commit: "f28dca45a35f9c5d058d8042f9c25f4945d44d14"
 branch: "codex/initial-questra-structure-pr"
-generated_at_utc: "2026-10-24T14:50:37.809442Z"
+generated_at_utc: "2026-10-24T22:33:56.618737Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
@@ -37,8 +37,8 @@ inventory:
   dependency_license_status: "generated_review_pending"
 automated_gates:
   dependency_resolution: "not_run"
-  static_analysis: "passed"
-  flutter_tests: "passed"
+  static_analysis: "not_run"
+  flutter_tests: "not_run"
   rls_static_readiness: "not_run"
   performance_readiness: "not_run"
   feedback_readiness: "not_run"
