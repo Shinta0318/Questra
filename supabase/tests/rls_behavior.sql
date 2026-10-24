@@ -139,10 +139,17 @@ values
   (:'owner_public_trail_id', :'owner_id', :'owner_public_quest_id', :'owner_public_mission_id', 'Owner public Trail', 'Public Trail.', 'Public Trail content.', 'public', 'quest_record'),
   (:'other_private_trail_id', :'other_id', :'other_private_quest_id', :'other_private_mission_id', 'Other private Trail', 'Other private Trail.', 'Other private Trail content.', 'private', 'quest_record');
 
+select set_config('request.jwt.claim.role', 'service_role', true);
+insert into public.user_consents (user_id, purpose_code, purpose_version, status, granted_at, source)
+values
+  (:'owner_id', 'arc_personalization', 1, 'granted', now(), 'settings'),
+  (:'other_id', 'arc_personalization', 1, 'granted', now(), 'settings');
+
 insert into public.arc_memories (id, user_id, quest_id, title, content, memory_type, source_type)
 values
   (:'owner_memory_id', :'owner_id', :'owner_private_quest_id', 'Owner memory', 'Owner-only Arc Memory.', 'quest_memory', 'quest_created'),
   (:'other_memory_id', :'other_id', :'other_private_quest_id', 'Other memory', 'Other-only Arc Memory.', 'quest_memory', 'quest_created');
+select set_config('request.jwt.claim.role', '', true);
 
 insert into public.media (id, owner_id, bucket, path, media_type, related_table, related_id, visibility)
 values

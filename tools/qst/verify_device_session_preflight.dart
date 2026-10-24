@@ -17,7 +17,7 @@ void main() {
     ],
     'tools/qst/record_physical_accessibility_evidence.dart': [
       'Physical evidence must be recorded from a clean worktree.',
-      'Candidate SHA does not match HEAD.',
+      'Candidate SHA is not an unchanged source commit.',
       'Emulator output cannot be recorded as physical evidence.',
       'privacy-reviewed',
     ],
