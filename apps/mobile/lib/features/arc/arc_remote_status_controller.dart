@@ -82,7 +82,13 @@ String? sanitizeArcTraceId(String? value) {
 }
 
 String sanitizeArcFailureReason(String value) {
-  const allowed = {'timeout', 'remote_failure', 'invalid_response'};
+  const allowed = {
+    'timeout',
+    'remote_failure',
+    'invalid_response',
+    'consent_required',
+    'consent_check_unavailable',
+  };
   return allowed.contains(value) ? value : 'remote_failure';
 }
 

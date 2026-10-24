@@ -173,11 +173,12 @@ foreach ($requiredSecret in @('AI_PROVIDER', 'GEMINI_API_KEY')) {
   }
 }
 
-$deployedAt = [DateTime]::UtcNow.ToString('o')
+$functionDeployTimes = @{}
 foreach ($functionName in $requiredFunctions) {
   Invoke-SupabaseCommand @(
     'functions', 'deploy', $functionName, '--project-ref', $ProjectRef
   ) | Out-Null
+  $functionDeployTimes[$functionName] = [DateTime]::UtcNow.ToString('o')
 }
 
 $updatedAt = [DateTime]::UtcNow.ToString('o')
@@ -205,7 +206,8 @@ $lines.Add('functions:')
 foreach ($functionName in $requiredFunctions) {
   $lines.Add("  - name: $functionName")
   $lines.Add('    status: deployed')
-  $lines.Add("    deployed_at_utc: $(Quote-Yaml $deployedAt)")
+  $lines.Add("    deployed_at_utc: $(Quote-Yaml $functionDeployTimes[$functionName])")
+  $lines.Add("    source_commit: $(Quote-Yaml $sourceCommit)")
 }
 $lines.Add('secrets:')
 $lines.Add('  status: verified')

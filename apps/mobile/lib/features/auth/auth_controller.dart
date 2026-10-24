@@ -1,15 +1,26 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
-    show AuthChangeEvent, AuthException, Supabase, UserAttributes;
+    show
+        AuthChangeEvent,
+        AuthException,
+        AuthResponse,
+        FunctionException,
+        OtpType,
+        Supabase,
+        UserAttributes;
 import 'package:uuid/uuid.dart';
 
 import '../../core/config/supabase_config.dart';
 import '../arc/stardust_service.dart';
 import '../trust/legal_policy.dart';
 import 'auth_redirects.dart';
+import 'auth_error_feedback.dart';
 import 'auth_state.dart';
+import 'password_recovery_service.dart';
+import 'signup_confirmation_service.dart';
 
 final authControllerProvider = NotifierProvider<AuthController, AuthState>(
   AuthController.new,
@@ -43,8 +54,21 @@ class AuthController extends Notifier<AuthState> {
       unawaited(Future<void>.microtask(restoreSession));
       return const AuthState(isLoading: true);
     }
+    if (SupabaseConfig.autoEnterLocalMock) {
+      return AuthState(profile: _localMockProfile());
+    }
     return const AuthState();
   }
+
+  UserProfile _localMockProfile() => UserProfile(
+    id: _uuid.v4(),
+    email: 'preview@local.questra',
+    loginId: 'preview',
+    nickname: 'キャプテン',
+    onboardingCompleted: true,
+    hasSeenOnboardingTour: true,
+    legalAcceptanceCurrent: true,
+  );
 
   Future<void> restoreSession() async {
     if (!SupabaseConfig.isConfigured) {
@@ -64,6 +88,7 @@ class AuthController extends Notifier<AuthState> {
         user.email ?? '',
         user.userMetadata?['nickname'] as String?,
         user.userMetadata?['login_id'] as String?,
+        signupMetadata: user.userMetadata,
       );
       state = state.copyWith(profile: profile, isLoading: false);
     } catch (_) {
@@ -73,6 +98,52 @@ class AuthController extends Notifier<AuthState> {
         errorMessage: 'セッションを確認できませんでした。通信状態を確認して、もう一度お試しください。',
       );
     }
+  }
+
+  void setSignupConfirmationStatus(SignupConfirmationStatus status) {
+    state = state.copyWith(signupConfirmationStatus: status);
+  }
+
+  void activatePasswordRecovery() {
+    state = state.copyWith(
+      isPasswordRecovery: true,
+      isLoading: false,
+      clearError: true,
+    );
+  }
+
+  Future<SignupConfirmationStatus> confirmSignupToken(String tokenHash) async {
+    setSignupConfirmationStatus(SignupConfirmationStatus.checking);
+    var result = await verifySignupConfirmation(
+      Supabase.instance.client,
+      tokenHash,
+    );
+    if (result == SignupConfirmationStatus.verified) {
+      await restoreSession();
+      if (!state.isAuthenticated) {
+        result = SignupConfirmationStatus.unavailable;
+      }
+    }
+    setSignupConfirmationStatus(result);
+    return result;
+  }
+
+  Future<SignupConfirmationStatus> confirmSignupSession({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    setSignupConfirmationStatus(SignupConfirmationStatus.checking);
+    var result = await completeImplicitSignupConfirmation(
+      Supabase.instance.client,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
+    if (result == SignupConfirmationStatus.verified) {
+      await restoreSession();
+      if (!state.isAuthenticated) result = SignupConfirmationStatus.unavailable;
+    }
+    setSignupConfirmationStatus(result);
+    return result;
   }
 
   Future<void> signUp({
@@ -90,21 +161,59 @@ class AuthController extends Notifier<AuthState> {
         throw const AuthException('legal_acceptance_required');
       }
       if (SupabaseConfig.isConfigured) {
-        final response = await Supabase.instance.client.auth.signUp(
-          email: email,
-          password: password,
-          data: {
-            'nickname': nickname,
-            'login_id': normalizedLoginId,
-            ...legalAcceptance.toAuthMetadata(),
-          },
+        final signupClient = createSignupEmailClient(
+          SupabaseConfig.url,
+          SupabaseConfig.anonKey,
         );
+        late final AuthResponse response;
+        try {
+          Map<String, dynamic>? activePolicy;
+          try {
+            activePolicy = await signupClient
+                .from('legal_release_policies')
+                .select(
+                  'active,minimum_age,eligibility_version,terms_version,privacy_version,ai_disclosure_version',
+                )
+                .eq('region_code', QuestraLegalPolicy.regionCode)
+                .eq('active', true)
+                .maybeSingle();
+          } catch (_) {
+            throw const AuthException(
+              'signup_unavailable',
+              code: 'signup_unavailable',
+            );
+          }
+          switch (QuestraLegalPolicy.activePolicyState(activePolicy)) {
+            case ActiveLegalPolicyState.current:
+              break;
+            case ActiveLegalPolicyState.unavailable:
+              throw const AuthException(
+                'signup_unavailable',
+                code: 'signup_unavailable',
+              );
+            case ActiveLegalPolicyState.updateRequired:
+              throw const AuthException(
+                'app_update_required',
+                code: 'app_update_required',
+              );
+          }
+          response = await signupClient.auth.signUp(
+            email: email,
+            password: password,
+            emailRedirectTo: AuthRedirects.signupConfirmation,
+            data: {
+              'nickname': nickname,
+              'login_id': normalizedLoginId,
+              ...legalAcceptance.toAuthMetadata(),
+            },
+          );
+          if (response.session != null) await signupClient.auth.signOut();
+        } finally {
+          await signupClient.dispose();
+        }
         final user = response.user;
         if (user == null) {
           throw const AuthException('アカウント作成に失敗しました。');
-        }
-        if (response.session != null) {
-          await Supabase.instance.client.auth.signOut();
         }
         state = state.copyWith(
           clearProfile: true,
@@ -128,80 +237,102 @@ class AuthController extends Notifier<AuthState> {
         registrationCompleted: true,
         passwordResetCompleted: false,
       );
-    });
+    }, errorContext: AuthErrorContext.signup);
   }
 
   Future<void> login({
     required String identifier,
     required String password,
   }) async {
-    await _runAuthAction(() async {
-      if (SupabaseConfig.isConfigured) {
-        final functionResponse = await (() async {
-          try {
-            return await Supabase.instance.client.functions.invoke(
-              'auth-login',
-              body: {
-                'identifier': identifier.trim().toLowerCase(),
-                'password': password,
-              },
-            );
-          } catch (_) {
+    await _runAuthAction(
+      () async {
+        if (SupabaseConfig.isConfigured) {
+          final functionResponse = await (() async {
+            try {
+              return await Supabase.instance.client.functions.invoke(
+                'auth-login',
+                body: {
+                  'identifier': identifier.trim().toLowerCase(),
+                  'password': password,
+                },
+              );
+            } on FunctionException catch (error) {
+              throw loginFunctionFailure(error);
+            } catch (_) {
+              throw const AuthException(
+                'login_unavailable',
+                code: 'login_unavailable',
+              );
+            }
+          })();
+          final payload = Map<String, dynamic>.from(
+            functionResponse.data as Map,
+          );
+          final accessToken = payload['access_token'] as String?;
+          final refreshToken = payload['refresh_token'] as String?;
+          if (accessToken == null || refreshToken == null) {
             throw const AuthException('ログインに失敗しました。');
           }
-        })();
-        final payload = Map<String, dynamic>.from(functionResponse.data as Map);
-        final accessToken = payload['access_token'] as String?;
-        final refreshToken = payload['refresh_token'] as String?;
-        if (accessToken == null || refreshToken == null) {
-          throw const AuthException('ログインに失敗しました。');
+          final response = await Supabase.instance.client.auth.setSession(
+            refreshToken,
+            accessToken: accessToken,
+          );
+          final user = response.user;
+          if (user == null) {
+            throw const AuthException('ログインに失敗しました。');
+          }
+          final profile = await _loadProfile(
+            user.id,
+            user.email ?? '',
+            user.userMetadata?['nickname'] as String?,
+            user.userMetadata?['login_id'] as String?,
+            signupMetadata: user.userMetadata,
+          );
+          state = state.copyWith(
+            profile: profile,
+            registrationCompleted: false,
+            passwordResetCompleted: false,
+            passwordResetSignOutPending: false,
+            passwordResetLockClearFailed: false,
+            isPasswordRecovery: false,
+          );
+          return;
         }
-        final response = await Supabase.instance.client.auth.setSession(
-          refreshToken,
-          accessToken: accessToken,
-        );
-        final user = response.user;
-        if (user == null) {
-          throw const AuthException('ログインに失敗しました。');
+
+        _ensureLocalPersistenceAllowed();
+
+        final localAccount = _localAccount;
+        if (localAccount == null) {
+          throw const AuthException(
+            'local_mock_account_missing',
+            code: 'local_mock_account_missing',
+          );
         }
-        final profile = await _loadProfile(
-          user.id,
-          user.email ?? '',
-          user.userMetadata?['nickname'] as String?,
-          user.userMetadata?['login_id'] as String?,
-        );
+        final normalizedIdentifier = identifier.trim().toLowerCase();
+        if ((normalizedIdentifier != localAccount.loginId &&
+                normalizedIdentifier != localAccount.email.toLowerCase()) ||
+            password != localAccount.password) {
+          throw const AuthException(
+            'local_mock_invalid_credentials',
+            code: 'local_mock_invalid_credentials',
+          );
+        }
         state = state.copyWith(
-          profile: profile,
+          profile: UserProfile(
+            id: _uuid.v4(),
+            email: localAccount.email,
+            loginId: localAccount.loginId,
+            nickname: localAccount.nickname,
+            legalAcceptanceCurrent: localAccount.legalAcceptanceCurrent,
+          ),
           registrationCompleted: false,
           passwordResetCompleted: false,
-          isPasswordRecovery: false,
         );
-        return;
-      }
-
-      _ensureLocalPersistenceAllowed();
-
-      final localAccount = _localAccount;
-      if (localAccount != null &&
-          identifier.trim().toLowerCase() != localAccount.loginId &&
-          identifier.trim().toLowerCase() != localAccount.email.toLowerCase()) {
-        throw const AuthException('ログインIDまたはパスワードを確認してください。');
-      }
-      if (localAccount != null && password != localAccount.password) {
-        throw const AuthException('ログインIDまたはパスワードを確認してください。');
-      }
-      state = state.copyWith(
-        profile: UserProfile(
-          id: _uuid.v4(),
-          email: localAccount?.email ?? identifier,
-          loginId: localAccount?.loginId,
-          nickname: localAccount?.nickname ?? identifier.split('@').first,
-          legalAcceptanceCurrent: localAccount?.legalAcceptanceCurrent ?? false,
-        ),
-        registrationCompleted: false,
-        passwordResetCompleted: false,
-      );
-    });
+      },
+      errorContext: SupabaseConfig.isConfigured
+          ? AuthErrorContext.login
+          : AuthErrorContext.localPreviewLogin,
+    );
   }
 
   Future<void> enterLocalMockPreview() async {
@@ -211,15 +342,7 @@ class AuthController extends Notifier<AuthState> {
         throw const AuthException('Local mock preview is unavailable.');
       }
       state = state.copyWith(
-        profile: UserProfile(
-          id: _uuid.v4(),
-          email: 'preview@local.questra',
-          loginId: 'preview',
-          nickname: 'キャプテン',
-          onboardingCompleted: true,
-          hasSeenOnboardingTour: true,
-          legalAcceptanceCurrent: true,
-        ),
+        profile: _localMockProfile(),
         registrationCompleted: false,
         passwordResetCompleted: false,
         isPasswordRecovery: false,
@@ -239,18 +362,59 @@ class AuthController extends Notifier<AuthState> {
   Future<void> requestPasswordReset({required String email}) async {
     await _runAuthAction(() async {
       if (SupabaseConfig.isConfigured) {
-        await Supabase.instance.client.auth.resetPasswordForEmail(
-          email.trim(),
-          redirectTo: AuthRedirects.passwordRecovery,
-        );
+        if (kIsWeb) {
+          final recoveryClient = createPasswordRecoveryEmailClient(
+            SupabaseConfig.url,
+            SupabaseConfig.anonKey,
+          );
+          try {
+            await recoveryClient.auth.resetPasswordForEmail(
+              email.trim(),
+              redirectTo: AuthRedirects.passwordRecovery,
+            );
+          } finally {
+            await recoveryClient.dispose();
+          }
+        } else {
+          await Supabase.instance.client.auth.resetPasswordForEmail(
+            email.trim(),
+            redirectTo: AuthRedirects.passwordRecovery,
+          );
+        }
       } else {
         _ensureLocalPersistenceAllowed();
+        throw const AuthException(
+          'local_mail_unavailable',
+          code: 'local_mail_unavailable',
+        );
       }
       state = state.copyWith(
         passwordResetRequested: true,
         passwordResetCompleted: false,
       );
     });
+  }
+
+  Future<bool> resendSignupConfirmation({required String email}) async {
+    await _runAuthAction(() async {
+      if (!SupabaseConfig.isConfigured) {
+        throw const AuthException('confirmation_unavailable');
+      }
+      final signupClient = createSignupEmailClient(
+        SupabaseConfig.url,
+        SupabaseConfig.anonKey,
+      );
+      try {
+        await signupClient.auth.resend(
+          type: OtpType.signup,
+          email: email.trim(),
+          emailRedirectTo: AuthRedirects.signupConfirmation,
+        );
+      } finally {
+        await signupClient.dispose();
+      }
+    }, errorContext: AuthErrorContext.confirmation);
+    return state.errorMessage == null;
   }
 
   Future<void> completePasswordReset({required String newPassword}) async {
@@ -262,20 +426,47 @@ class AuthController extends Notifier<AuthState> {
         if (response.user == null) {
           throw const AuthException('パスワードを更新できませんでした。');
         }
-        await Supabase.instance.client.rpc('clear_my_login_lock');
-        await Supabase.instance.client.auth.signOut();
+        final finalization = await finalizePasswordReset(
+          clearLoginLock: () async {
+            await Supabase.instance.client.rpc('clear_my_login_lock');
+          },
+          signOut: () => Supabase.instance.client.auth.signOut(),
+        );
+        state = state.copyWith(
+          clearProfile: finalization.signedOut,
+          isPasswordRecovery: !finalization.signedOut,
+          passwordResetRequested: false,
+          passwordResetCompleted: true,
+          passwordResetSignOutPending: !finalization.signedOut,
+          passwordResetLockClearFailed: !finalization.loginLockCleared,
+        );
       } else {
         _ensureLocalPersistenceAllowed();
-        if (_localAccount != null) {
-          _localAccount = _localAccount!.copyWith(password: newPassword);
-        }
+        throw const AuthException(
+          'local_mail_unavailable',
+          code: 'local_mail_unavailable',
+        );
       }
+    });
+  }
 
+  Future<void> finishPasswordResetSignOut() async {
+    if (!state.passwordResetCompleted || !state.passwordResetSignOutPending) {
+      return;
+    }
+    await _runAuthAction(() async {
+      try {
+        await Supabase.instance.client.auth.signOut();
+      } catch (_) {
+        throw const AuthException(
+          'password_reset_sign_out_failed',
+          code: 'password_reset_sign_out_failed',
+        );
+      }
       state = state.copyWith(
         clearProfile: true,
         isPasswordRecovery: false,
-        passwordResetRequested: false,
-        passwordResetCompleted: true,
+        passwordResetSignOutPending: false,
       );
     });
   }
@@ -314,10 +505,18 @@ class AuthController extends Notifier<AuthState> {
       } else {
         _ensureLocalPersistenceAllowed();
       }
+      if (SupabaseConfig.isConfigured &&
+          !(await _currentLegalAcceptance(profile.id)).current) {
+        throw const AuthException('legal_acceptance_not_recorded');
+      }
       state = state.copyWith(
-        profile: profile.copyWith(legalAcceptanceCurrent: true),
+        profile: profile.copyWith(
+          legalAcceptanceCurrent: true,
+          legalAcceptanceCheckAvailable: true,
+          legalPolicyUpdateRequired: false,
+        ),
       );
-    });
+    }, errorContext: AuthErrorContext.legalConsent);
   }
 
   Future<void> completeOnboarding({
@@ -448,7 +647,10 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  Future<void> _runAuthAction(Future<void> Function() action) async {
+  Future<void> _runAuthAction(
+    Future<void> Function() action, {
+    AuthErrorContext? errorContext,
+  }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       await action();
@@ -456,12 +658,16 @@ class AuthController extends Notifier<AuthState> {
     } on AuthException catch (error) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: _friendlyAuthMessage(error.message),
+        errorMessage: friendlyAuthError(error, errorContext),
+        errorContext: errorContext,
       );
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: '認証処理を完了できませんでした。通信状態を確認して、もう一度お試しください。',
+        errorMessage: errorContext == AuthErrorContext.legalConsent
+            ? '利用条件への同意を保存できませんでした。しばらくしてから再試行してください。'
+            : '認証処理を完了できませんでした。通信状態を確認して、もう一度お試しください。',
+        errorContext: errorContext,
       );
     }
   }
@@ -470,32 +676,6 @@ class AuthController extends Notifier<AuthState> {
     if (!SupabaseConfig.localPersistenceAllowed) {
       throw const AuthException('Supabaseの接続設定が必要です。');
     }
-  }
-
-  String _friendlyAuthMessage(String rawMessage) {
-    final message = rawMessage.toLowerCase();
-    if (message.contains('rate') ||
-        message.contains('too many') ||
-        message.contains('60 seconds')) {
-      return '操作が続いたため一時停止しています。少し待ってからお試しください。';
-    }
-    if (message.contains('weak') ||
-        message.contains('password') ||
-        rawMessage.contains('パスワード')) {
-      return 'パスワードは8文字以上で、英字と数字を含めてください。';
-    }
-    if (message.contains('session') || message.contains('recovery')) {
-      return '再設定リンクが無効または期限切れです。もう一度メールを送信してください。';
-    }
-    if (message.contains('legal_acceptance')) {
-      return '年齢条件、利用規約、プライバシー説明、AI処理の内容を確認してください。';
-    }
-    if (message.contains('signup') ||
-        message.contains('already') ||
-        message.contains('database')) {
-      return 'アカウントを作成できませんでした。入力内容を確認するか、別のログインIDをお試しください。';
-    }
-    return 'ログインIDまたはパスワードを確認してください。10回連続で失敗すると30分間ログインできません。';
   }
 
   Future<void> _upsertProfile(
@@ -524,10 +704,14 @@ class AuthController extends Notifier<AuthState> {
     String userId,
     String email,
     String? fallbackNickname,
-    String? fallbackLoginId,
-  ) async {
+    String? fallbackLoginId, {
+    Map<String, dynamic>? signupMetadata,
+  }) async {
     final row = await _loadProfileRow(userId);
-    final legalAcceptanceCurrent = await _hasCurrentLegalAcceptance(userId);
+    final legalAcceptance = await _currentLegalAcceptance(userId);
+    final priorSignupConsentClaimed = QuestraLegalPolicy.matchesSignupMetadata(
+      signupMetadata,
+    );
 
     if (row == null) {
       return UserProfile(
@@ -535,7 +719,10 @@ class AuthController extends Notifier<AuthState> {
         email: email,
         nickname: fallbackNickname ?? 'キャプテン',
         loginId: fallbackLoginId,
-        legalAcceptanceCurrent: legalAcceptanceCurrent,
+        legalAcceptanceCurrent: legalAcceptance.current,
+        legalAcceptanceCheckAvailable: legalAcceptance.available,
+        legalPolicyUpdateRequired: legalAcceptance.updateRequired,
+        priorSignupConsentClaimed: priorSignupConsentClaimed,
       );
     }
 
@@ -555,7 +742,10 @@ class AuthController extends Notifier<AuthState> {
       bondScore: row['bond_score'] as int? ?? 0,
       stardustBalance: row['stardust_balance'] as int? ?? 0,
       navigatorRank: row['navigator_rank'] as String? ?? 'novice',
-      legalAcceptanceCurrent: legalAcceptanceCurrent,
+      legalAcceptanceCurrent: legalAcceptance.current,
+      legalAcceptanceCheckAvailable: legalAcceptance.available,
+      legalPolicyUpdateRequired: legalAcceptance.updateRequired,
+      priorSignupConsentClaimed: priorSignupConsentClaimed,
     );
   }
 
@@ -581,8 +771,25 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  Future<bool> _hasCurrentLegalAcceptance(String userId) async {
+  Future<({bool current, bool available, bool updateRequired})>
+  _currentLegalAcceptance(String userId) async {
     try {
+      final activePolicy = await Supabase.instance.client
+          .from('legal_release_policies')
+          .select(
+            'active,minimum_age,eligibility_version,terms_version,privacy_version,ai_disclosure_version',
+          )
+          .eq('region_code', QuestraLegalPolicy.regionCode)
+          .eq('active', true)
+          .maybeSingle();
+      switch (QuestraLegalPolicy.activePolicyState(activePolicy)) {
+        case ActiveLegalPolicyState.unavailable:
+          return (current: false, available: false, updateRequired: false);
+        case ActiveLegalPolicyState.updateRequired:
+          return (current: false, available: true, updateRequired: true);
+        case ActiveLegalPolicyState.current:
+          break;
+      }
       final row = await Supabase.instance.client
           .from('legal_acceptances')
           .select('id')
@@ -594,9 +801,9 @@ class AuthController extends Notifier<AuthState> {
           .eq('region_code', QuestraLegalPolicy.regionCode)
           .eq('minimum_age_confirmed', true)
           .maybeSingle();
-      return row != null;
+      return (current: row != null, available: true, updateRequired: false);
     } catch (_) {
-      return false;
+      return (current: false, available: false, updateRequired: false);
     }
   }
 }
@@ -615,12 +822,4 @@ class _LocalAccount {
   final String password;
   final String nickname;
   final bool legalAcceptanceCurrent;
-
-  _LocalAccount copyWith({String? password}) => _LocalAccount(
-    email: email,
-    loginId: loginId,
-    password: password ?? this.password,
-    nickname: nickname,
-    legalAcceptanceCurrent: legalAcceptanceCurrent,
-  );
 }

@@ -62,6 +62,9 @@ class PersistedTaskOfflineQueueRepository
         idempotencyKey: key,
         desired: desired,
         previous: previous,
+        kind: row['kind'] == TaskMutationKind.reorder.name
+            ? TaskMutationKind.reorder
+            : TaskMutationKind.save,
         attempts: (row['attempts'] as int? ?? 0).clamp(0, 20),
         queuedAt: storedAt,
       );
@@ -83,6 +86,7 @@ class PersistedTaskOfflineQueueRepository
       'version': 2,
       'ownerId': ownerId,
       'idempotencyKey': mutation.idempotencyKey,
+      'kind': mutation.kind.name,
       'attempts': mutation.attempts,
       'desired': mutation.desired.map(_taskToJson).toList(growable: false),
       'previous': mutation.previous.map(_taskToJson).toList(growable: false),
@@ -136,6 +140,8 @@ class PersistedTaskOfflineQueueRepository
     'completedAt': task.completedAt?.toIso8601String(),
     'verificationType': task.verificationType.storageKey,
     'generatedBy': task.generatedBy.name,
+    'origin': task.origin.name,
+    'taskVersion': task.version,
     'generationVersion': task.generationVersion,
     'createdAt': task.createdAt.toIso8601String(),
     'updatedAt': task.updatedAt.toIso8601String(),
@@ -170,6 +176,14 @@ class PersistedTaskOfflineQueueRepository
       row['generatedBy'] as String? ?? 'user',
       TaskGeneratedBy.user,
     ),
+    origin: row['origin'] is String
+        ? enumFromStorage(
+            TaskOrigin.values,
+            row['origin'] as String,
+            TaskOrigin.user,
+          )
+        : null,
+    version: row['taskVersion'] as int? ?? 1,
     generationVersion: row['generationVersion'] as String?,
     createdAt: _date(row['createdAt']) ?? DateTime.now(),
     updatedAt: _date(row['updatedAt']) ?? DateTime.now(),

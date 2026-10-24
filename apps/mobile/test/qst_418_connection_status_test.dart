@@ -26,6 +26,8 @@ void main() {
     );
 
     expect(snapshot.dataStorage.state, ConnectionCapabilityState.preview);
+    expect(snapshot.dataStorage.detail, contains('再読み込みで消え'));
+    expect(snapshot.dataStorage.detail, contains('実アカウントには保存されません'));
     expect(snapshot.arcConversation.statusLabel, 'プレビュー応答');
     expect(snapshot.arcConversation.detail, contains('オンライン応答ではありません'));
   });

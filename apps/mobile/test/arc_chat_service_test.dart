@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 import 'package:questra/core/performance/performance_limits.dart';
 import 'package:questra/core/validation/input_validators.dart';
 import 'package:questra/features/arc/arc_chat_service.dart';
@@ -11,6 +12,40 @@ import 'package:questra/features/trail/trail_model.dart';
 import 'package:questra/features/task/task_model.dart';
 
 void main() {
+  test('Arc distinguishes missing consent from a temporary check failure', () {
+    final missing = SupabaseArcChatService.legalGateFailure(
+      const FunctionException(
+        status: 403,
+        details: {'error': 'consent_required'},
+      ),
+    );
+    expect(missing?.deliveryMode, ArcChatDeliveryMode.degraded);
+    expect(missing?.failureReason, 'consent_required');
+    expect(missing?.message, contains('AIへ送っていません'));
+    expect(missing?.quickActions, isEmpty);
+    expect(missing?.showQuestCta, isFalse);
+
+    final unavailable = SupabaseArcChatService.legalGateFailure(
+      const FunctionException(
+        status: 503,
+        details: {'error': 'consent_check_unavailable'},
+      ),
+    );
+    expect(unavailable?.failureReason, 'consent_check_unavailable');
+    expect(unavailable?.quickActions, contains('もう一度試す'));
+    expect(unavailable?.showQuestCta, isFalse);
+
+    expect(
+      SupabaseArcChatService.legalGateFailure(
+        const FunctionException(
+          status: 403,
+          details: {'error': 'unrelated_error'},
+        ),
+      ),
+      isNull,
+    );
+  });
+
   test('local Arc chat response uses Quest and Trail context', () async {
     const service = LocalArcChatService();
     final response = await service.send(

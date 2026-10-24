@@ -1,3 +1,6 @@
+import { isValidUserId } from "./ai_auth.ts";
+import { callGeminiInteraction } from "./quest_planning/interactions_adapter.ts";
+
 type GroundedSource = {
   title: string;
   publisher: string;
@@ -10,69 +13,49 @@ export type GroundedSearchResult = {
   sourceType: string;
 };
 
-const endpoint = "https://generativelanguage.googleapis.com/v1beta/interactions";
+type GroundedSearchOptions = {
+  userId: string;
+  operation: "arc_grounded_search" | "mission_research";
+};
 
 export async function groundedMissionSearch(
   input: Record<string, unknown>,
+  options: GroundedSearchOptions,
 ): Promise<GroundedSearchResult | null> {
-  const apiKey = Deno.env.get("GEMINI_API_KEY");
-  if (!apiKey) return null;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20_000);
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
+  if (!isValidUserId(options.userId)) return null;
+  const response = await callGeminiInteraction({
+    operation: options.operation,
+    modelRole: "quest_understanding",
+    promptVersion: "grounded_mission_search_v2",
+    schemaVersion: "grounded_mission_search_v2",
+    systemInstruction:
+      "Search only for information needed to complete the supplied Mission. Return compact JSON with summary, checkpoints (3-6 strings), and cautions (0-4 strings). Prefer official, primary, and current sources. Do not invent URLs, prices, laws, schedules, availability, or guarantees. Explain uncertainty in cautions. Never include advertising or enterprise proposals.",
+    input: JSON.stringify(input).slice(0, 4_000),
+    responseSchema: {
+      type: "object",
+      required: ["summary", "checkpoints", "cautions"],
+      properties: {
+        summary: { type: "string" },
+        checkpoints: { type: "array", items: { type: "string" } },
+        cautions: { type: "array", items: { type: "string" } },
       },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: Deno.env.get("GEMINI_SEARCH_MODEL") ?? "gemini-3.5-flash",
-        store: false,
-        tools: [{ type: "google_search" }],
-        system_instruction:
-          "Search only for information needed to complete the supplied Mission. Return compact JSON with summary, checkpoints (3-6 strings), and cautions (0-4 strings). Prefer official, primary, and current sources. Do not invent URLs, prices, laws, schedules, availability, or guarantees. Explain uncertainty in cautions. Never include advertising or enterprise proposals.",
-        input: JSON.stringify(input).slice(0, 4_000),
-        generation_config: {
-          max_output_tokens: 1_200,
-          temperature: 0.2,
-          thinking_level: "minimal",
-        },
-      }),
-    });
-    if (!response.ok) return null;
-    const data = await response.json() as Record<string, unknown>;
-    const parts: string[] = [];
-    collectText(data.steps, parts);
-    const text = parts.join("\n").trim();
-    if (!text) return null;
-    return {
-      text,
-      sources: collectSources(data.steps),
-      sourceType: "gemini_google_search_grounding",
-    };
-  } catch (_) {
-    return null;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-function collectText(value: unknown, output: string[]) {
-  if (Array.isArray(value)) {
-    for (const item of value) collectText(item, output);
-    return;
-  }
-  if (!value || typeof value !== "object") return;
-  const data = value as Record<string, unknown>;
-  if (data.type === "model_output" && typeof data.text === "string") {
-    output.push(data.text);
-  }
-  if (data.type === "model_output") collectText(data.content, output);
-  if (data.type !== "model_output") {
-    for (const nested of Object.values(data)) collectText(nested, output);
-  }
+    },
+    tools: [{ type: "google_search" }],
+    maxOutputTokens: 1_200,
+    temperature: 0.2,
+    timeoutMs: 20_000,
+    idempotencyKey: crypto.randomUUID(),
+    traceId: crypto.randomUUID(),
+    userId: options.userId,
+  });
+  if (response.error || !response.text || !response.groundingMetadata) return null;
+  const sources = collectSources(response.groundingMetadata.sources);
+  if (sources.length === 0) return null;
+  return {
+    text: response.text,
+    sources,
+    sourceType: "gemini_google_search_grounding",
+  };
 }
 
 function collectSources(value: unknown) {

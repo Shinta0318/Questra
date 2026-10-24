@@ -1,0 +1,15 @@
+version: 1
+qst: QST-538
+status: unverified
+project_ref: dhbmgwarnrtelrcrmmfk
+candidate_source_commit: null
+working_tree_clean_at_execution: false
+custom_smtp_enabled: false
+confirmation_mail_received: false
+confirmation_link_completed: false
+login_after_confirmation: false
+password_reset_mail_received: false
+recipient_redacted: false
+evidence_path: null
+operator_approval: pending
+notes: "2026-10-06: Confirm email enabled; custom SMTP disabled. Auth logs showed signup accepted and mail.send, but not inbox delivery. Do not record recipient addresses or credentials here."

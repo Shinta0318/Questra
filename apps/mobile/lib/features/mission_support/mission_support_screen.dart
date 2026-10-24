@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/safety/ai_legal_failure.dart';
 import '../../core/theme/questra_surface_palette.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
 import '../business_foundation/mission_support_profile.dart';
@@ -270,9 +271,13 @@ class _MissionSupportScreenState extends ConsumerState<MissionSupportScreen> {
       }
       ref.invalidate(missionSourceReferencesProvider(mission.id));
       if (mounted) setState(() => _result = result);
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
-        setState(() => _error = '最新情報を取得できませんでした。接続を確認して、もう一度試してください。');
+        setState(
+          () => _error =
+              aiLegalFailureMessage(error) ??
+              '最新情報を取得できませんでした。接続を確認して、もう一度試してください。',
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);

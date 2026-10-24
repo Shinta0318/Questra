@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const decisionPath = 'docs/qst/ARC_ASSET_RELEASE_DECISION.yaml';
 const finalizerPath = 'tools/qst/finalize_arc_asset_release.dart';
 
@@ -22,7 +24,7 @@ void main(List<String> arguments) {
   }
   for (final snippet in const [
     'Arc release evidence must start from a clean worktree.',
-    'Beta candidate manifest is not bound to HEAD.',
+    'Beta candidate manifest is not bound to candidate source.',
     'current_provenance',
     'release_safe_replacement',
     'Missing chain record',
@@ -35,10 +37,18 @@ void main(List<String> arguments) {
 
   final requireRelease = arguments.contains('--require-release');
   if (requireRelease) {
-    final head = _command(['git', 'rev-parse', 'HEAD']).trim();
+    final candidate = _read('docs/qst/BETA_CANDIDATE.yaml', failures);
+    final sourceCommit = RegExp(
+      r'^source_commit: "([a-f0-9]{40})"$',
+      multiLine: true,
+    ).firstMatch(candidate)?.group(1);
+    if (sourceCommit == null ||
+        !candidateSourceHasOnlyEvidenceCommits(sourceCommit)) {
+      failures.add('Arc asset release has no unchanged candidate source.');
+    }
     for (final snippet in [
       'status: approved',
-      'candidate_source_commit: "$head"',
+      'candidate_source_commit: "$sourceCommit"',
       'working_tree_clean_before_apply: true',
       'approved_runtime_asset_count: 7',
     ]) {
@@ -84,15 +94,6 @@ String _read(String path, List<String> failures) {
     return '';
   }
   return file.readAsStringSync();
-}
-
-String _command(List<String> command) {
-  final result = Process.runSync(command.first, command.skip(1).toList());
-  if (result.exitCode != 0) {
-    stderr.writeln(result.stderr);
-    exit(1);
-  }
-  return result.stdout.toString();
 }
 
 void _expect(

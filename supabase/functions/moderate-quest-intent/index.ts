@@ -1,4 +1,6 @@
 import { generateAiText } from "../_shared/ai_provider.ts";
+import { authenticatedAiUser } from "../_shared/ai_auth.ts";
+import { aiLegalFailureResponse } from "../_shared/ai_legal_http.ts";
 import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
 import {
   deterministicSafetyAssessment,
@@ -12,16 +14,21 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, { status: 405 });
   }
+  const userId = await authenticatedAiUser(req);
+  if (!userId) return jsonResponse({ error: "authentication_required" }, { status: 401 });
   const payload = await readJson<{ input?: string }>(req);
   const input = payload?.input?.trim().slice(0, 4_000) ?? "";
   if (!input) return jsonResponse(safeAssessment());
 
   const deterministic = deterministicSafetyAssessment(input);
   if (deterministic) return jsonResponse(deterministic);
+  const legalFailure = await aiLegalFailureResponse(userId);
+  if (legalFailure) return legalFailure;
 
   try {
     const result = await generateAiText({
       feature: "quest_intent_moderation",
+      userId,
       promptVersion: "quest_safety_v1",
       systemInstruction:
         "Classify whether a proposed life Quest requests operational facilitation of serious wrongdoing or exploitation. Return JSON only. Do not block legitimate prevention, victim support, health, education, consensual adult wellbeing, fiction, research, or ambitious harmless goals merely for containing sensitive words. Block violent wrongdoing, illegal operational wrongdoing, sexual exploitation of minors, and non-consensual sexual conduct. Reframe acute self-harm distress toward immediate safety. Do not decide account bans.",
@@ -30,13 +37,15 @@ Deno.serve(async (req) => {
       maxOutputTokens: 350,
       temperature: 0,
     });
-    if (!result) return jsonResponse(safeAssessment("safety_fallback"));
+    if (!result) {
+      return jsonResponse({ error: "safety_check_unavailable" }, { status: 503 });
+    }
     const parsed = JSON.parse(stripFence(result.text)) as Record<string, unknown>;
     return jsonResponse(
       normalizeAssessment(parsed, result.sourceType, result.model),
     );
   } catch (_) {
-    return jsonResponse(safeAssessment("safety_fallback"));
+    return jsonResponse({ error: "safety_check_unavailable" }, { status: 503 });
   }
 });
 

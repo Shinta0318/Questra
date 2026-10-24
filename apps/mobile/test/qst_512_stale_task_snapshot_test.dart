@@ -184,6 +184,7 @@ void main() {
             onRetry: () async {},
             onDiscard: () async {},
             onDismiss: () {},
+            onRefreshConflict: () async => true,
           ),
         ),
       ),

@@ -1,10 +1,11 @@
 import 'dart:io';
 
+import 'ai_provider_contract.dart';
+
 const configPath = 'supabase/config.toml';
 const evidencePath = 'docs/qst/BETA_SUPABASE_PROJECT.yaml';
 const runbookPath = 'docs/product/supabase_beta_project_bootstrap.md';
 const bootstrapPath = 'tools/qst/bootstrap_supabase_beta.ps1';
-const aiProviderPath = 'supabase/functions/_shared/ai_provider.ts';
 
 const requiredFunctions = [
   'arc-chat',
@@ -58,7 +59,10 @@ void main(List<String> arguments) {
   final evidence = _readRequired(evidencePath, failures);
   final runbook = _readRequired(runbookPath, failures);
   final bootstrap = _readRequired(bootstrapPath, failures);
-  final aiProvider = _readRequired(aiProviderPath, failures);
+  final aiProvider = _readRequired(aiProviderEntryPath, failures);
+  final interactionsAdapter = _readRequired(interactionsAdapterPath, failures);
+  final modelRegistry = _readRequired(modelRegistryPath, failures);
+  final aiBudget = _readRequired(aiBudgetPath, failures);
   final gitignore = _readRequired('.gitignore', failures);
 
   for (final snippet in requiredStaticConfig) {
@@ -159,20 +163,14 @@ void main(List<String> arguments) {
     _expect(bootstrap, snippet, bootstrapPath, failures);
   }
 
-  for (final snippet in [
-    'https://generativelanguage.googleapis.com/v1beta/interactions',
-    'GEMINI_API_KEY',
-    'gemini-3.5-flash',
-    'AI_PROVIDER',
-    'OPENAI_API_KEY',
-    'store: false',
-    'max_output_tokens',
-    'thinking_level: "minimal"',
-    'AI_MAX_INPUT_CHARS',
-    'AI_REQUEST_TIMEOUT_MS',
-  ]) {
-    _expect(aiProvider, snippet, aiProviderPath, failures);
-  }
+  failures.addAll(
+    verifyAiBootstrapContract(
+      entry: aiProvider,
+      adapter: interactionsAdapter,
+      registry: modelRegistry,
+      budget: aiBudget,
+    ),
+  );
   for (final functionName in requiredFunctions) {
     final source = _readRequired(
       'supabase/functions/$functionName/index.ts',
@@ -255,6 +253,7 @@ void _verifyCloudEvidence(
   }
   _expect(evidence, 'migrations:\n  status: applied', evidencePath, failures);
   _expect(evidence, 'secrets:\n  status: verified', evidencePath, failures);
+  _expect(evidence, 'working_tree_clean_at_deploy: true', evidencePath, failures);
 
   final candidateCommit = _yamlScalar(evidence, 'candidate_source_commit', 0);
   if (candidateCommit == null ||
@@ -285,17 +284,47 @@ void _verifyCloudEvidence(
     final latest = migrations.last.uri.pathSegments.last;
     _expect(evidence, 'remote_head: "$latest"', evidencePath, failures);
   }
-  for (final functionName in requiredFunctions) {
-    final deployed = RegExp(
-      r'- name: ' +
-          RegExp.escape(functionName) +
-          r'\s*\r?\n\s+status: deployed\s*\r?\n'
-              r'\s+deployed_at_utc: (?!null)',
-    );
-    if (!deployed.hasMatch(evidence)) {
-      failures.add('Deployment evidence is missing for $functionName.');
+  failures.addAll(
+    functionDeploymentEvidenceFailures(
+      evidence,
+      candidateCommit,
+      requiredFunctions,
+    ),
+  );
+}
+
+List<String> functionDeploymentEvidenceFailures(
+  String evidence,
+  String? candidateCommit,
+  Iterable<String> functionNames,
+) {
+  final failures = <String>[];
+  for (final name in functionNames) {
+    final blocks = RegExp(
+      '^  - name: ${RegExp.escape(name)}\\r?\\n((?:    .*\\r?\\n)*)',
+      multiLine: true,
+    ).allMatches(evidence).toList();
+    if (blocks.length != 1) {
+      failures.add('Expected exactly one deployment entry for $name.');
+      continue;
+    }
+    final block = blocks.single.group(1)!;
+    final deployedAt = _yamlScalar(block, 'deployed_at_utc', 4);
+    if (_yamlScalar(block, 'status', 4) != 'deployed' ||
+        deployedAt == null ||
+        !deployedAt.endsWith('Z') ||
+        DateTime.tryParse(deployedAt) == null) {
+      failures.add('Deployment evidence is missing for $name.');
+      continue;
+    }
+    if (candidateCommit == null ||
+        _yamlScalar(block, 'source_commit', 4) != candidateCommit) {
+      failures.add(
+        'Deployment source commit does not match candidate for $name.',
+      );
     }
   }
+  return failures;
 }
 
 String? _yamlScalar(String content, String field, int indent) {

@@ -98,8 +98,15 @@ class QuestGuideController extends Notifier<QuestGuideState> {
   Future<void> _refreshAdvice(Quest quest, List<QuestGuide> guides) async {
     final service = ref.read(arcAdviceServiceProvider);
     final advice = <ArcAdvice>[];
-    for (final guide in guides) {
-      advice.add(await service.generate(quest: quest, guide: guide));
+    try {
+      for (final guide in guides) {
+        advice.add(await service.generate(quest: quest, guide: guide));
+      }
+    } catch (_) {
+      state = state.copyWith(
+        adviceByQuest: {...state.adviceByQuest}..remove(quest.id),
+      );
+      return;
     }
 
     state = state.copyWith(

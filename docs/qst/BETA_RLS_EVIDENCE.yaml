@@ -6,7 +6,7 @@ working_tree_clean_at_execution: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
 migrations:
   status: local_pending_deployment
-  latest_local: "202609150006_immutable_compensating_ai_budget_correction.sql"
+  latest_local: "202610180001_ai_legal_consent_gate.sql"
   remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   command: "supabase migration list --linked"
 rls_behavior:

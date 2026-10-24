@@ -8,8 +8,8 @@ executed_at_utc: null
 cli_version: null
 migrations:
   remote_head_before: "202608080006_route_proposal_stale_conflict_guard.sql"
-  latest_local: "202609150006_immutable_compensating_ai_budget_correction.sql"
-  pending_at_plan: 36
+  latest_local: "202610180001_ai_legal_consent_gate.sql"
+  pending_at_plan: 45
   pending_at_execution: null
   applied_during_run: null
   remote_head_after: null
@@ -51,6 +51,15 @@ migrations:
     - "202609150004_tool_continuation_cost_attribution.sql"
     - "202609150005_approval_safe_ai_route_replacement.sql"
     - "202609150006_immutable_compensating_ai_budget_correction.sql"
+    - "202609280001_route_snapshot_schema_v2.sql"
+    - "202609300001_route_proposal_provenance.sql"
+    - "202609300002_task_versioned_update.sql"
+    - "202609300003_task_batch_cas_and_restore.sql"
+    - "202610040001_task_single_replay_guard.sql"
+    - "202610040002_task_reopen_atomic.sql"
+    - "202610080001_auth_login_atomic_decision.sql"
+    - "202610160001_auth_free_tier_token_lock.sql"
+    - "202610180001_ai_legal_consent_gate.sql"
 execution:
   runner: tools/qst/run_hosted_migration_deployment.ps1
   requires:

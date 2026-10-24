@@ -9,6 +9,9 @@ abstract final class SupabaseConfig {
   static const _mockPersistenceRequested = bool.fromEnvironment(
     'ALLOW_MOCK_PERSISTENCE',
   );
+  static const _autoEnterLocalMockRequested = bool.fromEnvironment(
+    'AUTO_ENTER_LOCAL_MOCK',
+  );
 
   static bool get isConfigured => url.isNotEmpty && anonKey.isNotEmpty;
 
@@ -26,6 +29,19 @@ abstract final class SupabaseConfig {
 
   static bool get isLocalMockPreview =>
       !isConfigured && localPersistenceAllowed;
+
+  static bool get autoEnterLocalMock => resolveAutoEnterLocalMock(
+    requested: _autoEnterLocalMockRequested,
+    isReleaseMode: kReleaseMode,
+    isLocalMockPreview: isLocalMockPreview,
+  );
+
+  @visibleForTesting
+  static bool resolveAutoEnterLocalMock({
+    required bool requested,
+    required bool isReleaseMode,
+    required bool isLocalMockPreview,
+  }) => requested && !isReleaseMode && isLocalMockPreview;
 
   static PersistenceSource get persistenceSource {
     if (isConfigured) return PersistenceSource.supabase;

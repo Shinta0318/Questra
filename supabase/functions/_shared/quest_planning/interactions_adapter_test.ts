@@ -40,6 +40,9 @@ Deno.test("fallback failure reports the model and thinking level actually execut
     for (const [key, value] of Object.entries(env)) Deno.env.set(key, value);
     globalThis.fetch = (async (input, init) => {
       const url = String(input);
+      if (url.endsWith("/rpc/has_current_ai_legal_acceptance")) {
+        return jsonResponse(true);
+      }
       if (url.endsWith("/rpc/reserve_ai_usage_budget_v2")) {
         const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
         reservedModels.push(...body.p_model_names as string[]);

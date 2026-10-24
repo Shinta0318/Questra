@@ -33,7 +33,9 @@ void main() {
     failures.add('Candidate source commit is missing or invalid.');
   } else if (decision.distributionReady &&
       recordedSourceCommit != decision.sourceCommit) {
-    failures.add('A GO decision must be bound to current HEAD.');
+    failures.add(
+      'A GO decision must be bound to the verified candidate source.',
+    );
   }
   _expect(
     content,

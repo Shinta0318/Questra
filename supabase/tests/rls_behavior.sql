@@ -49,6 +49,9 @@ $$;
 \set other_private_quest_id '00000000-0000-4000-8000-000000004201'
 \set owner_private_mission_id '00000000-0000-4000-8000-000000014101'
 \set owner_private_task_id '00000000-0000-4000-8000-000000154101'
+\set owner_qst528_task_id '00000000-0000-4000-8000-000000154128'
+\set owner_qst534_task_id '00000000-0000-4000-8000-000000154134'
+\set owner_qst535_dependent_task_id '00000000-0000-4000-8000-000000154135'
 \set owner_public_mission_id '00000000-0000-4000-8000-000000014102'
 \set other_private_mission_id '00000000-0000-4000-8000-000000014201'
 \set owner_private_trail_id '00000000-0000-4000-8000-000000024101'
@@ -80,11 +83,32 @@ $$;
 \set owner_runtime_event_id '00000000-0000-4000-8000-000000214101'
 \set other_runtime_event_id '00000000-0000-4000-8000-000000214201'
 
-insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
-values
-  (:'owner_id', 'authenticated', 'authenticated', 'qst41-owner@example.test', 'qst41', now(), now(), now()),
-  (:'other_id', 'authenticated', 'authenticated', 'qst41-other@example.test', 'qst41', now(), now(), now())
+insert into auth.users (
+  id, aud, role, email, encrypted_password,
+  email_confirmed_at, created_at, updated_at, raw_user_meta_data
+)
+select fixture.id::uuid, 'authenticated', 'authenticated', fixture.email,
+       'qst41', now(), now(), now(),
+       jsonb_build_object(
+         'region_code', policy.region_code,
+         'minimum_age_confirmed', true,
+         'eligibility_version', policy.eligibility_version,
+         'terms_version', policy.terms_version,
+         'privacy_version', policy.privacy_version,
+         'ai_disclosure_version', policy.ai_disclosure_version
+       )
+from (values
+  (:'owner_id', 'qst41-owner@example.test'),
+  (:'other_id', 'qst41-other@example.test')
+) as fixture(id, email)
+cross join public.legal_release_policies as policy
+where policy.region_code = 'JP' and policy.active
 on conflict (id) do nothing;
+
+select pg_temp.qst_assert_eq(
+  (select count(*) from auth.users where id in (:'owner_id', :'other_id')),
+  2, 'legal-policy-compliant RLS fixture users exist'
+);
 
 insert into public.user_profiles (id, nickname)
 values
@@ -105,7 +129,9 @@ values
   (:'other_private_mission_id', :'other_private_quest_id', 'Other private Mission', 'Other private Mission.', 'route', 'easy', 'todo');
 
 insert into public.tasks (id, owner_id, quest_id, mission_id, title, action, done_condition)
-values (:'owner_private_task_id', :'owner_id', :'owner_private_quest_id', :'owner_private_mission_id', 'Owner private Task', 'Ownerだけが実行できる具体行動', '結果を確認できる状態になる');
+values
+  (:'owner_private_task_id', :'owner_id', :'owner_private_quest_id', :'owner_private_mission_id', 'Owner private Task', 'Ownerだけが実行できる具体行動', '結果を確認できる状態になる'),
+  (:'owner_qst534_task_id', :'owner_id', :'owner_public_quest_id', :'owner_public_mission_id', 'Replay Test Task', '再送後の版番号を検証する', '版番号の整合を確認する');
 
 insert into public.trails (id, owner_id, quest_id, mission_id, title, summary, content, visibility, trail_type)
 values
@@ -315,6 +341,327 @@ select pg_temp.qst_assert_eq((select count(*) from public.quest_progress_events 
 select pg_temp.qst_assert_eq((select count(*) from public.quest_dna_versions where id = :'owner_dna_version_id'), 1, 'owner can read own Quest DNA version');
 select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id = :'owner_consent_id'), 1, 'owner can read own consent');
 select pg_temp.qst_assert_eq((select count(*) from public.tasks where id = :'owner_private_task_id'), 1, 'owner can read own private Task');
+select pg_temp.qst_assert_eq(
+  has_table_privilege('authenticated', 'public.tasks', 'INSERT')::integer,
+  0, 'QST-528 authenticated cannot directly create Tasks'
+);
+select pg_temp.qst_assert_eq(
+  has_table_privilege('authenticated', 'public.tasks', 'UPDATE')::integer,
+  0, 'QST-528 authenticated cannot directly update Tasks'
+);
+select pg_temp.qst_assert_eq(
+  has_table_privilege('authenticated', 'public.tasks', 'DELETE')::integer,
+  0, 'QST-528 authenticated cannot directly delete Tasks'
+);
+select pg_temp.qst_assert_raises(
+  format(
+    'insert into public.tasks (owner_id, quest_id, mission_id, title, action, done_condition) values (%L, %L, %L, %L, %L, %L)',
+    :'owner_id', :'owner_private_quest_id', :'owner_private_mission_id',
+    'Bypass creation', '直接作成を試みる', '拒否される'
+  ),
+  'QST-528 direct owner Task creation is denied'
+);
+select pg_temp.qst_assert_raises(
+  format('update public.tasks set title = %L where id = %L',
+    'Bypass version', :'owner_private_task_id'),
+  'QST-528 direct owner Task update is denied'
+);
+select pg_temp.qst_assert_raises(
+  format('delete from public.tasks where id = %L', :'owner_private_task_id'),
+  'QST-528 direct owner Task delete is denied'
+);
+select pg_temp.qst_assert_eq(
+  (public.create_tasks_if_absent(
+    'qst528-create-owner',
+    jsonb_build_array(jsonb_build_object(
+      'id', :'owner_qst528_task_id', 'owner_id', :'owner_id',
+      'quest_id', :'owner_private_quest_id',
+      'mission_id', :'owner_private_mission_id',
+      'title', '航路を確認する', 'action', '安全な情報源を確認する',
+      'done_condition', '確認内容を記録する', 'status', 'pending',
+      'required', true, 'order_index', 2, 'version', 1,
+      'generated_by', 'user', 'origin', 'user',
+      'verification_type', 'self'
+    ))
+  )->>'count')::bigint,
+  1, 'QST-528 owner can create a Task through the batch RPC'
+);
+select pg_temp.qst_assert_eq(
+  (public.create_tasks_if_absent(
+    'qst528-create-owner',
+    jsonb_build_array(jsonb_build_object(
+      'id', :'owner_qst528_task_id', 'owner_id', :'owner_id',
+      'quest_id', :'owner_private_quest_id',
+      'mission_id', :'owner_private_mission_id',
+      'title', '航路を確認する', 'action', '安全な情報源を確認する',
+      'done_condition', '確認内容を記録する', 'status', 'pending',
+      'required', true, 'order_index', 2, 'version', 1,
+      'generated_by', 'user', 'origin', 'user',
+      'verification_type', 'self'
+    ))
+  )->>'count')::bigint,
+  1, 'QST-528 lost response retry is idempotent'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.tasks where id = :'owner_qst528_task_id'),
+  1, 'QST-528 retry never creates a duplicate Task'
+);
+select pg_temp.qst_assert_raises(
+  format(
+    'select public.create_tasks_if_absent(%L, jsonb_build_array(jsonb_build_object(''id'', %L, ''owner_id'', %L, ''quest_id'', %L, ''mission_id'', %L, ''title'', %L, ''action'', %L, ''done_condition'', %L, ''status'', %L, ''required'', true, ''order_index'', 3, ''generated_by'', ''user'', ''origin'', ''user'', ''verification_type'', ''self'')))',
+    'qst528-create-without-version', '00000000-0000-4000-8000-000000154131',
+    :'owner_id', :'owner_private_quest_id', :'owner_private_mission_id',
+    '版番号なし', '版番号なしのTask作成を試みる', '作成を拒否する', 'pending'
+  ),
+  'QST-528 create RPC rejects a missing version'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.tasks
+   where id = '00000000-0000-4000-8000-000000154131'),
+  0, 'QST-528 missing version never creates a Task'
+);
+select pg_temp.qst_assert_raises(
+  format(
+    'select public.create_tasks_if_absent(%L, %L::jsonb)',
+    'qst528-batch-bad-dependency',
+    jsonb_build_array(
+      jsonb_build_object(
+        'id', '00000000-0000-4000-8000-000000154132',
+        'owner_id', :'owner_id', 'quest_id', :'owner_private_quest_id',
+        'mission_id', :'owner_private_mission_id', 'title', '先に作られるTask',
+        'action', '必要なことを確認する', 'done_condition', '確認結果を残す',
+        'status', 'pending', 'required', true, 'order_index', 3, 'version', 1,
+        'generated_by', 'user', 'origin', 'user', 'verification_type', 'self'
+      ),
+      jsonb_build_object(
+        'id', '00000000-0000-4000-8000-000000154133',
+        'owner_id', :'owner_id', 'quest_id', :'owner_private_quest_id',
+        'mission_id', :'owner_private_mission_id', 'title', '無効な依存Task',
+        'action', '存在しないTaskへ依存する', 'done_condition', '依存先を確認する',
+        'status', 'pending', 'required', true, 'order_index', 4, 'version', 1,
+        'generated_by', 'user', 'origin', 'user', 'verification_type', 'self',
+        'dependency_ids', jsonb_build_array('00000000-0000-4000-8000-000000159999')
+      )
+    )::text
+  ),
+  'QST-528 invalid dependency rejects the entire Task batch'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.tasks where id in (
+    '00000000-0000-4000-8000-000000154132',
+    '00000000-0000-4000-8000-000000154133'
+  )),
+  0, 'QST-528 rejected batch leaves no partial Tasks'
+);
+select pg_temp.qst_assert_eq(
+  (public.reorder_mission_tasks(
+    :'owner_private_mission_id'::uuid,
+    array[:'owner_private_task_id'::uuid],
+    'qst528-reorder-incomplete',
+    jsonb_build_object(:'owner_private_task_id', 1)
+  )->>'status' = 'conflict')::integer,
+  1, 'QST-528 incomplete Task list cannot overwrite mission order'
+);
+select pg_temp.qst_assert_eq(
+  (public.reorder_mission_tasks(
+    :'owner_private_mission_id'::uuid,
+    array[:'owner_qst528_task_id'::uuid, :'owner_private_task_id'::uuid],
+    'qst528-reorder-owner',
+    jsonb_build_object(:'owner_private_task_id', 1, :'owner_qst528_task_id', 1)
+  )->>'updated_count')::bigint,
+  2, 'QST-528 owner can reorder both Tasks with their expected versions'
+);
+select pg_temp.qst_assert_eq(
+  (public.reorder_mission_tasks(
+    :'owner_private_mission_id'::uuid,
+    array[:'owner_qst528_task_id'::uuid, :'owner_private_task_id'::uuid],
+    'qst528-reorder-owner',
+    jsonb_build_object(:'owner_private_task_id', 1, :'owner_qst528_task_id', 1)
+  )->>'status' = 'already_applied')::integer,
+  1, 'QST-528 lost reorder response does not replay the update'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.tasks
+   where id in (:'owner_private_task_id', :'owner_qst528_task_id')
+     and version = 2),
+  2, 'QST-528 reorder retry preserves the new versions'
+);
+select pg_temp.qst_assert_eq(
+  (public.create_tasks_if_absent(
+    'qst528-create-owner',
+    jsonb_build_array(jsonb_build_object(
+      'id', :'owner_qst528_task_id', 'owner_id', :'owner_id',
+      'quest_id', :'owner_private_quest_id',
+      'mission_id', :'owner_private_mission_id',
+      'title', '航路を確認する', 'action', '安全な情報源を確認する',
+      'done_condition', '確認内容を記録する', 'status', 'pending',
+      'required', true, 'order_index', 2, 'version', 1,
+      'generated_by', 'user', 'origin', 'user',
+      'verification_type', 'self'
+    ))
+  )->>'status' = 'conflict')::integer,
+  1, 'QST-528 create retry cannot hide a later Task reorder'
+);
+select pg_temp.qst_assert_eq(
+  (public.reorder_mission_tasks(
+    :'owner_private_mission_id'::uuid,
+    array[:'owner_private_task_id'::uuid, :'owner_qst528_task_id'::uuid],
+    'qst528-reorder-stale',
+    jsonb_build_object(:'owner_private_task_id', 1, :'owner_qst528_task_id', 1)
+  )->>'status' = 'conflict')::integer,
+  1, 'QST-528 stale Task reorder cannot overwrite a newer order'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.tasks
+   where id in (:'owner_private_task_id', :'owner_qst528_task_id')
+     and version = 2),
+  2, 'QST-528 stale reorder leaves both Tasks unchanged'
+);
+
+select (to_jsonb(task) || jsonb_build_object('title', 'First edit'))::text
+  as qst534_first_payload
+from public.tasks task where id = :'owner_qst534_task_id' \gset
+select pg_temp.qst_assert_eq(
+  (public.update_task_if_version(
+    :'owner_qst534_task_id'::uuid, 1, 'qst534-first-edit',
+    :'qst534_first_payload'::jsonb
+  )->>'version')::bigint,
+  2, 'QST-534 first Task update advances version once'
+);
+select pg_temp.qst_assert_eq(
+  (public.update_task_if_version(
+    :'owner_qst534_task_id'::uuid, 1, 'qst534-first-edit',
+    :'qst534_first_payload'::jsonb
+  )->>'status' = 'already_applied')::integer,
+  1, 'QST-534 immediate lost-response retry is idempotent'
+);
+select pg_temp.qst_assert_eq(
+  (public.update_task_if_version(
+    :'owner_qst534_task_id'::uuid, 2, 'qst534-second-edit',
+    (select to_jsonb(task) || jsonb_build_object('title', 'Second edit')
+     from public.tasks task where id = :'owner_qst534_task_id')
+  )->>'version')::bigint,
+  3, 'QST-534 later Task update advances version'
+);
+select pg_temp.qst_assert_eq(
+  (public.update_task_if_version(
+    :'owner_qst534_task_id'::uuid, 1, 'qst534-first-edit',
+    :'qst534_first_payload'::jsonb
+  )->>'status' = 'conflict')::integer,
+  1, 'QST-534 stale replay cannot hide the later Task edit'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.tasks
+   where id = :'owner_qst534_task_id' and title = 'Second edit' and version = 3),
+  1, 'QST-534 stale replay leaves the later Task edit intact'
+);
+select pg_temp.qst_assert_eq(
+  (public.complete_task_journey(
+    :'owner_qst534_task_id'::uuid, 'qst534-complete', 3
+  )->>'version')::bigint,
+  4, 'QST-534 first completion advances version once'
+);
+select pg_temp.qst_assert_eq(
+  (public.complete_task_journey(
+    :'owner_qst534_task_id'::uuid, 'qst534-complete', 3
+  )->>'already_applied' = 'true')::integer,
+  1, 'QST-534 completion retry confirms the same operation'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.task_progress_events
+   where owner_id = :'owner_id' and event_key = 'journey:qst534-complete'),
+  1, 'QST-534 completion retry creates one journey event'
+);
+select pg_temp.qst_assert_eq(
+  (public.update_task_if_version(
+    :'owner_qst534_task_id'::uuid, 4, 'qst534-after-complete-edit',
+    (select to_jsonb(task) || jsonb_build_object('title', 'After completion')
+     from public.tasks task where id = :'owner_qst534_task_id')
+  )->>'version')::bigint,
+  5, 'QST-534 completed Task can receive a later metadata edit'
+);
+select pg_temp.qst_assert_eq(
+  (public.complete_task_journey(
+    :'owner_qst534_task_id'::uuid, 'qst534-complete', 3
+  )->>'status' = 'conflict')::integer,
+  1, 'QST-534 completion replay cannot hide a later edit'
+);
+select pg_temp.qst_assert_raises(
+  'select count(*) from public.task_completion_operations',
+  'QST-534 app user cannot read completion operation ledger'
+);
+select pg_temp.qst_assert_eq(
+  (public.confirm_mission_outcome(:'owner_public_mission_id'::uuid)->>'status' = 'completed')::integer,
+  1, 'QST-535 Mission success is confirmed before Task reopen'
+);
+select pg_temp.qst_assert_eq(
+  (public.reopen_task_journey(:'owner_qst534_task_id'::uuid, 'qst535-reopen', 5)->>'version')::bigint,
+  6, 'QST-535 completed Task reopens atomically'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.missions where id = :'owner_public_mission_id'
+    and success_confirmed_at is null and status <> 'completed'),
+  1, 'QST-535 reopening required Task clears Mission confirmation'
+);
+select pg_temp.qst_assert_eq(
+  (public.reopen_task_journey(:'owner_qst534_task_id'::uuid, 'qst535-reopen', 5)->>'status' = 'already_applied')::integer,
+  1, 'QST-535 immediate replay is idempotent'
+);
+select pg_temp.qst_assert_eq(
+  (public.update_task_if_version(
+    :'owner_qst534_task_id'::uuid, 6, 'qst535-later-edit',
+    (select to_jsonb(task) || jsonb_build_object('title', 'Reopened and edited')
+      from public.tasks task where id = :'owner_qst534_task_id')
+  )->>'version')::bigint,
+  7, 'QST-535 later Task edit advances version'
+);
+select pg_temp.qst_assert_eq(
+  (public.reopen_task_journey(:'owner_qst534_task_id'::uuid, 'qst535-reopen', 5)->>'status' = 'conflict')::integer,
+  1, 'QST-535 stale replay does not hide later Task edit'
+);
+select pg_temp.qst_assert_eq(
+  (public.complete_task_journey(:'owner_qst534_task_id'::uuid, 'qst535-recomplete', 7)->>'version')::bigint,
+  8, 'QST-535 Task may complete again after reopen'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.missions where id = :'owner_public_mission_id'
+    and success_confirmed_at is null and status <> 'completed'),
+  1, 'QST-535 re-completion does not silently confirm Mission'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.stardust_events
+    where user_id = :'owner_id' and event_type = 'task_completed'
+      and source_id = :'owner_qst534_task_id'),
+  1, 'QST-535 re-completion does not duplicate Stardust'
+);
+select pg_temp.qst_assert_eq(
+  (public.create_tasks_if_absent(
+    'qst535-dependent-create',
+    jsonb_build_array(jsonb_build_object(
+      'id', :'owner_qst535_dependent_task_id', 'owner_id', :'owner_id',
+      'quest_id', :'owner_public_quest_id',
+      'mission_id', :'owner_public_mission_id',
+      'title', 'Dependent Task', 'action', '前のTaskに続く',
+      'done_condition', '結果を確認する', 'status', 'pending',
+      'required', true, 'order_index', 1, 'version', 1,
+      'dependency_ids', jsonb_build_array(:'owner_qst534_task_id'),
+      'generated_by', 'user', 'origin', 'user', 'verification_type', 'self'
+    ))
+  )->>'count')::bigint,
+  1, 'QST-535 dependent Task is created through the owner RPC'
+);
+select pg_temp.qst_assert_eq(
+  (public.update_task_if_version(
+    :'owner_qst535_dependent_task_id'::uuid, 1, 'qst535-dependent-start',
+    (select to_jsonb(task) || jsonb_build_object('status', 'in_progress')
+      from public.tasks task where id = :'owner_qst535_dependent_task_id')
+  )->>'version')::bigint,
+  2, 'QST-535 dependent Task starts through the versioned RPC'
+);
+select pg_temp.qst_assert_eq(
+  (public.reopen_task_journey(:'owner_qst534_task_id'::uuid, 'qst535-dependent', 8)->>'status' = 'conflict')::integer,
+  1, 'QST-535 active dependent blocks prerequisite reopen'
+);
 select pg_temp.qst_assert_eq((select count(*) from public.mission_plan_drafts where id = :'owner_mission_draft_id'), 1, 'owner can read own Mission plan draft');
 select pg_temp.qst_assert_eq((select count(*) from public.mission_candidates where id = :'owner_mission_candidate_id'), 1, 'owner can read own Mission candidate');
 select pg_temp.qst_assert_eq((select count(*) from public.data_rights_requests where id = :'owner_data_rights_request_id'), 1, 'owner can read own Data Rights request');
@@ -340,6 +687,17 @@ select pg_temp.qst_assert_raises(
 
 select set_config('request.jwt.claim.sub', :'other_id', true);
 
+select pg_temp.qst_assert_raises(
+  format('select public.complete_task_journey(%L, %L, 5)',
+    :'owner_qst534_task_id', 'qst534-foreign-complete'),
+  'QST-534 another account cannot complete the owner Task'
+);
+select pg_temp.qst_assert_raises(
+  format('select public.reopen_task_journey(%L, %L, 8)',
+    :'owner_qst534_task_id', 'qst535-foreign-reopen'),
+  'QST-535 another account cannot reopen the owner Task'
+);
+
 select pg_temp.qst_assert_eq((select count(*) from public.quests where id = :'owner_private_quest_id'), 0, 'other cannot read owner private Quest');
 select pg_temp.qst_assert_eq((select count(*) from public.quests where id = :'owner_public_quest_id'), 1, 'other can read public Quest');
 select pg_temp.qst_assert_eq((select count(*) from public.missions where id = :'owner_private_mission_id'), 0, 'other cannot read Mission on private Quest');
@@ -361,6 +719,24 @@ select pg_temp.qst_assert_eq((select count(*) from public.quest_progress_events 
 select pg_temp.qst_assert_eq((select count(*) from public.quest_dna_versions where id = :'owner_dna_version_id'), 0, 'other cannot read owner Quest DNA version');
 select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id = :'owner_consent_id'), 0, 'other cannot read owner consent');
 select pg_temp.qst_assert_eq((select count(*) from public.tasks where id = :'owner_private_task_id'), 0, 'other cannot read owner private Task');
+select pg_temp.qst_assert_raises(
+  format(
+    'select public.create_tasks_if_absent(%L, jsonb_build_array(jsonb_build_object(''id'', %L, ''owner_id'', %L, ''quest_id'', %L, ''mission_id'', %L, ''title'', %L, ''action'', %L, ''done_condition'', %L, ''status'', %L, ''required'', true, ''order_index'', 0, ''version'', 1, ''generated_by'', ''user'', ''origin'', ''user'', ''verification_type'', ''self'')))',
+    'qst528-cross-owner', '00000000-0000-4000-8000-000000154129',
+    :'owner_id', :'owner_private_quest_id', :'owner_private_mission_id',
+    '越境Task', '他人のQuestへ追加する', '追加結果を記録する', 'pending'
+  ),
+  'QST-528 batch RPC rejects cross-owner Task creation'
+);
+select pg_temp.qst_assert_eq(
+  (public.reorder_mission_tasks(
+    :'owner_private_mission_id'::uuid,
+    array[:'owner_private_task_id'::uuid, :'owner_qst528_task_id'::uuid],
+    'qst528-cross-owner-reorder',
+    jsonb_build_object(:'owner_private_task_id', 2, :'owner_qst528_task_id', 2)
+  )->>'status' = 'conflict')::integer,
+  1, 'QST-528 other owner cannot reorder private Tasks through RPC'
+);
 select pg_temp.qst_assert_eq((select count(*) from public.mission_plan_drafts where id = :'owner_mission_draft_id'), 0, 'other cannot read owner Mission plan draft');
 select pg_temp.qst_assert_eq((select count(*) from public.mission_candidates where id = :'owner_mission_candidate_id'), 0, 'other cannot read owner Mission candidate');
 select pg_temp.qst_assert_eq((select count(*) from public.data_rights_requests where id = :'owner_data_rights_request_id'), 0, 'other cannot read owner Data Rights request');
@@ -478,6 +854,33 @@ select pg_temp.qst_assert_raises(
 select pg_temp.qst_assert_raises(
   'select * from public.enterprise_support_proposals limit 1',
   'app user cannot read unprojected enterprise support proposals'
+);
+
+select set_config('request.jwt.claim.sub', :'owner_id', true);
+select pg_temp.qst_assert_eq(
+  (public.create_tasks_if_absent(
+    'qst528-create-after-reorder',
+    jsonb_build_array(jsonb_build_object(
+      'id', '00000000-0000-4000-8000-000000154130',
+      'owner_id', :'owner_id', 'quest_id', :'owner_private_quest_id',
+      'mission_id', :'owner_private_mission_id',
+      'title', '追加の準備', 'action', '準備項目を確認する',
+      'done_condition', '確認内容を記録する', 'status', 'pending',
+      'required', true, 'order_index', 2, 'version', 1,
+      'generated_by', 'user', 'origin', 'user',
+      'verification_type', 'self'
+    ))
+  )->>'status' = 'applied')::integer,
+  1, 'QST-528 another device can add a Task after reorder'
+);
+select pg_temp.qst_assert_eq(
+  (public.reorder_mission_tasks(
+    :'owner_private_mission_id'::uuid,
+    array[:'owner_qst528_task_id'::uuid, :'owner_private_task_id'::uuid],
+    'qst528-reorder-owner',
+    jsonb_build_object(:'owner_private_task_id', 1, :'owner_qst528_task_id', 1)
+  )->>'status' = 'conflict')::integer,
+  1, 'QST-528 replay does not claim success after the mission Task set changed'
 );
 
 rollback;

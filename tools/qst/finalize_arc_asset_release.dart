@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const provenancePath = 'docs/qst/ARC_ASSET_PROVENANCE.yaml';
 const packagePath = 'docs/qst/CANDIDATE_ASSET_PACKAGE.yaml';
 const decisionPath = 'docs/qst/ARC_ASSET_RELEASE_DECISION.yaml';
@@ -20,15 +22,17 @@ const runtimeAssetNames = <String>[
 
 Future<void> main(List<String> arguments) async {
   final options = _Options.parse(arguments);
-  final head = _command(['git', 'rev-parse', 'HEAD']).trim();
+  final head = options.candidateSha;
   final branch = _command(['git', 'branch', '--show-current']).trim();
   if (branch != expectedBranch) _fail('Arc release must use $expectedBranch.');
-  if (options.candidateSha != head) _fail('Candidate SHA does not match HEAD.');
+  if (!candidateSourceHasOnlyEvidenceCommits(head)) {
+    _fail('Candidate SHA is not an unchanged source commit.');
+  }
   if (_command(['git', 'status', '--porcelain']).trim().isNotEmpty) {
     _fail('Arc release evidence must start from a clean worktree.');
   }
   if (!_read(candidatePath).contains('source_commit: "$head"')) {
-    _fail('Beta candidate manifest is not bound to HEAD.');
+    _fail('Beta candidate manifest is not bound to candidate source.');
   }
 
   final previousProvenance = _read(provenancePath);

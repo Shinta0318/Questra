@@ -156,7 +156,7 @@ class SecureArcJourneyDraftRepository implements ArcJourneyDraftRepository {
         .whereType<Map>()
         .map(QuestClarificationQuestion.fromJson)
         .whereType<QuestClarificationQuestion>()
-        .take(5)
+        .take(3)
         .toList(growable: false);
     if (suggestion == null || questions.isEmpty) return null;
     final answers = <QuestClarificationType, String>{};
@@ -195,6 +195,10 @@ class SecureArcJourneyDraftRepository implements ArcJourneyDraftRepository {
       'successCondition': suggestion.successCondition,
       'realityFrame': suggestion.realityFrame,
       'reframedOutcome': suggestion.reframedOutcome,
+      'confirmedAnswers': {
+        for (final entry in suggestion.confirmedAnswers.entries)
+          entry.key.storageKey: entry.value,
+      },
     };
   }
 
@@ -217,6 +221,17 @@ class SecureArcJourneyDraftRepository implements ArcJourneyDraftRepository {
       successCondition: (row['successCondition'] as String?)?.trim() ?? '',
       realityFrame: (row['realityFrame'] as String?)?.trim() ?? 'uncertain',
       reframedOutcome: (row['reframedOutcome'] as String?)?.trim(),
+      confirmedAnswers: {
+        for (final entry
+            in (row['confirmedAnswers'] is Map
+                    ? row['confirmedAnswers'] as Map
+                    : const {})
+                .entries)
+          if (questClarificationTypeFromStorage(entry.key) case final type?)
+            if (entry.value is String &&
+                (entry.value as String).trim().isNotEmpty)
+              type: (entry.value as String).trim(),
+      },
     );
   }
 }

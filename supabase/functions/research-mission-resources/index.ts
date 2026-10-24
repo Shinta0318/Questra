@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import { groundedMissionSearch } from "../_shared/grounded_search_provider.ts";
+import { aiLegalFailureResponse } from "../_shared/ai_legal_http.ts";
 import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
 
 type MissionInput = {
@@ -33,6 +34,8 @@ Deno.serve(async (req) => {
       return jsonResponse({ ...cached, source_type: "mission_research_cache" });
     }
   }
+  const legalFailure = await aiLegalFailureResponse(user.id);
+  if (legalFailure) return legalFailure;
   if (!await withinRateLimit(user.id)) {
     return jsonResponse({ error: "Research rate limit reached" }, { status: 429 });
   }
@@ -42,7 +45,7 @@ Deno.serve(async (req) => {
     mission: limit(mission.title, 120),
     mission_description: limit(mission.description, 600),
     requested_output: "Only information necessary to complete this Mission",
-  });
+  }, { userId: user.id, operation: "mission_research" });
   if (!result) return jsonResponse({ error: "Search unavailable" }, { status: 503 });
 
   const parsed = parseResult(result.text);

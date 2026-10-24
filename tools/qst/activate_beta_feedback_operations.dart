@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const operationsPath = 'docs/qst/BETA_FEEDBACK_OPERATIONS.yaml';
 const registerPath = 'docs/qst/BETA_ISSUE_REGISTER.yaml';
 
@@ -27,12 +29,18 @@ Future<void> main(List<String> arguments) async {
       );
     }
   }
-  final head = (await Process.run('git', [
-    'rev-parse',
-    'HEAD',
-  ])).stdout.toString().trim();
-  if (values['candidate-commit'] != head) {
-    _fail('candidate-commit must match current HEAD.');
+  final head = values['candidate-commit']!;
+  if (!candidateSourceHasOnlyEvidenceCommits(head)) {
+    _fail('candidate-commit must name an unchanged candidate source.');
+  }
+  final dirty = await Process.run('git', ['status', '--porcelain']);
+  if (dirty.exitCode != 0 || dirty.stdout.toString().trim().isNotEmpty) {
+    _fail('Feedback operations must be activated from a clean worktree.');
+  }
+  final candidate = File('docs/qst/BETA_CANDIDATE.yaml');
+  if (!candidate.existsSync() ||
+      !candidate.readAsStringSync().contains('source_commit: "$head"')) {
+    _fail('Beta candidate manifest does not match candidate source.');
   }
 
   final registerFile = File(registerPath);

@@ -133,8 +133,17 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
       'id': proposal.routeVersionId,
       'quest_id': proposal.questId,
       'status': 'proposed',
-      'generated_by': 'arc',
+      'generated_by': switch (proposal.provenance.generator) {
+        RouteProposalGenerator.manual => 'user',
+        RouteProposalGenerator.rules ||
+        RouteProposalGenerator.legacyUnknown => 'system',
+        _ => 'arc',
+      },
       'generation_reason': proposal.reason.name,
+      'ai_model': proposal.provenance.generator == RouteProposalGenerator.gemini
+          ? proposal.provenance.version
+          : null,
+      'prompt_version': proposal.provenance.promptVersion,
       'version_number': await _nextVersion(proposal.questId),
       'route_snapshot': proposal.routeSnapshot,
     });
@@ -148,6 +157,11 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
       'confidence_score': proposal.confidence,
       'status': proposal.status.name,
       'base_snapshot': proposal.routeSnapshot,
+      'generator_type': proposal.provenance.generator.name,
+      'generator_version': proposal.provenance.version,
+      'prompt_version': proposal.provenance.promptVersion,
+      'schema_version': proposal.provenance.schemaVersion,
+      'grounded': proposal.provenance.grounded,
     });
     await client.from('route_change_items').insert([
       for (final item in proposal.items)
@@ -291,6 +305,7 @@ class SupabaseRouteReplanningRepository implements RouteReplanningRepository {
       reason: RouteProposalReason.values.byName(row['reason'] as String),
       summary: row['summary'] as String,
       confidence: (row['confidence_score'] as num).toDouble(),
+      provenance: RouteProposalProvenance.fromStorage(row),
       status: RouteProposalStatus.values.byName(row['status'] as String),
       createdAt: DateTime.parse(row['created_at'] as String),
       routeSnapshot: Map<String, Object?>.from(

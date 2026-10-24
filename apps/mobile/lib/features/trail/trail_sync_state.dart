@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/persistence/durable_mutation.dart';
+import '../../core/persistence/database_write_feedback.dart';
 
 enum TrailSyncStatus { idle, loading, saved, failed }
 
@@ -75,9 +76,15 @@ class TrailSyncController extends Notifier<TrailSyncState> {
     final operation = state.operation;
     final preservesInput = operation != TrailSyncOperation.load;
     final offline = isOfflineFailure(error);
+    final databaseFeedback = operation == TrailSyncOperation.save
+        ? DatabaseWriteFeedback.from(error)
+        : null;
     state = TrailSyncState(
       status: TrailSyncStatus.failed,
-      message: offline
+      message: databaseFeedback != null
+          ? 'Trailを保存できませんでした。${databaseFeedback.message}'
+                '${preservesInput ? '入力内容は保持されています。' : ''}'
+          : offline
           ? 'Trailを同期できませんでした。オフラインの可能性があります。'
                 '${preservesInput ? '入力内容は保持されています。' : ''}'
           : 'Trailを同期できませんでした。'

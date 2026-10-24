@@ -14,6 +14,7 @@ import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/quest/quest_providers.dart';
 import 'package:questra/features/quest/quest_repository.dart';
 import 'package:questra/features/quest/route_replanning_controller.dart';
+import 'package:questra/features/quest/route_mutation_journal.dart';
 import 'package:questra/features/quest/route_replanning_model.dart';
 import 'package:questra/features/quest/route_replanning_repository.dart';
 import 'package:questra/features/quest/route_snapshot_service.dart';
@@ -47,6 +48,20 @@ void main() {
       await questRepository.saveRequested.future;
 
       expect(routeRepository.applyCalls, 0);
+      await expectLater(
+        controller.accept(
+          container.read(questControllerProvider).single,
+          container.read(missionControllerProvider),
+          proposal,
+          {proposal.items.single.id},
+        ),
+        throwsA(isA<StateError>()),
+      );
+      expect((await controller.undo(proposal.id)).status, RouteUndoStatus.busy);
+      expect(
+        await controller.acknowledgeRouteJournal(proposal.questId, proposal.id),
+        isFalse,
+      );
       expect(
         (await routeRepository.findByQuest(proposal.questId)).single.status,
         RouteProposalStatus.pending,
@@ -119,6 +134,131 @@ void main() {
     expect(container.read(missionControllerProvider).single.title, '旅程を決める');
     expect(missionRepository.saveCalls, 2);
   });
+
+  test('Undo waits for saved Quest and Mission snapshots', () async {
+    final routeRepository = _RecordingRouteRepository();
+    final container = _container(
+      questRepository: InMemoryQuestRepository(),
+      missionRepository: InMemoryMissionRepository(),
+      routeRepository: routeRepository,
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(
+      routeReplanningControllerProvider.notifier,
+    );
+    final proposal = _questProposal(container);
+    await controller.registerProposal(proposal);
+    final accepted = await controller.accept(
+      container.read(questControllerProvider).single,
+      container.read(missionControllerProvider),
+      proposal,
+      {proposal.items.single.id},
+    );
+    expect(accepted?.status, RouteProposalStatus.accepted);
+    expect(
+      container.read(questControllerProvider).single.targetDate,
+      DateTime(2027, 6, 1),
+    );
+
+    final undo = await controller.undo(proposal.id);
+    expect(undo.status, RouteUndoStatus.restored);
+    expect(
+      container.read(questControllerProvider).single.targetDate,
+      DateTime(2027, 3, 1),
+    );
+    expect(
+      (await routeRepository.findByQuest(proposal.questId)).single.status,
+      RouteProposalStatus.rolledBack,
+    );
+  });
+
+  test('failed Undo keeps its snapshot and can be retried', () async {
+    final questRepository = _FailOnceUndoQuestRepository();
+    final container = _container(
+      questRepository: questRepository,
+      missionRepository: InMemoryMissionRepository(),
+      routeRepository: _RecordingRouteRepository(),
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(
+      routeReplanningControllerProvider.notifier,
+    );
+    final proposal = _questProposal(container);
+    await controller.registerProposal(proposal);
+    await controller.accept(
+      container.read(questControllerProvider).single,
+      container.read(missionControllerProvider),
+      proposal,
+      {proposal.items.single.id},
+    );
+
+    expect(
+      (await controller.undo(proposal.id)).status,
+      RouteUndoStatus.recoveryIncomplete,
+    );
+    expect(
+      (await controller.undo(proposal.id)).status,
+      RouteUndoStatus.restored,
+    );
+    expect(questRepository.saveCalls, 3);
+  });
+
+  test('Undo refuses to overwrite a later route change', () async {
+    final container = _container(
+      questRepository: InMemoryQuestRepository(),
+      missionRepository: InMemoryMissionRepository(),
+      routeRepository: _RecordingRouteRepository(),
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(
+      routeReplanningControllerProvider.notifier,
+    );
+    final proposal = _questProposal(container);
+    await controller.registerProposal(proposal);
+    await controller.accept(
+      container.read(questControllerProvider).single,
+      container.read(missionControllerProvider),
+      proposal,
+      {proposal.items.single.id},
+    );
+    final updated = container
+        .read(questControllerProvider)
+        .single
+        .copyWith(targetDate: DateTime(2027, 9, 1));
+    container.read(questControllerProvider.notifier).stageRouteUpdate(updated);
+
+    expect((await controller.undo(proposal.id)).status, RouteUndoStatus.stale);
+    expect(
+      container.read(questControllerProvider).single.targetDate,
+      DateTime(2027, 9, 1),
+    );
+  });
+
+  test('duplicate Undo returns busy until the first call finishes', () async {
+    final repository = _DelayedRollbackRepository();
+    final container = _container(
+      questRepository: InMemoryQuestRepository(),
+      missionRepository: InMemoryMissionRepository(),
+      routeRepository: repository,
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(
+      routeReplanningControllerProvider.notifier,
+    );
+    final proposal = _questProposal(container);
+    await controller.registerProposal(proposal);
+    await controller.accept(
+      container.read(questControllerProvider).single,
+      container.read(missionControllerProvider),
+      proposal,
+      {proposal.items.single.id},
+    );
+    final first = controller.undo(proposal.id);
+    await repository.rollbackRequested.future;
+    expect((await controller.undo(proposal.id)).status, RouteUndoStatus.busy);
+    repository.release();
+    expect((await first).status, RouteUndoStatus.restored);
+  });
 }
 
 ProviderContainer _container({
@@ -134,6 +274,9 @@ ProviderContainer _container({
     questRepositoryProvider.overrideWithValue(questRepository),
     missionRepositoryProvider.overrideWithValue(missionRepository),
     routeReplanningRepositoryProvider.overrideWithValue(routeRepository),
+    routeMutationJournalRepositoryProvider.overrideWithValue(
+      InMemoryRouteMutationJournalRepository(),
+    ),
   ],
 );
 
@@ -246,6 +389,31 @@ class _RecordingRouteRepository extends InMemoryRouteReplanningRepository {
       proposal: proposal,
       acceptedItemIds: acceptedItemIds,
     );
+  }
+}
+
+class _FailOnceUndoQuestRepository extends InMemoryQuestRepository {
+  int saveCalls = 0;
+
+  @override
+  Future<Quest> save({required String ownerId, required Quest quest}) async {
+    saveCalls++;
+    if (saveCalls == 2) throw StateError('Undo persistence failed');
+    return super.save(ownerId: ownerId, quest: quest);
+  }
+}
+
+class _DelayedRollbackRepository extends _RecordingRouteRepository {
+  final rollbackRequested = Completer<void>();
+  final _release = Completer<void>();
+
+  void release() => _release.complete();
+
+  @override
+  Future<RouteMutationResult> rollbackProposal(String proposalId) async {
+    rollbackRequested.complete();
+    await _release.future;
+    return super.rollbackProposal(proposalId);
   }
 }
 

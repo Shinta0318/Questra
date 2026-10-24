@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const evidencePath = 'docs/qst/WEB_CANDIDATE_SESSION.yaml';
 
 Future<void> main(List<String> arguments) async {
@@ -44,8 +46,10 @@ Future<void> main(List<String> arguments) async {
     _fail('Web evidence must use Chrome or Edge.');
   }
   final candidateSha = _scalar(content, 'candidate_sha');
-  final head = _command(['git', 'rev-parse', 'HEAD']).trim();
-  if (candidateSha != head) _fail('Web evidence is not bound to HEAD.');
+  if (candidateSha == null ||
+      !candidateSourceHasOnlyEvidenceCommits(candidateSha)) {
+    _fail('Web evidence is not bound to an unchanged candidate source.');
+  }
 
   final artifactMatch = RegExp(
     r'artifact:\n  path: "([^"]+)"\n  bytes: (\d+)\n  sha256: "([a-f0-9]{64})"',
@@ -69,7 +73,7 @@ Future<void> main(List<String> arguments) async {
   for (final entry in entries) {
     await _verifyFile(entry, 'artifacts/qst396/');
   }
-  stdout.writeln('Supported Web candidate evidence passed for $head.');
+  stdout.writeln('Supported Web candidate evidence passed for $candidateSha.');
 }
 
 const _requiredChecks = <String>{
@@ -101,12 +105,6 @@ String? _scalar(String content, String field, {int indent = 0}) {
     multiLine: true,
   ).firstMatch(content);
   return match?.group(1);
-}
-
-String _command(List<String> command) {
-  final result = Process.runSync(command.first, command.skip(1).toList());
-  if (result.exitCode != 0) _fail(result.stderr.toString());
-  return result.stdout.toString();
 }
 
 Future<String?> _sha256(String path) async {

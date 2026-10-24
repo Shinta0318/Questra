@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "qst": "QST-539",
+  "status": "unverified",
+  "project_ref": "dhbmgwarnrtelrcrmmfk",
+  "candidate_source_commit": null,
+  "working_tree_clean_at_execution": false,
+  "site_url": "http://localhost:3000",
+  "allowed_redirect_urls": [
+    "http://127.0.0.1:5268/#/email-confirmation-return",
+    "http://127.0.0.1:5268/#/reset-password",
+    "http://127.0.0.1:5268/?auth_callback=signup",
+    "http://127.0.0.1:5268/?auth_callback=recovery"
+  ],
+  "signup_confirmation_roundtrip_verified": false,
+  "web_confirmation_link_returned": false,
+  "web_recovery_link_returned": false,
+  "mobile_confirmation_link_returned": false,
+  "mobile_recovery_link_returned": false,
+  "evidence_path": null,
+  "operator_approval": "pending",
+  "notes": "2026-10-17: Hosted Beta URL Configuration lists four exact local redirects, including the newly approved recovery callback. The default Site URL remains localhost:3000. The screenshot at reports/qst/evidence/QST-570/recovery_redirect_url.jpg proves configuration only; no real email round trip, candidate deployment, or login has been verified. No recipient, link token, or credentials are recorded."
+}

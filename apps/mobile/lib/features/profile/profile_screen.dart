@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/config/supabase_config.dart';
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
@@ -30,6 +31,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
     final profile = auth.profile;
+    final autoPreview = SupabaseConfig.autoEnterLocalMock;
     final quests = ref.watch(questControllerProvider);
     final missions = ref.watch(missionControllerProvider);
     final trails = ref.watch(trailControllerProvider);
@@ -89,7 +91,7 @@ class ProfileScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'アカウント',
+                              autoPreview ? '開発用プレビュー' : 'アカウント',
                               style: Theme.of(context).textTheme.labelLarge
                                   ?.copyWith(
                                     color: QuestraSurfacePalette.dark.action,
@@ -107,7 +109,9 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: AppSpacing.sm),
                             Text(
-                              profile?.email ?? 'ログインしていません',
+                              autoPreview
+                                  ? '実アカウントには接続していません'
+                                  : profile?.email ?? 'ログインしていません',
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
                                     color:
@@ -122,39 +126,45 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    profile == null ? 'この端末だけのゲスト航路です' : 'ログイン中の航路です',
+                    autoPreview
+                        ? 'ログイン不要の一時プレビューです'
+                        : profile == null
+                        ? 'この端末だけのゲスト航路です'
+                        : 'ログイン中の航路です',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: QuestraSurfacePalette.dark.muted,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _ProfileStatusBadge(
-                    completed: profile?.onboardingCompleted == true,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  const Divider(height: 1),
-                  const SizedBox(height: AppSpacing.md),
-                  SizedBox(
-                    width: double.infinity,
-                    child: profile == null
-                        ? FilledButton.icon(
-                            onPressed: () => context.go(AppRoutes.login),
-                            icon: const Icon(Icons.login_rounded),
-                            label: const Text('ログイン'),
-                          )
-                        : OutlinedButton.icon(
-                            onPressed: () async {
-                              await ref
-                                  .read(authControllerProvider.notifier)
-                                  .logout();
-                              if (context.mounted) {
-                                context.go(AppRoutes.login);
-                              }
-                            },
-                            icon: const Icon(Icons.logout_rounded),
-                            label: const Text('ログアウト'),
-                          ),
-                  ),
+                  if (!autoPreview) ...[
+                    _ProfileStatusBadge(
+                      completed: profile?.onboardingCompleted == true,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    const Divider(height: 1),
+                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(
+                      width: double.infinity,
+                      child: profile == null
+                          ? FilledButton.icon(
+                              onPressed: () => context.go(AppRoutes.login),
+                              icon: const Icon(Icons.login_rounded),
+                              label: const Text('ログイン'),
+                            )
+                          : OutlinedButton.icon(
+                              onPressed: () async {
+                                await ref
+                                    .read(authControllerProvider.notifier)
+                                    .logout();
+                                if (context.mounted) {
+                                  context.go(AppRoutes.login);
+                                }
+                              },
+                              icon: const Icon(Icons.logout_rounded),
+                              label: const Text('ログアウト'),
+                            ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -196,7 +206,9 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    profile == null
+                    SupabaseConfig.isLocalMockPreview
+                        ? '開発用プレビューのQuestなどは再読み込みで消えます。実アカウントには保存されません。'
+                        : profile == null
                         ? 'ログインすると、この航路を別の端末でも続けられます。'
                         : 'Quest、Mission、Task、Trail、Arc Memoryは、このプロフィールに紐づいて保存されます。',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(

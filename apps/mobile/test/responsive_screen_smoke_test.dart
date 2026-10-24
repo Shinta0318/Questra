@@ -208,7 +208,13 @@ void main() {
     expect(find.text('自分のデータ'), findsOneWidget);
     expect(find.text('目的別の同意'), findsOneWidget);
     expect(find.text('フィードバック'), findsOneWidget);
-    expect(find.text('端末内のみ'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('settings_action_/settings/data-rights')),
+        matching: find.text('プレビュー'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('準備中'), findsNothing);
     expect(find.textContaining('RLS'), findsNothing);
   });

@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/analytics/analytics_service.dart';
 import '../../core/estimation/effort_estimation_service.dart';
 import '../../core/router/app_routes.dart';
+import '../../core/safety/ai_legal_failure.dart';
 import '../../core/safety/quest_safety_service.dart';
 import '../../core/safety/safety_providers.dart';
 import '../../core/theme/app_colors.dart';
@@ -47,6 +48,7 @@ import '../quest/quest_intent_service.dart';
 import '../quest/quest_intent_resolution_service.dart';
 import '../quest/quest_title_service.dart';
 import '../quest/quest_model.dart';
+import '../quest/quest_understanding.dart';
 import '../quest/planning_preferences_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../trail/trail_controller.dart';
@@ -633,6 +635,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       final safety = await ref.read(questSafetyServiceProvider).assess(text);
       if (safety.action != QuestSafetyAction.allow) {
         if (!mounted) return;
+        final retryable = safety.reasonCode == 'safety_check_unavailable';
         setState(() {
           _messages.add(
             ArcChatMessage(
@@ -644,11 +647,19 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
           _pendingQuestSuggestion = null;
           _clarificationSession = null;
           _pendingQuestChanges = const [];
-          _quickActions = safety.safeAlternative == null
+          _quickActions = retryable
+              ? const ['もう一度試す', '入力を編集する', 'あとで続ける']
+              : safety.safeAlternative == null
               ? const ['別の相談をする']
               : [safety.safeAlternative!, '別の相談をする'];
+          _lastFailedInput = retryable ? text : null;
           _isThinking = false;
         });
+        if (retryable) {
+          ref
+              .read(arcRemoteStatusProvider.notifier)
+              .markDegraded(failureReason: 'remote_failure');
+        }
         _saveDraft();
         unawaited(
           ref
@@ -735,7 +746,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
             response.clarificationQuestions.isNotEmpty) {
           _clarificationSession = ArcQuestClarificationSession(
             suggestion: acceptedSuggestion,
-            questions: response.clarificationQuestions.take(5).toList(),
+            questions: response.clarificationQuestions.take(3).toList(),
           );
           _pendingQuestSuggestion = null;
         } else {
@@ -757,14 +768,16 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       if (response.deliveryMode != ArcChatDeliveryMode.degraded) {
         await _rememberChat(userMessage, arcMessage, context);
       }
-    } catch (_) {
+    } catch (error) {
       if (!mounted) {
         return;
       }
+      final legalReason = aiLegalFailureReason(error);
       setState(() {
         _messages.add(
           ArcChatMessage(
-            text: '星雲が少しざわついているみたい。今は小さな一歩だけ一緒に選ぼう。',
+            text: aiLegalFailureMessage(error) ??
+                '星雲が少しざわついているみたい。今は小さな一歩だけ一緒に選ぼう。',
             fromArc: true,
             createdAt: DateTime.now(),
           ),
@@ -778,7 +791,7 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       });
       ref
           .read(arcRemoteStatusProvider.notifier)
-          .markDegraded(failureReason: 'remote_failure');
+          .markDegraded(failureReason: legalReason ?? 'remote_failure');
       _saveDraft();
       _recordChatAction(ArcActionTrigger.saveFailure);
       _scrollToLatest();
@@ -1820,6 +1833,7 @@ class _ArcQuestCreationSheetState
   bool _manualMode = false;
   String? _error;
   String _suggestionPlanningContext = '';
+  String _confirmedDeadlineText = '';
   bool _editingWish = true;
 
   bool get _recoveryV2Enabled =>
@@ -1842,9 +1856,18 @@ class _ArcQuestCreationSheetState
       _successConditionController.text = suggestion.successCondition;
       _difficulty = suggestion.difficulty;
       _suggestionPlanningContext = suggestion.description.trim();
+      _confirmedDeadlineText =
+          suggestion.confirmedAnswers[QuestClarificationType.deadline] ?? '';
       _targetDate = QuestClarificationService.targetDateFromText(
-        suggestion.description,
+        _confirmedDeadlineText.isNotEmpty
+            ? _confirmedDeadlineText
+            : suggestion.description,
       );
+      for (final entry in suggestion.confirmedAnswers.entries) {
+        if (entry.key != QuestClarificationType.deadline) {
+          _clarificationControllers[entry.key]?.text = entry.value;
+        }
+      }
       final planningInput = [
         suggestion.sourceInput,
         suggestion.description,
@@ -1860,11 +1883,7 @@ class _ArcQuestCreationSheetState
         ),
         summary: '相談内容から、最初に目指す状態を整理しました。',
         successCondition: suggestion.successCondition,
-        clarificationQuestions: QuestClarificationService.resolve(
-          input: planningInput,
-          category: questType.storageKey,
-          targetDate: _targetDate,
-        ),
+        clarificationQuestions: const [],
         directions: const [],
         sourceType: 'arc_chat_intent',
       );
@@ -1889,15 +1908,26 @@ class _ArcQuestCreationSheetState
     super.dispose();
   }
 
-  List<QuestClarificationQuestion> get _clarificationQuestions =>
-      _intentResolution?.clarificationQuestions ??
-      QuestClarificationService.resolve(
-        input: _inputController.text,
-        category: _categoryController.text,
-        targetDate: _targetDate,
-      );
+  List<QuestClarificationQuestion> get _clarificationQuestions {
+    final confirmed = _suggestionPlanningContext.isNotEmpty
+        ? widget.suggestion?.confirmedAnswers.keys.toList()
+        : null;
+    if (confirmed != null && confirmed.isNotEmpty) {
+      return confirmed
+          .map(QuestClarificationService.questionForType)
+          .toList(growable: false);
+    }
+    return _intentResolution?.clarificationQuestions ??
+        QuestClarificationService.resolve(
+          input: _inputController.text,
+          category: _categoryController.text,
+          targetDate: _targetDate,
+        );
+  }
 
   Map<QuestClarificationType, String> get _clarificationAnswers => {
+    if (_confirmedDeadlineText.isNotEmpty)
+      QuestClarificationType.deadline: _confirmedDeadlineText,
     for (final entry in _clarificationControllers.entries)
       entry.key: entry.value.text.trim(),
   };
@@ -1932,10 +1962,12 @@ class _ArcQuestCreationSheetState
         _intentResolution = resolution;
         _isIntentConfirmed = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       setState(
-        () => _error = 'Questを整理できませんでした。入力内容は残っています。もう一度試すか、手動で整えられます。',
+        () => _error =
+            aiLegalFailureMessage(error) ??
+            'Questを整理できませんでした。入力内容は残っています。もう一度試すか、手動で整えられます。',
       );
     } finally {
       if (mounted) {
@@ -1986,6 +2018,46 @@ class _ArcQuestCreationSheetState
     return details.isEmpty ? base : '$base\n${details.join('\n')}';
   }
 
+  QuestUnderstanding? _understandingWithConfirmedConditions(
+    QuestUnderstanding? generated,
+  ) {
+    final now = DateTime.now();
+    final answers = {
+      ..._clarificationAnswers,
+      if (_targetDate != null)
+        QuestClarificationType.deadline:
+            '${_targetDate!.year}年${_targetDate!.month}月',
+    };
+    final conditions = <QuestClarificationType, QuestConfirmedCondition>{
+      for (final entry in answers.entries)
+        if (entry.value.trim().isNotEmpty)
+          entry.key: QuestConfirmedCondition(
+            value: entry.value.trim(),
+            source: QuestConditionSource.userConfirmed,
+            confirmedAt: now,
+          ),
+    };
+    if (conditions.isEmpty) return generated;
+    final base =
+        generated ??
+        QuestUnderstanding(
+          originalWish: _inputController.text.trim(),
+          questOutcome: _titleController.text.trim(),
+          successEvidence: _successConditionController.text.trim(),
+          motivation: _motivationController.text.trim(),
+          currentState: '',
+          constraints: const [],
+          knownResources: const [],
+          unknowns: const [],
+          planningRisks: const [],
+          planningMode: QuestPlanningMode.project,
+          assumptions: const [],
+        );
+    return base.copyWith(
+      confirmedConditions: {...base.confirmedConditions, ...conditions},
+    );
+  }
+
   void _invalidateGuide() {
     setState(() {
       _draftQuest = null;
@@ -1998,8 +2070,20 @@ class _ArcQuestCreationSheetState
   }
 
   void _onWishChanged() {
+    final previousSuggestion = _suggestionPlanningContext.isNotEmpty;
+    if (previousSuggestion) {
+      for (final controller in _clarificationControllers.values) {
+        controller.clear();
+      }
+      _targetDate = null;
+      _titleController.clear();
+      _categoryController.clear();
+      _motivationController.clear();
+      _successConditionController.clear();
+    }
     setState(() {
       _suggestionPlanningContext = '';
+      _confirmedDeadlineText = '';
       _intentResolution = null;
       _isIntentConfirmed = false;
     });
@@ -2168,7 +2252,9 @@ class _ArcQuestCreationSheetState
       effortEstimate: guide.effortEstimate ?? draftQuest.effortEstimate,
       evaluation: guide.questEvaluation ?? draftQuest.evaluation,
       dna: guide.questDna ?? draftQuest.dna,
-      understanding: guide.questUnderstanding ?? draftQuest.understanding,
+      understanding: _understandingWithConfirmedConditions(
+        guide.questUnderstanding ?? draftQuest.understanding,
+      ),
       planQuality: guide.planQuality ?? draftQuest.planQuality,
     );
     QuestraModalSheet.finish(
@@ -2258,6 +2344,7 @@ class _ArcQuestCreationSheetState
             : _categoryController.text.trim(),
         targetDate: _targetDate,
         effortEstimate: estimate,
+        understanding: _understandingWithConfirmedConditions(null),
       );
       _isConfirming = true;
       QuestraModalSheet.finish(
@@ -2293,11 +2380,13 @@ class _ArcQuestCreationSheetState
             children: [
               Icon(Icons.auto_awesome, color: AppColors.warmGold),
               SizedBox(width: AppSpacing.sm),
-              Text(
-                'ArcがまとめたQuest',
-                style: TextStyle(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Text(
+                  'ArcがまとめたQuest',
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
@@ -2343,22 +2432,37 @@ class _ArcQuestCreationSheetState
             ),
           ],
           const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton(
-                  onPressed: _isGenerating ? null : _acceptIntent,
-                  child: const Text('このQuestで進む'),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: TextButton(
-                  onPressed: _isGenerating ? null : _consultMore,
-                  child: const Text('Arcともう少し相談する'),
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stacked =
+                  constraints.maxWidth < 480 ||
+                  MediaQuery.textScalerOf(context).scale(1) > 1.5;
+              final continueButton = FilledButton(
+                onPressed: _isGenerating ? null : _acceptIntent,
+                child: const Text('このQuestで進む', textAlign: TextAlign.center),
+              );
+              final consultButton = TextButton(
+                onPressed: _isGenerating ? null : _consultMore,
+                child: const Text('Arcともう少し相談する', textAlign: TextAlign.center),
+              );
+              if (stacked) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    continueButton,
+                    const SizedBox(height: AppSpacing.sm),
+                    consultButton,
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: continueButton),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(child: consultButton),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -2568,6 +2672,10 @@ class _ArcQuestCreationSheetState
                     questions: _clarificationQuestions,
                     controllers: _clarificationControllers,
                     targetDate: _targetDate,
+                    reviewingAnswers:
+                        _suggestionPlanningContext.isNotEmpty &&
+                        widget.suggestion?.confirmedAnswers.isNotEmpty == true,
+                    confirmedDeadline: _confirmedDeadlineText,
                     enabled: !_isGenerating,
                     onDatePressed: _pickTargetDate,
                     onAnswerChanged: _invalidateGuide,
@@ -2986,6 +3094,8 @@ class _ArcClarificationPanel extends StatelessWidget {
     required this.questions,
     required this.controllers,
     required this.targetDate,
+    required this.reviewingAnswers,
+    required this.confirmedDeadline,
     required this.enabled,
     required this.onDatePressed,
     required this.onAnswerChanged,
@@ -2994,6 +3104,8 @@ class _ArcClarificationPanel extends StatelessWidget {
   final List<QuestClarificationQuestion> questions;
   final Map<QuestClarificationType, TextEditingController> controllers;
   final DateTime? targetDate;
+  final bool reviewingAnswers;
+  final String confirmedDeadline;
   final bool enabled;
   final VoidCallback onDatePressed;
   final VoidCallback onAnswerChanged;
@@ -3017,22 +3129,25 @@ class _ArcClarificationPanel extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  '航路を整える確認',
+                  reviewingAnswers ? 'Arcと確認した条件' : '航路を整える確認',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.white,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
-              Text(
-                '${questions.length}/3',
-                style: const TextStyle(color: AppColors.parchment),
-              ),
+              if (!reviewingAnswers)
+                Text(
+                  '${questions.length}/3',
+                  style: const TextStyle(color: AppColors.parchment),
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
-          const Text(
-            '分からない項目は空欄のまま進められます。',
+          Text(
+            reviewingAnswers
+                ? '相談で決めた内容です。変えたいところだけ書き換えられます。'
+                : '分からない項目は空欄のまま進められます。',
             style: TextStyle(color: AppColors.parchment),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -3058,7 +3173,9 @@ class _ArcClarificationPanel extends StatelessWidget {
             icon: const Icon(Icons.event_outlined),
             label: Text(
               targetDate == null
-                  ? 'YYYY / MM を選ぶ'
+                  ? confirmedDeadline.isNotEmpty
+                        ? confirmedDeadline
+                        : 'YYYY / MM を選ぶ'
                   : DateFormat('yyyy / MM').format(targetDate!),
             ),
           ),

@@ -9,6 +9,7 @@ import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/quest/quest_route_screen.dart';
 import 'package:questra/features/quest/route_replanning_controller.dart';
 import 'package:questra/features/quest/route_replanning_model.dart';
+import 'package:questra/features/quest/route_mutation_journal.dart';
 
 void main() {
   setUp(() => _RouteFixtureController.accepted = false);
@@ -24,11 +25,14 @@ void main() {
           routeReplanningControllerProvider.overrideWith(
             _RouteFixtureController.new,
           ),
+          routeMutationJournalRepositoryProvider.overrideWithValue(
+            InMemoryRouteMutationJournalRepository(),
+          ),
         ],
         child: const MaterialApp(home: QuestRouteScreen(questId: 'quest-1')),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Arcと航路を見直す'));
     await tester.pumpAndSettle();
@@ -40,7 +44,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(_RouteFixtureController.accepted, isTrue);
-    expect(find.text('承認した内容で航路を更新しました。'), findsOneWidget);
+    expect(find.textContaining('承認した内容で航路を更新しました。'), findsWidgets);
   });
 
   testWidgets('route review error is visible and existing route stays intact', (
@@ -54,16 +58,19 @@ void main() {
           routeReplanningControllerProvider.overrideWith(
             _FailingRouteController.new,
           ),
+          routeMutationJournalRepositoryProvider.overrideWithValue(
+            InMemoryRouteMutationJournalRepository(),
+          ),
         ],
         child: const MaterialApp(home: QuestRouteScreen(questId: 'quest-1')),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Arcと航路を見直す'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('内容は変更されていません'), findsOneWidget);
+    expect(find.textContaining('現在の内容を確認してください'), findsOneWidget);
     expect(find.text('Missionを準備する'), findsOneWidget);
     expect(find.text('Arcと航路を見直す'), findsOneWidget);
   });

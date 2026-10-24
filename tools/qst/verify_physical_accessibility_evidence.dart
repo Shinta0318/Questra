@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const evidencePath = 'docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml';
 const trailJourneyScenarios = [
   'trail_quest_mission_selection',
@@ -61,8 +63,10 @@ Future<void> main(List<String> arguments) async {
     r'^candidate_sha: "([a-f0-9]{40})"$',
     multiLine: true,
   ).firstMatch(content)?.group(1);
-  final head = _command(['git', 'rev-parse', 'HEAD']).trim();
-  if (candidateSha != head) _fail('Physical evidence is not bound to HEAD.');
+  if (candidateSha == null ||
+      !candidateSourceHasOnlyEvidenceCommits(candidateSha)) {
+    _fail('Physical evidence is not bound to an unchanged candidate source.');
+  }
 
   final entries = RegExp(
     r'  - check: ([a-z0-9_]+)\n'
@@ -96,17 +100,11 @@ Future<void> main(List<String> arguments) async {
       _fail('Physical evidence hash changed: $path');
     }
   }
-  stdout.writeln('Physical accessibility evidence passed for $head.');
+  stdout.writeln('Physical accessibility evidence passed for $candidateSha.');
 }
 
 void _expect(String content, String snippet) {
   if (!content.contains(snippet)) _fail('Missing physical evidence: $snippet');
-}
-
-String _command(List<String> command) {
-  final result = Process.runSync(command.first, command.skip(1).toList());
-  if (result.exitCode != 0) _fail(result.stderr as String);
-  return result.stdout as String;
 }
 
 Future<String?> _sha256(String path) async {

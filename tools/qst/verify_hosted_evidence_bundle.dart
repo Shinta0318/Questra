@@ -51,6 +51,7 @@ void main(List<String> arguments) {
     _expect(run, 'working_tree_clean_at_start: true', runPath, failures);
     for (final result in [
       'migrations_and_functions: passed',
+      'ai_user_boundary: passed',
       'rls_behavior: passed',
       'dual_account_journey: passed',
       'data_export_owner_scope: passed',

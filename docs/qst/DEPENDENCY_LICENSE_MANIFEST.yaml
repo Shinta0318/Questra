@@ -1,8 +1,8 @@
 version: 1
 status: generated_review_pending
-generated_at_utc: "2026-09-03T00:27:57.470619Z"
-candidate_source_commit: "4d316c6b47604664293b4176b0a54d12e4564c1e"
-flutter_dart_package_count: 159
+generated_at_utc: "2026-10-18T22:21:09.246913Z"
+candidate_source_commit: "a9d83bcb551e6c974b9c3fdf8a9d1a51a401c61c"
+flutter_dart_package_count: 160
 missing_license_file_count: 0
 npm_import_count: 1
 unpinned_npm_import_count: 0

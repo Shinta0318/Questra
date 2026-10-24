@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/safety/ai_legal_failure.dart';
 import '../quest/quest_model.dart';
 import '../quest/route_replanning_model.dart';
 import 'mission_model.dart';
@@ -49,6 +50,11 @@ class LocalMissionRegenerationProposalService
       reason: hint,
       after: after,
       confidence: 0.64,
+      provenance: const RouteProposalProvenance(
+        generator: RouteProposalGenerator.rules,
+        version: 'mission-regeneration-local-v1',
+        schemaVersion: 'route-proposal-v1',
+      ),
     );
   }
 
@@ -164,10 +170,24 @@ class SupabaseMissionRegenerationProposalService
         },
         confidence:
             (after['confidence'] as num?)?.toDouble().clamp(0, 1) ?? 0.6,
+        provenance: RouteProposalProvenance(
+          generator: switch (data['source_type']) {
+            'gemini_mission_regeneration' => RouteProposalGenerator.gemini,
+            'openai_mission_regeneration' =>
+              RouteProposalGenerator.otherProvider,
+            _ => RouteProposalGenerator.legacyUnknown,
+          },
+          version: data['model'] as String?,
+          promptVersion: data['prompt_version'] as String?,
+          schemaVersion: data['schema_version'] as String?,
+          grounded: data['grounded'] == true,
+        ),
       );
     } on MissionRegenerationUnavailableException {
       rethrow;
-    } catch (_) {
+    } catch (error) {
+      final legalMessage = aiLegalFailureMessage(error);
+      if (legalMessage != null) throw StateError(legalMessage);
       throw const MissionRegenerationUnavailableException();
     }
   }
@@ -188,10 +208,12 @@ RouteChangeProposal _proposal({
   required String reason,
   required Map<String, Object?> after,
   required double confidence,
+  required RouteProposalProvenance provenance,
 }) {
   return const RouteProposalValidator().validate(
     RouteChangeProposal(
       questId: quest.id,
+      provenance: provenance,
       reason: RouteProposalReason.manualReview,
       summary: '「${mission.title}」を「${intent.label}」の方針で描き直します。',
       confidence: confidence,

@@ -8,10 +8,10 @@ candidate_requirements:
   generated_outputs_separated: required
   secret_scan: required
 scan_scope:
-  - apps/mobile/lib
-  - apps/mobile/web
-  - supabase/functions
-  - .github/workflows
+  - git_tracked_files
+  - git_untracked_nonignored_files
+  - nonbinary_utf8_content
+  - oversized_known_text_files_block_candidate
 prohibited_secret_material:
   - google_api_key_value
   - supabase_secret_key_value

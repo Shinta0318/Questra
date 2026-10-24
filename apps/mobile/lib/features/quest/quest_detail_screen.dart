@@ -59,6 +59,7 @@ import 'quest_milestone_controller.dart';
 import 'quest_milestone_model.dart';
 import 'quest_dna_snapshot.dart';
 import 'quest_model.dart';
+import 'quest_clarification_service.dart';
 import 'quest_understanding.dart';
 import 'quest_progress_service.dart';
 import 'quest_providers.dart';
@@ -663,25 +664,13 @@ class _QuestEvaluationAndRouteCard extends ConsumerWidget {
           OutlinedButton.icon(
             onPressed: isLoading
                 ? null
-                : () => _reviewRoute(
-                    context,
-                    ref,
-                    quest,
-                    missions,
-                    existing: pendingProposal,
-                  ),
+                : () => context.push(AppRoutes.questRoute(quest.id)),
             icon: Icon(
               proposal == null
                   ? Icons.analytics_outlined
                   : Icons.route_outlined,
             ),
-            label: Text(
-              pendingProposal != null
-                  ? 'Arcからの提案を確認'
-                  : proposal == null
-                  ? 'AI評価を更新'
-                  : '航路の再提案を確認',
-            ),
+            label: Text(pendingProposal != null ? 'Arcからの提案を確認' : '航路を見直す'),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -693,161 +682,6 @@ class _QuestEvaluationAndRouteCard extends ConsumerWidget {
     );
   }
 }
-
-Future<void> _reviewRoute(
-  BuildContext context,
-  WidgetRef ref,
-  Quest quest,
-  List<Mission> missions, {
-  RouteChangeProposal? existing,
-}) async {
-  final proposal = existing?.status == RouteProposalStatus.stale
-      ? await ref
-            .read(routeReplanningControllerProvider.notifier)
-            .refreshStale(quest, missions, existing!)
-      : existing ??
-            await ref
-                .read(routeReplanningControllerProvider.notifier)
-                .review(quest, missions);
-  if (!context.mounted) return;
-  if (proposal == null) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('今は航路を変更する必要はなさそうです。')));
-    return;
-  }
-  final selected = proposal.items.map((item) => item.id).toSet();
-  final result = await showDialog<_RouteReviewResult>(
-    context: context,
-    builder: (dialogContext) => StatefulBuilder(
-      builder: (context, setState) => AlertDialog(
-        title: const Text('Arcから航路更新の提案'),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(proposal.summary),
-                const SizedBox(height: 8),
-                Text(
-                  '提案の確度 ${(proposal.confidence * 100).round()}%',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: QuestraColors.slate,
-                  ),
-                ),
-                const Divider(height: 24),
-                for (final item in proposal.items)
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: selected.contains(item.id),
-                    onChanged: (value) => setState(() {
-                      if (value ?? false) {
-                        selected.add(item.id);
-                      } else {
-                        selected.remove(item.id);
-                      }
-                    }),
-                    title: Text(item.title),
-                    subtitle: Text('${item.reason}\n${_routeDiffLabel(item)}'),
-                    isThreeLine: true,
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                const SizedBox(height: 6),
-                const Text(
-                  '承認するまでMissionや期限は変わりません。削除を含む変更は常に個別確認します。',
-                  style: TextStyle(fontSize: 12, color: QuestraColors.slate),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () =>
-                Navigator.of(dialogContext).pop(_RouteReviewResult.reject),
-            child: const Text('今回は変更しない'),
-          ),
-          TextButton(
-            onPressed: () =>
-                Navigator.of(dialogContext).pop(_RouteReviewResult.later),
-            child: const Text('あとで確認'),
-          ),
-          FilledButton(
-            onPressed: selected.isEmpty
-                ? null
-                : () => Navigator.of(
-                    dialogContext,
-                  ).pop(_RouteReviewResult.accept),
-            child: const Text('選んだ変更を反映'),
-          ),
-        ],
-      ),
-    ),
-  );
-  if (!context.mounted ||
-      result == null ||
-      result == _RouteReviewResult.later) {
-    return;
-  }
-  if (result == _RouteReviewResult.reject) {
-    await ref.read(routeReplanningControllerProvider.notifier).reject(proposal);
-    return;
-  }
-  final mutation = await ref
-      .read(routeReplanningControllerProvider.notifier)
-      .accept(quest, missions, proposal, selected);
-  if (!context.mounted) return;
-  if (mutation?.status == RouteProposalStatus.stale) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          mutation?.staleReason ?? '提案後に進捗が変わりました。最新の航路で作り直してください。',
-        ),
-        action: SnackBarAction(
-          label: '作り直す',
-          onPressed: () => unawaited(
-            _reviewRoute(context, ref, quest, missions, existing: proposal),
-          ),
-        ),
-      ),
-    );
-    return;
-  }
-  if (mutation == null) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('反映する変更を選んでください。')));
-    return;
-  }
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: const Text('承認した内容で航路を更新しました。'),
-      action: SnackBarAction(
-        label: '元に戻す',
-        onPressed: () => unawaited(
-          ref
-              .read(routeReplanningControllerProvider.notifier)
-              .undo(proposal.id),
-        ),
-      ),
-    ),
-  );
-}
-
-String _routeDiffLabel(RouteChangeItem item) {
-  final before = item.beforeData.entries
-      .map((entry) => '${entry.key}: ${entry.value ?? "なし"}')
-      .join(' / ');
-  final after = item.afterData.entries
-      .map((entry) => '${entry.key}: ${entry.value ?? "なし"}')
-      .join(' / ');
-  return '変更前 ${before.isEmpty ? "なし" : before}\n変更後 ${after.isEmpty ? "なし" : after}';
-}
-
-enum _RouteReviewResult { accept, reject, later }
 
 Future<void> _showQuestEditDialog(
   BuildContext context,
@@ -1009,10 +843,7 @@ class _QuestHeader extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      quest.description,
-                      style: const TextStyle(color: QuestraColors.parchment),
-                    ),
+                    _QuestDescriptionWithConditions(quest: quest),
                     const SizedBox(height: 10),
                     Text(
                       'Arc: ${theme.arcHint}',
@@ -1106,15 +937,10 @@ class _CompactQuestHeader extends StatelessWidget {
               ),
             ],
           ),
-          if (quest.description.trim().isNotEmpty) ...[
+          if (quest.description.trim().isNotEmpty ||
+              quest.understanding?.confirmedConditions.isNotEmpty == true) ...[
             const SizedBox(height: 8),
-            Text(
-              quest.description,
-              style: const TextStyle(
-                color: QuestraColors.parchment,
-                height: 1.45,
-              ),
-            ),
+            _QuestDescriptionWithConditions(quest: quest),
           ],
           const SizedBox(height: 14),
           Wrap(
@@ -1137,6 +963,67 @@ class _CompactQuestHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _QuestDescriptionWithConditions extends StatelessWidget {
+  const _QuestDescriptionWithConditions({required this.quest});
+
+  final Quest quest;
+
+  @override
+  Widget build(BuildContext context) {
+    final conditions =
+        quest.understanding?.confirmedConditions ??
+        const <QuestClarificationType, QuestConfirmedCondition>{};
+    final description = conditions.isEmpty
+        ? quest.description.trim()
+        : QuestClarificationService.descriptionWithoutAnsweredContext(
+            quest.description,
+          );
+    final visibleConditions = QuestClarificationType.values
+        .where(
+          (type) =>
+              conditions.containsKey(type) &&
+              (type != QuestClarificationType.deadline ||
+                  quest.targetDate == null),
+        )
+        .toList(growable: false);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (description.isNotEmpty)
+          Text(
+            description,
+            style: const TextStyle(
+              color: QuestraColors.parchment,
+              height: 1.45,
+            ),
+          ),
+        if (visibleConditions.isNotEmpty) ...[
+          if (description.isNotEmpty) const SizedBox(height: 10),
+          for (final type in visibleConditions)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Semantics(
+                label:
+                    '${type.displayLabel}、${conditions[type]!.value}、'
+                    '${conditions[type]!.source == QuestConditionSource.userConfirmed ? '本人確認済み' : 'Arcの仮説'}',
+                child: ExcludeSemantics(
+                  child: Text(
+                    '${type.displayLabel}  ${conditions[type]!.value}'
+                    '${conditions[type]!.source == QuestConditionSource.inferred ? '（Arcの仮説）' : ''}',
+                    style: const TextStyle(
+                      color: QuestraColors.parchment,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ],
     );
   }
 }
@@ -2695,12 +2582,7 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
                 message: '星雲が少し濃いみたい。今は手動でMissionを作る航路に切り替えられます。',
               ),
               const SizedBox(height: 8),
-              Text(
-                error,
-                style: const TextStyle(color: QuestraColors.slate),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+              Text(error, style: const TextStyle(color: QuestraColors.slate)),
             ] else
               Text(
                 widget.missions.isEmpty
@@ -3704,11 +3586,18 @@ Future<void> _applyRecoveryAction(
     return;
   }
   if (action == GentleRecoveryAction.reviewDeadline) {
-    await _reviewRoute(context, ref, quest, missions);
+    if (context.mounted) {
+      await context.push(AppRoutes.questRoute(quest.id));
+    }
     return;
   }
   final proposal = RouteChangeProposal(
     questId: quest.id,
+    provenance: const RouteProposalProvenance(
+      generator: RouteProposalGenerator.manual,
+      version: 'mission-pause-v1',
+      schemaVersion: 'route-proposal-v1',
+    ),
     reason: RouteProposalReason.stalled,
     summary: '今のペースを責めず、このMissionを一時停止します。',
     confidence: 0.9,
@@ -3727,7 +3616,7 @@ Future<void> _applyRecoveryAction(
       .read(routeReplanningControllerProvider.notifier)
       .registerProposal(proposal);
   if (!context.mounted) return;
-  await _reviewRoute(context, ref, quest, missions, existing: proposal);
+  await context.push(AppRoutes.questRoute(quest.id));
 }
 
 Future<void> _regenerateMission(
@@ -3836,12 +3725,16 @@ Future<void> _regenerateMissionWithIntent(
         .read(routeReplanningControllerProvider.notifier)
         .registerProposal(proposal);
     if (!context.mounted) return;
-    await _reviewRoute(context, ref, quest, missions, existing: proposal);
+    await context.push(AppRoutes.questRoute(quest.id));
   } catch (error) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Missionを描き直せませんでした: $error')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Missionを描き直せませんでした: ${error is StateError ? error.message : error}',
+        ),
+      ),
+    );
   }
 }
 

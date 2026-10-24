@@ -12,9 +12,16 @@ import '../../widgets/forms/questra_field_label.dart';
 import 'auth_journey_scaffold.dart';
 import 'auth_entry_switcher.dart';
 import 'auth_controller.dart';
+import 'auth_email_availability.dart';
+import 'auth_error_notice.dart';
+import 'auth_state.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
+
+  static String registrationNotice({required bool isConnected}) => isConnected
+      ? '確認メールを送りました。確認メールのリンクを開くと、そのままQuestraへ進めます。届かない場合は迷惑メールと宛先を確認し、「確認メールが届かない方」から再送してください。'
+      : 'アカウントを作成しました。登録したログインIDでログインしてください。';
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -36,14 +43,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
+    final emailAvailable = ref.watch(authEmailAvailableProvider);
 
     return AuthJourneyScaffold(
       eyebrow: 'ログイン',
       message: '保存したQuestの続きを、Arcと進めよう。',
+      mobileFormHeader: true,
       child: AutofillGroup(
         child: Form(
           key: _formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -52,8 +60,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onLogin: () {},
                 onSignup: () => context.go(AppRoutes.signup),
               ),
-              const SizedBox(height: AppSpacing.xl),
-              if (SupabaseConfig.isLocalMockPreview) ...[
+              const SizedBox(height: AppSpacing.lg),
+              if (SupabaseConfig.isLocalMockPreview && !emailAvailable) ...[
                 FilledButton.icon(
                   onPressed: auth.isLoading ? null : _openLocalMockPreview,
                   icon: const Icon(Icons.visibility_outlined),
@@ -61,7 +69,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  'アカウントでログイン',
+                  'プレビューで作成したアカウントでログイン',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.white.withValues(alpha: 0.7),
@@ -70,17 +78,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: AppSpacing.lg),
               ],
               if (auth.registrationCompleted)
-                const _AuthNotice(
-                  message: 'アカウントを作成しました。確認メールの案内後、登録したログインIDでログインしてください。',
+                _AuthNotice(
+                  message: LoginScreen.registrationNotice(
+                    isConnected: SupabaseConfig.isConfigured,
+                  ),
                 ),
               if (auth.passwordResetCompleted)
                 const _AuthNotice(message: 'パスワードを更新しました。新しいパスワードでログインしてください。'),
+              if (auth.passwordResetLockClearFailed)
+                const AuthErrorNotice(
+                  message: 'ログイン制限の解除を確認できませんでした。ログインできない場合は、少し待ってからお試しください。',
+                ),
               QuestraFieldLabel(
                 label: 'ログインIDまたはメールアドレス',
                 foregroundColor: AppColors.white,
                 required: true,
                 child: TextFormField(
                   controller: _identifierController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: _fieldDecoration(icon: Icons.badge_outlined),
                   style: const TextStyle(color: AppColors.white),
                   textCapitalization: TextCapitalization.none,
@@ -90,13 +105,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   validator: InputValidators.loginIdentifier,
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.md),
               QuestraFieldLabel(
                 label: 'パスワード',
                 foregroundColor: AppColors.white,
                 required: true,
                 child: TextFormField(
                   controller: _passwordController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: _fieldDecoration(
                     icon: Icons.lock_outline_rounded,
                     suffix: IconButton(
@@ -120,23 +136,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   validator: InputValidators.loginPassword,
                 ),
               ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: auth.isLoading
-                      ? null
-                      : () => context.go(AppRoutes.forgotPassword),
-                  child: const Text('パスワードを忘れた方'),
+              if (emailAvailable)
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: auth.isLoading
+                          ? null
+                          : () => context.go(AppRoutes.confirmEmailHelp),
+                      child: const Text('確認メールが届かない方'),
+                    ),
+                    TextButton(
+                      onPressed: auth.isLoading
+                          ? null
+                          : () => context.go(AppRoutes.forgotPassword),
+                      child: const Text('パスワードを忘れた方'),
+                    ),
+                  ],
                 ),
-              ),
-              if (auth.errorMessage != null) ...[
+              if (auth.errorMessage != null &&
+                  auth.errorContext != AuthErrorContext.signup &&
+                  auth.errorContext != AuthErrorContext.confirmation) ...[
                 const SizedBox(height: AppSpacing.md),
-                Text(
-                  auth.errorMessage!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+                AuthErrorNotice(message: auth.errorMessage!),
+                if (emailAvailable &&
+                    auth.errorContext == AuthErrorContext.login) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    '登録直後なら確認メールのリンクを開いてください。確認済みでもログインできない場合は、上の「パスワードを忘れた方」から再設定できます。',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.white.withValues(alpha: 0.82),
+                    ),
+                  ),
+                ],
               ],
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.sm),
               FilledButton.icon(
                 onPressed: auth.isLoading ? null : _submit,
                 icon: auth.isLoading

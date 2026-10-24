@@ -24,6 +24,9 @@ void main() {
   final verifier = File(
     'tools/qst/verify_clean_candidate_evidence.dart',
   ).absolute.path;
+  final sourceReader = File(
+    'tools/qst/read_candidate_source_commit.dart',
+  ).absolute.path;
   final temp = Directory.systemTemp.createTempSync('questra-git-gate-');
   var count = 0;
   try {
@@ -124,8 +127,61 @@ void main() {
         '--expected-sha=${'0' * 40}',
       ], workingDirectory: root.path);
       if (result.exitCode == 0 ||
-          !result.stderr.toString().contains('does not match current HEAD')) {
+          !result.stderr.toString().contains(
+            'not an ancestor with evidence-only commits',
+          )) {
         throw StateError('Gate accepted a stale SHA: ${result.stderr}');
+      }
+    });
+    scenario('source-manifest-and-evidence-descendant', (root, git) {
+      final head = Process.runSync('git', [
+        'rev-parse',
+        'HEAD',
+      ], workingDirectory: root.path).stdout.toString().trim();
+      Directory('${root.path}/docs/qst').createSync(recursive: true);
+      final manifest = File('${root.path}/docs/qst/BETA_CANDIDATE.yaml')
+        ..writeAsStringSync('version: 1\nsource_commit: "$head"\n');
+      if (candidateSourceCommit(manifestPath: manifest.path) != head) {
+        throw StateError('Candidate manifest source was not read.');
+      }
+      manifest.writeAsStringSync(
+        'version: 1\nsource_commit: "$head"\nsource_commit: "$head"\n',
+      );
+      try {
+        candidateSourceCommit(manifestPath: manifest.path);
+        throw StateError('Duplicate source commit was accepted.');
+      } on StateError catch (error) {
+        if (error.message == 'Duplicate source commit was accepted.') rethrow;
+      }
+      manifest.writeAsStringSync('version: 1\nsource_commit: "$head"\n');
+      git(['add', 'docs/qst/BETA_CANDIDATE.yaml']);
+      git(['commit', '-qm', 'evidence only']);
+      if (!candidateSourceHasOnlyEvidenceCommits(
+        head,
+        workingDirectory: root.path,
+      )) {
+        throw StateError('Evidence-only descendant must pass.');
+      }
+      final accepted = Process.runSync(Platform.resolvedExecutable, [
+        sourceReader,
+      ], workingDirectory: root.path);
+      if (accepted.exitCode != 0 || accepted.stdout.toString().trim() != head) {
+        throw StateError('Candidate reader rejected evidence-only commit.');
+      }
+      File('${root.path}/runtime.dart').writeAsStringSync('changed\n');
+      git(['add', 'runtime.dart']);
+      git(['commit', '-qm', 'runtime change']);
+      if (candidateSourceHasOnlyEvidenceCommits(
+        head,
+        workingDirectory: root.path,
+      )) {
+        throw StateError('Runtime descendant was accepted.');
+      }
+      final rejected = Process.runSync(Platform.resolvedExecutable, [
+        sourceReader,
+      ], workingDirectory: root.path);
+      if (rejected.exitCode == 0) {
+        throw StateError('Candidate reader accepted runtime descendant.');
       }
     });
   } finally {

@@ -1,4 +1,6 @@
 import { generateAiText } from "../_shared/ai_provider.ts";
+import { authenticatedAiUser } from "../_shared/ai_auth.ts";
+import { aiLegalFailureResponse } from "../_shared/ai_legal_http.ts";
 import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
 
 const guideTypes = [
@@ -16,14 +18,19 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, { status: 405 });
   }
+  const userId = await authenticatedAiUser(req);
+  if (!userId) return jsonResponse({ error: "authentication_required" }, { status: 401 });
   const payload = await readJson<{ quest?: Record<string, unknown> }>(req);
   if (!payload) {
     return jsonResponse({ error: "Invalid JSON body" }, { status: 400 });
   }
+  const legalFailure = await aiLegalFailureResponse(userId);
+  if (legalFailure) return legalFailure;
 
   try {
     const result = await generateAiText({
       feature: "quest_guides",
+      userId,
       promptVersion: "quest_guides_v1",
       systemInstruction:
         "You are Arc, Questra's gentle star navigator. Return only compact Japanese JSON. Keep each guide practical, warm, and distinct. Never describe Arc as an assistant.",

@@ -80,7 +80,7 @@ class GuildDiscoveryDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              '取り入れる前に内容を確認し、Arcの最適化を選べるようになります。',
+              '取り込む内容を確認してから、自分だけのQuestとして保存します。',
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,

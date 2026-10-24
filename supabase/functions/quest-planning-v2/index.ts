@@ -3,6 +3,7 @@ import { revalidateApprovedMissionPlan, runQuestPlanningPipeline, runTaskExpansi
 import { validateRouteMissionPlan } from "../_shared/quest_planning/validators.ts";
 import { deterministicSafetyAssessment } from "../_shared/safety_guard.ts";
 import { buildExistingRouteContext } from "../_shared/quest_planning/existing_route_context.ts";
+import { aiLegalFailureResponse } from "../_shared/ai_legal_http.ts";
 
 type RequestBody = {
   mode?: "plan" | "approve" | "expand_tasks";
@@ -42,6 +43,8 @@ Deno.serve(async (req) => {
   const safety = deterministicSafetyAssessment(wish);
   if (safety) return jsonResponse({ error: "unsafe_intent", safety }, { status: 422 });
   if (!await ownsQuest(auth, userId, questId)) return jsonResponse({ error: "quest_not_found" }, { status: 404 });
+  const legalFailure = await aiLegalFailureResponse(userId);
+  if (legalFailure) return legalFailure;
   const existingRoute = await loadExistingRouteContext(auth, questId);
   if (!existingRoute) {
     return jsonResponse({ error: "planning_context_unavailable" }, { status: 503 });
@@ -87,6 +90,8 @@ async function expandTasks(
   if (!await ownsQuest(auth, userId, questId)) {
     return jsonResponse({ error: "quest_not_found" }, { status: 404 });
   }
+  const legalFailure = await aiLegalFailureResponse(userId);
+  if (legalFailure) return legalFailure;
   const [questResponse, missionResponse, taskResponse] = await Promise.all([
     userFetch(auth, `/rest/v1/quests?id=eq.${questId}&select=id,title,description,target_date&limit=1`),
     userFetch(auth, `/rest/v1/missions?id=eq.${missionId}&quest_id=eq.${questId}&select=id,title,description,objective,success_condition,expected_outcome,done_condition,expected_output,action&limit=1`),

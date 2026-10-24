@@ -9,12 +9,14 @@ class GuildDiscoveryRankingService {
     required Iterable<GuildDiscoveryQuest> candidates,
     GuildDiscoveryProfile profile = const GuildDiscoveryProfile(),
     GuildDiscoverySection section = GuildDiscoverySection.recommended,
+    String query = '',
     DateTime? now,
     int limit = 20,
   }) {
     if (limit <= 0) return const <GuildDiscoveryResult>[];
 
     final evaluatedAt = now ?? DateTime.now();
+    final normalizedQuery = _normalize(query);
     final normalizedPreferences = profile.preferredTags
         .map(_normalize)
         .where((tag) => tag.isNotEmpty)
@@ -23,6 +25,13 @@ class GuildDiscoveryRankingService {
     final results =
         candidates
             .where((quest) => quest.canAppearInDiscovery)
+            .where(
+              (quest) =>
+                  normalizedQuery.isEmpty ||
+                  _normalize(
+                    '${quest.title} ${quest.summary} ${quest.tags.join(' ')}',
+                  ).contains(normalizedQuery),
+            )
             .where(
               (quest) =>
                   section != GuildDiscoverySection.seekingCompanions ||
@@ -69,8 +78,6 @@ class GuildDiscoveryRankingService {
                   recency * 0.35 + usefulness * 0.35 + boundedPopularity * 0.30,
                 GuildDiscoverySection.seekingCompanions =>
                   relevance * 0.40 + recency * 0.25 + usefulness * 0.35,
-                GuildDiscoverySection.missionLibrary =>
-                  relevance * 0.50 + usefulness * 0.35 + recency * 0.15,
                 GuildDiscoverySection.recommended =>
                   relevance * 0.50 +
                       usefulness * 0.25 +

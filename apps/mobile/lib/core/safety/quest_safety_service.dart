@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
+import 'ai_legal_failure.dart';
 import '../config/supabase_config.dart';
 
 enum QuestSafetyCategory {
@@ -28,16 +29,55 @@ class QuestSafetyAssessment {
     this.safeAlternative,
   });
 
-  const QuestSafetyAssessment.allowed({
-    this.sourceType = 'local_safety',
-  })  : action = QuestSafetyAction.allow,
-        category = QuestSafetyCategory.safe,
-        severity = 0,
-        confidence = 1,
-        reasonCode = 'safe',
-        userMessage = '',
-        policyVersion = '2026-07-24.v1',
-        safeAlternative = null;
+  const QuestSafetyAssessment.allowed({this.sourceType = 'local_safety'})
+    : action = QuestSafetyAction.allow,
+      category = QuestSafetyCategory.safe,
+      severity = 0,
+      confidence = 1,
+      reasonCode = 'safe',
+      userMessage = '',
+      policyVersion = '2026-07-24.v1',
+      safeAlternative = null;
+
+  const QuestSafetyAssessment.unavailable()
+    : action = QuestSafetyAction.block,
+      category = QuestSafetyCategory.other,
+      severity = 0,
+      confidence = 0,
+      reasonCode = 'safety_check_unavailable',
+      userMessage = '安全性を確認できませんでした。入力内容は残っています。通信状態を確認して、もう一度お試しください。',
+      policyVersion = '2026-07-24.v1',
+      sourceType = 'safety_unavailable',
+      safeAlternative = 'もう一度試す';
+
+  factory QuestSafetyAssessment.fromRemoteData(Map<String, dynamic> data) {
+    if (data['source_type'] == 'safety_fallback' ||
+        (data['action'] == 'allow' &&
+            data['source_type'] != 'gemini_interactions' &&
+            data['source_type'] != 'deterministic_safety')) {
+      return const QuestSafetyAssessment.unavailable();
+    }
+    final action = QuestSafetyAction.values.firstWhere(
+      (value) => value.name == data['action'],
+      orElse: () => QuestSafetyAction.block,
+    );
+    final category = QuestSafetyCategory.values.firstWhere(
+      (value) => value.name == data['category'],
+      orElse: () => QuestSafetyCategory.other,
+    );
+    return QuestSafetyAssessment(
+      action: action,
+      category: category,
+      severity: (data['severity'] as num?)?.round().clamp(0, 4) ?? 3,
+      confidence: (data['confidence'] as num?)?.toDouble().clamp(0, 1) ?? 0,
+      reasonCode: data['reason_code'] as String? ?? 'provider_invalid',
+      userMessage:
+          data['user_message'] as String? ?? '安全を確認できなかったため、今はこの航路を作れないよ。',
+      policyVersion: data['policy_version'] as String? ?? '2026-07-24.v1',
+      sourceType: data['source_type'] as String? ?? 'remote_safety',
+      safeAlternative: data['safe_alternative'] as String?,
+    );
+  }
 
   final QuestSafetyAction action;
   final QuestSafetyCategory category;
@@ -161,32 +201,12 @@ class SupabaseQuestSafetyService implements QuestSafetyService {
         'moderate-quest-intent',
         body: {'input': input.trim()},
       );
-      return _fromData(Map<String, dynamic>.from(response.data as Map));
-    } catch (_) {
-      return local;
+      return QuestSafetyAssessment.fromRemoteData(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+    } catch (error) {
+      if (aiLegalFailureMessage(error) != null) rethrow;
+      return const QuestSafetyAssessment.unavailable();
     }
-  }
-
-  QuestSafetyAssessment _fromData(Map<String, dynamic> data) {
-    final action = QuestSafetyAction.values.firstWhere(
-      (value) => value.name == data['action'],
-      orElse: () => QuestSafetyAction.block,
-    );
-    final category = QuestSafetyCategory.values.firstWhere(
-      (value) => value.name == data['category'],
-      orElse: () => QuestSafetyCategory.other,
-    );
-    return QuestSafetyAssessment(
-      action: action,
-      category: category,
-      severity: (data['severity'] as num?)?.round().clamp(0, 4) ?? 3,
-      confidence: (data['confidence'] as num?)?.toDouble().clamp(0, 1) ?? 0,
-      reasonCode: data['reason_code'] as String? ?? 'provider_invalid',
-      userMessage:
-          data['user_message'] as String? ?? '安全を確認できなかったため、今はこの航路を作れないよ。',
-      policyVersion: data['policy_version'] as String? ?? '2026-07-24.v1',
-      sourceType: data['source_type'] as String? ?? 'remote_safety',
-      safeAlternative: data['safe_alternative'] as String?,
-    );
   }
 }

@@ -1,4 +1,6 @@
 import { generateAiText } from "../_shared/ai_provider.ts";
+import { authenticatedAiUser } from "../_shared/ai_auth.ts";
+import { aiLegalFailureResponse } from "../_shared/ai_legal_http.ts";
 import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
 
 Deno.serve(async (req) => {
@@ -7,6 +9,8 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, { status: 405 });
   }
+  const userId = await authenticatedAiUser(req);
+  if (!userId) return jsonResponse({ error: "authentication_required" }, { status: 401 });
   const payload = await readJson<{
     quest?: Record<string, unknown>;
     guide?: Record<string, unknown>;
@@ -14,11 +18,14 @@ Deno.serve(async (req) => {
   if (!payload) {
     return jsonResponse({ error: "Invalid JSON body" }, { status: 400 });
   }
+  const legalFailure = await aiLegalFailureResponse(userId);
+  if (legalFailure) return legalFailure;
 
   const guideType = text(payload.guide?.guide_type, "route");
   try {
     const result = await generateAiText({
       feature: "mission_generation",
+      userId,
       promptVersion: "mission_generation_v1",
       systemInstruction:
         "You are Arc, Questra's gentle star navigator. Return only compact Japanese JSON. Suggest a safe, concrete Mission that takes 5 to 30 minutes.",

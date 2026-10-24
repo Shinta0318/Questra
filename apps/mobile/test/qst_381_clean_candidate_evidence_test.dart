@@ -35,7 +35,12 @@ void main() {
       expect(verifier, contains('nonEvidenceChanges'));
       expect(verifier, contains('candidate_source_commit'));
       expect(verifier, contains('candidate_sha'));
-      expect(verifier, contains('Candidate artifact checksum is missing'));
+      expect(
+        verifier,
+        contains(
+          'Candidate Web and Android artifact checksums do not match files.',
+        ),
+      );
       expect(verifier, contains("aiReport['passed'] != true"));
     },
   );
@@ -60,7 +65,7 @@ void main() {
     );
   });
 
-  test('only a distributable GO decision must bind current HEAD', () {
+  test('only a distributable GO decision must bind the verified source', () {
     final verifier = File(
       '${repo.path}/tools/qst/verify_external_beta_go_no_go.dart',
     ).readAsStringSync();
@@ -69,7 +74,10 @@ void main() {
       contains('Candidate source commit is missing or invalid.'),
     );
     expect(verifier, contains('decision.distributionReady'));
-    expect(verifier, contains('A GO decision must be bound to current HEAD.'));
+    expect(
+      verifier,
+      contains('A GO decision must be bound to the verified candidate source.'),
+    );
     expect(verifier, contains('externalBetaGateBlock(content, gate.id)'));
     expect(
       verifier,

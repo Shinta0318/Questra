@@ -1,5 +1,6 @@
 import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
 import { executeQuestraTool } from "../_shared/quest_planning/tool_server.ts";
+import { aiLegalFailureResponse } from "../_shared/ai_legal_http.ts";
 
 Deno.serve(async (req) => {
   const preflight = preflightResponse(req);
@@ -12,6 +13,8 @@ Deno.serve(async (req) => {
   if (!payload || typeof payload.tool !== "string" || !isRecord(payload.arguments)) {
     return jsonResponse({ error: "invalid_tool_request" }, { status: 400 });
   }
+  const legalFailure = await aiLegalFailureResponse(userId);
+  if (legalFailure) return legalFailure;
   const result = await executeQuestraTool(payload.tool, payload.arguments, {
     userId,
     traceId: uuid(payload.trace_id) ?? crypto.randomUUID(),

@@ -37,6 +37,17 @@ if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect the working tree.' }
 if ($workingTreeStatus) {
   throw 'Hosted evidence must start from a clean candidate working tree.'
 }
+$probeUserJwt = $null
+if ($Apply) {
+  if (-not $env:SUPABASE_ANON_KEY -or -not $env:SUPABASE_USER_JWT) {
+    throw 'Hosted AI auth verification requires SUPABASE_ANON_KEY and a temporary SUPABASE_USER_JWT in the process environment.'
+  }
+  if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    throw 'Hosted AI auth verification requires Node.js.'
+  }
+  $probeUserJwt = $env:SUPABASE_USER_JWT
+  Remove-Item Env:SUPABASE_USER_JWT
+}
 
 dart run tools/qst/verify_hosted_evidence_runner_v2.dart
 if ($LASTEXITCODE -ne 0) { throw 'Hosted evidence V2 preflight failed.' }
@@ -59,6 +70,19 @@ if ($LASTEXITCODE -ne 0) { throw 'Supabase bootstrap failed.' }
 if (-not $Apply) {
   Write-Host 'Hosted evidence preflight passed. Re-run with -Apply to deploy and test.'
   exit 0
+}
+
+$env:SUPABASE_URL = "https://$ProjectRef.supabase.co"
+$env:SUPABASE_USER_JWT = $probeUserJwt
+try {
+  node tools/qst/verify_hosted_ai_auth_boundary.mjs
+  $aiAuthProbeExit = $LASTEXITCODE
+} finally {
+  Remove-Item Env:SUPABASE_USER_JWT -ErrorAction SilentlyContinue
+  $probeUserJwt = $null
+}
+if ($aiAuthProbeExit -ne 0) {
+  throw 'Hosted AI user boundary failed. Do not mark this deployment verified.'
 }
 
 & "$PSScriptRoot/capture_cloud_rls_evidence.ps1" `
@@ -97,6 +121,7 @@ $lines = @(
   "latest_migration: $(Quote-Yaml $latestMigration.Name)",
   'gates:',
   '  migrations_and_functions: passed',
+  '  ai_user_boundary: passed',
   '  rls_behavior: passed',
   '  dual_account_journey: passed',
   '  data_export_owner_scope: passed',

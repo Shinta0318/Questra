@@ -10,6 +10,7 @@ class TaskMutationBanner extends StatelessWidget {
     required this.onRetry,
     required this.onDiscard,
     required this.onDismiss,
+    required this.onRefreshConflict,
     super.key,
   });
 
@@ -17,6 +18,7 @@ class TaskMutationBanner extends StatelessWidget {
   final Future<void> Function() onRetry;
   final Future<void> Function() onDiscard;
   final VoidCallback onDismiss;
+  final Future<bool> Function() onRefreshConflict;
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +28,10 @@ class TaskMutationBanner extends StatelessWidget {
     final failed = state.canRetry;
     final saving = state.status == TaskMutationStatus.saving;
     final conflict = state.status == TaskMutationStatus.conflict;
+    final cleanup = state.canCleanup;
     final color = failed
         ? Colors.redAccent
-        : conflict
+        : conflict || cleanup
         ? Colors.orangeAccent
         : AppColors.cosmicBlue;
     return Container(
@@ -50,7 +53,7 @@ class TaskMutationBanner extends StatelessWidget {
             Icon(
               failed
                   ? Icons.cloud_off_outlined
-                  : conflict
+                  : conflict || cleanup
                   ? Icons.warning_amber_rounded
                   : Icons.check_circle_outline,
               color: color,
@@ -64,16 +67,23 @@ class TaskMutationBanner extends StatelessWidget {
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
           ),
-          if (state.canRetry) ...[
+          if (state.needsConflictRefresh)
             IconButton(
-              onPressed: onDiscard,
-              icon: const Icon(Icons.delete_outline),
-              tooltip: '未送信の変更を破棄',
-            ),
+              onPressed: () => onRefreshConflict(),
+              icon: const Icon(Icons.refresh),
+              tooltip: '最新のTaskを再読み込み',
+            )
+          else if (state.canRetry || cleanup) ...[
+            if (state.canRetry)
+              IconButton(
+                onPressed: onDiscard,
+                icon: const Icon(Icons.delete_outline),
+                tooltip: '未送信の変更を破棄',
+              ),
             TextButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('再試行'),
+              label: Text(cleanup ? '整理する' : '再試行'),
             ),
           ] else if (!saving)
             IconButton(

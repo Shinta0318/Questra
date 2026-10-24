@@ -47,7 +47,7 @@ Future<void> main(List<String> arguments) async {
         regression['candidate_source_commit'] !=
             human['candidate_source_commit']) {
       throw StateError(
-        'Automated provider release gate did not pass for current HEAD.',
+        'Automated provider release gate did not pass for the candidate source.',
       );
     }
     // Recheck the files after the subprocess; never bind the review to newer

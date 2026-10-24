@@ -264,6 +264,13 @@ export async function failAiToolContinuationAttribution(
 }
 
 function budgetOperation(operation: string) {
+  if (
+    operation === "arc_chat" || operation === "arc_advice" ||
+    operation === "arc_grounded_search" ||
+    operation === "quest_intent_moderation"
+  ) return "arc_consultation";
+  if (operation === "mission_research") return "detailed_progress_review";
+  if (operation.includes("mission_generation")) return "basic_mission_planning";
   if (operation.includes("task_generation")) return "basic_mission_planning";
   if (operation.includes("repair")) return "mission_redesign";
   if (operation.includes("critic") || operation.includes("coverage")) {
@@ -428,6 +435,7 @@ function bytesToHex(bytes: Uint8Array) {
 export function verifiedGroundingQueryCount(metadata: unknown): number | null {
   if (metadata === null || metadata === undefined) return 0;
   if (!isRecord(metadata) || !Array.isArray(metadata.queries)) return null;
+  if (metadata.queryAttributionComplete === false) return null;
   if (metadata.queries.some((value) => typeof value !== "string")) return null;
   const queries = metadata.queries
     .filter((value): value is string => typeof value === "string")

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const manifestPath = 'docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml';
 const noticePath = 'docs/legal/THIRD_PARTY_NOTICES.md';
 const registryPath = 'tools/qst/server_dependency_registry.json';
@@ -98,12 +100,10 @@ Future<void> main(List<String> arguments) async {
     _fail('Dependency evidence has no valid source commit.');
   }
   if (requireRelease) {
-    final head = (await Process.run('git', [
-      'rev-parse',
-      'HEAD',
-    ])).stdout.toString().trim();
-    if (candidateSourceCommit != head) {
-      _fail('Release dependency evidence is not bound to current HEAD.');
+    if (!candidateSourceHasOnlyEvidenceCommits(candidateSourceCommit)) {
+      _fail(
+        'Release dependency evidence is not bound to an unchanged candidate source.',
+      );
     }
     for (final required in [
       'status: approved',

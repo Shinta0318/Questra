@@ -8,6 +8,8 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/validation/input_validators.dart';
 import '../../widgets/forms/questra_field_label.dart';
 import 'auth_controller.dart';
+import 'auth_email_availability.dart';
+import 'auth_error_notice.dart';
 import 'auth_journey_scaffold.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -31,12 +33,30 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
+    final emailAvailable = ref.watch(authEmailAvailableProvider);
 
     return AuthJourneyScaffold(
       eyebrow: 'ログインできない方へ',
       title: 'パスワードを再設定',
-      message: '登録したメールアドレスが必要です。再設定用のリンクを送ります。',
-      child: auth.passwordResetRequested
+      message: emailAvailable
+          ? '登録したメールアドレスが必要です。再設定用のリンクを送ります。'
+          : 'このオフラインモックではメールを送信できません。',
+      child: !emailAvailable
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'パスワード再設定はSupabaseに接続した画面で利用できます。',
+                  style: TextStyle(color: AppColors.white),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                TextButton(
+                  onPressed: () => context.go(AppRoutes.login),
+                  child: const Text('ログインへ戻る'),
+                ),
+              ],
+            )
+          : auth.passwordResetRequested
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -75,7 +95,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     child: TextFormField(
                       controller: _emailController,
                       decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.mail_outline_rounded),
+                        prefixIcon: Icon(
+                          Icons.mail_outline_rounded,
+                          color: AppColors.skyBlue,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.midnightNavy,
                       ),
                       style: const TextStyle(color: AppColors.white),
                       keyboardType: TextInputType.emailAddress,
@@ -87,14 +112,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           auth.isLoading ? null : _submit(),
                     ),
                   ),
-                  if (auth.errorMessage != null) ...[
+                  if (auth.errorMessage != null &&
+                      auth.errorContext == null) ...[
                     const SizedBox(height: AppSpacing.md),
-                    Text(
-                      auth.errorMessage!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
+                    AuthErrorNotice(message: auth.errorMessage!),
                   ],
                   const SizedBox(height: AppSpacing.xl),
                   FilledButton.icon(

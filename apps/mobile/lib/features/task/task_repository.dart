@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
+import 'package:uuid/uuid.dart';
 
 import '../../core/performance/performance_limits.dart';
 import 'task_model.dart';
@@ -17,8 +20,21 @@ abstract interface class TaskRepository {
     int limit = QuestraPerformanceLimits.taskPerMissionListLimit,
   });
   Future<QuestraTask> save(QuestraTask task);
+  Future<QuestraTask> updateWithVersion(
+    QuestraTask task, {
+    required String operationId,
+  });
   Future<List<QuestraTask>> saveAll(List<QuestraTask> tasks);
+  Future<List<QuestraTask>> replaceQuestTasks(
+    String questId,
+    List<QuestraTask> expectedCurrent,
+    List<QuestraTask> snapshot,
+  );
   Future<QuestraTask> completeAtomically(
+    QuestraTask task, {
+    required String operationId,
+  });
+  Future<QuestraTask> reopenAtomically(
     QuestraTask task, {
     required String operationId,
   });
@@ -66,12 +82,54 @@ class InMemoryTaskRepository implements TaskRepository {
   }
 
   @override
+  Future<QuestraTask> updateWithVersion(
+    QuestraTask task, {
+    required String operationId,
+  }) async {
+    final current = _tasks.where((item) => item.id == task.id).firstOrNull;
+    if (current == null || current.version != task.version) {
+      throw const TaskVersionConflictException();
+    }
+    return save(task.copyWith(version: task.version + 1));
+  }
+
+  @override
   Future<List<QuestraTask>> saveAll(List<QuestraTask> tasks) async {
     for (final task in tasks) {
       _tasks.removeWhere((item) => item.id == task.id);
       _tasks.add(task);
     }
     return List.unmodifiable(tasks);
+  }
+
+  @override
+  Future<List<QuestraTask>> replaceQuestTasks(
+    String questId,
+    List<QuestraTask> expectedCurrent,
+    List<QuestraTask> snapshot,
+  ) async {
+    final current = _tasks.where((task) => task.questId == questId).toList();
+    final expected = {
+      for (final task in expectedCurrent) task.id: task.version,
+    };
+    if (current.length != expected.length ||
+        current.any((task) => expected[task.id] != task.version) ||
+        snapshot.any(
+          (task) =>
+              task.questId != questId ||
+              !expected.containsKey(task.id) ||
+              task.missionId !=
+                  current.where((item) => item.id == task.id).first.missionId,
+        )) {
+      throw const TaskVersionConflictException();
+    }
+    final saved = [
+      for (final task in snapshot)
+        task.copyWith(version: expected[task.id]! + 1),
+    ];
+    _tasks.removeWhere((task) => task.questId == questId);
+    _tasks.addAll(saved);
+    return List.unmodifiable(saved);
   }
 
   @override
@@ -85,6 +143,35 @@ class InMemoryTaskRepository implements TaskRepository {
       version: task.version + 1,
     ),
   );
+
+  @override
+  Future<QuestraTask> reopenAtomically(
+    QuestraTask task, {
+    required String operationId,
+  }) async {
+    final current = _tasks.where((item) => item.id == task.id).firstOrNull;
+    if (current == null ||
+        current.version != task.version ||
+        current.status != TaskStatus.completed ||
+        _tasks.any(
+          (item) =>
+              item.missionId == task.missionId &&
+              item.dependencyIds.contains(task.id) &&
+              {
+                TaskStatus.inProgress,
+                TaskStatus.completed,
+              }.contains(item.status),
+        )) {
+      throw const TaskVersionConflictException();
+    }
+    return save(
+      task.copyWith(
+        status: TaskStatus.pending,
+        clearCompletedAt: true,
+        version: task.version + 1,
+      ),
+    );
+  }
 
   @override
   Future<List<QuestraTask>> reorderMissionTasks(
@@ -147,21 +234,82 @@ class SupabaseTaskRepository implements TaskRepository {
   }
 
   @override
+  Future<QuestraTask> updateWithVersion(
+    QuestraTask task, {
+    required String operationId,
+  }) async {
+    final ownerId = client.auth.currentUser?.id;
+    if (ownerId == null) throw StateError('Taskの保存にはログインが必要です。');
+    final payload = Map<String, Object?>.from(_toRow(task, ownerId))
+      ..remove('updated_at');
+    final response = await client.rpc(
+      'update_task_if_version',
+      params: {
+        'p_task_id': task.id,
+        'p_expected_version': task.version,
+        'p_operation_id': operationId,
+        'p_payload': payload,
+      },
+    );
+    return confirmVersionedTaskUpdate(task, response);
+  }
+
+  @override
   Future<List<QuestraTask>> saveAll(List<QuestraTask> tasks) async {
     if (tasks.isEmpty) return const [];
     final ownerId = client.auth.currentUser?.id;
     if (ownerId == null) throw StateError('Taskの保存にはログインが必要です。');
-    final rows = await client
-        .from('tasks')
-        .upsert(tasks.map((task) => _toRow(task, ownerId)).toList())
-        .select(_taskColumns)
-        .limit(tasks.length);
-    if (rows.length != tasks.length) {
-      throw StateError('Taskをすべて保存できませんでした。');
+    if (tasks.map((task) => task.id).toSet().length != tasks.length) {
+      throw ArgumentError('同じTaskを一括保存できません。');
     }
-    return rows
-        .map((row) => _fromRow(Map<String, dynamic>.from(row)))
-        .toList(growable: false);
+    return _applyBatch(tasks: tasks, ownerId: ownerId);
+  }
+
+  @override
+  Future<List<QuestraTask>> replaceQuestTasks(
+    String questId,
+    List<QuestraTask> expectedCurrent,
+    List<QuestraTask> snapshot,
+  ) => throw UnsupportedError('保存済みの航路は承認済みの航路RPCから復旧してください。');
+
+  Future<List<QuestraTask>> _applyBatch({
+    required List<QuestraTask> tasks,
+    required String ownerId,
+  }) async {
+    final rows = [
+      for (final task in tasks)
+        Map<String, Object?>.from(_toRow(task, ownerId))..remove('updated_at'),
+    ];
+    final operationId =
+        'task-create:${const Uuid().v5(Namespace.url.value, jsonEncode(rows))}';
+    final response = await client.rpc(
+      'create_tasks_if_absent',
+      params: {'p_operation_id': operationId, 'p_tasks': rows},
+    );
+    final result = response is Map
+        ? Map<String, dynamic>.from(response)
+        : const <String, dynamic>{};
+    if (result['status'] == 'conflict') {
+      throw const TaskVersionConflictException();
+    }
+    if (result['status'] != 'applied' &&
+        result['status'] != 'already_applied') {
+      throw StateError('Taskの保存結果を確認できませんでした。');
+    }
+    if (tasks.isEmpty) return const [];
+    final loaded = await client
+        .from('tasks')
+        .select(_taskColumns)
+        .inFilter('id', tasks.map((task) => task.id).toList())
+        .limit(tasks.length);
+    if (loaded.length != tasks.length) {
+      throw StateError('保存したTaskを再確認できませんでした。');
+    }
+    final byId = {
+      for (final row in loaded)
+        row['id'] as String: _fromRow(Map<String, dynamic>.from(row)),
+    };
+    return [for (final task in tasks) byId[task.id]!];
   }
 
   @override
@@ -177,20 +325,23 @@ class SupabaseTaskRepository implements TaskRepository {
         'p_expected_version': task.version,
       },
     );
-    final payload = response is Map
-        ? Map<String, dynamic>.from(response)
-        : const <String, dynamic>{};
-    if (payload['status'] != 'completed') {
-      throw StateError('Taskを完了できませんでした。');
-    }
-    return task.copyWith(
-      status: TaskStatus.completed,
-      completedAt:
-          DateTime.tryParse(payload['completed_at'] as String? ?? '') ??
-          task.completedAt ??
-          DateTime.now(),
-      version: payload['version'] as int? ?? task.version + 1,
+    return confirmTaskCompletion(task, response);
+  }
+
+  @override
+  Future<QuestraTask> reopenAtomically(
+    QuestraTask task, {
+    required String operationId,
+  }) async {
+    final response = await client.rpc(
+      'reopen_task_journey',
+      params: {
+        'p_task_id': task.id,
+        'p_operation_id': operationId,
+        'p_expected_version': task.version,
+      },
     );
+    return confirmTaskReopen(task, response);
   }
 
   @override
@@ -205,26 +356,46 @@ class SupabaseTaskRepository implements TaskRepository {
         'p_mission_id': missionId,
         'p_task_ids': ordered.map((task) => task.id).toList(growable: false),
         'p_operation_id': operationId,
+        'p_expected_versions': {
+          for (final task in ordered) task.id: task.version,
+        },
       },
     );
     final payload = response is Map
         ? Map<String, dynamic>.from(response)
         : const <String, dynamic>{};
-    if (payload['updated_count'] != ordered.length) {
+    if (payload['status'] == 'conflict') {
+      throw const TaskVersionConflictException();
+    }
+    if ((payload['status'] != 'applied' &&
+            payload['status'] != 'already_applied') ||
+        payload['updated_count'] != ordered.length) {
       throw StateError('Taskの並び順を保存できませんでした。');
     }
-    return [
-      for (var index = 0; index < ordered.length; index++)
-        ordered[index].copyWith(
-          orderIndex: index,
-          version: ordered[index].version + 1,
-        ),
+    final rows = await client
+        .from('tasks')
+        .select(_taskColumns)
+        .eq('mission_id', missionId)
+        .order('order_index');
+    if (rows.length != ordered.length) {
+      throw const TaskVersionConflictException();
+    }
+    final saved = [
+      for (final row in rows) _fromRow(Map<String, dynamic>.from(row)),
     ];
+    for (var index = 0; index < ordered.length; index++) {
+      if (saved[index].id != ordered[index].id ||
+          saved[index].orderIndex != index ||
+          saved[index].version != ordered[index].version + 1) {
+        throw const TaskVersionConflictException();
+      }
+    }
+    return saved;
   }
 
   @override
   Future<void> delete(String taskId) async =>
-      client.from('tasks').delete().eq('id', taskId);
+      throw UnsupportedError('Taskの削除は承認済みの航路復旧処理から行ってください。');
 
   QuestraTask _fromRow(Map<String, dynamic> row) {
     final mission = row['missions'] is Map
@@ -305,4 +476,81 @@ class SupabaseTaskRepository implements TaskRepository {
   String? _date(DateTime? value) => value?.toIso8601String().split('T').first;
   DateTime? _parseDate(Object? value) =>
       value is String ? DateTime.tryParse(value) : null;
+}
+
+class TaskVersionConflictException implements Exception {
+  const TaskVersionConflictException();
+
+  @override
+  String toString() => 'Taskが別の端末で更新されました。最新の内容を確認してください。';
+}
+
+QuestraTask confirmVersionedTaskUpdate(QuestraTask task, Object? response) {
+  final result = response is Map
+      ? Map<String, dynamic>.from(response)
+      : const <String, dynamic>{};
+  if (result['status'] == 'conflict') {
+    throw const TaskVersionConflictException();
+  }
+  if (result['status'] != 'applied' && result['status'] != 'already_applied') {
+    throw StateError('Taskの保存結果を確認できませんでした。');
+  }
+  final version = result['version'];
+  if (version is! int) {
+    throw StateError('Taskの保存結果を確認できませんでした。');
+  }
+  if (version != task.version + 1) {
+    throw const TaskVersionConflictException();
+  }
+  return task.copyWith(version: version);
+}
+
+QuestraTask confirmTaskCompletion(QuestraTask task, Object? response) {
+  final result = response is Map
+      ? Map<String, dynamic>.from(response)
+      : const <String, dynamic>{};
+  if (result['status'] == 'conflict') {
+    throw const TaskVersionConflictException();
+  }
+  if (result['status'] != 'completed' || result['task_id'] != task.id) {
+    throw StateError('Taskの完了結果を確認できませんでした。');
+  }
+  final version = result['version'];
+  final completedAt = DateTime.tryParse(
+    result['completed_at'] as String? ?? '',
+  );
+  if (version is! int || completedAt == null) {
+    throw StateError('Taskの完了結果を確認できませんでした。');
+  }
+  if (version != task.version + 1) {
+    throw const TaskVersionConflictException();
+  }
+  return task.copyWith(
+    status: TaskStatus.completed,
+    completedAt: completedAt,
+    version: version,
+  );
+}
+
+QuestraTask confirmTaskReopen(QuestraTask task, Object? response) {
+  final result = response is Map
+      ? Map<String, dynamic>.from(response)
+      : const <String, dynamic>{};
+  if (result['status'] == 'conflict') {
+    throw const TaskVersionConflictException();
+  }
+  if ((result['status'] != 'reopened' &&
+          result['status'] != 'already_applied') ||
+      result['task_id'] != task.id ||
+      result['completed_at'] != null) {
+    throw StateError('Taskの再開結果を確認できませんでした。');
+  }
+  if (result['version'] != task.version + 1) {
+    throw const TaskVersionConflictException();
+  }
+  return task.copyWith(
+    status: TaskStatus.pending,
+    clearCompletedAt: true,
+    version: result['version'] as int,
+  );
 }

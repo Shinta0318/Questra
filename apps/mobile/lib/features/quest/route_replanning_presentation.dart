@@ -1,5 +1,14 @@
 import 'route_replanning_model.dart';
 
+String routeProposalSourceLabel(RouteChangeProposal proposal) =>
+    switch (proposal.provenance.generator) {
+      RouteProposalGenerator.rules => '進捗に基づく航路提案',
+      RouteProposalGenerator.gemini => 'ArcがAIと考えた航路提案',
+      RouteProposalGenerator.manual => 'あなたの操作に基づく航路提案',
+      RouteProposalGenerator.otherProvider => 'ArcがAIと考えた航路提案',
+      RouteProposalGenerator.legacyUnknown => '生成元を確認できない航路提案',
+    };
+
 String routeChangeTargetLabel(RouteChangeItem item) {
   if (item.targetTaskId != null) return 'Task';
   if (item.targetMissionId != null) return 'Mission';

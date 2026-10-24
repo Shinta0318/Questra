@@ -75,9 +75,23 @@ Future<void> main(List<String> arguments) async {
     for (final name in automatedGateNames) name: 'not_run',
     ...options.checks,
   };
-  final hasArtifact = artifacts.any(
-    (artifact) => artifact.exists && artifact.sha256 != null,
-  );
+  final hasArtifacts =
+      artifacts.any(
+        (artifact) =>
+            artifact.path ==
+                'artifacts/candidate/questra-android-$sourceCommit.apk' &&
+            artifact.exists &&
+            artifact.sha256 != null,
+      ) &&
+      artifacts.any(
+        (artifact) =>
+            (artifact.path ==
+                    'artifacts/candidate/questra-web-$sourceCommit.zip' ||
+                artifact.path ==
+                    'artifacts/candidate/questra-web-$sourceCommit.tar.gz') &&
+            artifact.exists &&
+            artifact.sha256 != null,
+      );
   final automatedPassed = automatedGateNames.every(
     (name) => checks[name] == 'passed',
   );
@@ -94,7 +108,7 @@ Future<void> main(List<String> arguments) async {
   final distributionReady =
       options.status == 'approved' &&
       worktreeClean &&
-      hasArtifact &&
+      hasArtifacts &&
       automatedPassed &&
       options.externalEvidenceComplete &&
       externalEvidenceMatchesCandidate;

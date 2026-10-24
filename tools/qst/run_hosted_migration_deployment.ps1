@@ -40,9 +40,9 @@ function Quote-Yaml([string]$Value) {
   return '"' + $Value.Replace('\', '\\').Replace('"', '\"') + '"'
 }
 
-$head = (& git rev-parse HEAD).Trim()
-if ($LASTEXITCODE -ne 0 -or $head -ne $ExpectedSha) {
-  throw 'Candidate SHA does not match HEAD.'
+$sourceCommit = (& dart "$PSScriptRoot/read_candidate_source_commit.dart").Trim()
+if ($LASTEXITCODE -ne 0 -or $sourceCommit -cne $ExpectedSha) {
+  throw 'Candidate SHA does not match the verified candidate source.'
 }
 $branch = (& git branch --show-current).Trim()
 if ($branch -ne 'codex/initial-questra-structure-pr') {

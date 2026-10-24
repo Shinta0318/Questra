@@ -57,15 +57,15 @@ $ErrorActionPreference = 'Stop'
 $timeline = Resolve-IncidentTimeline -Detected $DetectedAtUtc -Stopped $DistributionStoppedAtUtc -Acknowledged $CommunicationAcknowledgedAtUtc
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 Set-Location $repoRoot
-$head = (& git rev-parse HEAD).Trim()
-if ($LASTEXITCODE -ne 0 -or $head -ne $CandidateSha) { throw 'Candidate SHA must match current HEAD.' }
+$sourceCommit = (& dart "$PSScriptRoot/read_candidate_source_commit.dart").Trim()
+if ($LASTEXITCODE -ne 0 -or $sourceCommit -cne $CandidateSha) { throw 'Candidate SHA must match the verified candidate source.' }
 if ((& git branch --show-current).Trim() -ne 'codex/initial-questra-structure-pr') { throw 'Incident drill is restricted to the Questra candidate branch.' }
 if (& git status --porcelain) { throw 'Incident live drill requires a clean candidate worktree.' }
 if (-not (Get-Command $SupabaseCommand -ErrorAction SilentlyContinue)) { throw 'Supabase CLI was not found.' }
 
 $candidate = Get-Content -Raw -Encoding UTF8 'docs/qst/BETA_CANDIDATE.yaml'
 if ($candidate -notmatch "source_commit: `"$CandidateSha`"" -or $candidate -notmatch 'candidate_status: "approved"') {
-  throw 'An approved Beta candidate bound to HEAD is required.'
+  throw 'An approved Beta candidate bound to the verified source is required.'
 }
 if ($candidate -notmatch "rollback_commit: `"$RollbackCandidateSha`"") { throw 'Rollback candidate does not match the candidate manifest.' }
 $project = Get-Content -Raw -Encoding UTF8 'docs/qst/BETA_SUPABASE_PROJECT.yaml'

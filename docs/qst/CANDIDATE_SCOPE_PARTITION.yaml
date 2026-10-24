@@ -22,12 +22,14 @@ phases:
 scope_groups:
   mobile_runtime:
     - apps/mobile/lib/
+    - apps/mobile/pubspec.lock
     - apps/mobile/pubspec.yaml
     - apps/mobile/web/
   mobile_tests:
     - apps/mobile/test/
     - apps/mobile/integration_test/
   supabase_runtime:
+    - supabase/config.toml
     - supabase/functions/
     - supabase/migrations/
     - supabase/tests/
@@ -36,6 +38,7 @@ scope_groups:
     - .github/
     - tools/qst/
   product_governance:
+    - README.md
     - docs/analytics/
     - docs/legal/
     - docs/product/

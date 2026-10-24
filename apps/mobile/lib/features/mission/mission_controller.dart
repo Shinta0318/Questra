@@ -42,6 +42,10 @@ final missionSyncControllerProvider =
 
 class MissionController extends Notifier<List<Mission>> {
   final PersistenceRetrySlot _retrySlot = PersistenceRetrySlot();
+  int _loadGeneration = 0;
+  int _authorityRevision = 0;
+  final Map<String, int> _authorityRevisionByMission = {};
+  final Set<String> _authorityUnknown = {};
 
   @override
   List<Mission> build() {
@@ -61,6 +65,9 @@ class MissionController extends Notifier<List<Mission>> {
       next,
     ) {
       if (next == previous) return;
+      _loadGeneration++;
+      _authorityRevisionByMission.clear();
+      _authorityUnknown.clear();
       _retrySlot.clear();
       ref.read(missionSyncControllerProvider.notifier).clear();
       state = const [];
@@ -311,6 +318,7 @@ class MissionController extends Notifier<List<Mission>> {
     String missionId, {
     required int progressPercent,
     required bool allRequiredTasksCompleted,
+    bool persist = true,
   }) {
     final mission = state.where((item) => item.id == missionId).firstOrNull;
     if (mission == null) return;
@@ -334,14 +342,16 @@ class MissionController extends Notifier<List<Mission>> {
       for (final item in state)
         if (item.id == missionId) updated else item,
     ];
-    _syncQuestProgress(updated.questId);
-    unawaited(
-      _persistMission(
-        updated,
-        sourceType: ArcMemorySourceType.missionCreated,
-        recordJourney: false,
-      ),
-    );
+    _syncQuestProgress(updated.questId, persist: persist);
+    if (persist) {
+      unawaited(
+        _persistMission(
+          updated,
+          sourceType: ArcMemorySourceType.missionCreated,
+          recordJourney: false,
+        ),
+      );
+    }
   }
 
   bool confirmMissionSuccess(
@@ -350,6 +360,7 @@ class MissionController extends Notifier<List<Mission>> {
   }) {
     final mission = state.where((item) => item.id == missionId).firstOrNull;
     if (mission == null ||
+        _authorityUnknown.contains(missionId) ||
         !allRequiredTasksCompleted ||
         mission.progressPercent < 100) {
       return false;
@@ -581,17 +592,27 @@ class MissionController extends Notifier<List<Mission>> {
   }
 
   Future<void> loadForQuests(List<String> questIds) async {
+    final loadGeneration = ++_loadGeneration;
+    final authorityRevision = _authorityRevision;
     final ownerId = ref.read(authControllerProvider).profile?.id;
+    final sync = ref.read(missionSyncControllerProvider.notifier);
     if (ownerId == null) {
       state = const [];
+      if (ref.read(missionSyncControllerProvider).operation ==
+          PersistenceSyncOperation.load) {
+        sync.clear();
+      }
       return;
     }
     if (questIds.isEmpty) {
       state = const [];
+      if (ref.read(missionSyncControllerProvider).operation ==
+          PersistenceSyncOperation.load) {
+        sync.clear();
+      }
       return;
     }
 
-    final sync = ref.read(missionSyncControllerProvider.notifier);
     sync.loading(
       'Missionを読み込んでいます...',
       operation: PersistenceSyncOperation.load,
@@ -600,27 +621,107 @@ class MissionController extends Notifier<List<Mission>> {
       final loaded = await ref
           .read(missionRepositoryProvider)
           .findManyByQuestIds(questIds);
-      if (ref.read(authControllerProvider).profile?.id != ownerId) return;
+      if (ref.read(authControllerProvider).profile?.id != ownerId ||
+          loadGeneration != _loadGeneration) {
+        return;
+      }
       final loadedIds = loaded.map((mission) => mission.id).toSet();
       final questIdSet = questIds.toSet();
+      final currentById = {for (final mission in state) mission.id: mission};
+      final unaffected = state.where(
+        (mission) => !questIdSet.contains(mission.questId),
+      );
       final localOnly = state.where(
         (mission) =>
             questIdSet.contains(mission.questId) &&
             !loadedIds.contains(mission.id),
       );
-      state = [...loaded, ...localOnly];
+      state = [
+        ...unaffected,
+        for (final mission in loaded)
+          if (_authorityUnknown.contains(mission.id))
+            mission.copyWith(
+              status: MissionStatus.todo,
+              clearSuccessConfirmedAt: true,
+            )
+          else if ((_authorityRevisionByMission[mission.id] ?? 0) >
+                  authorityRevision &&
+              currentById.containsKey(mission.id))
+            currentById[mission.id]!
+          else
+            mission,
+        ...localOnly,
+      ];
       for (final questId in questIds) {
-        _syncQuestProgress(questId);
+        _syncQuestProgress(questId, persist: false);
       }
       sync.clear();
     } catch (error) {
-      if (ref.read(authControllerProvider).profile?.id != ownerId) return;
+      if (ref.read(authControllerProvider).profile?.id != ownerId ||
+          loadGeneration != _loadGeneration) {
+        return;
+      }
       sync.failed(
         'Missionの読み込み',
         error,
         retryAvailable: true,
         inputPreserved: false,
       );
+    }
+  }
+
+  bool needsAuthorityRefresh(String missionId) =>
+      _authorityUnknown.contains(missionId);
+
+  void markAuthorityUnknown(Set<String> missionIds) {
+    if (missionIds.isEmpty) return;
+    _authorityRevision++;
+    for (final missionId in missionIds) {
+      _authorityRevisionByMission[missionId] = _authorityRevision;
+    }
+    if (ref.read(missionSyncControllerProvider).operation ==
+        PersistenceSyncOperation.load) {
+      ref.read(missionSyncControllerProvider.notifier).clear();
+    }
+    _authorityUnknown.addAll(missionIds);
+    final affectedQuests = state
+        .where((mission) => missionIds.contains(mission.id))
+        .map((mission) => mission.questId)
+        .toSet();
+    state = [
+      for (final mission in state)
+        if (missionIds.contains(mission.id))
+          mission.copyWith(
+            status: MissionStatus.todo,
+            clearSuccessConfirmedAt: true,
+          )
+        else
+          mission,
+    ];
+    for (final questId in affectedQuests) {
+      _syncQuestProgress(questId, persist: false);
+    }
+  }
+
+  void applyAuthoritativeSnapshots(List<Mission> snapshots) {
+    if (snapshots.isEmpty) return;
+    _authorityRevision++;
+    for (final mission in snapshots) {
+      _authorityRevisionByMission[mission.id] = _authorityRevision;
+    }
+    if (ref.read(missionSyncControllerProvider).operation ==
+        PersistenceSyncOperation.load) {
+      ref.read(missionSyncControllerProvider.notifier).clear();
+    }
+    final replacements = {for (final mission in snapshots) mission.id: mission};
+    final affectedQuests = snapshots.map((mission) => mission.questId).toSet();
+    _authorityUnknown.removeAll(replacements.keys);
+    state = [
+      for (final mission in state) replacements.remove(mission.id) ?? mission,
+      ...replacements.values,
+    ];
+    for (final questId in affectedQuests) {
+      _syncQuestProgress(questId, persist: false);
     }
   }
 

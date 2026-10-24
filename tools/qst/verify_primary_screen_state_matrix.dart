@@ -18,6 +18,9 @@ void main() {
     'trail': '/trail',
     'profile': '/profile',
     'onboarding': '/onboarding',
+    'mission': '/mission',
+    'task': '/task',
+    'route_review': '/quest/:questId/route',
   };
   for (final entry in screens.entries) {
     if (!source.contains('  - id: ${entry.key}\n')) {
@@ -29,6 +32,7 @@ void main() {
   }
   for (final token in const [
     'compact_viewport: 390x844',
+    'compact_viewports: [360x800, 390x844, 430x932]',
     'large_text_scale: 2.0',
     'deterministic_japanese_font_required: true',
     'candidate_sha_binding_required: true',
@@ -37,6 +41,8 @@ void main() {
     'ai_fallback',
     'filtered_empty',
     'resumed',
+    'permission_denied',
+    'recovery_incomplete',
   ]) {
     if (!source.contains(token)) errors.add('Missing contract token: $token');
   }

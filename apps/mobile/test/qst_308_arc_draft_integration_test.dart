@@ -85,6 +85,41 @@ void main() {
     expect(await repository.load('owner-a'), isNull);
   });
 
+  test('completed answers stay typed across a draft restart', () async {
+    const storage = FlutterSecureStorage();
+    final now = DateTime.utc(2026, 9, 30);
+    final repository = SecureArcJourneyDraftRepository(
+      storage: storage,
+      clock: () => now,
+    );
+    const suggestion = ArcQuestSuggestion(
+      title: 'シンガポールへ行く',
+      description: '旅行を実現する',
+      category: '旅行',
+      difficulty: QuestDifficulty.normal,
+      sourceInput: 'シンガポールに行きたい',
+      confirmedAnswers: {
+        QuestClarificationType.deadline: '2027年3月',
+        QuestClarificationType.party: '家族と',
+      },
+    );
+    await repository.save(
+      'owner-a',
+      ArcJourneyDraft(
+        messages: const [],
+        updatedAt: now,
+        questSuggestion: suggestion,
+      ),
+    );
+    final restored = await repository.load('owner-a');
+    expect(restored?.questSuggestion?.description, '旅行を実現する');
+    expect(
+      restored?.questSuggestion?.confirmedAnswers[QuestClarificationType.party],
+      '家族と',
+    );
+    expect(await repository.load('owner-b'), isNull);
+  });
+
   test('expires stale drafts before they reach Arc screen', () async {
     const storage = FlutterSecureStorage();
     final savedAt = DateTime.utc(2026, 7, 1);

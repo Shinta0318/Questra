@@ -15,12 +15,12 @@ $planningRows = @($rows | Where-Object evaluation_type -eq 'planning')
 $safetyRows = @($rows | Where-Object evaluation_type -eq 'safety')
 if ($planningRows.Count -lt 200) { throw "At least 200 planning cases are required; found $($planningRows.Count)." }
 if ($safetyRows.Count -lt 10) { throw "At least 10 safety cases are required; found $($safetyRows.Count)." }
-$sourceCommit = (& git rev-parse HEAD).Trim()
-if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') { throw 'Unable to resolve current HEAD.' }
+$sourceCommit = (& dart "$PSScriptRoot/read_candidate_source_commit.dart").Trim()
+if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') { throw 'Unable to resolve valid candidate source.' }
 $uniqueIds = @($rows | ForEach-Object id | Sort-Object -Unique)
 if ($uniqueIds.Count -ne $rows.Count) { throw 'Evaluation case IDs must be unique.' }
 if (@($rows | Where-Object candidate_source_commit -ne $sourceCommit).Count -gt 0) {
-  throw 'Every evaluation row must be bound to current HEAD.'
+  throw 'Every evaluation row must be bound to the candidate source.'
 }
 $runIds = @($rows | ForEach-Object run_id | Sort-Object -Unique)
 if ($runIds.Count -ne 1 -or [string]::IsNullOrWhiteSpace([string]$runIds[0])) { throw 'Exactly one provider run ID is required.' }

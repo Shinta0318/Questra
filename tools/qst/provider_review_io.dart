@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'candidate_git_state.dart';
 import 'provider_review_contract.dart';
 
 const providerResultsPath = 'tools/qst/quest_planning_eval_results.json';
@@ -13,12 +14,12 @@ List<JsonMap> readReviewRows(String path) => (readReviewJson(path) as List)
     .map((row) => JsonMap.from(row as Map))
     .toList();
 
-String candidateHead() {
-  final result = Process.runSync('git', ['rev-parse', 'HEAD']);
-  final head = result.stdout.toString().trim();
-  if (result.exitCode != 0 || !RegExp(r'^[a-f0-9]{40}$').hasMatch(head))
-    throw StateError('Unable to resolve candidate HEAD.');
-  return head;
+String verifiedCandidateSource() {
+  final source = candidateSourceCommit();
+  if (!candidateSourceHasOnlyEvidenceCommits(source)) {
+    throw StateError('Candidate source has runtime changes in later commits.');
+  }
+  return source;
 }
 
 Future<String> reviewFileHash(String path) async {
@@ -52,7 +53,7 @@ Future<JsonMap> recomputeRecordedReview(
     rows: readReviewRows(resultsPath),
     corpus: readReviewRows(providerCorpusPath),
     safetyCorpus: readReviewRows(providerSafetyPath),
-    candidate: candidateHead(),
+    candidate: verifiedCandidateSource(),
     hashes: await providerReviewHashes(resultsPath: resultsPath),
     now: DateTime.now().toUtc(),
   );

@@ -14,6 +14,7 @@ import '../../widgets/layout/questra_screen_surface.dart';
 import '../../widgets/navigation/questra_route_back_button.dart';
 import '../auth/auth_controller.dart';
 import '../quest/quest_controller.dart';
+import '../quest/quest_model.dart';
 import 'guild_discovery_detail_screen.dart';
 import 'guild_discovery_model.dart';
 import 'guild_discovery_providers.dart';
@@ -27,8 +28,20 @@ class GuildDiscoveryScreen extends ConsumerStatefulWidget {
 }
 
 class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
+  final TextEditingController _searchController = TextEditingController();
   GuildDiscoverySection _section = GuildDiscoverySection.recommended;
+  String _query = '';
+  String? _contextQuestId;
   String? _copyingPublicationId;
+  bool _publishing = false;
+  bool _copyDialogOpen = false;
+  final Map<String, String> _copyRequestKeys = {};
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,9 +85,32 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
     GuildPilotStatus status,
   ) {
     final discoveryRepository = ref.watch(guildDiscoveryRepositoryProvider);
+    final ownQuests = ref
+        .watch(questControllerProvider)
+        .where((quest) => quest.status == QuestStatus.active)
+        .toList(growable: false);
+    final selectedQuest = ownQuests.where(
+      (quest) => quest.id == _contextQuestId,
+    );
+    final contextQuest = selectedQuest.isEmpty ? null : selectedQuest.first;
+    final profile = contextQuest == null
+        ? const GuildDiscoveryProfile()
+        : GuildDiscoveryProfile(
+            preferredTags: {
+              contextQuest.category,
+              contextQuest.dna?.valueFor('category') ?? '',
+              contextQuest.dna?.valueFor('theme') ?? '',
+            }.where((tag) => tag.isNotEmpty && tag != '未評価').toList(),
+          );
     final results = ref
         .watch(guildDiscoveryRankingServiceProvider)
-        .rank(candidates: candidates, section: _section, limit: 20);
+        .rank(
+          candidates: candidates,
+          profile: profile,
+          section: _section,
+          query: _query,
+          limit: 20,
+        );
 
     return QuestraResponsiveListView(
       showScrollbar: true,
@@ -85,6 +121,79 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
       children: [
         _DiscoveryHeader(cohort: status.cohort),
+        if (!status.configured) ...[
+          const SizedBox(height: 12),
+          Text(
+            'オフラインプレビュー：公開Questの閲覧・取り込みは実接続版で利用できます。',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.parchment),
+          ),
+        ],
+        const SizedBox(height: 18),
+        TextField(
+          key: const Key('guild-search'),
+          controller: _searchController,
+          onChanged: (value) => setState(() => _query = value),
+          style: const TextStyle(color: AppColors.deepNavy),
+          decoration: const InputDecoration(
+            labelText: '公開Questを探す',
+            hintText: 'タイトル・内容・タグ',
+            labelStyle: TextStyle(color: AppColors.deepNavy),
+            hintStyle: TextStyle(color: AppColors.deepNavy),
+            prefixIconColor: AppColors.deepNavy,
+            prefixIcon: Icon(Icons.search_rounded),
+            filled: true,
+            fillColor: AppColors.white,
+            border: OutlineInputBorder(),
+          ),
+        ),
+        if (ownQuests.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String?>(
+            key: const Key('guild-context-quest'),
+            initialValue: contextQuest?.id,
+            isExpanded: true,
+            dropdownColor: AppColors.white,
+            style: const TextStyle(color: AppColors.deepNavy),
+            decoration: const InputDecoration(
+              labelText: '自分のQuestに近い挑戦',
+              labelStyle: TextStyle(color: AppColors.deepNavy),
+              prefixIconColor: AppColors.deepNavy,
+              prefixIcon: Icon(Icons.explore_outlined),
+              filled: true,
+              fillColor: AppColors.white,
+              border: OutlineInputBorder(),
+            ),
+            items: [
+              const DropdownMenuItem<String?>(
+                value: null,
+                child: Text('すべての挑戦'),
+              ),
+              for (final quest in ownQuests)
+                DropdownMenuItem<String?>(
+                  value: quest.id,
+                  child: Text(quest.title, overflow: TextOverflow.ellipsis),
+                ),
+            ],
+            onChanged: (value) => setState(() => _contextQuestId = value),
+          ),
+        ],
+        const SizedBox(height: 8),
+        Text(
+          '検索とおすすめは、表示中の公開Questから探します。自分のQuestは公開されません。',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.parchment),
+        ),
+        if (ownQuests.isNotEmpty && discoveryRepository != null) ...[
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _publishing ? null : () => _publishQuest(ownQuests),
+            icon: const Icon(Icons.publish_outlined),
+            label: Text(_publishing ? '公開申請中...' : '自分のQuestを公開申請する'),
+          ),
+        ],
         const SizedBox(height: 18),
         _DiscoverySectionPicker(
           selected: _section,
@@ -95,9 +204,16 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
           ArcEmptyState(
             title: _emptyTitle,
             message: _emptyMessage,
-            actionLabel: 'ArcとQuestを考える',
+            actionLabel: _query.trim().isEmpty ? 'ArcとQuestを考える' : '検索をクリア',
             icon: Icons.explore_outlined,
-            onAction: () => context.go(AppRoutes.arc),
+            onAction: () {
+              if (_query.trim().isNotEmpty) {
+                _searchController.clear();
+                setState(() => _query = '');
+              } else {
+                context.go(AppRoutes.arc);
+              }
+            },
           )
         else
           ...results.map(
@@ -140,7 +256,15 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
   }
 
   Future<void> _copyQuest(GuildDiscoveryQuest quest) async {
-    if (_copyingPublicationId != null) return;
+    if (_copyingPublicationId != null || _copyDialogOpen) return;
+    _copyDialogOpen = true;
+    final GuildQuestCopyOptions? options;
+    try {
+      options = await _confirmCopy(quest);
+    } finally {
+      _copyDialogOpen = false;
+    }
+    if (options == null || !mounted) return;
     final repository = ref.read(guildDiscoveryRepositoryProvider);
     final profile = ref.read(authControllerProvider).profile;
     if (repository == null || profile == null) {
@@ -153,9 +277,13 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
     try {
       final result = await repository.copyToPrivate(
         publicationId: quest.id,
-        options: const GuildQuestCopyOptions(),
-        idempotencyKey: 'guild-copy-${const Uuid().v4()}',
+        options: options,
+        idempotencyKey: _copyRequestKeys.putIfAbsent(
+          quest.id,
+          () => 'guild-copy-${const Uuid().v4()}',
+        ),
       );
+      _copyRequestKeys.remove(quest.id);
       await ref.read(questControllerProvider.notifier).loadForUser(profile.id);
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -170,22 +298,224 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
     }
   }
 
-  String get _emptyTitle => switch (_section) {
-    GuildDiscoverySection.recommended => 'おすすめを準備しています',
-    GuildDiscoverySection.trending => '注目のQuestはまだありません',
-    GuildDiscoverySection.recent => '公開されたQuestはまだありません',
-    GuildDiscoverySection.seekingCompanions => '仲間を募集中のQuestはありません',
-    GuildDiscoverySection.missionLibrary => '公開Missionはまだありません',
-  };
+  Future<GuildQuestCopyOptions?> _confirmCopy(GuildDiscoveryQuest quest) {
+    var includeMissions = true;
+    return showModalBottomSheet<GuildQuestCopyOptions>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Questを取り込む',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(quest.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('公開済みMissionも取り込む'),
+                  subtitle: const Text('審査済みのMissionだけが対象です。'),
+                  value: includeMissions,
+                  onChanged: (value) =>
+                      setSheetState(() => includeMissions = value),
+                ),
+                const SizedBox(height: 8),
+                const Text('自分だけのQuestとして保存します。元のQuestは変更しません。'),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(
+                    GuildQuestCopyOptions(includeMissions: includeMissions),
+                  ),
+                  child: const Text('取り込む'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  child: const Text('キャンセル'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-  String get _emptyMessage => switch (_section) {
-    GuildDiscoverySection.recommended =>
-      'Questが育つと、関心に近い公開航路をここで見つけられるようになります。',
-    GuildDiscoverySection.trending => '役立つ航路が集まり次第、達成状況と新しさを見て紹介します。',
-    GuildDiscoverySection.recent => '公開審査を通った新しい航路だけを、ここへ届けます。',
-    GuildDiscoverySection.seekingCompanions => '参加は任意です。まずは自分のQuestから始められます。',
-    GuildDiscoverySection.missionLibrary => '必要な一歩だけ取り入れられるMissionを準備しています。',
-  };
+  Future<void> _publishQuest(List<Quest> ownQuests) async {
+    if (_publishing) return;
+    final draft = await showModalBottomSheet<({Quest quest, String summary})>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => _PublicationSheet(quests: ownQuests),
+    );
+    if (draft == null || !mounted) return;
+    final repository = ref.read(guildDiscoveryRepositoryProvider);
+    if (repository == null) return;
+    setState(() => _publishing = true);
+    try {
+      await repository.publishQuest(
+        questId: draft.quest.id,
+        summary: draft.summary,
+        tags: draft.quest.category.trim().isEmpty
+            ? const []
+            : [draft.quest.category],
+        visibility: GuildDiscoveryVisibility.public,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('公開申請を受け付けました。審査が終わるまで一覧には表示されません。')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('公開申請ができませんでした。内容を確認して、もう一度お試しください。')),
+      );
+    } finally {
+      if (mounted) setState(() => _publishing = false);
+    }
+  }
+
+  String get _emptyTitle => _query.trim().isNotEmpty
+      ? '一致する公開Questはありません'
+      : switch (_section) {
+          GuildDiscoverySection.recommended => 'おすすめを準備しています',
+          GuildDiscoverySection.trending => '注目のQuestはまだありません',
+          GuildDiscoverySection.recent => '公開されたQuestはまだありません',
+          GuildDiscoverySection.seekingCompanions => '仲間を募集中のQuestはありません',
+        };
+
+  String get _emptyMessage => _query.trim().isNotEmpty
+      ? '別の言葉やタグで探してみてください。'
+      : switch (_section) {
+          GuildDiscoverySection.recommended =>
+            'Questが育つと、関心に近い公開航路をここで見つけられるようになります。',
+          GuildDiscoverySection.trending => '役立つ航路が集まり次第、達成状況と新しさを見て紹介します。',
+          GuildDiscoverySection.recent => '公開審査を通った新しい航路だけを、ここへ届けます。',
+          GuildDiscoverySection.seekingCompanions =>
+            '参加は任意です。まずは自分のQuestから始められます。',
+        };
+}
+
+class _PublicationSheet extends StatefulWidget {
+  const _PublicationSheet({required this.quests});
+
+  final List<Quest> quests;
+
+  @override
+  State<_PublicationSheet> createState() => _PublicationSheetState();
+}
+
+class _PublicationSheetState extends State<_PublicationSheet> {
+  final TextEditingController _summaryController = TextEditingController();
+  late Quest _selectedQuest;
+  bool _confirmed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedQuest = widget.quests.first;
+  }
+
+  @override
+  void dispose() {
+    _summaryController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+    final availableHeight = MediaQuery.sizeOf(context).height - keyboardHeight;
+    return Padding(
+      padding: EdgeInsets.only(bottom: keyboardHeight),
+      child: SizedBox(
+        height: availableHeight * 0.85,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Questの公開申請',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedQuest.id,
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: '公開するQuest'),
+                    items: [
+                      for (final quest in widget.quests)
+                        DropdownMenuItem(
+                          value: quest.id,
+                          child: Text(
+                            quest.title,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                    onChanged: (id) {
+                      if (id == null) return;
+                      setState(() {
+                        _selectedQuest = widget.quests.firstWhere(
+                          (quest) => quest.id == id,
+                        );
+                        _confirmed = false;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: _summaryController,
+                    minLines: 3,
+                    maxLines: 5,
+                    maxLength: 2000,
+                    decoration: const InputDecoration(
+                      labelText: '公開用の概要',
+                      hintText: 'ほかの人が挑戦を理解できるように、内容をまとめてください',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const Text('Quest名と表示名が公開候補になります。住所・連絡先などの個人情報は書かないでください。'),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('公開する内容を確認しました'),
+                    value: _confirmed,
+                    onChanged: (value) =>
+                        setState(() => _confirmed = value ?? false),
+                  ),
+                  FilledButton(
+                    onPressed:
+                        _confirmed && _summaryController.text.trim().isNotEmpty
+                        ? () => Navigator.of(context).pop((
+                            quest: _selectedQuest,
+                            summary: _summaryController.text.trim(),
+                          ))
+                        : null,
+                    child: const Text('審査へ提出する'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('キャンセル'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _DiscoveryHeader extends StatelessWidget {
@@ -270,12 +600,27 @@ class _DiscoverySectionPicker extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: SegmentedButton<GuildDiscoverySection>(
         showSelectedIcon: false,
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(Size(84, 48)),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.deepNavy
+                : AppColors.white,
+          ),
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.parchment
+                : AppColors.midnightNavy,
+          ),
+        ),
         segments: GuildDiscoverySection.values
             .map(
               (section) => ButtonSegment<GuildDiscoverySection>(
                 value: section,
-                icon: Icon(_sectionIcon(section), size: 18),
-                label: Text(_sectionLabel(section)),
+                label: Text(_sectionLabel(section), softWrap: false),
               ),
             )
             .toList(growable: false),
@@ -290,15 +635,6 @@ class _DiscoverySectionPicker extends StatelessWidget {
     GuildDiscoverySection.trending => '注目',
     GuildDiscoverySection.recent => '新着',
     GuildDiscoverySection.seekingCompanions => '仲間',
-    GuildDiscoverySection.missionLibrary => 'Mission',
-  };
-
-  IconData _sectionIcon(GuildDiscoverySection section) => switch (section) {
-    GuildDiscoverySection.recommended => Icons.auto_awesome_outlined,
-    GuildDiscoverySection.trending => Icons.trending_up_rounded,
-    GuildDiscoverySection.recent => Icons.schedule_rounded,
-    GuildDiscoverySection.seekingCompanions => Icons.group_outlined,
-    GuildDiscoverySection.missionLibrary => Icons.route_outlined,
   };
 }
 

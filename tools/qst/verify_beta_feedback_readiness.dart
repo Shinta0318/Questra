@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const feedbackPlanPath = 'docs/qst/BETA_FEEDBACK.yaml';
 const operationsDocPath = 'docs/product/beta_feedback_operations.md';
 const operationsEvidencePath = 'docs/qst/BETA_FEEDBACK_OPERATIONS.yaml';
@@ -72,7 +74,7 @@ void main(List<String> arguments) {
   _rejectSecrets(operations, failures);
   _rejectSecrets(register, failures);
   for (final snippet in [
-    "values['candidate-commit'] != head",
+    'candidateSourceHasOnlyEvidenceCommits(head)',
     'Open S0:',
     '_looksSensitive',
   ]) {
@@ -110,13 +112,16 @@ void main(List<String> arguments) {
     if (stopChannel == null) {
       failures.add('A verified S0 stop communication channel is required.');
     }
-    final head = Process.runSync('git', [
-      'rev-parse',
-      'HEAD',
-    ]).stdout.toString().trim();
-    if (!operations.contains('candidate_source_commit: "$head"') ||
-        !register.contains('candidate_source_commit: "$head"')) {
-      failures.add('Feedback operations evidence must match current HEAD.');
+    final source = RegExp(
+      r'^candidate_source_commit: "([a-f0-9]{40})"$',
+      multiLine: true,
+    ).firstMatch(operations)?.group(1);
+    if (source == null ||
+        !candidateSourceHasOnlyEvidenceCommits(source) ||
+        !register.contains('candidate_source_commit: "$source"')) {
+      failures.add(
+        'Feedback operations evidence must match an unchanged candidate source.',
+      );
     }
     _expect(
       register,

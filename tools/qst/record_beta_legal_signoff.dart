@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const version = '2026-08-18-beta.1';
 const intakePath = 'docs/qst/LEGAL_SIGNOFF_INTAKE.yaml';
 const signoffPath = 'docs/qst/BETA_LEGAL_SIGNOFF.yaml';
@@ -7,14 +9,16 @@ const reconciliationPath = 'docs/qst/LEGAL_VERSION_RECONCILIATION.yaml';
 
 void main(List<String> arguments) {
   final options = _Options.parse(arguments);
-  final head = _command(['git', 'rev-parse', 'HEAD']).trim();
+  final head = options.candidateSha;
   if (_command(['git', 'status', '--porcelain']).trim().isNotEmpty) {
     _fail('Legal sign-off must be recorded from a clean worktree.');
   }
-  if (options.candidateSha != head) _fail('Candidate SHA does not match HEAD.');
+  if (!candidateSourceHasOnlyEvidenceCommits(head)) {
+    _fail('Candidate SHA is not an unchanged source commit.');
+  }
   final candidate = _read('docs/qst/BETA_CANDIDATE.yaml');
   if (!candidate.contains('source_commit: "$head"')) {
-    _fail('Beta candidate manifest does not match HEAD.');
+    _fail('Beta candidate manifest does not match candidate source.');
   }
   final hosted = _read('docs/qst/HOSTED_EVIDENCE_RUN.yaml');
   if (!hosted.contains('status: verified') ||

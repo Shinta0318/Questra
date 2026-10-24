@@ -64,6 +64,9 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
     }
     final taskProgress = const TaskProgressService().forMission(tasks);
     final taskMutation = ref.watch(taskMutationControllerProvider);
+    final authorityUnknown = ref
+        .read(missionControllerProvider.notifier)
+        .needsAuthorityRefresh(mission.id);
     final presentation = MissionCardPresentation.resolve(
       mission: mission,
       tasks: tasks,
@@ -87,8 +90,30 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
                 ref.read(taskControllerProvider.notifier).discardPending(),
             onDismiss: () =>
                 ref.read(taskMutationControllerProvider.notifier).clear(),
+            onRefreshConflict: () =>
+                ref.read(taskControllerProvider.notifier).refreshConflict(),
           ),
           if (taskMutation.isActive) const SizedBox(height: 12),
+          if (authorityUnknown) ...[
+            QuestraCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Missionの最新状態を確認できませんでした。'),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () => ref
+                        .read(taskControllerProvider.notifier)
+                        .refreshMissionAuthority(mission.id),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('再読み込み'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           if (hierarchyV2)
             JourneyHierarchyBreadcrumb(
               questId: mission.questId,
@@ -148,8 +173,14 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
             _MissionPrimaryActionCard(
               mission: mission,
               presentation: presentation,
-              onPressed: () =>
-                  _runPrimaryAction(mission, tasks, taskProgress, presentation),
+              onPressed: authorityUnknown
+                  ? null
+                  : () => _runPrimaryAction(
+                      mission,
+                      tasks,
+                      taskProgress,
+                      presentation,
+                    ),
             ),
           ],
           const SizedBox(height: 20),
@@ -254,7 +285,8 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
           if (!hierarchyV2)
             FilledButton.icon(
               onPressed:
-                  taskProgress.allRequiredCompleted &&
+                  !authorityUnknown &&
+                      taskProgress.allRequiredCompleted &&
                       mission.successConfirmedAt == null
                   ? () => ref
                         .read(missionControllerProvider.notifier)
@@ -523,7 +555,7 @@ class _MissionPrimaryActionCard extends StatelessWidget {
 
   final Mission mission;
   final MissionCardPresentation presentation;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {

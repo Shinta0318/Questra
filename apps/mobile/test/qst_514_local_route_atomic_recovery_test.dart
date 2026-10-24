@@ -8,6 +8,7 @@ import 'package:questra/features/quest/quest_controller.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
 import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/quest/route_replanning_controller.dart';
+import 'package:questra/features/quest/route_mutation_journal.dart';
 import 'package:questra/features/quest/route_replanning_model.dart';
 import 'package:questra/features/quest/route_replanning_repository.dart';
 import 'package:questra/features/quest/route_snapshot_service.dart';
@@ -99,6 +100,7 @@ void main() {
     );
 
     expect(result?.status, RouteProposalStatus.stale);
+    expect(result?.recoveryIncomplete, isTrue);
     expect(result?.staleReason, contains('復旧を完了できませんでした'));
     expect(container.read(taskControllerProvider).single.orderIndex, 0);
     expect(
@@ -107,7 +109,147 @@ void main() {
           ?.status,
       RouteProposalStatus.stale,
     );
+    expect(
+      await controller.inspectLocalJournal(
+        container.read(questControllerProvider).single,
+        container.read(missionControllerProvider),
+      ),
+      RouteJournalDisposition.recoveryNeeded,
+    );
+    _TaskFixtureController.failRestore = false;
+    final retried = await controller.retryFailedAcceptanceRecovery(proposal.id);
+    expect(retried.status, RouteUndoStatus.restored);
+    expect(container.read(taskControllerProvider).single.orderIndex, 1);
+    expect(
+      await controller.inspectLocalJournal(
+        container.read(questControllerProvider).single,
+        container.read(missionControllerProvider),
+      ),
+      isNull,
+    );
   });
+
+  test(
+    'recovery is not reported complete when journal clear is ineffective',
+    () async {
+      _TaskFixtureController.failRestore = true;
+      final journalRepository = _NoOpClearJournalRepository();
+      final container = _container(
+        _RecordingRepository(failFinalize: true),
+        journalRepository: journalRepository,
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(
+        routeReplanningControllerProvider.notifier,
+      );
+      final proposal = _taskReorderProposal(container);
+      await controller.registerProposal(proposal);
+      final result = await controller.accept(
+        container.read(questControllerProvider).single,
+        container.read(missionControllerProvider),
+        proposal,
+        {proposal.items.single.id},
+      );
+      expect(result?.recoveryIncomplete, isTrue);
+
+      _TaskFixtureController.failRestore = false;
+      final retried = await controller.retryFailedAcceptanceRecovery(
+        proposal.id,
+      );
+      expect(retried.status, RouteUndoStatus.recoveryIncomplete);
+      expect(
+        await journalRepository.load('local-preview', proposal.questId),
+        isNotNull,
+      );
+    },
+  );
+
+  test(
+    'accepted route is not rolled back when journal cleanup fails',
+    () async {
+      final journalRepository = _NoOpClearJournalRepository();
+      final routeRepository = _RecordingRepository();
+      final container = _container(
+        routeRepository,
+        journalRepository: journalRepository,
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(
+        routeReplanningControllerProvider.notifier,
+      );
+      final proposal = _questAndTaskProposal(container);
+      await controller.registerProposal(proposal);
+
+      final result = await controller.accept(
+        container.read(questControllerProvider).single,
+        container.read(missionControllerProvider),
+        proposal,
+        proposal.items.map((item) => item.id).toSet(),
+      );
+
+      expect(result?.status, RouteProposalStatus.accepted);
+      expect(result?.recoveryIncomplete, isTrue);
+      expect(
+        container.read(questControllerProvider).single.targetDate,
+        DateTime(2027, 6, 1),
+      );
+      expect(container.read(taskControllerProvider).single.orderIndex, 0);
+      expect(
+        (await routeRepository.findByQuest(proposal.questId)).single.status,
+        RouteProposalStatus.accepted,
+      );
+      expect(
+        (await journalRepository.load(
+          'local-preview',
+          proposal.questId,
+        ))?.stage,
+        RouteJournalStage.applied,
+      );
+    },
+  );
+
+  test(
+    'accepted route remains accepted if applied journal cannot be saved',
+    () async {
+      final journalRepository = _FailAppliedJournalRepository();
+      final routeRepository = _RecordingRepository();
+      final container = _container(
+        routeRepository,
+        journalRepository: journalRepository,
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(
+        routeReplanningControllerProvider.notifier,
+      );
+      final proposal = _questAndTaskProposal(container);
+      await controller.registerProposal(proposal);
+
+      final result = await controller.accept(
+        container.read(questControllerProvider).single,
+        container.read(missionControllerProvider),
+        proposal,
+        proposal.items.map((item) => item.id).toSet(),
+      );
+
+      expect(result?.status, RouteProposalStatus.accepted);
+      expect(result?.recoveryIncomplete, isTrue);
+      expect(
+        container.read(questControllerProvider).single.targetDate,
+        DateTime(2027, 6, 1),
+      );
+      expect(
+        (await routeRepository.findByQuest(proposal.questId)).single.status,
+        RouteProposalStatus.accepted,
+      );
+      expect(
+        (await journalRepository.load(
+          'local-preview',
+          proposal.questId,
+        ))?.stage,
+        RouteJournalStage.applying,
+      );
+    },
+  );
 
   test('a stale proposal is not applied again', () async {
     final repository = _RecordingRepository(failFinalize: true);
@@ -141,15 +283,37 @@ void main() {
   });
 }
 
-ProviderContainer _container(RouteReplanningRepository repository) =>
-    ProviderContainer(
-      overrides: [
-        questControllerProvider.overrideWith(_QuestFixtureController.new),
-        missionControllerProvider.overrideWith(_MissionFixtureController.new),
-        taskControllerProvider.overrideWith(_TaskFixtureController.new),
-        routeReplanningRepositoryProvider.overrideWithValue(repository),
-      ],
-    );
+ProviderContainer _container(
+  RouteReplanningRepository repository, {
+  RouteMutationJournalRepository? journalRepository,
+}) => ProviderContainer(
+  overrides: [
+    questControllerProvider.overrideWith(_QuestFixtureController.new),
+    missionControllerProvider.overrideWith(_MissionFixtureController.new),
+    taskControllerProvider.overrideWith(_TaskFixtureController.new),
+    routeReplanningRepositoryProvider.overrideWithValue(repository),
+    routeMutationJournalRepositoryProvider.overrideWithValue(
+      journalRepository ?? InMemoryRouteMutationJournalRepository(),
+    ),
+  ],
+);
+
+class _NoOpClearJournalRepository
+    extends InMemoryRouteMutationJournalRepository {
+  @override
+  Future<void> clear(String ownerId, String questId) async {}
+}
+
+class _FailAppliedJournalRepository
+    extends InMemoryRouteMutationJournalRepository {
+  @override
+  Future<void> save(RouteMutationJournal journal) async {
+    if (journal.stage == RouteJournalStage.applied) {
+      throw StateError('journal write failed');
+    }
+    await super.save(journal);
+  }
+}
 
 RouteChangeProposal _taskReorderProposal(ProviderContainer container) {
   final task = container.read(taskControllerProvider).single;

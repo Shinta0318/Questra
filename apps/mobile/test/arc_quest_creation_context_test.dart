@@ -36,8 +36,15 @@ void main() {
     );
     expect(result.wish, 'シンガポールに行きたい');
     expect(result.suggestion!.title, 'シンガポールへ行く');
-    expect(result.suggestion!.description, contains('2028年10月'));
-    expect(result.suggestion!.description, contains('20万円'));
+    expect(result.suggestion!.description, isNot(contains('航路条件')));
+    expect(
+      result.suggestion!.confirmedAnswers[QuestClarificationType.deadline],
+      '2028年10月',
+    );
+    expect(
+      result.suggestion!.confirmedAnswers[QuestClarificationType.budget],
+      '20万円',
+    );
   });
 
   test('falls back to a real wish, not a command or Arc reply', () {
@@ -98,6 +105,143 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'answered chat conditions are prefilled for review, not reasked',
+    (tester) async {
+      tester.view.physicalSize = const Size(1100, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        const ProviderScope(child: MaterialApp(home: ArcScreen())),
+      );
+      await tester.pump();
+      for (final reply in ['シンガポールに行きたい', '2027年3月', '家族と', '30万円まで']) {
+        await tester.enterText(
+          find.byKey(const ValueKey('arc-chat-input')),
+          reply,
+        );
+        await tester.tap(find.byTooltip('メッセージを送信'));
+        for (var frame = 0; frame < 10; frame++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+      }
+      final create = find.widgetWithText(FilledButton, 'Questとして始める');
+      await tester.ensureVisible(create.first);
+      await tester.tap(create.first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      final proceed = find.widgetWithText(FilledButton, 'このQuestで進む');
+      await tester.ensureVisible(proceed.first);
+      await tester.tap(proceed.first);
+      await tester.pump();
+      expect(find.text('Arcと確認した条件'), findsOneWidget);
+      expect(find.text('2027 / 03'), findsWidgets);
+      final fields = tester.widgetList<TextField>(find.byType(TextField));
+      expect(fields.any((field) => field.controller?.text == '家族と'), isTrue);
+      expect(fields.any((field) => field.controller?.text == '30万円まで'), isTrue);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('editing a suggested wish clears its old confirmed answers', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1100, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: ArcScreen())),
+    );
+    await tester.pump();
+    for (final reply in ['シンガポールに行きたい', '2027年3月', '家族と', '30万円まで']) {
+      await tester.enterText(
+        find.byKey(const ValueKey('arc-chat-input')),
+        reply,
+      );
+      await tester.tap(find.byTooltip('メッセージを送信'));
+      for (var frame = 0; frame < 10; frame++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+    final create = find.widgetWithText(FilledButton, 'Questとして始める');
+    await tester.ensureVisible(create.first);
+    await tester.tap(create.first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    final proceed = find.widgetWithText(FilledButton, 'このQuestで進む');
+    await tester.ensureVisible(proceed.first);
+    await tester.tap(proceed.first);
+    await tester.pump();
+    await tester.tap(find.byTooltip('相談内容を編集'));
+    await tester.pump();
+    final wish = find.widgetWithText(
+      TextField,
+      '例: 来年シンガポールへ行きたい。予算や準備の順番が分からない。',
+    );
+    await tester.enterText(wish, 'TOEIC700点を取る');
+    await tester.pump();
+    expect(find.text('Arcと確認した条件'), findsNothing);
+    expect(find.text('2027 / 03'), findsNothing);
+    final fields = tester.widgetList<TextField>(find.byType(TextField));
+    expect(fields.any((field) => field.controller?.text == '家族と'), isFalse);
+    expect(fields.any((field) => field.controller?.text == '30万円まで'), isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final width in [320.0, 360.0, 390.0, 430.0]) {
+    testWidgets('Arc Quest handoff stays usable at ${width.toInt()}px and 200% text', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: const TextScaler.linear(2),
+              ),
+              child: child!,
+            ),
+            home: const ArcScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(tester.takeException(), isNull, reason: 'initial Arc screen');
+      await tester.enterText(
+        find.byKey(const ValueKey('arc-chat-input')),
+        '2028年10月までにシンガポールに行きたい',
+      );
+      await tester.tap(find.byTooltip('メッセージを送信'));
+      for (var frame = 0; frame < 10; frame++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(tester.takeException(), isNull, reason: 'after Arc reply');
+      final create = find.widgetWithText(FilledButton, 'Questとして始める');
+      await tester.ensureVisible(create.first);
+      await tester.tap(create.first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(tester.takeException(), isNull, reason: 'Quest handoff summary');
+      expect(find.text('Arcに伝えたこと'), findsOneWidget);
+      final proceed = find.widgetWithText(FilledButton, 'このQuestで進む');
+      await tester.ensureVisible(proceed.first);
+      await tester.tap(proceed.first);
+      await tester.pump();
+      expect(tester.takeException(), isNull, reason: 'Quest confirmation fields');
+      final title = find.byKey(const Key('arc-quest-title-field'));
+      await tester.ensureVisible(title);
+      await tester.pump();
+      expect(title, findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   test('operation prompts cannot become local Quest suggestions', () {
     for (final label in [

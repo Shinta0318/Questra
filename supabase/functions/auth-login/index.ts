@@ -1,9 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.112.4";
-
-type LoginRequest = {
-  identifier?: string;
-  password?: string;
-};
+import { classifyAuthFailure } from "./auth_error.ts";
+import { requestPasswordGrant, runLoginDecisionRpc } from "./auth_io.ts";
+import { readBoundedJsonObject } from "./bounded_request.ts";
 
 type LoginAccount = {
   user_id: string;
@@ -12,6 +10,7 @@ type LoginAccount = {
 };
 
 const MAX_BODY_BYTES = 4_096;
+const AUTH_CONTRACT_VERSION = "2026-10-18.1";
 const LOGIN_ID_PATTERN = /^[a-z0-9][a-z0-9._-]{2,39}$/;
 const LOCAL_ORIGIN_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
@@ -28,23 +27,17 @@ Deno.serve(async (req) => {
     return secureJson({ error: "Method not allowed" }, 405, origin);
   }
 
-  const contentLength = Number(req.headers.get("content-length") ?? "0");
-  if (contentLength > MAX_BODY_BYTES) {
-    return secureJson({ error: "Request too large" }, 413, origin);
+  const parsed = await readBoundedJsonObject(req, MAX_BODY_BYTES);
+  if (parsed.kind !== "ok") {
+    const failure = {
+      too_large: { message: "Request too large", status: 413 },
+      invalid: { message: "Invalid request", status: 400 },
+      timed_out: { message: "Request timed out", status: 408 },
+    }[parsed.kind];
+    return secureJson({ error: failure.message }, failure.status, origin);
   }
 
-  const rawBody = await req.text();
-  if (new TextEncoder().encode(rawBody).length > MAX_BODY_BYTES) {
-    return secureJson({ error: "Request too large" }, 413, origin);
-  }
-
-  let payload: LoginRequest;
-  try {
-    payload = JSON.parse(rawBody) as LoginRequest;
-  } catch (_) {
-    return secureJson({ error: "Invalid request" }, 400, origin);
-  }
-
+  const payload = parsed.value;
   const identifier = normalizeIdentifier(payload.identifier);
   const password = typeof payload.password === "string" ? payload.password : "";
   if (!identifier || password.length < 1 || password.length > 72) {
@@ -59,11 +52,14 @@ Deno.serve(async (req) => {
     return secureJson({ error: "Authentication is unavailable" }, 503, origin);
   }
 
-  const admin = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const admin = createAuthAdminClient(supabaseUrl, serviceRoleKey);
 
-  const account = await findLoginAccount(admin, identifier);
+  let account: LoginAccount | null;
+  try {
+    account = await findLoginAccount(admin, identifier);
+  } catch (_) {
+    return secureJson({ error: "Authentication is unavailable" }, 503, origin);
+  }
   if (!account) {
     await minimumFailureDelay();
     return invalidCredentials(origin);
@@ -74,36 +70,43 @@ Deno.serve(async (req) => {
     return invalidCredentials(origin);
   }
 
-  const authResponse = await fetch(
-    `${supabaseUrl}/auth/v1/token?grant_type=password`,
-    {
-      method: "POST",
-      headers: {
-        "apikey": anonKey,
-        "authorization": `Bearer ${anonKey}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ email: account.email_norm, password }),
-    },
+  const authResponse = await requestPasswordGrant(
+    supabaseUrl,
+    anonKey,
+    account.email_norm,
+    password,
   );
+  if (!authResponse) {
+    return secureJson({ error: "Authentication is unavailable" }, 503, origin);
+  }
 
   const authPayload = await safeJson(authResponse);
   if (!authResponse.ok) {
-    if (authPayload.code === "invalid_credentials") {
-      await admin.rpc("record_auth_login_failure", {
-        target_user_id: account.user_id,
-      });
+    const failure = classifyAuthFailure(authResponse.status, authPayload);
+    if (failure === "invalid_credentials") {
+      const decision = await runLoginDecisionRpc(() =>
+        admin.rpc("record_auth_login_failure_v2", {
+          target_user_id: account.user_id,
+        })
+      );
+      if (decision === "unavailable") {
+        return secureJson({ error: "Authentication is unavailable" }, 503, origin);
+      }
       await minimumFailureDelay();
       return invalidCredentials(origin);
     }
-    if (authResponse.status === 429) {
+    if (failure === "unconfirmed") {
+      await minimumFailureDelay();
+      return invalidCredentials(origin);
+    }
+    if (failure === "rate_limited") {
       return secureJson(
         { code: "rate_limited", error: "しばらく待ってから再度お試しください。" },
         429,
         origin,
       );
     }
-    return invalidCredentials(origin);
+    return secureJson({ error: "Authentication is unavailable" }, 503, origin);
   }
 
   const accessToken = stringValue(authPayload.access_token);
@@ -112,9 +115,18 @@ Deno.serve(async (req) => {
     return secureJson({ error: "Authentication is unavailable" }, 503, origin);
   }
 
-  await admin.rpc("record_auth_login_success", {
-    target_user_id: account.user_id,
-  });
+  const decision = await runLoginDecisionRpc(() =>
+    admin.rpc("record_auth_login_success_v2", {
+      target_user_id: account.user_id,
+    })
+  );
+  if (decision === "unavailable") {
+    return secureJson({ error: "Authentication is unavailable" }, 503, origin);
+  }
+  if (decision === "locked") {
+    await minimumFailureDelay();
+    return invalidCredentials(origin);
+  }
 
   return secureJson({
     access_token: accessToken,
@@ -123,8 +135,14 @@ Deno.serve(async (req) => {
   }, 200, origin);
 });
 
+function createAuthAdminClient(url: string, serviceRoleKey: string) {
+  return createClient(url, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
 async function findLoginAccount(
-  admin: ReturnType<typeof createClient>,
+  admin: ReturnType<typeof createAuthAdminClient>,
   identifier: string,
 ): Promise<LoginAccount | null> {
   const column = identifier.includes("@") ? "email_norm" : "login_id_norm";
@@ -134,7 +152,8 @@ async function findLoginAccount(
     .eq(column, identifier)
     .maybeSingle();
 
-  if (error || !data) return null;
+  if (error) throw error;
+  if (!data) return null;
   return data as LoginAccount;
 }
 
@@ -197,6 +216,7 @@ function secureHeaders(origin: string | null) {
     "referrer-policy": "no-referrer",
     "vary": "Origin",
     "x-content-type-options": "nosniff",
+    "x-questra-auth-contract": AUTH_CONTRACT_VERSION,
   });
   if (origin) headers.set("access-control-allow-origin", origin);
   return headers;

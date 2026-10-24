@@ -17,6 +17,7 @@ import {
   type ToolExecutionContext,
   type ToolExecutionResult,
 } from "./tool_server.ts";
+import { isValidUserId } from "../ai_auth.ts";
 
 type ProviderCaller = (request: ProviderRequest) => Promise<ProviderResponse>;
 type ToolExecutor = (
@@ -43,6 +44,9 @@ export async function callGeminiInteractionWithTools(
   options: ToolInteractionOptions = {},
   dependencies: ToolInteractionDependencies = {},
 ): Promise<ProviderResponse> {
+  if (!isValidUserId(context.userId) || request.userId !== context.userId) {
+    return requestFailure(request, "Provider and tool user contexts must match", "tool_failed");
+  }
   const callProvider = dependencies.callProvider ?? callGeminiInteraction;
   const executeTool = dependencies.executeTool ?? executeQuestraTool;
   const now = dependencies.now ?? Date.now;
@@ -54,7 +58,7 @@ export async function callGeminiInteractionWithTools(
   let totalToolCalls = 0;
   const attribution = await startAiToolContinuationAttribution(request);
   if (attribution.enabled && !attribution.runId) {
-    return requestFailure(request, "Tool cost attribution was unavailable");
+    return requestFailure(request, "Tool cost attribution was unavailable", "tool_failed");
   }
   let response = await callTurn(request, history, 0, deadline, now, callProvider);
   if (response.error) {
@@ -367,7 +371,11 @@ function toolFailure(response: ProviderResponse, message: string): ProviderRespo
   };
 }
 
-function requestFailure(request: ProviderRequest, message: string): ProviderResponse {
+function requestFailure(
+  request: ProviderRequest,
+  message: string,
+  code: "timeout" | "tool_failed" = "timeout",
+): ProviderResponse {
   return {
     provider: "gemini",
     model: "unresolved",
@@ -381,7 +389,7 @@ function requestFailure(request: ProviderRequest, message: string): ProviderResp
     latencyMs: 0,
     finishReason: "error",
     traceId: request.traceId,
-    error: { code: "timeout", retryable: true, message },
+    error: { code, retryable: code === "timeout", message },
   };
 }
 

@@ -10,6 +10,34 @@ import { estimateProviderInputTokens } from "./ai_budget_admission.ts";
 import { callGeminiInteractionWithTools } from "./tool_interaction_orchestrator.ts";
 import { executeQuestraTool } from "./tool_server.ts";
 
+const testUserId = "00000000-0000-4000-8000-000000000001";
+
+test("rejects mismatched provider and tool identities before any side effect", async () => {
+  let calls = 0;
+  for (const contextUserId of [
+    "00000000-0000-4000-8000-000000000002",
+    "not-a-uuid",
+  ]) {
+    const result = await callGeminiInteractionWithTools(
+      request(),
+      { userId: contextUserId },
+      {},
+      {
+        callProvider: async () => {
+          calls++;
+          return response({});
+        },
+        executeTool: async () => {
+          calls++;
+          return { ok: true, data: {} };
+        },
+      },
+    );
+    assert.equal(result.error?.code, "tool_failed");
+  }
+  assert.equal(calls, 0);
+});
+
 test("adapter sends stateless history and preserves continuation steps", async () => {
   const runtime = globalThis as unknown as Record<string, unknown>;
   const originalDeno = runtime.Deno;
@@ -25,6 +53,9 @@ test("adapter sends stateless history and preserves continuation steps", async (
     runtime.Deno = { env: { get: (key: string) => env[key] } };
     globalThis.fetch = (async (input, init) => {
       const url = String(input);
+      if (url.endsWith("/rpc/has_current_ai_legal_acceptance")) {
+        return jsonResponse(true);
+      }
       if (url.endsWith("/rpc/reserve_ai_usage_budget_v2")) {
         return jsonResponse({
           allowed: true,
@@ -132,6 +163,9 @@ test("provider-backed multi-turn fallback finalizes exact aggregate cost attribu
       const body = init?.body
         ? JSON.parse(String(init.body)) as Record<string, unknown>
         : {};
+      if (url.endsWith("/rpc/has_current_ai_legal_acceptance")) {
+        return jsonResponse(true);
+      }
       if (url.endsWith("/rpc/start_ai_tool_continuation_attribution")) {
         attributionBodies.push(body);
         return jsonResponse({
@@ -222,7 +256,7 @@ test("provider-backed multi-turn fallback finalizes exact aggregate cost attribu
     ];
     const result = await callGeminiInteractionWithTools(
       requestValue,
-      { userId: "user-1" },
+      { userId: testUserId },
       {},
       {
         executeTool: async () => ({
@@ -294,7 +328,7 @@ test("tool server rejects arguments outside the registered schema", async () => 
     const result = await executeQuestraTool(
       "get_quest_context",
       { questId: "", unexpected: true },
-      { userId: "user-1", traceId: "trace-1", approved: false },
+      { userId: testUserId, traceId: "trace-1", approved: false },
     );
 
     assert.equal(result.error, "invalid_arguments");
@@ -345,7 +379,7 @@ test("executes owner-scoped read tool and continues stateless interaction", asyn
 
   const result = await callGeminiInteractionWithTools(
     request(),
-    { userId: "user-1" },
+    { userId: testUserId },
     {},
     {
       callProvider: async (value) => {
@@ -384,7 +418,7 @@ test("blocks write tools before execution", async () => {
   let executions = 0;
   const result = await callGeminiInteractionWithTools(
     request(),
-    { userId: "user-1", approved: true },
+    { userId: testUserId, approved: true },
     {},
     {
       callProvider: async () => response({
@@ -418,7 +452,7 @@ test("stops repeated tool-call cycles", async () => {
   };
   const result = await callGeminiInteractionWithTools(
     request(),
-    { userId: "user-1" },
+    { userId: testUserId },
     {},
     {
       callProvider: async () => {
@@ -445,7 +479,7 @@ test("maxTurns counts the initial provider turn and never exceeds the five-turn 
   let providerCalls = 0;
   const result = await callGeminiInteractionWithTools(
     request(),
-    { userId: "user-1" },
+    { userId: testUserId },
     { maxTurns: 5, maxToolCalls: 12 },
     {
       callProvider: async () => {
@@ -485,7 +519,7 @@ function request(): ProviderRequest {
     }],
     idempotencyKey: "test-request",
     traceId: "trace-1",
-    userId: "user-1",
+    userId: testUserId,
   };
 }
 

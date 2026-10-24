@@ -50,6 +50,13 @@ available as subordinate references where they do not conflict with v2.
 
 ## MVP Performance Check
 
+For an internal Web review with live Supabase and Gemini via the Arc Edge
+Function, run `pwsh -NoProfile -File tools/qst/run_mock.ps1` from the repository
+root. The public client configuration lives outside Git at
+`$HOME/.questra/beta-preview.env`; sign in with a real test account. Use
+`-Offline` only when a disconnected UI mock is intended. See
+[connected preview runbook](docs/product/connected_preview_runbook.md).
+
 Use these checks before internal beta builds:
 
 - Run `flutter analyze` from `apps/mobile`.

@@ -87,6 +87,25 @@ void main() {
 
     expect(results.single.quest.id, 'new');
   });
+
+  test('searches approved Quest content without exposing hidden rows', () {
+    final results = service.rank(
+      candidates: [
+        _quest(id: 'public', now: now, tags: const ['旅行']),
+        _quest(
+          id: 'private',
+          now: now,
+          tags: const ['旅行'],
+          visibility: GuildDiscoveryVisibility.private,
+        ),
+        _quest(id: 'unrelated', now: now, tags: const ['学習']),
+      ],
+      query: '旅行',
+      now: now,
+    );
+
+    expect(results.map((result) => result.quest.id), ['public']);
+  });
 }
 
 GuildDiscoveryQuest _quest({

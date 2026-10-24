@@ -105,8 +105,10 @@ class SettingsInformationArchitectureService {
           title: '自分のデータ',
           summary: remotePersistenceConnected
               ? 'エクスポート、訂正、削除を管理します。'
-              : 'この端末のデータを確認します。アカウント操作には接続が必要です。',
-          statusLabel: remotePersistenceConnected ? '利用できます' : '端末内のみ',
+              : localMockPreview
+              ? 'Questなどは再読み込みで消えます。アカウント操作には接続が必要です。'
+              : 'アカウント操作には接続が必要です。',
+          statusLabel: remotePersistenceConnected ? '利用できます' : 'プレビュー',
           destination: '/settings/data-rights',
         ),
         const SettingsSectionOverview(

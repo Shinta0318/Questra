@@ -2,6 +2,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $runner = Join-Path $PSScriptRoot 'run_connected_preview.ps1'
+. (Join-Path $PSScriptRoot 'connected_preview_login_probe.ps1')
 $shell = (Get-Process -Id $PID).Path
 $temp = Join-Path ([IO.Path]::GetTempPath()) (
   'questra-preview-test-' + [guid]::NewGuid().ToString('N')
@@ -78,6 +79,62 @@ GEMINI_API_KEY=must-not-enter-client-config
 SUPABASE_URL=http://abcdefghijklmnopqrst.supabase.co
 SUPABASE_ANON_KEY=$validKey
 "@
+
+  Assert-LoginEntryResponse -StatusCode 401 `
+    -Content '{"code":"invalid_credentials"}' `
+    -AllowedOrigin 'http://127.0.0.1:5268' `
+    -ExpectedOrigin 'http://127.0.0.1:5268'
+  $passed++
+  Write-Host 'PASS login-entry-valid'
+
+  if (-not (Assert-LoginContractVersion -ActualVersion '2026-10-18.1' `
+      -RequireCurrentContract)) {
+    throw 'Current login contract should pass.'
+  }
+  $passed++
+  Write-Host 'PASS login-contract-current'
+
+  $legacy = Assert-LoginContractVersion -ActualVersion ''
+  if ($legacy) {
+    throw 'Legacy login contract should warn without passing.'
+  }
+  $passed++
+  Write-Host 'PASS login-contract-legacy-warning'
+
+  $rejected = $false
+  try {
+    Assert-LoginContractVersion -ActualVersion '' `
+      -RequireCurrentContract | Out-Null
+  } catch { $rejected = $true }
+  if (-not $rejected) { throw 'Strict login contract should reject a missing version.' }
+  $passed++
+  Write-Host 'PASS login-contract-legacy-strict'
+
+  $output = & $shell -NoProfile -File $runner `
+    -ConfigPath (Join-Path $temp 'publishable-key.env') `
+    -ValidateOnly -SkipRemoteProbe -RequireCurrentAuthContract 2>&1
+  if ($LASTEXITCODE -eq 0 -or
+      ($output -join ' ') -notmatch 'cannot be required while the remote probe is skipped') {
+    throw 'Strict login contract must not allow a skipped remote probe.'
+  }
+  $passed++
+  Write-Host 'PASS login-contract-no-probe-bypass'
+
+  foreach ($case in @(
+    @{ Name = 'login-entry-missing'; Status = 404; Content = '{}'; Origin = 'http://127.0.0.1:5268' },
+    @{ Name = 'login-entry-wrong-code'; Status = 401; Content = '{"code":"other"}'; Origin = 'http://127.0.0.1:5268' },
+    @{ Name = 'login-entry-wrong-cors'; Status = 401; Content = '{"code":"invalid_credentials"}'; Origin = 'http://localhost:3000' }
+  )) {
+    $failed = $false
+    try {
+      Assert-LoginEntryResponse -StatusCode $case.Status `
+        -Content $case.Content -AllowedOrigin $case.Origin `
+        -ExpectedOrigin 'http://127.0.0.1:5268'
+    } catch { $failed = $true }
+    if (-not $failed) { throw "$($case.Name) should fail." }
+    $passed++
+    Write-Host "PASS $($case.Name)"
+  }
 
   Write-Host "Connected preview launcher tests: PASS ($passed scenarios)."
 } finally {

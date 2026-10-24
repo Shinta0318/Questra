@@ -1,16 +1,26 @@
 param(
-  [string] $ConfigPath = $env:QUESTRA_PREVIEW_CONFIG,
+  [string] $ConfigPath = $(if ($env:QUESTRA_PREVIEW_CONFIG) {
+    $env:QUESTRA_PREVIEW_CONFIG
+  } else {
+    Join-Path $HOME '.questra/beta-preview.env'
+  }),
   [ValidateRange(1024, 65535)]
   [int] $Port = 5268,
   [string] $Device = 'web-server',
   [switch] $ValidateOnly,
-  [switch] $SkipRemoteProbe
+  [switch] $SkipRemoteProbe,
+  [switch] $RequireCurrentAuthContract
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+if ($RequireCurrentAuthContract -and $SkipRemoteProbe) {
+  throw 'Current auth contract cannot be required while the remote probe is skipped.'
+}
+
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+. (Join-Path $PSScriptRoot 'connected_preview_login_probe.ps1')
 
 function Read-PreviewConfig {
   param([string] $Path)
@@ -86,7 +96,9 @@ function Assert-PublishableKey {
 function Invoke-PublicProbe {
   param(
     [uri] $BaseUri,
-    [string] $Key
+    [string] $Key,
+    [int] $Port,
+    [switch] $RequireCurrentContract
   )
 
   $headers = @{ apikey = $Key }
@@ -100,15 +112,22 @@ function Invoke-PublicProbe {
   }
 
   $rest = Invoke-WebRequest `
-    -Uri ([uri]::new($BaseUri, '/rest/v1/')) `
+    -Uri ([uri]::new($BaseUri, '/rest/v1/quests?select=id&limit=0')) `
     -Headers $headers `
     -Method Get `
-    -TimeoutSec 20
-  if ($rest.StatusCode -ne 200) {
+    -TimeoutSec 20 `
+    -SkipHttpErrorCheck
+  if ($rest.StatusCode -eq 200) {
+    Write-Host 'Public probes: Auth PASS / Data API PASS'
+  } elseif ($rest.StatusCode -eq 401 -and
+      ($rest.Content | ConvertFrom-Json).code -eq '42501') {
+    Write-Host 'Public probes: Auth PASS / Data API reachable (anonymous Quest access denied)'
+  } else {
     throw 'Supabase Data API public probe failed.'
   }
-
-  Write-Host 'Public probes: Auth PASS / Data API PASS'
+  Invoke-LoginEntryProbe -BaseUri $BaseUri -Key $Key -Port $Port `
+    -RequireCurrentContract:$RequireCurrentContract
+  Write-Host 'Authenticated data access still requires an in-app smoke test.'
   Write-Host 'Gemini route: server-side Edge Function (authenticated smoke test required in app)'
 }
 
@@ -138,7 +157,8 @@ Assert-PublishableKey -Key $anonKey -ProjectRef $projectRef
 Write-Host "Connected preview target: $($baseUri.Host)"
 Write-Host 'Client credentials: publishable/anon only (validated; value not printed)'
 if (-not $SkipRemoteProbe) {
-  Invoke-PublicProbe -BaseUri $baseUri -Key $anonKey
+  Invoke-PublicProbe -BaseUri $baseUri -Key $anonKey -Port $Port `
+    -RequireCurrentContract:$RequireCurrentAuthContract
 }
 if ($ValidateOnly) {
   Write-Host 'Connected preview configuration: PASS'
@@ -163,7 +183,7 @@ try {
   try {
     $arguments = @('run', '-d', $Device, "--dart-define-from-file=$defineFile")
     if ($Device -eq 'web-server') {
-      $arguments += @('--web-hostname=127.0.0.1', "--web-port=$Port")
+      $arguments += @('--profile', '--web-hostname=127.0.0.1', "--web-port=$Port")
     }
     Write-Host "Starting Questra connected preview on http://127.0.0.1:$Port/"
     & flutter @arguments

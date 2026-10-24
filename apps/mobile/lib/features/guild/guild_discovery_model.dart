@@ -2,13 +2,7 @@ enum GuildDiscoveryVisibility { private, unlisted, public }
 
 enum GuildDiscoveryModerationStatus { pending, approved, rejected }
 
-enum GuildDiscoverySection {
-  recommended,
-  trending,
-  recent,
-  seekingCompanions,
-  missionLibrary,
-}
+enum GuildDiscoverySection { recommended, trending, recent, seekingCompanions }
 
 class GuildPilotStatus {
   const GuildPilotStatus({
@@ -122,13 +116,11 @@ class GuildDiscoveryResult {
 class GuildQuestCopyOptions {
   const GuildQuestCopyOptions({
     this.includeMissions = true,
-    this.optimizeWithArc = true,
-    this.openEditorAfterCopy = true,
+    this.optimizeWithArc = false,
   });
 
   final bool includeMissions;
   final bool optimizeWithArc;
-  final bool openEditorAfterCopy;
 }
 
 class GuildQuestCopyResult {

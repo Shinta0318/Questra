@@ -105,7 +105,7 @@ class _DevelopmentDataBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
-      label: '開発用データ。この端末内だけに保存されます。',
+      label: '開発用プレビュー。Questなどは再読み込みで消えます。',
       child: Material(
         color: QuestraColors.cosmicBlue,
         child: SafeArea(
@@ -123,7 +123,7 @@ class _DevelopmentDataBanner extends StatelessWidget {
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    '開発用データ / この端末内だけに保存',
+                    '開発用プレビュー / Questなどは再読み込みで消えます',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: QuestraColors.white,

@@ -5,17 +5,23 @@ import '../task/task_model.dart';
 import 'quest_model.dart';
 
 class RouteSnapshotConflict {
-  const RouteSnapshotConflict({required this.changedEntityIds});
+  const RouteSnapshotConflict({required this.changedEntityIds, String? message})
+    // ignore: prefer_initializing_formals
+    : _message = message;
 
   final List<String> changedEntityIds;
+  final String? _message;
 
   bool get isStale => changedEntityIds.isNotEmpty;
 
-  String get message => isStale ? '提案後に進捗が更新されました。最新の航路で提案を作り直してください。' : '';
+  String get message =>
+      _message ?? (isStale ? '提案後に進捗が更新されました。最新の航路で提案を作り直してください。' : '');
 }
 
 class RouteSnapshotService {
   const RouteSnapshotService();
+
+  static const snapshotVersion = 2;
 
   Map<String, Object?> capture({
     required Quest quest,
@@ -33,6 +39,14 @@ class RouteSnapshotService {
                 'sortOrder': mission.sortOrder,
                 'isToday': mission.isToday,
                 'routeState': mission.routeState.name,
+                'title': mission.title,
+                'description': mission.description,
+                'doneCondition': mission.doneCondition,
+                'expectedOutput': mission.expectedOutput,
+                'estimatedDurationDays': mission.estimatedDurationDays,
+                'difficultyScore': mission.difficultyScore,
+                'sourceRequirement': mission.sourceRequirement,
+                'confidence': mission.confidence,
               },
             )
             .toList()
@@ -54,7 +68,7 @@ class RouteSnapshotService {
             .toList()
           ..sort((a, b) => (a['id'] as String).compareTo(b['id'] as String));
     return {
-      'snapshotVersion': 1,
+      'snapshotVersion': snapshotVersion,
       'quest': {'id': quest.id, 'targetDate': _dateKey(quest.targetDate)},
       'missions': missionRows,
       'tasks': taskRows,
@@ -65,6 +79,13 @@ class RouteSnapshotService {
     Map<String, Object?> expected,
     Map<String, Object?> current,
   ) {
+    if (expected['snapshotVersion'] != snapshotVersion ||
+        current['snapshotVersion'] != snapshotVersion) {
+      return const RouteSnapshotConflict(
+        changedEntityIds: ['snapshot-version'],
+        message: '航路提案の保存形式が更新されました。最新の航路で提案を作り直してください。',
+      );
+    }
     final changed = <String>[];
     if (_canonical(expected['quest']) != _canonical(current['quest'])) {
       changed.add('quest');
