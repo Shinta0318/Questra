@@ -16,7 +16,7 @@ void main() {
     expect(local.sections, hasLength(SettingsSectionType.values.length));
     expect(
       _section(local, SettingsSectionType.dataRequest).statusLabel,
-      '端末内のみ',
+      'プレビュー',
     );
     expect(
       _section(connected, SettingsSectionType.dataRequest).statusLabel,

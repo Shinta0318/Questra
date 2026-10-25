@@ -42,6 +42,7 @@ void main() {
       expect(proposal.items.single.beforeData['title'], current.title);
       expect(proposal.items.single.afterData['title'], contains('15分'));
       expect(current.title, '装備を準備する');
+      expect(proposal.provenance.generator, RouteProposalGenerator.rules);
     },
   );
 

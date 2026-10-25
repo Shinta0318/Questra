@@ -9,8 +9,9 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 Set-Location $repoRoot
+. "$PSScriptRoot/hosted_auth_fixture.ps1"
 
-$sourceCommit = (& git rev-parse HEAD).Trim()
+$sourceCommit = (& dart "$PSScriptRoot/read_candidate_source_commit.dart").Trim()
 if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') {
   throw 'Unable to resolve candidate source commit.'
 }
@@ -21,20 +22,17 @@ if (-not (Get-Command $SupabaseCommand -ErrorAction SilentlyContinue)) {
   throw "Supabase CLI was not found: $SupabaseCommand"
 }
 
-$keyJson = & $SupabaseCommand projects api-keys --project-ref $ProjectRef 2>$null |
-  Out-String | ConvertFrom-Json
-$anonKey = ($keyJson.keys | Where-Object { $_.name -eq 'anon' }).api_key
-$serviceRoleKey = ($keyJson.keys | Where-Object { $_.name -eq 'service_role' }).api_key
-if ([string]::IsNullOrWhiteSpace($anonKey) -or
-    [string]::IsNullOrWhiteSpace($serviceRoleKey)) {
-  throw 'Required hosted keys were not returned.'
-}
+$keys = Get-HostedApiKeys -SupabaseCommand $SupabaseCommand -ProjectRef $ProjectRef
+$anonKey = $keys.AnonKey
+$serviceRoleKey = $keys.ServiceRoleKey
 
 $projectUrl = "https://$ProjectRef.supabase.co"
 $adminHeaders = @{
   apikey = $serviceRoleKey
   Authorization = "Bearer $serviceRoleKey"
 }
+$fixtureMetadata = Get-HostedLegalFixtureMetadata `
+  -ProjectUrl $projectUrl -AdminHeaders $adminHeaders
 $runId = [Guid]::NewGuid().ToString('N')
 $accounts = [System.Collections.Generic.List[object]]::new()
 $script:cleanupFailed = $false
@@ -47,20 +45,18 @@ function New-DrillAccount([string]$Label) {
     email = $email
     password = $password
     email_confirm = $true
-    user_metadata = @{ nickname = "QST374 $Label" }
+    user_metadata = $fixtureMetadata + @{ nickname = "QST374 $Label" }
   } | ConvertTo-Json -Depth 4
   $user = Invoke-RestMethod -Uri "$projectUrl/auth/v1/admin/users" `
     -Method Post -Headers $adminHeaders -ContentType 'application/json' -Body $body
+  $account = [pscustomobject]@{ Id = $user.id; AccessToken = $null }
+  $accounts.Add($account) | Out-Null
   $sessionBody = @{ email = $email; password = $password } | ConvertTo-Json
   $session = Invoke-RestMethod `
     -Uri "$projectUrl/auth/v1/token?grant_type=password" `
     -Method Post -Headers @{ apikey = $anonKey } `
     -ContentType 'application/json' -Body $sessionBody
-  $account = [pscustomobject]@{
-    Id = $user.id
-    AccessToken = $session.access_token
-  }
-  $accounts.Add($account) | Out-Null
+  $account.AccessToken = $session.access_token
   return $account
 }
 
@@ -77,13 +73,15 @@ function Invoke-ServiceRpc([string]$Name, [hashtable]$Payload) {
 }
 
 function Get-UserRows($Account, [string]$Path) {
-  return @(Invoke-RestMethod -Uri "$projectUrl/rest/v1/$Path" -Method Get `
-    -Headers @{ apikey = $anonKey; Authorization = "Bearer $($Account.AccessToken)" })
+  $rows = Invoke-RestMethod -Uri "$projectUrl/rest/v1/$Path" -Method Get `
+    -Headers @{ apikey = $anonKey; Authorization = "Bearer $($Account.AccessToken)" }
+  return ,@($rows | Where-Object { $null -ne $_ })
 }
 
 function Get-ServiceRows([string]$Path) {
-  return @(Invoke-RestMethod -Uri "$projectUrl/rest/v1/$Path" -Method Get `
-    -Headers $adminHeaders)
+  $rows = Invoke-RestMethod -Uri "$projectUrl/rest/v1/$Path" -Method Get `
+    -Headers $adminHeaders
+  return ,@($rows | Where-Object { $null -ne $_ })
 }
 
 function Remove-DrillAccounts {

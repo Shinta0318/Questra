@@ -1797,7 +1797,10 @@ class _CreateTrailSheetState extends ConsumerState<_CreateTrailSheet> {
     }
     setState(() {
       _isSaving = false;
-      _errorMessage = 'Trailを保存できませんでした。入力内容を残したまま再試行できます。';
+      final sync = ref.read(trailSyncControllerProvider);
+      _errorMessage = sync.status == TrailSyncStatus.failed
+          ? sync.message
+          : 'Trailを保存できませんでした。入力内容を残したまま再試行できます。';
     });
   }
 
@@ -2362,7 +2365,7 @@ class _TrailImageAttachment extends StatelessWidget {
   }
 }
 
-class _ReflectTrailSheet extends StatefulWidget {
+class _ReflectTrailSheet extends ConsumerStatefulWidget {
   const _ReflectTrailSheet({
     required this.trail,
     required this.coach,
@@ -2376,10 +2379,10 @@ class _ReflectTrailSheet extends StatefulWidget {
   final Future<bool> Function(Trail) onSubmit;
 
   @override
-  State<_ReflectTrailSheet> createState() => _ReflectTrailSheetState();
+  ConsumerState<_ReflectTrailSheet> createState() => _ReflectTrailSheetState();
 }
 
-class _ReflectTrailSheetState extends State<_ReflectTrailSheet> {
+class _ReflectTrailSheetState extends ConsumerState<_ReflectTrailSheet> {
   final _formKey = GlobalKey<FormState>();
   final _learningController = TextEditingController();
   final _nextStepController = TextEditingController();
@@ -2508,7 +2511,10 @@ class _ReflectTrailSheetState extends State<_ReflectTrailSheet> {
     }
     setState(() {
       _isSaving = false;
-      _errorMessage = '保存できませんでした。入力を残したまま再試行できます。';
+      final sync = ref.read(trailSyncControllerProvider);
+      _errorMessage = sync.status == TrailSyncStatus.failed
+          ? sync.message
+          : '保存できませんでした。入力を残したまま再試行できます。';
     });
   }
 }

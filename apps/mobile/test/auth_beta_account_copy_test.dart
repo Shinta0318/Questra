@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:questra/features/auth/auth_email_availability.dart';
 import 'package:questra/features/auth/login_screen.dart';
 import 'package:questra/features/auth/signup_screen.dart';
 
@@ -17,12 +18,26 @@ void main() {
     expect(find.text('パスワード'), findsOneWidget);
     expect(find.text('ログイン'), findsWidgets);
     expect(find.text('新規登録'), findsWidgets);
-    expect(find.text('パスワードを忘れた方'), findsOneWidget);
+    expect(find.text('パスワードを忘れた方'), findsNothing);
+    expect(find.text('確認メールが届かない方'), findsNothing);
     expect(find.text('モックを開く'), findsOneWidget);
-    expect(find.text('アカウントでログイン'), findsOneWidget);
+    expect(find.text('プレビューで作成したアカウントでログイン'), findsOneWidget);
     expect(find.text('Welcome back'), findsNothing);
     expect(find.text('Login'), findsNothing);
     expect(find.text('Create an account'), findsNothing);
+  });
+
+  testWidgets('connected login retains email recovery links', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authEmailAvailableProvider.overrideWithValue(true)],
+        child: const MaterialApp(home: LoginScreen()),
+      ),
+    );
+
+    expect(find.text('確認メールが届かない方'), findsOneWidget);
+    expect(find.text('パスワードを忘れた方'), findsOneWidget);
+    expect(find.text('モックを開く'), findsNothing);
   });
 
   testWidgets('Signup screen explains first Quest persistence setup', (

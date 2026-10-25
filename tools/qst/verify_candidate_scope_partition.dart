@@ -8,17 +8,24 @@ const expectedBranch = 'codex/initial-questra-structure-pr';
 const scopeGroups = <String, List<String>>{
   'mobile_runtime': [
     'apps/mobile/lib/',
+    'apps/mobile/pubspec.lock',
     'apps/mobile/pubspec.yaml',
     'apps/mobile/web/',
   ],
   'mobile_tests': ['apps/mobile/test/', 'apps/mobile/integration_test/'],
   'supabase_runtime': [
+    'supabase/config.toml',
     'supabase/functions/',
     'supabase/migrations/',
     'supabase/tests/',
   ],
   'release_automation': ['.gitignore', '.github/', 'tools/qst/'],
-  'product_governance': ['docs/analytics/', 'docs/legal/', 'docs/product/'],
+  'product_governance': [
+    'README.md',
+    'docs/analytics/',
+    'docs/legal/',
+    'docs/product/',
+  ],
   'qst_governance': ['docs/qst/', 'reports/qst/'],
 };
 
@@ -26,6 +33,9 @@ const postCandidateEvidenceOutputs = <String>{
   'docs/qst/BETA_CANDIDATE.yaml',
   'docs/qst/HOSTED_EVIDENCE_RUN.yaml',
   'docs/qst/HOSTED_MIGRATION_DEPLOYMENT.yaml',
+  'docs/qst/BETA_SUPABASE_PROJECT.yaml',
+  'docs/qst/BETA_RLS_EVIDENCE.yaml',
+  'docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml',
   'docs/qst/DATA_RIGHTS_FULFILLMENT_DRILL.yaml',
   'docs/qst/RUNTIME_SLO_DRILL.yaml',
   'docs/qst/OBSERVABILITY_SINK_EVIDENCE.yaml',
@@ -113,10 +123,7 @@ void main(List<String> arguments) {
 
   if (phase == 'implementation') {
     for (final path in changedPaths) {
-      final matches = scopeGroups.entries
-          .where((entry) => entry.value.any((prefix) => _matches(path, prefix)))
-          .map((entry) => entry.key)
-          .toList();
+      final matches = candidateScopeMatches(path);
       if (matches.isEmpty) {
         failures.add('Unclassified implementation path: $path');
       } else if (matches.length > 1) {
@@ -162,6 +169,11 @@ bool _matches(String path, String prefix) {
   if (prefix.endsWith('/')) return path.startsWith(prefix);
   return path == prefix;
 }
+
+List<String> candidateScopeMatches(String path) => scopeGroups.entries
+    .where((entry) => entry.value.any((prefix) => _matches(path, prefix)))
+    .map((entry) => entry.key)
+    .toList(growable: false);
 
 Never _fail(String message) {
   stderr.writeln(message);

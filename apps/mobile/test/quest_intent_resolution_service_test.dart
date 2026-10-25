@@ -14,8 +14,6 @@ void main() {
       QuestClarificationType.deadline,
       QuestClarificationType.party,
       QuestClarificationType.budget,
-      QuestClarificationType.travelActivity,
-      QuestClarificationType.travelStyle,
     ]);
     expect(result.optimizedTitle, isNot(contains('習慣にする')));
     expect(result.optimizedTitle, isNot(contains('小さく試す')));

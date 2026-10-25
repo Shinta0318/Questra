@@ -15,6 +15,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 Set-Location $repoRoot
+. "$PSScriptRoot/hosted_migration_dry_run.ps1"
 
 function Invoke-SupabaseCommand {
   param([string[]]$Arguments)
@@ -27,22 +28,13 @@ function Invoke-SupabaseCommand {
   return ($output -join [Environment]::NewLine)
 }
 
-function Get-RemoteVersions([string]$MigrationList) {
-  return @(
-    $MigrationList -split "`r?`n" |
-      ForEach-Object {
-        if ($_ -match '^\s*\d*\s*\|\s*(\d{14})\s*\|') { $Matches[1] }
-      }
-  )
-}
-
 function Quote-Yaml([string]$Value) {
   return '"' + $Value.Replace('\', '\\').Replace('"', '\"') + '"'
 }
 
-$head = (& git rev-parse HEAD).Trim()
-if ($LASTEXITCODE -ne 0 -or $head -ne $ExpectedSha) {
-  throw 'Candidate SHA does not match HEAD.'
+$sourceCommit = (& dart "$PSScriptRoot/read_candidate_source_commit.dart").Trim()
+if ($LASTEXITCODE -ne 0 -or $sourceCommit -cne $ExpectedSha) {
+  throw 'Candidate SHA does not match the verified candidate source.'
 }
 $branch = (& git branch --show-current).Trim()
 if ($branch -ne 'codex/initial-questra-structure-pr') {
@@ -85,16 +77,22 @@ $pendingPlan = @($localMigrations | Select-Object -Skip ($plannedRemoteIndex + 1
 
 $cliVersion = Invoke-SupabaseCommand @('--version')
 $beforeList = Invoke-SupabaseCommand @('migration', 'list', '--linked')
-$remoteVersionsBefore = @(Get-RemoteVersions $beforeList)
+$remoteVersionsBefore = @(Get-HostedRemoteVersions -Output $beforeList)
 if ($remoteVersionsBefore.Count -eq 0) { throw 'Unable to resolve hosted migration head.' }
 $remoteHeadBefore = $remoteVersionsBefore[-1]
 if ($remoteHeadBefore -ne $plannedRemoteVersion -and $remoteHeadBefore -ne $latestVersion) {
   throw "Unexpected hosted migration head $remoteHeadBefore. Refusing push."
 }
 
-Invoke-SupabaseCommand @('db', 'push', '--linked', '--dry-run') | Out-Null
+$dryRunOutput = Invoke-SupabaseCommand @('db', 'push', '--linked', '--dry-run')
+$expectedDryRun = if ($remoteHeadBefore -eq $latestVersion) {
+  @()
+} else {
+  @($pendingPlan | ForEach-Object { $_.Name })
+}
+Assert-HostedMigrationDryRun -Output $dryRunOutput -ExpectedMigrationFiles $expectedDryRun
 if (-not $Execute) {
-  Write-Host 'Dry-run passed. Re-run with -Execute and -ConfirmProjectRef to deploy.'
+  Write-Host 'Dry-run plan exactly matches the reviewed migrations. Re-run with -Execute and -ConfirmProjectRef to deploy.'
   exit 0
 }
 
@@ -103,7 +101,7 @@ if ($pendingAtExecution -gt 0) {
   Invoke-SupabaseCommand @('db', 'push', '--linked') | Out-Null
 }
 $afterList = Invoke-SupabaseCommand @('migration', 'list', '--linked')
-$remoteVersionsAfter = @(Get-RemoteVersions $afterList)
+$remoteVersionsAfter = @(Get-HostedRemoteVersions -Output $afterList)
 if ($remoteVersionsAfter.Count -eq 0 -or $remoteVersionsAfter[-1] -ne $latestVersion) {
   throw 'Hosted migration head did not reach the latest local migration.'
 }
@@ -146,6 +144,7 @@ foreach ($requirement in @(
   'linked_project_match',
   'authenticated_supabase_cli',
   'successful_db_push_dry_run',
+  'exact_dry_run_migration_plan',
   'expected_remote_head_or_already_current'
 )) { $lines.Add("    - $requirement") }
 $lines.Add('guardrails:')

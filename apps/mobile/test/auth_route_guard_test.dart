@@ -58,6 +58,113 @@ void main() {
       );
     });
 
+    test('allows a completed local preview profile to open Guild directly', () {
+      expect(
+        AuthRouteGuard.redirect(
+          auth: const AuthState(profile: completeProfile),
+          location: Uri.parse(AppRoutes.guild),
+          persistenceAvailable: true,
+        ),
+        isNull,
+      );
+    });
+
+    test(
+      'current legal acceptance does not return a signed-in user to consent',
+      () {
+        expect(
+          AuthRouteGuard.redirect(
+            auth: const AuthState(profile: completeProfile),
+            location: Uri.parse(AppRoutes.legalConsent),
+            persistenceAvailable: true,
+          ),
+          AppRoutes.home,
+        );
+      },
+    );
+
+    test('a server-recorded signup acceptance never asks for consent again', () {
+      const signedUpProfile = UserProfile(
+        id: 'user-3',
+        email: 'signup@example.com',
+        nickname: 'Captain',
+        legalAcceptanceCurrent: true,
+        priorSignupConsentClaimed: true,
+        onboardingCompleted: true,
+      );
+      expect(
+        AuthRouteGuard.redirect(
+          auth: const AuthState(profile: signedUpProfile),
+          location: Uri.parse(AppRoutes.home),
+          persistenceAvailable: true,
+        ),
+        isNull,
+      );
+      expect(
+        AuthRouteGuard.redirect(
+          auth: const AuthState(profile: signedUpProfile),
+          location: Uri.parse(AppRoutes.legalConsent),
+          persistenceAvailable: true,
+        ),
+        AppRoutes.home,
+      );
+    });
+
+    test('signup metadata alone does not bypass missing server evidence', () {
+      const missingRecord = UserProfile(
+        id: 'user-4',
+        email: 'legacy@example.com',
+        nickname: 'Captain',
+        priorSignupConsentClaimed: true,
+        onboardingCompleted: true,
+      );
+      expect(
+        AuthRouteGuard.redirect(
+          auth: const AuthState(profile: missingRecord),
+          location: Uri.parse(AppRoutes.home),
+          persistenceAvailable: true,
+        ),
+        AppRoutes.legalConsent,
+      );
+    });
+
+    test('an outdated app cannot enter Home with an older acceptance', () {
+      const outdatedProfile = UserProfile(
+        id: 'user-5',
+        email: 'outdated@example.com',
+        nickname: 'Captain',
+        legalPolicyUpdateRequired: true,
+        onboardingCompleted: true,
+      );
+      expect(
+        AuthRouteGuard.redirect(
+          auth: const AuthState(profile: outdatedProfile),
+          location: Uri.parse(AppRoutes.home),
+          persistenceAvailable: true,
+        ),
+        AppRoutes.legalConsent,
+      );
+    });
+
+    test('a contradictory cached acceptance cannot bypass policy mismatch', () {
+      const staleProfile = UserProfile(
+        id: 'user-6',
+        email: 'stale@example.com',
+        nickname: 'Captain',
+        legalAcceptanceCurrent: true,
+        legalPolicyUpdateRequired: true,
+        onboardingCompleted: true,
+      );
+      expect(
+        AuthRouteGuard.redirect(
+          auth: const AuthState(profile: staleProfile),
+          location: Uri.parse(AppRoutes.home),
+          persistenceAvailable: true,
+        ),
+        AppRoutes.legalConsent,
+      );
+    });
+
     test('requires login while preserving a Trail share deep link', () {
       final token = List.filled(64, 'a').join();
       final location = Uri.parse('${AppRoutes.trailShare}/$token');

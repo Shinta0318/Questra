@@ -16,6 +16,7 @@ import 'route_replanning_model.dart';
 import 'route_replanning_repository.dart';
 import 'route_snapshot_service.dart';
 import 'route_replanning_trigger_service.dart';
+import 'route_mutation_journal.dart';
 
 final routeReplanningControllerProvider =
     NotifierProvider<
@@ -29,7 +30,35 @@ class RouteReplanningController
   final Map<String, Quest> _undoQuests = {};
   final Map<String, RouteChangeProposal> _undoProposals = {};
   final Map<String, List<QuestraTask>> _undoTasks = {};
+  final Map<String, Map<String, Object?>> _undoAppliedSnapshots = {};
+  final Map<String, Map<String, Object?>> _undoRecoverySnapshots = {};
+  final Map<String, String?> _undoOwners = {};
+  final Set<String> _undoInProgress = {};
+  final Set<String> _acceptInProgress = {};
+  final Set<String> _acknowledgmentInProgress = {};
+  final Set<String> _remoteRolledBack = {};
   final Map<String, DateTime> _lastEvaluatedAt = {};
+
+  String? undoProposalIdForQuest(String questId) {
+    for (final proposal in _undoProposals.values.toList().reversed) {
+      if (proposal.questId == questId) return proposal.id;
+    }
+    return null;
+  }
+
+  bool hasFailedAcceptanceRecovery(String proposalId) =>
+      _undoQuests.containsKey(proposalId) &&
+      _undoMissions.containsKey(proposalId) &&
+      _undoTasks.containsKey(proposalId);
+
+  String _operationKey(String questId) =>
+      '${ref.read(authControllerProvider).profile?.id ?? 'local-preview'}:$questId';
+
+  bool _undoBusyForQuest(String questId) => _undoInProgress.any(
+    (proposalId) =>
+        _undoProposals[proposalId]?.questId == questId ||
+        _undoQuests[proposalId]?.id == questId,
+  );
 
   @override
   Map<String, RouteChangeProposal> build() {
@@ -202,6 +231,25 @@ class RouteReplanningController
     RouteChangeProposal proposal,
     Set<String> acceptedItemIds,
   ) async {
+    final operationKey = _operationKey(quest.id);
+    if (_acknowledgmentInProgress.contains(operationKey) ||
+        _undoBusyForQuest(quest.id) ||
+        !_acceptInProgress.add(operationKey)) {
+      throw StateError('このQuestの航路を反映中です。完了してから確認してください。');
+    }
+    try {
+      return await _acceptInternal(quest, missions, proposal, acceptedItemIds);
+    } finally {
+      _acceptInProgress.remove(operationKey);
+    }
+  }
+
+  Future<RouteMutationResult?> _acceptInternal(
+    Quest quest,
+    List<Mission> missions,
+    RouteChangeProposal proposal,
+    Set<String> acceptedItemIds,
+  ) async {
     final tracked = state[proposal.questId];
     if (proposal.status != RouteProposalStatus.pending ||
         (tracked?.id == proposal.id &&
@@ -221,6 +269,14 @@ class RouteReplanningController
         .where((item) => acceptedItemIds.contains(item.id))
         .toList(growable: false);
     if (selected.isEmpty) return null;
+    final journalOwner =
+        ref.read(authControllerProvider).profile?.id ?? 'local-preview';
+    if (await ref
+            .read(routeMutationJournalRepositoryProvider)
+            .load(journalOwner, quest.id) !=
+        null) {
+      throw StateError('前回の航路操作を確認してから、次の変更を進めてください。');
+    }
     final tasks = ref
         .read(taskControllerProvider)
         .where((task) => task.questId == quest.id)
@@ -256,6 +312,7 @@ class RouteReplanningController
     }
     final repository = ref.read(routeReplanningRepositoryProvider);
     late RouteMutationResult result;
+    var journalCleanupIncomplete = false;
     if (repository.appliesProposalAtomically) {
       result = await repository.applyProposal(
         proposal: proposal,
@@ -274,12 +331,30 @@ class RouteReplanningController
       }
       await _reloadOwnedRoute();
     } else {
+      final journalRepository = ref.read(
+        routeMutationJournalRepositoryProvider,
+      );
+      final journalOwner =
+          ref.read(authControllerProvider).profile?.id ?? 'local-preview';
+      if (await journalRepository.load(journalOwner, quest.id) != null) {
+        throw StateError('前回の航路操作を確認してから、次の変更を進めてください。');
+      }
+      final journal = RouteMutationJournal(
+        ownerId: journalOwner,
+        questId: quest.id,
+        proposalId: proposal.id,
+        stage: RouteJournalStage.applying,
+        beforeSnapshot: currentSnapshot,
+        createdAt: DateTime.now().toUtc(),
+      );
+      await journalRepository.save(journal);
       _undoMissions[proposal.id] = List<Mission>.of(missions);
       _undoQuests[proposal.id] = quest;
       _undoTasks[proposal.id] = ref
           .read(taskControllerProvider)
           .where((task) => task.questId == quest.id)
           .toList(growable: false);
+      _undoOwners[proposal.id] = ref.read(authControllerProvider).profile?.id;
       try {
         for (final item in selected) {
           await _applyItem(quest, missions, item);
@@ -344,9 +419,21 @@ class RouteReplanningController
           conflictSnapshot: latestSnapshot,
         );
         state = {...state, proposal.questId: stale};
-        _undoMissions.remove(proposal.id);
-        _undoQuests.remove(proposal.id);
-        _undoTasks.remove(proposal.id);
+        if (restored) {
+          await journalRepository.clear(journalOwner, quest.id);
+          _undoMissions.remove(proposal.id);
+          _undoQuests.remove(proposal.id);
+          _undoTasks.remove(proposal.id);
+          _undoOwners.remove(proposal.id);
+        } else {
+          await journalRepository.save(
+            journal.copyWith(
+              stage: RouteJournalStage.recoveryNeeded,
+              afterSnapshot: latestSnapshot,
+              attempts: 1,
+            ),
+          );
+        }
         await ref
             .read(routeReplanningRepositoryProvider)
             .resolveProposal(proposal.id, RouteProposalStatus.stale);
@@ -358,10 +445,49 @@ class RouteReplanningController
           persistedAtomically: false,
           staleReason: reason,
           conflictSnapshot: latestSnapshot,
+          recoveryIncomplete: !restored,
         );
+      }
+      try {
+        await journalRepository.save(
+          journal.copyWith(
+            stage: RouteJournalStage.applied,
+            afterSnapshot: const RouteSnapshotService().capture(
+              quest:
+                  ref
+                      .read(questControllerProvider)
+                      .where((item) => item.id == quest.id)
+                      .firstOrNull ??
+                  quest,
+              missions: ref.read(missionControllerProvider),
+              tasks: ref.read(taskControllerProvider),
+            ),
+          ),
+        );
+        await journalRepository.clear(journalOwner, quest.id);
+        if (await journalRepository.load(journalOwner, quest.id) != null) {
+          journalCleanupIncomplete = true;
+        }
+      } catch (_) {
+        journalCleanupIncomplete = true;
       }
     }
     _undoProposals[proposal.id] = proposal;
+    if (!repository.appliesProposalAtomically) {
+      final appliedQuest = ref
+          .read(questControllerProvider)
+          .where((entry) => entry.id == quest.id)
+          .firstOrNull;
+      if (appliedQuest != null) {
+        _undoAppliedSnapshots[proposal.id] = const RouteSnapshotService()
+            .capture(
+              quest: appliedQuest,
+              missions: ref.read(missionControllerProvider),
+              tasks: ref.read(taskControllerProvider),
+            );
+      }
+      _undoOwners[proposal.id] = ref.read(authControllerProvider).profile?.id;
+    }
     unawaited(
       ref
           .read(analyticsServiceProvider)
@@ -374,6 +500,17 @@ class RouteReplanningController
           ),
     );
     state = Map.of(state)..remove(proposal.questId);
+    if (journalCleanupIncomplete) {
+      return RouteMutationResult(
+        proposalId: result.proposalId,
+        questId: result.questId,
+        routeVersionId: result.routeVersionId,
+        status: result.status,
+        persistedAtomically: result.persistedAtomically,
+        recoveryIncomplete: true,
+        staleReason: '航路は更新されましたが、復旧記録を整理できませんでした。現在の航路を確認してください。',
+      );
+    }
     return result;
   }
 
@@ -619,48 +756,423 @@ class RouteReplanningController
     }
   }
 
-  Future<void> undo(String proposalId) async {
-    final proposal = _undoProposals.remove(proposalId);
-    final result = await ref
-        .read(routeReplanningRepositoryProvider)
-        .rollbackProposal(proposalId);
-    if (proposal != null) {
-      unawaited(
-        ref
-            .read(analyticsServiceProvider)
-            .progress(
-              name: AnalyticsEventName.routeRolledBack,
-              userId: ref.read(authControllerProvider).profile?.id,
-              questId: proposal.questId,
-              routeId: proposal.routeVersionId,
-            ),
+  Future<RouteUndoResult> undo(String proposalId) async {
+    final questId =
+        _undoProposals[proposalId]?.questId ?? _undoQuests[proposalId]?.id;
+    if (questId != null &&
+        (_acceptInProgress.contains(_operationKey(questId)) ||
+            _acknowledgmentInProgress.contains(_operationKey(questId)) ||
+            _undoBusyForQuest(questId))) {
+      return const RouteUndoResult(
+        RouteUndoStatus.busy,
+        '航路を処理中です。完了までお待ちください。',
       );
     }
-    if (result.persistedAtomically) {
-      await _reloadOwnedRoute();
-      return;
+    if (!_undoInProgress.add(proposalId)) {
+      return const RouteUndoResult(
+        RouteUndoStatus.busy,
+        '航路を元に戻しています。完了までお待ちください。',
+      );
     }
-    final oldMissions = _undoMissions.remove(proposalId);
-    final oldQuest = _undoQuests.remove(proposalId);
-    final oldTasks = _undoTasks.remove(proposalId);
-    if (oldMissions == null || oldQuest == null) return;
-    ref.read(questControllerProvider.notifier).update(oldQuest);
-    final current = ref.read(missionControllerProvider);
-    final oldIds = oldMissions.map((mission) => mission.id).toSet();
-    for (final mission in current.where(
-      (mission) =>
-          mission.questId == oldQuest.id && !oldIds.contains(mission.id),
-    )) {
-      ref.read(missionControllerProvider.notifier).archiveForRoute(mission.id);
+    try {
+      final repository = ref.read(routeReplanningRepositoryProvider);
+      final proposal = _undoProposals[proposalId];
+      if (repository.appliesProposalAtomically) {
+        if (!_remoteRolledBack.contains(proposalId)) {
+          final result = await repository.rollbackProposal(proposalId);
+          if (result.status != RouteProposalStatus.rolledBack) {
+            return RouteUndoResult(
+              RouteUndoStatus.stale,
+              result.staleReason ?? '航路が更新されています。内容を確認してからやり直してください。',
+            );
+          }
+          _remoteRolledBack.add(proposalId);
+        }
+        try {
+          await _reloadOwnedRoute();
+        } catch (_) {
+          return const RouteUndoResult(
+            RouteUndoStatus.recoveryIncomplete,
+            '航路は保存されましたが、画面の再読み込みを完了できませんでした。もう一度確認してください。',
+          );
+        }
+      } else {
+        final oldQuest = _undoQuests[proposalId];
+        final oldMissions = _undoMissions[proposalId];
+        final oldTasks = _undoTasks[proposalId];
+        final applied = _undoAppliedSnapshots[proposalId];
+        if (oldQuest == null ||
+            oldMissions == null ||
+            oldTasks == null ||
+            applied == null ||
+            _undoOwners[proposalId] !=
+                ref.read(authControllerProvider).profile?.id) {
+          return const RouteUndoResult(
+            RouteUndoStatus.unavailable,
+            '元に戻すための記録がありません。最新の航路を確認してください。',
+          );
+        }
+        final currentQuest = ref
+            .read(questControllerProvider)
+            .where((entry) => entry.id == oldQuest.id)
+            .firstOrNull;
+        if (currentQuest == null) {
+          return const RouteUndoResult(
+            RouteUndoStatus.stale,
+            'Questの状態が変わりました。最新の航路を確認してください。',
+          );
+        }
+        final current = const RouteSnapshotService().capture(
+          quest: currentQuest,
+          missions: ref.read(missionControllerProvider),
+          tasks: ref.read(taskControllerProvider),
+        );
+        final expected = _undoRecoverySnapshots[proposalId] ?? applied;
+        if (const RouteSnapshotService().compare(expected, current).isStale) {
+          return const RouteUndoResult(
+            RouteUndoStatus.stale,
+            '航路の適用後に進捗が変わりました。変更内容を確認してください。',
+          );
+        }
+        final journalRepository = ref.read(
+          routeMutationJournalRepositoryProvider,
+        );
+        final ownerId = _undoOwners[proposalId] ?? 'local-preview';
+        final previousJournal = await journalRepository.load(
+          ownerId,
+          oldQuest.id,
+        );
+        if (previousJournal != null &&
+            previousJournal.proposalId != proposalId) {
+          return const RouteUndoResult(
+            RouteUndoStatus.recoveryIncomplete,
+            '前回の航路操作が残っています。現在の内容を確認してください。',
+          );
+        }
+        final journal =
+            previousJournal ??
+            RouteMutationJournal(
+              ownerId: ownerId,
+              questId: oldQuest.id,
+              proposalId: proposalId,
+              stage: RouteJournalStage.recovering,
+              beforeSnapshot: applied,
+              afterSnapshot: const RouteSnapshotService().capture(
+                quest: oldQuest,
+                missions: oldMissions,
+                tasks: oldTasks,
+              ),
+              createdAt: DateTime.now().toUtc(),
+            );
+        await journalRepository.save(
+          journal.copyWith(
+            stage: RouteJournalStage.recovering,
+            attempts: journal.attempts + 1,
+          ),
+        );
+        final restored = await _restoreLocalSnapshot(
+          quest: oldQuest,
+          missions: oldMissions,
+          tasks: oldTasks,
+        );
+        if (!restored) {
+          await journalRepository.save(
+            journal.copyWith(
+              stage: RouteJournalStage.recoveryNeeded,
+              attempts: journal.attempts + 1,
+            ),
+          );
+          _undoRecoverySnapshots[proposalId] = const RouteSnapshotService()
+              .capture(
+                quest:
+                    ref
+                        .read(questControllerProvider)
+                        .where((entry) => entry.id == oldQuest.id)
+                        .firstOrNull ??
+                    oldQuest,
+                missions: ref.read(missionControllerProvider),
+                tasks: ref.read(taskControllerProvider),
+              );
+          return const RouteUndoResult(
+            RouteUndoStatus.recoveryIncomplete,
+            '一部を元に戻せませんでした。現在の航路を確認し、もう一度お試しください。',
+          );
+        }
+        _undoRecoverySnapshots[proposalId] = const RouteSnapshotService()
+            .capture(
+              quest:
+                  ref
+                      .read(questControllerProvider)
+                      .where((entry) => entry.id == oldQuest.id)
+                      .firstOrNull ??
+                  oldQuest,
+              missions: ref.read(missionControllerProvider),
+              tasks: ref.read(taskControllerProvider),
+            );
+        final result = await repository.rollbackProposal(proposalId);
+        if (result.status != RouteProposalStatus.rolledBack) {
+          await journalRepository.save(
+            journal.copyWith(
+              stage: RouteJournalStage.recoveryNeeded,
+              attempts: journal.attempts + 1,
+            ),
+          );
+          return const RouteUndoResult(
+            RouteUndoStatus.recoveryIncomplete,
+            '航路の復旧状態を確定できませんでした。内容を確認してください。',
+          );
+        }
+        await journalRepository.clear(ownerId, oldQuest.id);
+      }
+      _undoProposals.remove(proposalId);
+      _undoQuests.remove(proposalId);
+      _undoMissions.remove(proposalId);
+      _undoTasks.remove(proposalId);
+      _undoAppliedSnapshots.remove(proposalId);
+      _undoRecoverySnapshots.remove(proposalId);
+      _undoOwners.remove(proposalId);
+      _remoteRolledBack.remove(proposalId);
+      if (proposal != null) {
+        unawaited(
+          ref
+              .read(analyticsServiceProvider)
+              .progress(
+                name: AnalyticsEventName.routeRolledBack,
+                userId: ref.read(authControllerProvider).profile?.id,
+                questId: proposal.questId,
+                routeId: proposal.routeVersionId,
+              ),
+        );
+      }
+      return const RouteUndoResult(RouteUndoStatus.restored, '航路を元に戻しました。');
+    } catch (_) {
+      return const RouteUndoResult(
+        RouteUndoStatus.recoveryIncomplete,
+        '航路を元に戻せませんでした。現在の内容を確認し、もう一度お試しください。',
+      );
+    } finally {
+      _undoInProgress.remove(proposalId);
     }
-    for (final mission in oldMissions) {
-      ref.read(missionControllerProvider.notifier).restoreForRoute(mission);
+  }
+
+  Future<RouteUndoResult> retryFailedAcceptanceRecovery(
+    String proposalId,
+  ) async {
+    final questId = _undoQuests[proposalId]?.id;
+    if (questId != null &&
+        (_acceptInProgress.contains(_operationKey(questId)) ||
+            _acknowledgmentInProgress.contains(_operationKey(questId)) ||
+            _undoBusyForQuest(questId))) {
+      return const RouteUndoResult(RouteUndoStatus.busy, '航路の処理中です。少しお待ちください。');
     }
-    if (oldTasks != null) {
-      await ref
-          .read(taskControllerProvider.notifier)
-          .restoreRouteSnapshot(oldQuest.id, oldTasks);
+    if (!_undoInProgress.add(proposalId)) {
+      return const RouteUndoResult(RouteUndoStatus.busy, '航路の復旧中です。少しお待ちください。');
     }
+    try {
+      final quest = _undoQuests[proposalId];
+      final missions = _undoMissions[proposalId];
+      final tasks = _undoTasks[proposalId];
+      final ownerId = ref.read(authControllerProvider).profile?.id;
+      if (quest == null ||
+          missions == null ||
+          tasks == null ||
+          _undoOwners[proposalId] != ownerId) {
+        return const RouteUndoResult(
+          RouteUndoStatus.unavailable,
+          '復旧に必要な記録がありません。現在の航路を確認してください。',
+        );
+      }
+      final repository = ref.read(routeMutationJournalRepositoryProvider);
+      final journal = await repository.load(
+        ownerId ?? 'local-preview',
+        quest.id,
+      );
+      if (journal == null ||
+          journal.proposalId != proposalId ||
+          journal.stage != RouteJournalStage.recoveryNeeded ||
+          journal.afterSnapshot == null) {
+        return const RouteUndoResult(
+          RouteUndoStatus.unavailable,
+          '前回の復旧記録を確認できません。現在の航路を確認してください。',
+        );
+      }
+      final currentQuest = ref
+          .read(questControllerProvider)
+          .where((entry) => entry.id == quest.id)
+          .firstOrNull;
+      if (currentQuest == null) {
+        return const RouteUndoResult(
+          RouteUndoStatus.stale,
+          'Questの状態が変わりました。最新の航路を確認してください。',
+        );
+      }
+      final current = const RouteSnapshotService().capture(
+        quest: currentQuest,
+        missions: ref.read(missionControllerProvider),
+        tasks: ref.read(taskControllerProvider),
+      );
+      if (const RouteSnapshotService()
+          .compare(journal.afterSnapshot!, current)
+          .isStale) {
+        return const RouteUndoResult(
+          RouteUndoStatus.stale,
+          '前回の操作後に進捗が変わりました。内容を確認してください。',
+        );
+      }
+      final restored = await _restoreLocalSnapshot(
+        quest: quest,
+        missions: missions,
+        tasks: tasks,
+      );
+      if (!restored) {
+        final latestQuest =
+            ref
+                .read(questControllerProvider)
+                .where((entry) => entry.id == quest.id)
+                .firstOrNull ??
+            quest;
+        await repository.save(
+          journal.copyWith(
+            attempts: journal.attempts + 1,
+            afterSnapshot: const RouteSnapshotService().capture(
+              quest: latestQuest,
+              missions: ref.read(missionControllerProvider),
+              tasks: ref.read(taskControllerProvider),
+            ),
+          ),
+        );
+        return const RouteUndoResult(
+          RouteUndoStatus.recoveryIncomplete,
+          '一部を戻せませんでした。現在の内容を確認してから、もう一度お試しください。',
+        );
+      }
+      await repository.clear(ownerId ?? 'local-preview', quest.id);
+      if (await repository.load(ownerId ?? 'local-preview', quest.id) != null) {
+        return const RouteUndoResult(
+          RouteUndoStatus.recoveryIncomplete,
+          '復旧記録を整理できませんでした。現在の航路を確認してください。',
+        );
+      }
+      _undoQuests.remove(proposalId);
+      _undoMissions.remove(proposalId);
+      _undoTasks.remove(proposalId);
+      _undoOwners.remove(proposalId);
+      return const RouteUndoResult(RouteUndoStatus.restored, '承認前の航路へ戻しました。');
+    } catch (_) {
+      return const RouteUndoResult(
+        RouteUndoStatus.recoveryIncomplete,
+        '航路の復旧を完了できませんでした。現在の内容を確認してください。',
+      );
+    } finally {
+      _undoInProgress.remove(proposalId);
+    }
+  }
+
+  Future<RouteJournalDisposition?> inspectLocalJournal(
+    Quest quest,
+    List<Mission> missions,
+  ) async {
+    return (await inspectRouteJournal(quest, missions))?.disposition;
+  }
+
+  Future<RouteJournalInspection?> inspectRouteJournal(
+    Quest quest,
+    List<Mission> missions,
+  ) async {
+    final ownerId =
+        ref.read(authControllerProvider).profile?.id ?? 'local-preview';
+    final journal = await ref
+        .read(routeMutationJournalRepositoryProvider)
+        .load(ownerId, quest.id);
+    if (journal == null) return null;
+    final current = const RouteSnapshotService().capture(
+      quest: quest,
+      missions: missions,
+      tasks: ref.read(taskControllerProvider),
+    );
+    return RouteJournalInspection(
+      proposalId: journal.proposalId,
+      stage: journal.stage,
+      disposition: journal.disposition(current),
+      createdAt: journal.createdAt,
+      matchesBefore: !const RouteSnapshotService()
+          .compare(journal.beforeSnapshot, current)
+          .isStale,
+      matchesAfter:
+          journal.afterSnapshot != null &&
+          !const RouteSnapshotService()
+              .compare(journal.afterSnapshot!, current)
+              .isStale,
+    );
+  }
+
+  Future<bool> acknowledgeRouteJournal(
+    String questId,
+    String proposalId,
+  ) async {
+    final operationKey = _operationKey(questId);
+    if (_acceptInProgress.contains(operationKey) ||
+        _undoBusyForQuest(questId) ||
+        !_acknowledgmentInProgress.add(operationKey)) {
+      return false;
+    }
+    try {
+      return await _acknowledgeRouteJournal(questId, proposalId);
+    } finally {
+      _acknowledgmentInProgress.remove(operationKey);
+    }
+  }
+
+  Future<bool> _acknowledgeRouteJournal(
+    String questId,
+    String proposalId,
+  ) async {
+    final ownerId =
+        ref.read(authControllerProvider).profile?.id ?? 'local-preview';
+    final repository = ref.read(routeMutationJournalRepositoryProvider);
+    final journal = await repository.load(ownerId, questId);
+    if (journal == null || journal.proposalId != proposalId) return false;
+    final quest = ref
+        .read(questControllerProvider)
+        .where((item) => item.id == questId)
+        .firstOrNull;
+    if (quest == null) return false;
+    final current = const RouteSnapshotService().capture(
+      quest: quest,
+      missions: ref.read(missionControllerProvider),
+      tasks: ref.read(taskControllerProvider),
+    );
+    final inspection = RouteJournalInspection(
+      proposalId: journal.proposalId,
+      stage: journal.stage,
+      disposition: journal.disposition(current),
+      createdAt: journal.createdAt,
+      matchesBefore: !const RouteSnapshotService()
+          .compare(journal.beforeSnapshot, current)
+          .isStale,
+      matchesAfter:
+          journal.afterSnapshot != null &&
+          !const RouteSnapshotService()
+              .compare(journal.afterSnapshot!, current)
+              .isStale,
+    );
+    if (!inspection.canAcknowledge) return false;
+    await repository.clear(ownerId, questId);
+    if (await repository.load(ownerId, questId) != null) return false;
+    if (journal.stage != RouteJournalStage.applied) {
+      _undoProposals.remove(proposalId);
+      _undoQuests.remove(proposalId);
+      _undoMissions.remove(proposalId);
+      _undoTasks.remove(proposalId);
+      _undoAppliedSnapshots.remove(proposalId);
+      _undoRecoverySnapshots.remove(proposalId);
+      _undoOwners.remove(proposalId);
+      _remoteRolledBack.remove(proposalId);
+      if (state[questId]?.id == proposalId) {
+        state = Map.of(state)..remove(questId);
+      }
+    }
+    return true;
   }
 
   Future<void> _reloadOwnedRoute() async {

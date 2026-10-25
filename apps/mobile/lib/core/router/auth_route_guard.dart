@@ -7,6 +7,8 @@ abstract final class AuthRouteGuard {
     AppRoutes.login,
     AppRoutes.signup,
     AppRoutes.forgotPassword,
+    AppRoutes.confirmEmailHelp,
+    AppRoutes.emailConfirmationReturn,
     AppRoutes.resetPassword,
   };
 
@@ -43,7 +45,10 @@ abstract final class AuthRouteGuard {
       return null;
     }
 
-    final legalAcceptanceCurrent = auth.profile?.legalAcceptanceCurrent == true;
+    final legalAcceptanceCurrent =
+        auth.profile?.legalAcceptanceCurrent == true &&
+        auth.profile?.legalAcceptanceCheckAvailable != false &&
+        auth.profile?.legalPolicyUpdateRequired != true;
     if (!legalAcceptanceCurrent) {
       return path == AppRoutes.legalConsent ? null : AppRoutes.legalConsent;
     }

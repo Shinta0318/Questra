@@ -1,22 +1,23 @@
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const outputPath = 'docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml';
 
 Future<void> main(List<String> arguments) async {
   final options = _Options.parse(arguments);
-  final head = _command(['git', 'rev-parse', 'HEAD']).trim();
   final dirty = _command(['git', 'status', '--porcelain']).trim().isNotEmpty;
   if (dirty) _fail('Physical evidence must be recorded from a clean worktree.');
-  if (options.candidateSha != head) {
-    _fail('Candidate SHA does not match HEAD.');
+  if (!candidateSourceHasOnlyEvidenceCommits(options.candidateSha)) {
+    _fail('Candidate SHA is not an unchanged source commit.');
   }
   if (!options.privacyReviewed) {
     _fail('Evidence requires explicit privacy review confirmation.');
   }
   final device = _verifyPhysicalAndroid(options.adbCommand, options.deviceId);
   final candidate = File('docs/qst/BETA_CANDIDATE.yaml').readAsStringSync();
-  if (!candidate.contains('source_commit: "$head"')) {
-    _fail('Beta candidate manifest does not match HEAD.');
+  if (!candidate.contains('source_commit: "${options.candidateSha}"')) {
+    _fail('Beta candidate manifest does not match candidate source.');
   }
   final evidence = <String, _EvidenceFile>{};
   for (final entry in options.evidence.entries) {
@@ -68,7 +69,9 @@ Future<void> main(List<String> arguments) async {
     ..writeln('  emulator_is_physical_evidence: false')
     ..writeln('  automated_test_replaces_human_evidence: false');
   File(outputPath).writeAsStringSync(output.toString());
-  stdout.writeln('Physical accessibility evidence recorded for $head.');
+  stdout.writeln(
+    'Physical accessibility evidence recorded for ${options.candidateSha}.',
+  );
 }
 
 class _Options {

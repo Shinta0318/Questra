@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/safety/ai_legal_failure.dart';
 import '../mission/mission_model.dart';
 
 class TaskSuggestion {
@@ -90,49 +91,56 @@ class SupabaseTaskGenerationService implements TaskGenerationService {
 
   @override
   Future<List<TaskSuggestion>> generateForMission(Mission mission) async {
-    final response = await client.functions.invoke(
-      'quest-planning-v2',
-      body: {
-        'mode': 'expand_tasks',
-        'quest_id': mission.questId,
-        'mission_id': mission.id,
-        'idempotency_key': 'task-expansion:${mission.id}:${const Uuid().v4()}',
-      },
-    );
-    final data = Map<String, dynamic>.from(response.data as Map);
-    if (data['status'] != 'preview_ready' || data['task_plan'] is! Map) {
-      throw StateError('Task候補を準備できませんでした。入力内容は失われていません。');
+    try {
+      final response = await client.functions.invoke(
+        'quest-planning-v2',
+        body: {
+          'mode': 'expand_tasks',
+          'quest_id': mission.questId,
+          'mission_id': mission.id,
+          'idempotency_key':
+              'task-expansion:${mission.id}:${const Uuid().v4()}',
+        },
+      );
+      final data = Map<String, dynamic>.from(response.data as Map);
+      if (data['status'] != 'preview_ready' || data['task_plan'] is! Map) {
+        throw StateError('Task候補を準備できませんでした。入力内容は失われていません。');
+      }
+      final plan = Map<String, dynamic>.from(data['task_plan'] as Map);
+      final qualityGate = Map<String, dynamic>.from(
+        plan['qualityGate'] as Map? ?? const {},
+      );
+      final critic = Map<String, dynamic>.from(
+        plan['taskCritic'] as Map? ?? const {},
+      );
+      if (qualityGate['status'] != 'passed' ||
+          qualityGate['version'] != 'qst-341-v1' ||
+          critic['passed'] != true ||
+          (critic['overallScore'] as num? ?? 0) < 85) {
+        throw StateError('Task候補の品質確認が完了していません。Missionを保ったまま再試行できます。');
+      }
+      final suggestions = <TaskSuggestion>[
+        for (final raw in (plan['tasks'] as List? ?? const []))
+          if (raw is Map) _fromJson(Map<String, dynamic>.from(raw)),
+      ];
+      if (suggestions.isEmpty) {
+        throw StateError('追加できるTask候補がありませんでした。');
+      }
+      final passedIds = {
+        for (final raw in (critic['taskResults'] as List? ?? const []))
+          if (raw is Map && raw['clientId'] is String && raw['passed'] == true)
+            raw['clientId'] as String,
+      };
+      if (passedIds.length != suggestions.length ||
+          suggestions.any((item) => !passedIds.contains(item.clientId))) {
+        throw StateError('Task候補の評価結果が不足しています。Missionを保ったまま再試行できます。');
+      }
+      return suggestions;
+    } catch (error) {
+      final legalMessage = aiLegalFailureMessage(error);
+      if (legalMessage != null) throw StateError(legalMessage);
+      rethrow;
     }
-    final plan = Map<String, dynamic>.from(data['task_plan'] as Map);
-    final qualityGate = Map<String, dynamic>.from(
-      plan['qualityGate'] as Map? ?? const {},
-    );
-    final critic = Map<String, dynamic>.from(
-      plan['taskCritic'] as Map? ?? const {},
-    );
-    if (qualityGate['status'] != 'passed' ||
-        qualityGate['version'] != 'qst-341-v1' ||
-        critic['passed'] != true ||
-        (critic['overallScore'] as num? ?? 0) < 85) {
-      throw StateError('Task候補の品質確認が完了していません。Missionを保ったまま再試行できます。');
-    }
-    final suggestions = <TaskSuggestion>[
-      for (final raw in (plan['tasks'] as List? ?? const []))
-        if (raw is Map) _fromJson(Map<String, dynamic>.from(raw)),
-    ];
-    if (suggestions.isEmpty) {
-      throw StateError('追加できるTask候補がありませんでした。');
-    }
-    final passedIds = {
-      for (final raw in (critic['taskResults'] as List? ?? const []))
-        if (raw is Map && raw['clientId'] is String && raw['passed'] == true)
-          raw['clientId'] as String,
-    };
-    if (passedIds.length != suggestions.length ||
-        suggestions.any((item) => !passedIds.contains(item.clientId))) {
-      throw StateError('Task候補の評価結果が不足しています。Missionを保ったまま再試行できます。');
-    }
-    return suggestions;
   }
 
   TaskSuggestion _fromJson(Map<String, dynamic> data) => TaskSuggestion(

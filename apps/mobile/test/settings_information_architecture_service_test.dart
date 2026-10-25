@@ -26,4 +26,14 @@ void main() {
       contains('データ保護'),
     );
   });
+
+  test('offline preview does not promise durable account data', () {
+    final overview = service.buildOverview(localMockPreview: true);
+    final data = overview.sections.firstWhere(
+      (section) => section.type == SettingsSectionType.dataRequest,
+    );
+
+    expect(data.summary, contains('再読み込みで消えます'));
+    expect(data.statusLabel, 'プレビュー');
+  });
 }

@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
+
+import 'candidate_git_state.dart';
 
 const intakePath = 'docs/qst/LEGAL_SIGNOFF_INTAKE.yaml';
 const signoffPath = 'docs/qst/BETA_LEGAL_SIGNOFF.yaml';
@@ -43,14 +46,22 @@ void main(List<String> arguments) {
   }
 
   if (arguments.contains('--require-approved')) {
-    final head = _command(['git', 'rev-parse', 'HEAD']).trim();
+    final candidate = _read('docs/qst/BETA_CANDIDATE.yaml', failures);
+    final sourceCommit = RegExp(
+      r'^source_commit: "([a-f0-9]{40})"$',
+      multiLine: true,
+    ).firstMatch(candidate)?.group(1);
+    if (sourceCommit == null ||
+        !candidateSourceHasOnlyEvidenceCommits(sourceCommit)) {
+      failures.add('Legal sign-off has no unchanged candidate source.');
+    }
     for (final pair in [
-      (intake, 'status: approved', 'candidate_source_commit: "$head"'),
-      (signoff, 'status: approved', 'candidate_source_commit: "$head"'),
+      (intake, 'status: approved', 'candidate_source_commit: "$sourceCommit"'),
+      (signoff, 'status: approved', 'candidate_source_commit: "$sourceCommit"'),
       (
         reconciliation,
         'status: versions_aligned_approved',
-        'candidate_source_commit: "$head"',
+        'candidate_source_commit: "$sourceCommit"',
       ),
     ]) {
       _expect(pair.$1, pair.$2, 'approved legal evidence', failures);
@@ -99,11 +110,19 @@ const _roles = [
 ];
 
 String? _scalar(String content, String field) {
-  final value = RegExp(
-    '^${RegExp.escape(field)}:\\s*"?([^"\\n]+)"?\\s*\$',
-    multiLine: true,
-  ).firstMatch(content)?.group(1)?.trim();
-  return value == null || value == 'null' || value == 'pending' ? null : value;
+  for (final line in content.split('\n')) {
+    if (!line.startsWith('$field:')) continue;
+    final raw = line.substring(field.length + 1).trim();
+    if (raw.isEmpty || raw == 'null' || raw == 'pending') return null;
+    if (!raw.startsWith('"')) return raw;
+    try {
+      final value = jsonDecode(raw);
+      return value is String && value.isNotEmpty ? value : null;
+    } catch (_) {
+      return null;
+    }
+  }
+  return null;
 }
 
 void _rejectSecrets(String content, List<String> failures) {
@@ -126,12 +145,6 @@ String _read(String path, List<String> failures) {
   return file.readAsStringSync().replaceAll('\r\n', '\n');
 }
 
-String _command(List<String> command) {
-  final result = Process.runSync(command.first, command.skip(1).toList());
-  if (result.exitCode != 0) _fail(result.stderr.toString());
-  return result.stdout.toString();
-}
-
 void _expect(
   String content,
   String snippet,
@@ -139,9 +152,4 @@ void _expect(
   List<String> failures,
 ) {
   if (!content.contains(snippet)) failures.add('$path missing: $snippet');
-}
-
-Never _fail(String message) {
-  stderr.writeln(message);
-  exit(1);
 }

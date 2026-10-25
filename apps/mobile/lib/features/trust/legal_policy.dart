@@ -36,6 +36,8 @@ class LegalAcceptance {
   };
 }
 
+enum ActiveLegalPolicyState { current, unavailable, updateRequired }
+
 abstract final class QuestraLegalPolicy {
   static const minimumAge = 18;
   static const regionCode = 'JP';
@@ -44,6 +46,37 @@ abstract final class QuestraLegalPolicy {
   static const termsVersion = '2026-08-18-beta.1';
   static const privacyVersion = '2026-08-18-beta.1';
   static const aiDisclosureVersion = '2026-08-18-beta.1';
+
+  static bool matchesSignupMetadata(Map<String, dynamic>? metadata) {
+    if (metadata == null) return false;
+    final acceptedAt = metadata['legal_accepted_at'];
+    return metadata['eligibility_version'] == eligibilityVersion &&
+        metadata['terms_version'] == termsVersion &&
+        metadata['privacy_version'] == privacyVersion &&
+        metadata['ai_disclosure_version'] == aiDisclosureVersion &&
+        metadata['region_code'] == regionCode &&
+        metadata['minimum_age_confirmed'] == true &&
+        acceptedAt is String &&
+        DateTime.tryParse(acceptedAt) != null;
+  }
+
+  static bool matchesActiveReleasePolicy(Map<String, dynamic>? policy) =>
+      policy != null &&
+      policy['active'] == true &&
+      policy['minimum_age'] == minimumAge &&
+      policy['eligibility_version'] == eligibilityVersion &&
+      policy['terms_version'] == termsVersion &&
+      policy['privacy_version'] == privacyVersion &&
+      policy['ai_disclosure_version'] == aiDisclosureVersion;
+
+  static ActiveLegalPolicyState activePolicyState(
+    Map<String, dynamic>? policy,
+  ) {
+    if (policy == null) return ActiveLegalPolicyState.unavailable;
+    return matchesActiveReleasePolicy(policy)
+        ? ActiveLegalPolicyState.current
+        : ActiveLegalPolicyState.updateRequired;
+  }
 
   static LegalAcceptance acceptance({DateTime? acceptedAt}) => LegalAcceptance(
     eligibilityVersion: eligibilityVersion,

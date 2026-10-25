@@ -20,7 +20,12 @@ final guildDiscoveryRankingServiceProvider =
 
 final guildPilotStatusProvider = FutureProvider<GuildPilotStatus>((ref) async {
   final repository = ref.watch(guildDiscoveryRepositoryProvider);
-  if (repository == null) return const GuildPilotStatus.localPreview();
+  if (repository == null) {
+    if (SupabaseConfig.autoEnterLocalMock) {
+      return const GuildPilotStatus(configured: false, enabled: true);
+    }
+    return const GuildPilotStatus.localPreview();
+  }
   return repository.pilotStatus();
 });
 

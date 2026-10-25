@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 
 import '../../core/config/supabase_config.dart';
+import '../../core/safety/ai_legal_failure.dart';
 import '../../core/estimation/effort_estimate.dart';
 import '../mission/mission_model.dart';
 import 'quest_guide_model.dart';
@@ -310,6 +311,8 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
       return _guideFromPlanningPreview(quest, data);
     } catch (error) {
       if (error is StateError) rethrow;
+      final legalMessage = aiLegalFailureMessage(error);
+      if (legalMessage != null) throw StateError(legalMessage);
       throw StateError('ArcがMission構造を確認できませんでした。固定候補には置き換えず、もう一度試せます。');
     }
   }

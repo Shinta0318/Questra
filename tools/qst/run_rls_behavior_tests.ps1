@@ -18,6 +18,12 @@ if ($LinkedCli) {
     throw "Supabase CLI was not found: $SupabaseCommand"
   }
 
+  $passMarker = switch ([System.IO.Path]::GetFileName($TestFile)) {
+    'rls_behavior.sql' { 'QST-041 RLS behavior tests passed' }
+    'hosted_rls_inventory.sql' { 'QST-395 hosted dynamic RLS inventory passed' }
+    default { throw 'Linked CLI execution requires a supported RLS test file.' }
+  }
+
   $psqlSource = Get-Content -Raw -Encoding UTF8 -LiteralPath $TestFile
   $variables = @{}
   $variablePattern = "(?m)^\\set\s+([A-Za-z_][A-Za-z0-9_]*)\s+'([^']*)'\s*$"
@@ -39,7 +45,7 @@ if ($LinkedCli) {
     $escapedValue = $variables[$name].Replace("'", "''")
     $linkedSql = $linkedSql.Replace(":'$name'", "'$escapedValue'")
   }
-  if ($linkedSql -match '(?m)^\\') {
+  if ($linkedSql -match '(?m)^\\' -or $linkedSql -match '\\gset\b') {
     throw 'Unsupported psql metacommand remains after linked CLI conversion.'
   }
   if ($linkedSql -match ":'[A-Za-z_][A-Za-z0-9_]*'") {
@@ -75,9 +81,7 @@ if ($LinkedCli) {
     if ($exitCode -ne 0) {
       throw "Linked CLI RLS behavior tests failed with exit code $exitCode."
     }
-    if (-not (($output -join [Environment]::NewLine).Contains(
-      'QST-041 RLS behavior tests passed'
-    ))) {
+    if (-not (($output -join [Environment]::NewLine).Contains($passMarker))) {
       throw 'Linked CLI output did not contain the RLS pass marker.'
     }
   } finally {

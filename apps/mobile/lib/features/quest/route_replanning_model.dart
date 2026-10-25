@@ -33,6 +33,43 @@ enum RouteProposalReason {
   manualReview,
 }
 
+enum RouteProposalGenerator {
+  legacyUnknown,
+  rules,
+  gemini,
+  manual,
+  otherProvider,
+}
+
+class RouteProposalProvenance {
+  const RouteProposalProvenance({
+    this.generator = RouteProposalGenerator.legacyUnknown,
+    this.version,
+    this.promptVersion,
+    this.schemaVersion,
+    this.grounded = false,
+  });
+
+  final RouteProposalGenerator generator;
+  final String? version;
+  final String? promptVersion;
+  final String? schemaVersion;
+  final bool grounded;
+
+  factory RouteProposalProvenance.fromStorage(Map<String, dynamic> row) {
+    return RouteProposalProvenance(
+      generator: RouteProposalGenerator.values.firstWhere(
+        (value) => value.name == row['generator_type'],
+        orElse: () => RouteProposalGenerator.legacyUnknown,
+      ),
+      version: row['generator_version'] as String?,
+      promptVersion: row['prompt_version'] as String?,
+      schemaVersion: row['schema_version'] as String?,
+      grounded: row['grounded'] == true,
+    );
+  }
+}
+
 class RouteMutationResult {
   const RouteMutationResult({
     required this.proposalId,
@@ -42,6 +79,7 @@ class RouteMutationResult {
     this.routeVersionId,
     this.staleReason,
     this.conflictSnapshot = const {},
+    this.recoveryIncomplete = false,
   });
 
   final String proposalId;
@@ -51,6 +89,18 @@ class RouteMutationResult {
   final String? routeVersionId;
   final String? staleReason;
   final Map<String, Object?> conflictSnapshot;
+  final bool recoveryIncomplete;
+}
+
+enum RouteUndoStatus { restored, stale, recoveryIncomplete, unavailable, busy }
+
+class RouteUndoResult {
+  const RouteUndoResult(this.status, this.message);
+
+  final RouteUndoStatus status;
+  final String message;
+
+  bool get restored => status == RouteUndoStatus.restored;
 }
 
 class RouteChangeItem {
@@ -90,6 +140,7 @@ class RouteChangeProposal {
     this.status = RouteProposalStatus.pending,
     this.staleReason,
     this.conflictSnapshot = const {},
+    this.provenance = const RouteProposalProvenance(),
     DateTime? createdAt,
   }) : id = id ?? _routeUuid.v4(),
        routeVersionId = routeVersionId ?? _routeUuid.v4(),
@@ -106,6 +157,7 @@ class RouteChangeProposal {
   final RouteProposalStatus status;
   final String? staleReason;
   final Map<String, Object?> conflictSnapshot;
+  final RouteProposalProvenance provenance;
   final DateTime createdAt;
 
   RouteChangeProposal copyWith({
@@ -125,6 +177,7 @@ class RouteChangeProposal {
       status: status ?? this.status,
       staleReason: staleReason ?? this.staleReason,
       conflictSnapshot: conflictSnapshot ?? this.conflictSnapshot,
+      provenance: provenance,
       createdAt: createdAt,
     );
   }
@@ -144,6 +197,11 @@ class RouteProposalValidator {
     }
     if (proposal.items.length > 20) {
       throw const FormatException('一度に確認できる変更は20件までです。');
+    }
+    if (proposal.provenance.version != null &&
+        (proposal.provenance.version!.length > 100 ||
+            proposal.provenance.version!.trim().isEmpty)) {
+      throw const FormatException('航路提案の生成情報が不正です。');
     }
     for (final item in proposal.items) {
       if (item.title.trim().isEmpty ||

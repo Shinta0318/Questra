@@ -12,6 +12,8 @@ import '../trust/legal_policy.dart';
 import 'auth_journey_scaffold.dart';
 import 'auth_controller.dart';
 import 'auth_entry_switcher.dart';
+import 'auth_error_notice.dart';
+import 'auth_state.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -41,6 +43,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
+    final suggestedEmail = InputValidators.suggestedEmailCorrection(
+      _emailController.text,
+    );
 
     if (_legalAcceptance == null) {
       return AuthJourneyScaffold(
@@ -70,10 +75,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       eyebrow: '新規登録',
       title: 'アカウントを作成',
       message: '登録後、Arcと最初のQuestを考えられます。',
+      mobileFormHeader: true,
       child: AutofillGroup(
         child: Form(
           key: _formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -95,6 +100,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 required: true,
                 child: TextFormField(
                   controller: _nicknameController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: _fieldDecoration(
                     icon: Icons.person_outline_rounded,
                   ),
@@ -117,6 +123,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 required: true,
                 child: TextFormField(
                   controller: _loginIdController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: _fieldDecoration(icon: Icons.badge_outlined),
                   style: const TextStyle(color: AppColors.white),
                   textCapitalization: TextCapitalization.none,
@@ -130,9 +137,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               QuestraFieldLabel(
                 label: 'メールアドレス',
                 foregroundColor: AppColors.white,
+                helper: '確認メールを受け取るアドレスです。',
                 required: true,
                 child: TextFormField(
                   controller: _emailController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: _fieldDecoration(
                     icon: Icons.mail_outline_rounded,
                   ),
@@ -141,9 +150,33 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   textInputAction: TextInputAction.next,
                   autofillHints: const [AutofillHints.email],
                   maxLength: InputLimits.email,
+                  onChanged: (_) => setState(() {}),
                   validator: InputValidators.email,
                 ),
               ),
+              if (suggestedEmail != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'メールアドレスを確認してください。',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.white),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      _emailController.text = suggestedEmail;
+                      _emailController.selection = TextSelection.collapsed(
+                        offset: suggestedEmail.length,
+                      );
+                      setState(() {});
+                    },
+                    icon: const Icon(Icons.edit_outlined),
+                    label: Text('@${suggestedEmail.split('@').last} に修正する'),
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.lg),
               QuestraFieldLabel(
                 label: 'パスワード',
@@ -151,6 +184,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 required: true,
                 child: TextFormField(
                   controller: _passwordController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: _fieldDecoration(
                     icon: Icons.lock_outline_rounded,
                     suffix: IconButton(
@@ -174,12 +208,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   validator: InputValidators.newPassword,
                 ),
               ),
-              if (auth.errorMessage != null) ...[
+              if (auth.errorMessage != null &&
+                  auth.errorContext == AuthErrorContext.signup) ...[
                 const SizedBox(height: AppSpacing.md),
-                Text(
-                  auth.errorMessage!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+                AuthErrorNotice(message: auth.errorMessage!),
               ],
               const SizedBox(height: AppSpacing.xl),
               FilledButton.icon(
@@ -215,6 +247,32 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final suggestion = InputValidators.suggestedEmailCorrection(
+      _emailController.text,
+    );
+    if (suggestion != null) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('メールアドレスを確認'),
+          content: Text(
+            '入力した宛先は ${_emailController.text.trim()} です。'
+            'もしかして $suggestion ですか？',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('修正する'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('このまま登録'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || proceed != true) return;
+    }
     await ref
         .read(authControllerProvider.notifier)
         .signUp(

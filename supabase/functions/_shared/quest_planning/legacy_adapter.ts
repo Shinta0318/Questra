@@ -1,5 +1,5 @@
 import { generateAiText } from "../ai_provider.ts";
-import { ProviderRequest, ProviderResponse } from "./contracts.ts";
+import type { ProviderRequest, ProviderResponse } from "./contracts.ts";
 
 // Migration-only adapter. New Quest Planning code must use callGeminiInteraction.
 export async function callLegacyGenerateContent(request: ProviderRequest): Promise<ProviderResponse> {
@@ -9,7 +9,7 @@ export async function callLegacyGenerateContent(request: ProviderRequest): Promi
     input: request.input,
     feature: request.operation,
     promptVersion: request.promptVersion,
-    userId: request.userId,
+    userId: request.userId ?? "",
     responseSchema: request.responseSchema,
     maxOutputTokens: request.maxOutputTokens,
     temperature: request.temperature,

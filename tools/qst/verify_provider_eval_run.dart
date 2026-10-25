@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const manifestPath = 'docs/qst/PROVIDER_EVAL_RUN.yaml';
 const recorderPath = 'tools/qst/record_provider_eval_human_review.dart';
 const resultsPath = 'tools/qst/quest_planning_eval_results.json';
@@ -46,7 +48,21 @@ Future<void> main(List<String> arguments) async {
       failures.add(
         'Human review output bindings and recomputed scores failed.',
       );
-    final head = _command(['git', 'rev-parse', 'HEAD']).trim();
+    final expectedArgs = arguments
+        .where((argument) => argument.startsWith('--expected-sha='))
+        .toList();
+    if (expectedArgs.length > 1) {
+      failures.add('Only one candidate source SHA may be supplied.');
+    }
+    final head = expectedArgs.isEmpty
+        ? candidateSourceCommit()
+        : expectedArgs.single.substring('--expected-sha='.length);
+    if (head != candidateSourceCommit()) {
+      failures.add('Expected SHA differs from the Beta candidate source.');
+    }
+    if (!candidateSourceHasOnlyEvidenceCommits(head)) {
+      failures.add('Candidate source has runtime changes in later commits.');
+    }
     for (final snippet in [
       'status: verified',
       'candidate_source_commit: "$head"',
@@ -110,15 +126,6 @@ String _read(String path, List<String> failures) {
     return '';
   }
   return file.readAsStringSync();
-}
-
-String _command(List<String> command) {
-  final result = Process.runSync(command.first, command.skip(1).toList());
-  if (result.exitCode != 0) {
-    stderr.writeln(result.stderr);
-    exit(1);
-  }
-  return result.stdout.toString();
 }
 
 Future<String> _sha256(String path) async {

@@ -54,6 +54,7 @@ void main() {
       await tester.pump();
       final accountTitle = tester.widget<Text>(find.text('ゲスト'));
       expect(accountTitle.style?.color, QuestraSurfacePalette.dark.foreground);
+      expect(find.text('ログイン'), findsOneWidget);
 
       await tester.scrollUntilVisible(
         find.byKey(const ValueKey('profile-bond-card')),

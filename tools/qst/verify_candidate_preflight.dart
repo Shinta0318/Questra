@@ -1,12 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 const manifestPath = 'docs/qst/CANDIDATE_PREFLIGHT.yaml';
-const scanRoots = <String>[
-  'apps/mobile/lib',
-  'apps/mobile/web',
-  'supabase/functions',
-  '.github/workflows',
-];
+const maxTextBytes = 2 * 1024 * 1024;
 
 final secretPatterns = <RegExp>[
   RegExp(r'AIza[0-9A-Za-z_-]{30,}'),
@@ -31,30 +27,9 @@ void main(List<String> args) {
     }
   }
 
-  var scannedFiles = 0;
-  for (final rootPath in scanRoots) {
-    final root = Directory(rootPath);
-    if (!root.existsSync()) {
-      failures.add('Missing scan root: $rootPath');
-      continue;
-    }
-    for (final entity in root.listSync(recursive: true).whereType<File>()) {
-      if (!_isTextSource(entity.path) ||
-          entity.lengthSync() > 2 * 1024 * 1024) {
-        continue;
-      }
-      scannedFiles++;
-      final content = entity.readAsStringSync();
-      for (final pattern in secretPatterns) {
-        if (pattern.hasMatch(content)) {
-          failures.add('Potential secret value in ${entity.path}');
-          break;
-        }
-      }
-    }
-  }
+  final scannedFiles = scanCandidateTextFiles(failures: failures);
 
-  final status = Process.runSync('git', ['status', '--porcelain=v1']);
+  final status = Process.runSync('git', ['status', '--porcelain=v1', '-uall']);
   if (status.exitCode != 0) {
     failures.add('Unable to inspect git worktree.');
   }
@@ -93,6 +68,65 @@ void main(List<String> args) {
   }
 }
 
+int scanCandidateTextFiles({
+  required List<String> failures,
+  String? workingDirectory,
+}) {
+  final root = workingDirectory ?? Directory.current.path;
+  final inventory = Process.runSync(
+    'git',
+    ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+    workingDirectory: root,
+    stdoutEncoding: utf8,
+  );
+  if (inventory.exitCode != 0) {
+    failures.add('Unable to list candidate files for secret scan.');
+    return 0;
+  }
+  var scanned = 0;
+  final paths = inventory.stdout
+      .toString()
+      .split('\u0000')
+      .where((path) => path.isNotEmpty)
+      .toSet();
+  for (final path in paths) {
+    final file = File('$root/$path');
+    final type = FileSystemEntity.typeSync(file.path, followLinks: false);
+    if (type == FileSystemEntityType.notFound) continue;
+    if (type == FileSystemEntityType.link) {
+      failures.add('Candidate file is a symlink and was not scanned: $path');
+      continue;
+    }
+    if (type != FileSystemEntityType.file) continue;
+    if (file.lengthSync() > maxTextBytes) {
+      if (_isTextSource(path))
+        failures.add('Candidate text file exceeds the scan limit: $path');
+      continue;
+    }
+    String content;
+    try {
+      content = utf8.decode(file.readAsBytesSync());
+    } on FormatException {
+      if (_isTextSource(path))
+        failures.add('Candidate text file is not UTF-8: $path');
+      continue;
+    }
+    if (content.contains('\u0000')) {
+      if (_isTextSource(path))
+        failures.add('Candidate text file contains binary data: $path');
+      continue;
+    }
+    scanned++;
+    for (final pattern in secretPatterns) {
+      if (pattern.hasMatch(content)) {
+        failures.add('Potential secret value in $path');
+        break;
+      }
+    }
+  }
+  return scanned;
+}
+
 bool _isTextSource(String path) {
   final normalized = path.replaceAll('\\', '/').toLowerCase();
   return const [
@@ -104,5 +138,17 @@ bool _isTextSource(String path) {
     '.yml',
     '.json',
     '.md',
+    '.sql',
+    '.ps1',
+    '.sh',
+    '.toml',
+    '.txt',
+    '.env',
+    '.svg',
+    '.xml',
+    '.gradle',
+    '.kt',
+    '.java',
+    '.py',
   ].any(normalized.endsWith);
 }

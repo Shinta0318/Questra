@@ -5,15 +5,24 @@ import type {
   ProviderRequest,
   ProviderResponse,
   ProviderToolCall,
+  ProviderUsage,
 } from "./contracts.ts";
 import { resolveThinkingLevel } from "./thinking_policy.ts";
 import { validateJsonSchema } from "./json_schema_validator.ts";
 import { releaseAiBudget, reserveAiBudget, settleAiBudget } from "./ai_budget_admission.ts";
+import { currentAiLegalGate } from "../ai_legal_gate.ts";
 
 const INTERACTIONS_URL = "https://generativelanguage.googleapis.com/v1/interactions";
 
 export async function callGeminiInteraction(request: ProviderRequest): Promise<ProviderResponse> {
   const startedAt = Date.now();
+  const legalGate = await currentAiLegalGate(request.userId);
+  if (legalGate === "denied") {
+    return failure(request, startedAt, "consent_required", "Current AI legal acceptance is required", 403);
+  }
+  if (legalGate === "unavailable") {
+    return failure(request, startedAt, "unavailable", "AI legal acceptance could not be verified", 503);
+  }
   const apiKey = Deno.env.get("GEMINI_API_KEY");
   if (!apiKey) return failure(request, startedAt, "unknown", "GEMINI_API_KEY is not configured");
   const allowPreview = Deno.env.get("AI_ALLOW_PREVIEW_MODELS") === "true";
@@ -350,21 +359,31 @@ export function extractContinuationSteps(data: Record<string, unknown>) {
 export function extractGroundingMetadata(data: Record<string, unknown>) {
   const searches: Record<string, unknown>[] = [];
   const queries = new Set<string>();
+  let queryAttributionComplete = true;
   const sourceByUri = new Map<string, { id: string; title: string; uri: string }>();
   visit(data.steps, (item) => {
     if (item.type !== "google_search_call" && item.type !== "google_search_result") return;
     searches.push({ type: item.type, id: stringValue(item.id), status: stringValue(item.status) });
     if (item.type === "google_search_call") {
-      for (const key of ["query", "search_query", "searchQuery"] as const) {
-        const query = stringValue(item[key]);
-        if (query) queries.add(query.slice(0, 500));
-      }
-      if (Array.isArray(item.queries)) {
-        for (const value of item.queries) {
-          const query = stringValue(value);
+      let hasQueryField = false;
+      const argumentsData = isRecord(item.arguments) ? item.arguments : null;
+      for (const source of [item, argumentsData]) {
+        if (!source) continue;
+        for (const key of ["query", "search_query", "searchQuery"] as const) {
+          if (typeof source[key] !== "string") continue;
+          hasQueryField = true;
+          const query = stringValue(source[key]);
           if (query) queries.add(query.slice(0, 500));
         }
+        if (Array.isArray(source.queries)) {
+          hasQueryField = true;
+          for (const value of source.queries) {
+            const query = stringValue(value);
+            if (query) queries.add(query.slice(0, 500));
+          }
+        }
       }
+      if (!hasQueryField) queryAttributionComplete = false;
     }
     collectGroundingSources(item, sourceByUri);
   });
@@ -373,6 +392,7 @@ export function extractGroundingMetadata(data: Record<string, unknown>) {
       steps: searches,
       queries: [...queries],
       billableQueryCount: queries.size,
+      queryAttributionComplete,
       sources: [...sourceByUri.values()],
       retrievedAt: new Date().toISOString(),
     }
@@ -416,7 +436,7 @@ function safeDomain(value: string) {
   }
 }
 
-export function extractUsage(data: Record<string, unknown>) {
+export function extractUsage(data: Record<string, unknown>): ProviderUsage {
   const usage = isRecord(data.usage)
     ? data.usage
     : isRecord(data.usage_metadata)

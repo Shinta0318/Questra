@@ -6,6 +6,7 @@ import 'package:questra/features/quest/quest_controller.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
 import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/quest/route_replanning_controller.dart';
+import 'package:questra/features/quest/route_mutation_journal.dart';
 import 'package:questra/features/quest/route_replanning_model.dart';
 import 'package:questra/features/quest/route_replanning_repository.dart';
 import 'package:questra/features/quest/route_snapshot_service.dart';
@@ -176,6 +177,9 @@ ProviderContainer _container(InMemoryRouteReplanningRepository repository) =>
         missionControllerProvider.overrideWith(_MissionFixtureController.new),
         taskControllerProvider.overrideWith(_TaskFixtureController.new),
         routeReplanningRepositoryProvider.overrideWithValue(repository),
+        routeMutationJournalRepositoryProvider.overrideWithValue(
+          InMemoryRouteMutationJournalRepository(),
+        ),
       ],
     );
 
@@ -289,5 +293,13 @@ class _TaskFixtureController extends TaskController {
     if (fail) return false;
     state = [state.single.copyWith(scheduledDate: date)];
     return true;
+  }
+
+  @override
+  Future<void> restoreRouteSnapshot(
+    String questId,
+    List<QuestraTask> snapshot,
+  ) async {
+    state = List<QuestraTask>.of(snapshot);
   }
 }

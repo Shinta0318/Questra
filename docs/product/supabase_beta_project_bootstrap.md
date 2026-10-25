@@ -66,7 +66,8 @@ powershell -ExecutionPolicy Bypass -File tools/qst/bootstrap_supabase_beta.ps1 `
 
 MVP/Betaの既定AI経路はGemini stable Interactions APIである。無料枠では`gemini-3.5-flash`を使用し、
 入力文字数、出力token数、timeout、retry回数をEdge Function側で制限する。`GEMINI_API_KEY`はEdge Functionの
-server-side secretとしてのみ保存する。OpenAI互換経路は`AI_PROVIDER=openai`を明示した場合だけ使用し、
+server-side secretとしてのみ保存する。旧Arc系の直接生成もGeminiのatomic budget予約・精算を通す。
+OpenAI互換経路は予算契約が未実装のため停止中で、`AI_PROVIDER=openai`を明示してもAIを呼ばない。
 provider障害時に別providerへ暗黙送信しない。選択providerが利用できない場合はArcのローカルfallbackへ戻る。
 Gemini Interactions requestは`store=false`で送信する。無料枠では送信内容がGoogleの製品改善に利用されるため、
 内部検証に限定し、個人情報・機密情報を入力しない。外部Beta前にbilling tier、AI Studioのlogging設定、

@@ -118,11 +118,15 @@ abstract final class QuestClarificationService {
         ),
       };
 
+  static QuestClarificationQuestion questionForType(
+    QuestClarificationType type,
+  ) => _questions[type]!;
+
   static List<QuestClarificationQuestion> resolve({
     required String input,
     required String category,
     required DateTime? targetDate,
-    int maxQuestions = 5,
+    int maxQuestions = 3,
   }) {
     final source = '$category $input'.toLowerCase();
     final candidates = <QuestClarificationType>[];
@@ -181,7 +185,7 @@ abstract final class QuestClarificationService {
 
     return candidates
         .toSet()
-        .take(maxQuestions.clamp(0, 5))
+        .take(maxQuestions.clamp(0, 3))
         .map((type) => _questions[type]!)
         .toList(growable: false);
   }
@@ -191,9 +195,22 @@ abstract final class QuestClarificationService {
     required DateTime? targetDate,
     required Map<QuestClarificationType, String> answers,
   }) {
+    if (description.contains('\n\n航路条件:\n')) return description.trim();
     final lines = answerLines(targetDate: targetDate, answers: answers);
     if (lines.isEmpty) return description.trim();
     return '${description.trim()}\n\n航路条件:\n${lines.map((line) => '- $line').join('\n')}';
+  }
+
+  static String descriptionWithoutAnsweredContext(String description) {
+    final lines = description.split('\n');
+    final start = lines.indexWhere((line) => line.trim() == '航路条件:');
+    if (start < 0) return description.trim();
+    var end = start + 1;
+    while (end < lines.length && lines[end].trimLeft().startsWith('- ')) {
+      end++;
+    }
+    lines.removeRange(start, end);
+    return lines.join('\n').trim();
   }
 
   static DateTime? targetDateFromText(String source) {
@@ -222,15 +239,16 @@ abstract final class QuestClarificationService {
   }) {
     final lines = <String>[];
     if (targetDate != null) {
-      lines.add(
-        '期限: ${targetDate.year}年${targetDate.month}月${targetDate.day}日',
-      );
+      lines.add('希望時期: ${targetDate.year}年${targetDate.month}月');
+    } else if (answers[QuestClarificationType.deadline]?.trim().isNotEmpty ==
+        true) {
+      lines.add('希望時期: ${answers[QuestClarificationType.deadline]!.trim()}');
     }
     for (final type in QuestClarificationType.values) {
       if (type == QuestClarificationType.deadline) continue;
       final value = answers[type]?.trim() ?? '';
       if (value.isEmpty) continue;
-      lines.add('${_answerLabel(type)}: $value');
+      lines.add('${type.displayLabel}: $value');
     }
     return lines;
   }
@@ -338,8 +356,10 @@ abstract final class QuestClarificationService {
 
   static bool _containsAny(String source, List<String> values) =>
       values.any(source.contains);
+}
 
-  static String _answerLabel(QuestClarificationType type) => switch (type) {
+extension QuestClarificationTypeLabel on QuestClarificationType {
+  String get displayLabel => switch (this) {
     QuestClarificationType.deadline => '期限',
     QuestClarificationType.budget => '予算',
     QuestClarificationType.location => '場所',

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'durable_mutation.dart';
+import 'database_write_feedback.dart';
 
 enum PersistenceSyncStatus { idle, loading, saved, failed }
 
@@ -60,15 +61,21 @@ class PersistenceSyncController extends Notifier<PersistenceSyncState> {
     final offline = isOfflineFailure(error);
     final preservesInput =
         inputPreserved ?? state.operation != PersistenceSyncOperation.load;
+    final databaseFeedback = state.operation == PersistenceSyncOperation.save
+        ? DatabaseWriteFeedback.from(error)
+        : null;
     state = PersistenceSyncState(
       status: PersistenceSyncStatus.failed,
-      message: offline
+      message: databaseFeedback != null
+          ? '$scopeに失敗しました。${databaseFeedback.message}'
+                '${preservesInput ? '変更内容は保持されています。' : ''}'
+          : offline
           ? '$scopeに失敗しました。オフラインの可能性があります。'
                 '${preservesInput ? '変更内容は保持されています。' : ''}'
           : '$scopeに失敗しました。'
                 '${preservesInput ? '変更内容は保持されています。' : '通信状態を確認してください。'}',
       operation: state.operation,
-      retryAvailable: retryAvailable,
+      retryAvailable: retryAvailable && databaseFeedback == null,
       inputPreserved: preservesInput,
       offline: offline,
     );

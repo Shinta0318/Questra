@@ -9,6 +9,8 @@ import '../../features/auth/auth_controller.dart';
 import '../../features/auth/auth_state.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
+import '../../features/auth/confirm_email_help_screen.dart';
+import '../../features/auth/email_confirmation_return_screen.dart';
 import '../../features/auth/reset_password_screen.dart';
 import '../../features/auth/signup_screen.dart';
 import '../../features/feedback/beta_feedback_screen.dart';
@@ -71,6 +73,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.forgotPassword,
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.confirmEmailHelp,
+        builder: (context, state) => const ConfirmEmailHelpScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.emailConfirmationReturn,
+        builder: (context, state) => const EmailConfirmationReturnScreen(),
       ),
       GoRoute(
         path: AppRoutes.resetPassword,

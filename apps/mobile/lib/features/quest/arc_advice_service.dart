@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
+import '../../core/safety/ai_legal_failure.dart';
 
 import '../arc/arc_emotion.dart';
 import 'quest_guide_model.dart';
@@ -66,7 +67,9 @@ class SupabaseArcAdviceService implements ArcAdviceService {
         emotion: _emotionFromValue(data['emotion'] as String?),
         sourceType: data['source_type'] as String? ?? 'arc_advice',
       );
-    } catch (_) {
+    } catch (error) {
+      final legalMessage = aiLegalFailureMessage(error);
+      if (legalMessage != null) throw StateError(legalMessage);
       return fallback.generate(quest: quest, guide: guide);
     }
   }

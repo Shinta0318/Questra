@@ -1,7 +1,7 @@
 # Third-Party Notices
 
-Generated: 2026-09-03T00:27:57.470619Z  
-Candidate source commit: `4d316c6b47604664293b4176b0a54d12e4564c1e`
+Generated: 2026-10-18T22:21:09.246913Z
+Candidate source commit: `a9d83bcb551e6c974b9c3fdf8a9d1a51a401c61c`
 
 This inventory reproduces license files available in the resolved Flutter/Dart package graph. Absence from this file is not a legal conclusion.
 
@@ -56,10 +56,10 @@ This inventory reproduces license files available in the resolved Flutter/Dart p
 - flutter_web_plugins 0.0.0 - `LICENSE` - `a3a9fd82f800a47377f7d3f60c60a5c91cae0495be8f329031e1448ce0f5dab9`
 - frontend_server_client 4.0.0 - `LICENSE` - `f3fedf65adeec4d6ccb2abf053ebc0f07603d402db3d3c5651322b50502e1071`
 - fuchsia_remote_debug_protocol 0.0.0 - `LICENSE` - `a3a9fd82f800a47377f7d3f60c60a5c91cae0495be8f329031e1448ce0f5dab9`
-- functions_client 2.6.0 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
+- functions_client 2.7.1 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
 - glob 2.1.3 - `LICENSE` - `3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16`
 - go_router 17.3.0 - `LICENSE` - `420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d`
-- gotrue 2.21.0 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
+- gotrue 2.27.2 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
 - gtk 2.2.0 - `LICENSE` - `1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5`
 - hooks 2.0.2 - `LICENSE` - `21ae23b0b9ff67a2dc75ab085d1e8db8ac548c5faf370af17f28dd2ef3b52b7b`
 - http 1.6.0 - `LICENSE` - `3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16`
@@ -78,7 +78,7 @@ This inventory reproduces license files available in the resolved Flutter/Dart p
 - io 1.0.5 - `LICENSE` - `ea97a7558a7bd7cee4e2355f7529e3cbebb0dcbb546ddb9a90f10c9eb6b08da5`
 - jni 1.0.0 - `LICENSE` - `08a004aa8956c3cf3b24f7f69c966247233953e18e6afaa61191ea47b7eb70f6`
 - jni_flutter 1.0.1 - `LICENSE` - `b1fcb475d67817411f335ac92872507011e574c4cb29cfdaaf7707b75641932c`
-- jwt_decode 0.3.1 - `LICENSE` - `6c322afa39d0e6ad3015dc1580e7516c1adfb2447627580c48c52f8a5bab9cb1`
+- json_annotation 4.12.0 - `LICENSE` - `143839f62c9b7f88143ea9f688361c27050888acde7696b34e04414bd254fafc`
 - leak_tracker 11.0.2 - `LICENSE` - `08a004aa8956c3cf3b24f7f69c966247233953e18e6afaa61191ea47b7eb70f6`
 - leak_tracker_flutter_testing 3.0.10 - `LICENSE` - `08a004aa8956c3cf3b24f7f69c966247233953e18e6afaa61191ea47b7eb70f6`
 - leak_tracker_testing 3.0.2 - `LICENSE` - `08a004aa8956c3cf3b24f7f69c966247233953e18e6afaa61191ea47b7eb70f6`
@@ -92,6 +92,7 @@ This inventory reproduces license files available in the resolved Flutter/Dart p
 - objective_c 9.4.1 - `LICENSE` - `1cda25a8de6880c5338de0b4a06ee89e8537c213eb1379c16a4c035bfd198b5c`
 - octo_image 2.1.0 - `LICENSE` - `9a64f4b486cd12af348a9716640d121dfca9b5ac2d8c3a24a9444b65e8560f9b`
 - package_config 2.2.0 - `LICENSE` - `0371d1da6a57fb791db29d29b95333429205f51f3cb2eb3a0c12d91838a38744`
+- passkeys_platform_interface 2.10.0 - `LICENSE` - `0422cdf4d700216b8ada10019aaf6f24b8a4efd825737fda9520fe21db6e43dc`
 - path 1.9.1 - `LICENSE` - `3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16`
 - path_provider 2.1.5 - `LICENSE` - `89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9`
 - path_provider_android 2.3.1 - `LICENSE` - `420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d`
@@ -103,12 +104,11 @@ This inventory reproduces license files available in the resolved Flutter/Dart p
 - plugin_platform_interface 2.1.8 - `LICENSE` - `89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9`
 - pointycastle 4.0.0 - `LICENSE` - `3a7bb295473da049a1c6edd2f8c41b9e526a4e80f200c0200cc5600b2634df3f`
 - pool 1.5.2 - `LICENSE` - `3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16`
-- postgrest 2.7.1 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
+- postgrest 2.9.1 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
 - process 5.0.5 - `LICENSE` - `5f018bbc25a55406d7a4e1d3229135439e315210b0050ca56dbb367a4934e85d`
 - pub_semver 2.2.0 - `LICENSE` - `3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16`
-- realtime_client 2.7.4 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
+- realtime_client 2.13.0 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
 - record_use 0.6.0 - `LICENSE` - `1cda25a8de6880c5338de0b4a06ee89e8537c213eb1379c16a4c035bfd198b5c`
-- retry 3.1.2 - `LICENSE` - `58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd`
 - riverpod 3.3.2 - `LICENSE` - `757d9c09a9a2a701144328c0fd596234ea287ff62952b39cd22f9ad4caed1171`
 - rxdart 0.28.0 - `LICENSE` - `c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4`
 - shared_preferences 2.5.5 - `LICENSE` - `420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d`
@@ -133,11 +133,12 @@ This inventory reproduces license files available in the resolved Flutter/Dart p
 - sqflite_platform_interface 2.4.1 - `LICENSE` - `c81f9454cf3107c116bc3c1fd22b7d751523a2b11e17cf90c0db3327d3c9e0da`
 - stack_trace 1.12.1 - `LICENSE` - `ff0b91d4f3c32b25cb6ec84985e8da89b0ba2a2b2f7eef353cda5e5423a20390`
 - state_notifier 1.0.0 - `LICENSE` - `757d9c09a9a2a701144328c0fd596234ea287ff62952b39cd22f9ad4caed1171`
-- storage_client 2.5.6 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
+- storage_client 2.8.1 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
 - stream_channel 2.1.4 - `LICENSE` - `ff15faa32a2e638107b7789592b14426162a75ba620044ee2340a20ec6ce5e73`
 - string_scanner 1.4.1 - `LICENSE` - `3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16`
-- supabase 2.12.2 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
-- supabase_flutter 2.14.2 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
+- supabase 2.16.2 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
+- supabase_common 0.1.2 - `LICENSE` - `be8c4de36f5c20598e7dcb2dd8d33d398d3c74fda7f9d33d902804302abf41f2`
+- supabase_flutter 2.18.0 - `LICENSE` - `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936`
 - sync_http 0.3.1 - `LICENSE` - `b9b748d4dd6f725387bf69e96df4e4ebff167ae83547954242a731504d037644`
 - synchronized 3.4.1 - `LICENSE` - `6d07c6bb60afb906049d507e19fcc4c6b59e35c0dd0f8a7302e87b3fb0576900`
 - term_glyph 1.2.2 - `LICENSE` - `ea97a7558a7bd7cee4e2355f7529e3cbebb0dcbb546ddb9a90f10c9eb6b08da5`
@@ -165,7 +166,7 @@ This inventory reproduces license files available in the resolved Flutter/Dart p
 - win32 6.3.0 - `LICENSE` - `87ef8bccdd619f2345ba5b9026cf1d6cccb305e36ab83849a8a3af9293abde7e`
 - xdg_directories 1.1.0 - `LICENSE` - `89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9`
 - yaml 3.1.3 - `LICENSE` - `d47b93335401b052d79a2f5a3710e4cf7b5aed782faedf84d40fbdd6eb934ec7`
-- yet_another_json_isolate 2.1.0 - `LICENSE` - `be8c4de36f5c20598e7dcb2dd8d33d398d3c74fda7f9d33d902804302abf41f2`
+- yet_another_json_isolate 2.1.1 - `LICENSE` - `be8c4de36f5c20598e7dcb2dd8d33d398d3c74fda7f9d33d902804302abf41f2`
 
 ## Unique license texts
 
@@ -645,7 +646,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### 58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd
 
-Packages: clock 1.1.2, fake_async 1.3.3, retry 3.1.2
+Packages: clock 1.1.2, fake_async 1.3.3
 
 ```text
 Apache License
@@ -1370,7 +1371,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### 334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936
 
-Packages: functions_client 2.6.0, gotrue 2.21.0, postgrest 2.7.1, realtime_client 2.7.4, storage_client 2.5.6, supabase 2.12.2, supabase_flutter 2.14.2
+Packages: functions_client 2.7.1, gotrue 2.27.2, postgrest 2.9.1, realtime_client 2.13.0, storage_client 2.8.1, supabase 2.16.2, supabase_flutter 2.18.0
 
 ```text
 MIT License
@@ -2116,39 +2117,36 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-### 6c322afa39d0e6ad3015dc1580e7516c1adfb2447627580c48c52f8a5bab9cb1
+### 143839f62c9b7f88143ea9f688361c27050888acde7696b34e04414bd254fafc
 
-Packages: jwt_decode 0.3.1
+Packages: json_annotation 4.12.0, platform 3.1.6
 
 ```text
-BSD 3-Clause License
-
-Copyright (c) 2020, Siddharth Subramanian
-All rights reserved.
-
+Copyright 2017, the Dart project authors. All rights reserved.
 Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+modification, are permitted provided that the following conditions are
+met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+    * Neither the name of Google Inc. nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
 
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
@@ -2511,37 +2509,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### 143839f62c9b7f88143ea9f688361c27050888acde7696b34e04414bd254fafc
+### 0422cdf4d700216b8ada10019aaf6f24b8a4efd825737fda9520fe21db6e43dc
 
-Packages: platform 3.1.6
+Packages: passkeys_platform_interface 2.10.0
 
 ```text
-Copyright 2017, the Dart project authors. All rights reserved.
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
+Copyright (c) 2023, Corbado GmbH
 
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-      copyright notice, this list of conditions and the following
-      disclaimer in the documentation and/or other materials provided
-      with the distribution.
-    * Neither the name of Google Inc. nor the names of its
-      contributors may be used to endorse or promote products derived
-      from this software without specific prior written permission.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of {{ project }} nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
 ### 3a7bb295473da049a1c6edd2f8c41b9e526a4e80f200c0200cc5600b2634df3f
@@ -33048,6 +33047,34 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
+### be8c4de36f5c20598e7dcb2dd8d33d398d3c74fda7f9d33d902804302abf41f2
+
+Packages: supabase_common 0.1.2, yet_another_json_isolate 2.1.1
+
+```text
+MIT License
+
+Copyright (c) 2022 Supabase Community
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 ### b9b748d4dd6f725387bf69e96df4e4ebff167ae83547954242a731504d037644
 
 Packages: sync_http 0.3.1
@@ -33604,34 +33631,6 @@ the Software without restriction, including without limitation the rights to
 use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 of the Software, and to permit persons to whom the Software is furnished to do
 so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-### be8c4de36f5c20598e7dcb2dd8d33d398d3c74fda7f9d33d902804302abf41f2
-
-Packages: yet_another_json_isolate 2.1.0
-
-```text
-MIT License
-
-Copyright (c) 2022 Supabase Community
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.

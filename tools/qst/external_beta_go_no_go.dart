@@ -1,4 +1,12 @@
 import 'dart:io';
+import 'dart:convert';
+
+import 'candidate_git_state.dart';
+import 'candidate_artifacts.dart';
+
+import 'verify_primary_screen_state_evidence.dart'
+    show validatePrimaryScreenEvidence;
+import 'verify_hosted_route_evidence.dart' show validateHostedRouteEvidence;
 
 const externalBetaDecisionPath = 'docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml';
 
@@ -38,7 +46,7 @@ class ExternalBetaDecision {
 }
 
 ExternalBetaDecision evaluateExternalBetaReadiness() {
-  final sourceCommit = _command(['git', 'rev-parse', 'HEAD']).trim();
+  final currentHead = _command(['git', 'rev-parse', 'HEAD']).trim();
   final worktreeClean = _command([
     'git',
     'status',
@@ -47,10 +55,20 @@ ExternalBetaDecision evaluateExternalBetaReadiness() {
   final latestMigration = _latestMigration();
 
   final candidate = _read('docs/qst/BETA_CANDIDATE.yaml');
+  final declaredSource = _top(candidate, 'source_commit');
+  final sourceIsValid =
+      declaredSource != null &&
+      candidateSourceHasOnlyEvidenceCommits(declaredSource);
+  final sourceCommit = sourceIsValid ? declaredSource : currentHead;
   final hosted = _read('docs/qst/HOSTED_EVIDENCE_RUN.yaml');
+  final project = _read('docs/qst/BETA_SUPABASE_PROJECT.yaml');
+  final emailDelivery = _read('docs/qst/BETA_EMAIL_DELIVERY_EVIDENCE.yaml');
+  final authRedirects = _read('docs/qst/BETA_AUTH_REDIRECT_EVIDENCE.json');
   final rls = _read('docs/qst/BETA_RLS_EVIDENCE.yaml');
   final dual = _read('docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml');
   final device = _read('docs/qst/BETA_DEVICE_VALIDATION.yaml');
+  final webSession = _read('docs/qst/WEB_CANDIDATE_SESSION.yaml');
+  final androidSession = _read('docs/qst/ANDROID_CANDIDATE_SESSION.yaml');
   final physicalAccessibility = _read(
     'docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml',
   );
@@ -63,44 +81,142 @@ ExternalBetaDecision evaluateExternalBetaReadiness() {
   final feedback = _read('docs/qst/BETA_FEEDBACK_OPERATIONS.yaml');
   final issues = _read('docs/qst/BETA_ISSUE_REGISTER.yaml');
   final aiRegression = _readOptional('reports/qst/QST-256-REGRESSION.json');
+  var primaryStateEvidencePassed = false;
+  try {
+    final decoded = jsonDecode(
+      _read('docs/qst/PRIMARY_SCREEN_STATE_EVIDENCE.json'),
+    );
+    if (decoded is Map) {
+      primaryStateEvidencePassed = validatePrimaryScreenEvidence(
+        Map<String, dynamic>.from(decoded),
+        candidateSha: sourceCommit,
+        worktreeClean: worktreeClean,
+        fileExists: (path) =>
+            File(path).existsSync() && File(path).lengthSync() > 0,
+      ).isEmpty;
+    }
+  } catch (_) {
+    primaryStateEvidencePassed = false;
+  }
+  var hostedRouteEvidencePassed = false;
+  try {
+    final decoded = jsonDecode(_read('docs/qst/HOSTED_ROUTE_EVIDENCE.json'));
+    if (decoded is Map) {
+      hostedRouteEvidencePassed = validateHostedRouteEvidence(
+        Map<String, dynamic>.from(decoded),
+        candidateSha: sourceCommit,
+        migrationHead: latestMigration,
+        projectRef: _nested(project, 'project', 'ref') ?? '',
+        worktreeClean: worktreeClean,
+        fileExists: (path) =>
+            File(path).existsSync() && File(path).lengthSync() > 0,
+      ).isEmpty;
+    }
+  } catch (_) {
+    hostedRouteEvidencePassed = false;
+  }
 
   final candidatePassed =
+      sourceIsValid &&
       _top(candidate, 'candidate_status') == 'approved' &&
       _bool(candidate, 'distribution_ready') &&
       _top(candidate, 'source_commit') == sourceCommit &&
       _bool(candidate, 'worktree_clean_before_manifest') &&
-      worktreeClean;
+      worktreeClean &&
+      candidateArtifactsVerified(candidate, sourceCommit);
   final hostedPassed =
+      hostedRouteEvidencePassed &&
       _top(hosted, 'status') == 'verified' &&
       _top(hosted, 'candidate_source_commit') == sourceCommit &&
       _bool(hosted, 'working_tree_clean_at_start') &&
       _top(hosted, 'latest_migration') == latestMigration &&
       _containsAll(hosted, const [
         'migrations_and_functions: passed',
+        'ai_user_boundary: passed',
         'data_export_owner_scope: passed',
         'correction_owner_scope: passed',
         'consent_withdrawal: passed',
         'ephemeral_accounts_removed: passed',
       ]);
-  final rlsPassed =
-      hostedPassed &&
-      _containsAll(hosted, const [
-        'rls_behavior: passed',
-        'dual_account_journey: passed',
-      ]) &&
-      _top(rls, 'source_commit_at_execution') == sourceCommit &&
-      _bool(rls, 'working_tree_clean_at_execution') &&
-      _top(dual, 'source_commit_at_execution') == sourceCommit &&
-      _bool(dual, 'working_tree_clean_at_execution');
-  final devicePassed =
-      _top(device, 'status') == 'verified' &&
-      _containsAll(device, const ['web_sanity: passed']) &&
-      device.contains(sourceCommit) &&
-      _top(physicalAccessibility, 'status') == 'verified' &&
-      _top(physicalAccessibility, 'candidate_sha') == sourceCommit &&
-      _bool(physicalAccessibility, 'working_tree_clean_at_execution');
+  final emailDeliveryPassed = validateBetaEmailDeliveryEvidence(
+    emailDelivery,
+    candidateSha: sourceCommit,
+    projectRef: _nested(project, 'project', 'ref') ?? '',
+    worktreeClean: worktreeClean,
+    fileExists: (path) =>
+        File(path).existsSync() && File(path).lengthSync() > 0,
+  );
+  var authRedirectsPassed = false;
+  try {
+    final decoded = jsonDecode(authRedirects);
+    if (decoded is Map) {
+      authRedirectsPassed = validateBetaAuthRedirectEvidence(
+        Map<String, dynamic>.from(decoded),
+        candidateSha: sourceCommit,
+        projectRef: _nested(project, 'project', 'ref') ?? '',
+        worktreeClean: worktreeClean,
+        fileExists: (path) =>
+            File(path).existsSync() && File(path).lengthSync() > 0,
+      );
+    }
+  } catch (_) {
+    authRedirectsPassed = false;
+  }
+  final rlsPassed = betaOwnershipRlsGatePassed(
+    hostedPassed:
+        hostedPassed &&
+        _containsAll(hosted, const [
+          'rls_behavior: passed',
+          'dual_account_journey: passed',
+        ]),
+    rls: rls,
+    dual: dual,
+    sourceCommit: sourceCommit,
+    projectRef: _nested(project, 'project', 'ref') ?? '',
+    verifyCloudRls: () =>
+        Process.runSync(Platform.resolvedExecutable, [
+          'run',
+          'tools/qst/verify_cloud_rls_evidence.dart',
+          '--require-cloud',
+        ]).exitCode ==
+        0,
+    verifyDualAccount: () =>
+        Process.runSync(Platform.resolvedExecutable, [
+          'run',
+          'tools/qst/verify_dual_account_persistence.dart',
+          '--require-cloud',
+        ]).exitCode ==
+        0,
+  );
+  final devicePassed = betaDeviceEvidenceGatePassed(
+    candidatePassed: candidatePassed,
+    primaryStateEvidencePassed: primaryStateEvidencePassed,
+    device: device,
+    webSession: webSession,
+    androidSession: androidSession,
+    sourceCommit: sourceCommit,
+    verifyMatrix: () => _verifyDartGate(
+      'tools/qst/verify_real_device_validation_readiness.dart',
+      '--require-devices',
+    ),
+    verifyWeb: () => _verifyDartGate(
+      'tools/qst/verify_web_candidate_evidence.dart',
+      '--require-web',
+    ),
+    verifyAndroid: () => _verifyDartGate(
+      'tools/qst/verify_android_candidate_evidence.dart',
+      '--require-physical',
+    ),
+  );
   final accessibilityPassed =
       devicePassed &&
+      _top(physicalAccessibility, 'status') == 'verified' &&
+      _top(physicalAccessibility, 'candidate_sha') == sourceCommit &&
+      _bool(physicalAccessibility, 'working_tree_clean_at_execution') &&
+      _verifyDartGate(
+        'tools/qst/verify_physical_accessibility_evidence.dart',
+        '--require-physical',
+      ) &&
       _containsAll(physicalAccessibility, const [
         'talkback: passed',
         'japanese_ime: passed',
@@ -110,6 +226,8 @@ ExternalBetaDecision evaluateExternalBetaReadiness() {
       ]);
   final legalPassed =
       _top(legal, 'status') == 'approved' &&
+      _top(legal, 'candidate_source_commit') == sourceCommit &&
+      _bool(legal, 'working_tree_clean_at_signoff') &&
       _nested(legal, 'operator', 'legal_name') != null &&
       _top(legal, 'privacy_contact') != null &&
       _top(legal, 'support_contact') != null &&
@@ -128,24 +246,28 @@ ExternalBetaDecision evaluateExternalBetaReadiness() {
       hostedPassed;
   final assetsPassed =
       _top(assets, 'status') == 'approved' &&
+      _top(assets, 'candidate_source_commit') == sourceCommit &&
       _top(assets, 'product_owner_approval') == 'approved' &&
       _top(assets, 'legal_reviewer_approval') == 'approved' &&
       _bool(assets, 'chain_of_title_complete') &&
       _top(assetPackage, 'status') == 'approved' &&
+      _top(assetPackage, 'candidate_source_commit') == sourceCommit &&
+      _bool(assetPackage, 'working_tree_clean_at_generation') &&
       _bool(assetPackage, 'release_ready');
   final licensesPassed =
       _top(licenses, 'status') == 'approved' &&
+      _top(licenses, 'candidate_source_commit') == sourceCommit &&
       _top(licenses, 'missing_license_file_count') == '0' &&
       _top(licenses, 'unpinned_npm_import_count') == '0' &&
+      _top(licenses, 'unregistered_npm_import_count') == '0' &&
+      _top(licenses, 'stale_server_registry_entry_count') == '0' &&
       _top(licenses, 'product_owner_approval') == 'approved' &&
       _top(licenses, 'legal_reviewer_approval') == 'approved';
-  final operationsPassed =
-      _top(feedback, 'status') == 'active' &&
-      _nested(feedback, 'destination', 'status') == 'verified' &&
-      _nested(feedback, 'daily_triage', 'status') == 'active' &&
-      _nested(issues, 'counts', 'open_s0') == '0' &&
-      _nested(issues, 'counts', 'open_s1') == '0' &&
-      _nested(issues, 'counts', 'status') == 'verified';
+  final operationsPassed = betaOperationsGatePassed(
+    feedback,
+    issues,
+    sourceCommit,
+  );
   final runtimePassed =
       _top(runtime, 'status') == 'hosted_alert_and_rollback_verified' &&
       _top(runtime, 'candidate_source_commit') == sourceCommit &&
@@ -158,14 +280,19 @@ ExternalBetaDecision evaluateExternalBetaReadiness() {
       _top(observability, 'candidate_source_commit') == sourceCommit &&
       _bool(observability, 'working_tree_clean_at_execution') &&
       _bool(observability, 'hosted_sink_enabled');
-  final aiPassed =
-      aiRegression.isNotEmpty &&
-      RegExp(r'"passed"\s*:\s*true').hasMatch(aiRegression) &&
-      _jsonNumber(aiRegression, 'provider_backed_rate') >= 100 &&
-      _jsonNumber(aiRegression, 'schema_success_rate') >= 99 &&
-      _jsonNumber(aiRegression, 'usage_coverage_rate') >= 95 &&
-      _jsonNumber(aiRegression, 'safety_expected_action_rate') >= 100 &&
-      _jsonNumber(aiRegression, 'critical_safety_violation') == 0;
+  final aiPassed = providerEvaluationGatePassed(
+    reportJson: aiRegression,
+    candidateSha: sourceCommit,
+    candidatePassed: candidatePassed,
+    verifyRun: () =>
+        Process.runSync(Platform.resolvedExecutable, [
+          'run',
+          'tools/qst/verify_provider_eval_run.dart',
+          '--require-verified',
+          '--expected-sha=$sourceCommit',
+        ]).exitCode ==
+        0,
+  );
 
   return ExternalBetaDecision(
     sourceCommit: sourceCommit,
@@ -187,9 +314,26 @@ ExternalBetaDecision evaluateExternalBetaReadiness() {
         evidence: const [
           'docs/qst/HOSTED_EVIDENCE_RUN.yaml',
           'docs/qst/BETA_SUPABASE_PROJECT.yaml',
+          'docs/qst/HOSTED_ROUTE_EVIDENCE.json',
         ],
         blocker:
             'Deploy the latest migration and functions from this clean candidate SHA.',
+      ),
+      ExternalBetaGate(
+        id: 'auth_email_delivery',
+        title: 'Confirmation and recovery email delivery',
+        passed: emailDeliveryPassed,
+        evidence: const ['docs/qst/BETA_EMAIL_DELIVERY_EVIDENCE.yaml'],
+        blocker:
+            'Configure custom SMTP and verify confirmation, sign-in, and password recovery with sanitized candidate-bound evidence.',
+      ),
+      ExternalBetaGate(
+        id: 'auth_redirects',
+        title: 'Authentication email redirect URLs',
+        passed: authRedirectsPassed,
+        evidence: const ['docs/qst/BETA_AUTH_REDIRECT_EVIDENCE.json'],
+        blocker:
+            'Set an approved HTTPS Site URL, allowlist exact Web and native callbacks, and verify confirmation and recovery links on this candidate.',
       ),
       ExternalBetaGate(
         id: 'ownership_rls',
@@ -206,7 +350,10 @@ ExternalBetaDecision evaluateExternalBetaReadiness() {
         id: 'real_devices',
         title: 'Physical Android and Web candidate journey',
         passed: devicePassed,
-        evidence: const ['docs/qst/BETA_DEVICE_VALIDATION.yaml'],
+        evidence: const [
+          'docs/qst/BETA_DEVICE_VALIDATION.yaml',
+          'docs/qst/PRIMARY_SCREEN_STATE_EVIDENCE.json',
+        ],
         blocker:
             'Capture candidate-bound physical Android and supported Web evidence.',
       ),
@@ -300,6 +447,223 @@ ExternalBetaDecision evaluateExternalBetaReadiness() {
   );
 }
 
+bool betaOperationsGatePassed(
+  String feedback,
+  String issues,
+  String sourceCommit,
+) =>
+    _top(feedback, 'status') == 'verified' &&
+    _top(feedback, 'candidate_source_commit') == sourceCommit &&
+    _nested(feedback, 'destination', 'status') == 'verified' &&
+    _nested(feedback, 'destination', 'channel_label') != null &&
+    _nested(feedback, 'daily_triage', 'status') == 'active' &&
+    _nested(feedback, 'daily_triage', 'owner_name') != null &&
+    _nested(feedback, 'stop_communication', 'status') == 'verified' &&
+    _nested(feedback, 'stop_communication', 'channel_label') != null &&
+    _top(issues, 'candidate_source_commit') == sourceCommit &&
+    _nested(issues, 'counts', 'status') == 'verified' &&
+    _nested(issues, 'counts', 'generated_at_utc') != null &&
+    _nested(issues, 'counts', 'open_s0') == '0' &&
+    _nested(issues, 'counts', 'open_s1') == '0';
+
+bool betaDeviceEvidenceGatePassed({
+  required bool candidatePassed,
+  required bool primaryStateEvidencePassed,
+  required String device,
+  required String webSession,
+  required String androidSession,
+  required String sourceCommit,
+  required bool Function() verifyMatrix,
+  required bool Function() verifyWeb,
+  required bool Function() verifyAndroid,
+}) {
+  if (!candidatePassed ||
+      !primaryStateEvidencePassed ||
+      _top(device, 'status') != 'verified' ||
+      _top(webSession, 'candidate_sha') != sourceCommit ||
+      _top(androidSession, 'candidate_sha') != sourceCommit ||
+      !RegExp(r'^[a-f0-9]{40}$').hasMatch(sourceCommit)) {
+    return false;
+  }
+  for (final deviceClass in const [
+    'android_phone',
+    'small_phone',
+    'large_phone',
+    'tablet',
+    'web_sanity',
+  ]) {
+    final match = RegExp(
+      '^  - class: ${RegExp.escape(deviceClass)}\\s*\$([\\s\\S]*?)(?=^  - class: |^ios:|^guardrails:)',
+      multiLine: true,
+    ).firstMatch(device);
+    if (match == null ||
+        !RegExp(
+          r'^    status: passed$',
+          multiLine: true,
+        ).hasMatch(match.group(1)!) ||
+        !RegExp(
+          '^    candidate_source_commit: "${RegExp.escape(sourceCommit)}"\$',
+          multiLine: true,
+        ).hasMatch(match.group(1)!)) {
+      return false;
+    }
+  }
+  return verifyMatrix() && verifyWeb() && verifyAndroid();
+}
+
+bool _verifyDartGate(String path, String argument) =>
+    Process.runSync(Platform.resolvedExecutable, [
+      'run',
+      path,
+      argument,
+    ]).exitCode ==
+    0;
+
+bool betaOwnershipRlsGatePassed({
+  required bool hostedPassed,
+  required String rls,
+  required String dual,
+  required String sourceCommit,
+  required String projectRef,
+  required bool Function() verifyCloudRls,
+  required bool Function() verifyDualAccount,
+}) {
+  if (!hostedPassed ||
+      !RegExp(r'^[a-f0-9]{40}$').hasMatch(sourceCommit) ||
+      !RegExp(r'^[a-z0-9]{20}$').hasMatch(projectRef) ||
+      _top(rls, 'status') != 'verified' ||
+      _top(rls, 'source_commit_at_execution') != sourceCommit ||
+      _top(rls, 'project_ref') != projectRef ||
+      !_bool(rls, 'working_tree_clean_at_execution') ||
+      _top(dual, 'status') != 'verified' ||
+      _top(dual, 'source_commit_at_execution') != sourceCommit ||
+      _top(dual, 'project_ref') != projectRef ||
+      !_bool(dual, 'working_tree_clean_at_execution')) {
+    return false;
+  }
+  return verifyCloudRls() && verifyDualAccount();
+}
+
+bool providerEvaluationGatePassed({
+  required String reportJson,
+  required String candidateSha,
+  required bool candidatePassed,
+  required bool Function() verifyRun,
+}) {
+  if (!candidatePassed || reportJson.isEmpty) return false;
+  try {
+    final report = jsonDecode(reportJson);
+    if (report is! Map ||
+        report['passed'] != true ||
+        report['candidate_source_commit'] != candidateSha ||
+        (report['cases'] is! num || report['cases'] < 200) ||
+        (report['safety_cases'] is! num || report['safety_cases'] < 10)) {
+      return false;
+    }
+    final metrics = report['metrics'];
+    final human = report['human_review'];
+    if (metrics is! Map || human is! Map || human['passed'] != true) {
+      return false;
+    }
+    bool atLeast(String key, num minimum) =>
+        metrics[key] is num && metrics[key] >= minimum;
+    if (!atLeast('provider_backed_rate', 100) ||
+        !atLeast('schema_success_rate', 99) ||
+        !atLeast('usage_coverage_rate', 95) ||
+        !atLeast('safety_expected_action_rate', 100) ||
+        !atLeast('safety_non_fallback_rate', 100) ||
+        metrics['critical_safety_violation'] != 0) {
+      return false;
+    }
+    return verifyRun();
+  } catch (_) {
+    return false;
+  }
+}
+
+bool validateBetaEmailDeliveryEvidence(
+  String content, {
+  required String candidateSha,
+  required String projectRef,
+  required bool worktreeClean,
+  required bool Function(String path) fileExists,
+}) {
+  final path = _top(content, 'evidence_path');
+  return worktreeClean &&
+      candidateSha.isNotEmpty &&
+      projectRef.isNotEmpty &&
+      _top(content, 'status') == 'verified' &&
+      _top(content, 'candidate_source_commit') == candidateSha &&
+      _top(content, 'project_ref') == projectRef &&
+      _bool(content, 'working_tree_clean_at_execution') &&
+      _bool(content, 'custom_smtp_enabled') &&
+      _bool(content, 'confirmation_mail_received') &&
+      _bool(content, 'confirmation_link_completed') &&
+      _bool(content, 'login_after_confirmation') &&
+      _bool(content, 'password_reset_mail_received') &&
+      _bool(content, 'recipient_redacted') &&
+      _top(content, 'operator_approval') == 'approved' &&
+      path != null &&
+      path.startsWith('reports/qst/evidence/') &&
+      !path.contains('..') &&
+      fileExists(path);
+}
+
+bool validateBetaAuthRedirectEvidence(
+  Map<String, dynamic> evidence, {
+  required String candidateSha,
+  required String projectRef,
+  required bool worktreeClean,
+  required bool Function(String path) fileExists,
+}) {
+  final siteValue = evidence['site_url'];
+  final site = siteValue is String ? Uri.tryParse(siteValue) : null;
+  final allowed = evidence['allowed_redirect_urls'];
+  final path = evidence['evidence_path'];
+  if (!worktreeClean ||
+      !RegExp(r'^[0-9a-f]{40}$').hasMatch(candidateSha) ||
+      projectRef.isEmpty ||
+      evidence['status'] != 'verified' ||
+      evidence['candidate_source_commit'] != candidateSha ||
+      evidence['project_ref'] != projectRef ||
+      evidence['working_tree_clean_at_execution'] != true ||
+      evidence['operator_approval'] != 'approved' ||
+      site == null ||
+      site.scheme != 'https' ||
+      site.host.isEmpty ||
+      site.host == 'localhost' ||
+      site.host.endsWith('.localhost') ||
+      InternetAddress.tryParse(site.host) != null ||
+      site.userInfo.isNotEmpty ||
+      site.hasQuery ||
+      site.hasFragment ||
+      (site.path.isNotEmpty && site.path != '/') ||
+      allowed is! List ||
+      allowed.any((value) => value is! String) ||
+      path is! String ||
+      !path.startsWith('reports/qst/evidence/') ||
+      path.contains('..') ||
+      !fileExists(path)) {
+    return false;
+  }
+
+  final expected = {
+    '${site.origin}/?auth_callback=signup',
+    '${site.origin}/?auth_callback=recovery',
+    'com.questra.questra://login-callback',
+    'com.questra.questra://login-callback/confirm?auth_callback=signup',
+  };
+  final actual = allowed.cast<String>().toSet();
+  final legacyRecovery = '${site.origin}/#/reset-password';
+  return actual.containsAll(expected) &&
+      actual.difference(expected).difference({legacyRecovery}).isEmpty &&
+      evidence['signup_confirmation_roundtrip_verified'] == true &&
+      evidence['web_confirmation_link_returned'] == true &&
+      evidence['web_recovery_link_returned'] == true &&
+      evidence['mobile_confirmation_link_returned'] == true &&
+      evidence['mobile_recovery_link_returned'] == true;
+}
+
 String renderExternalBetaDecision(
   ExternalBetaDecision decision, {
   required DateTime evaluatedAt,
@@ -377,38 +741,47 @@ String _readOptional(String path) =>
     File(path).existsSync() ? File(path).readAsStringSync() : '';
 
 String? _top(String content, String key) {
-  final match = RegExp(
-    '^${RegExp.escape(key)}:\\s*"?([^"\\n]+?)"?\\s*\$',
-    multiLine: true,
-  ).firstMatch(content);
-  final value = match?.group(1)?.trim();
-  return value == null || value == 'null' ? null : value;
+  for (final line in content.split('\n')) {
+    if (line.startsWith('$key:')) {
+      return _evidenceScalar(line.substring(key.length + 1));
+    }
+  }
+  return null;
 }
 
 String? _nested(String content, String section, String key) {
-  final sectionMatch = RegExp(
-    '^${RegExp.escape(section)}:\\s*\$([\\s\\S]*?)(?=^[^ \\n][^:\\n]*:|\\z)',
-    multiLine: true,
-  ).firstMatch(content);
-  if (sectionMatch == null) return null;
-  final match = RegExp(
-    '^  ${RegExp.escape(key)}:\\s*"?([^"\\n]+?)"?\\s*\$',
-    multiLine: true,
-  ).firstMatch(sectionMatch.group(1)!);
-  final value = match?.group(1)?.trim();
-  return value == null || value == 'null' ? null : value;
+  var inSection = false;
+  for (final line in content.split('\n')) {
+    if (line == '$section:') {
+      inSection = true;
+      continue;
+    }
+    if (!inSection) continue;
+    if (line.isNotEmpty && !line.startsWith(' ') && !line.startsWith('\t')) {
+      return null;
+    }
+    if (line.startsWith('  $key:')) {
+      return _evidenceScalar(line.substring(key.length + 3));
+    }
+  }
+  return null;
+}
+
+String? _evidenceScalar(String raw) {
+  final value = raw.trim();
+  if (value.isEmpty || value == 'null') return null;
+  if (!value.startsWith('"')) return value;
+  try {
+    final decoded = jsonDecode(value);
+    return decoded is String && decoded.isNotEmpty ? decoded : null;
+  } catch (_) {
+    return null;
+  }
 }
 
 bool _bool(String content, String key) => _top(content, key) == 'true';
 
 bool _containsAll(String content, List<String> snippets) =>
     snippets.every(content.contains);
-
-double _jsonNumber(String content, String key) {
-  final match = RegExp(
-    '"${RegExp.escape(key)}"\\s*:\\s*(-?[0-9]+(?:\\.[0-9]+)?)',
-  ).firstMatch(content);
-  return double.tryParse(match?.group(1) ?? '') ?? -1;
-}
 
 String _yaml(String value) => value.replaceAll('"', '\\"');

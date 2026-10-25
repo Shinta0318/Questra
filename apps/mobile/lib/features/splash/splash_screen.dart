@@ -223,7 +223,7 @@ class _PersistenceNotice extends StatelessWidget {
     final title = unavailable ? 'データ保存を開始できません' : '開発用データで表示中';
     final message = unavailable
         ? 'Supabaseの接続設定を確認してください。保存先がない状態では航海を開始できません。'
-        : 'この端末内だけに保存されます。正式なアカウントデータとは同期されません。';
+        : 'Questなどのデータは再読み込みで消え、正式なアカウントには保存されません。';
 
     return Semantics(
       container: true,

@@ -87,7 +87,7 @@ Future<void> main() async {
   final notice = StringBuffer()
     ..writeln('# Third-Party Notices')
     ..writeln()
-    ..writeln('Generated: $generatedAt  ')
+    ..writeln('Generated: $generatedAt')
     ..writeln('Candidate source commit: `$sha`')
     ..writeln()
     ..writeln(

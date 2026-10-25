@@ -1,14 +1,17 @@
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const outputPath = 'docs/qst/ANDROID_CANDIDATE_SESSION.yaml';
 
 Future<void> main(List<String> arguments) async {
   final options = _Options.parse(arguments);
-  final head = _command(['git', 'rev-parse', 'HEAD']).trim();
   if (_command(['git', 'status', '--porcelain']).trim().isNotEmpty) {
     _fail('Android evidence must be recorded from a clean worktree.');
   }
-  if (options.candidateSha != head) _fail('Candidate SHA does not match HEAD.');
+  if (!candidateSourceHasOnlyEvidenceCommits(options.candidateSha)) {
+    _fail('Candidate SHA is not an unchanged source commit.');
+  }
   if (!options.supabaseConnected || !options.serverAiConnected) {
     _fail('Android candidate evidence requires hosted Supabase and server AI.');
   }
@@ -19,8 +22,8 @@ Future<void> main(List<String> arguments) async {
     _fail('Evidence requires explicit privacy review confirmation.');
   }
   final candidate = File('docs/qst/BETA_CANDIDATE.yaml').readAsStringSync();
-  if (!candidate.contains('source_commit: "$head"')) {
-    _fail('Beta candidate manifest does not match HEAD.');
+  if (!candidate.contains('source_commit: "${options.candidateSha}"')) {
+    _fail('Beta candidate manifest does not match candidate source.');
   }
   final device = _verifyPhysicalAndroid(options.adbCommand, options.deviceId);
   final artifact = await _evidenceFile(
@@ -80,7 +83,9 @@ Future<void> main(List<String> arguments) async {
     ..writeln('  automated_test_replaces_human_evidence: false')
     ..writeln('  artifact_content_committed: false');
   File(outputPath).writeAsStringSync(output.toString());
-  stdout.writeln('Physical Android candidate evidence recorded for $head.');
+  stdout.writeln(
+    'Physical Android candidate evidence recorded for ${options.candidateSha}.',
+  );
 }
 
 class _Options {

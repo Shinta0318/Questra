@@ -1,4 +1,41 @@
+import 'quest_clarification_service.dart';
+
 enum QuestPlanningMode { project, habit, exploration, preparation, challenge }
+
+enum QuestConditionSource { userConfirmed, inferred }
+
+class QuestConfirmedCondition {
+  const QuestConfirmedCondition({
+    required this.value,
+    required this.source,
+    required this.confirmedAt,
+  });
+
+  final String value;
+  final QuestConditionSource source;
+  final DateTime confirmedAt;
+
+  Map<String, Object?> toJson() => {
+    'value': value,
+    'source': source.name,
+    'confirmed_at': confirmedAt.toUtc().toIso8601String(),
+  };
+
+  static QuestConfirmedCondition? fromJson(Object? input) {
+    if (input is! Map) return null;
+    final row = Map<String, dynamic>.from(input);
+    final value = (row['value'] as String?)?.trim() ?? '';
+    final date = DateTime.tryParse(row['confirmed_at'] as String? ?? '');
+    if (value.isEmpty || date == null) return null;
+    return QuestConfirmedCondition(
+      value: value,
+      source: row['source'] == QuestConditionSource.userConfirmed.name
+          ? QuestConditionSource.userConfirmed
+          : QuestConditionSource.inferred,
+      confirmedAt: date,
+    );
+  }
+}
 
 class QuestUnderstanding {
   QuestUnderstanding({
@@ -13,6 +50,7 @@ class QuestUnderstanding {
     required this.planningRisks,
     required this.planningMode,
     required this.assumptions,
+    this.confirmedConditions = const {},
     this.version = 1,
     DateTime? evaluatedAt,
   }) : evaluatedAt = evaluatedAt ?? DateTime.now();
@@ -28,6 +66,8 @@ class QuestUnderstanding {
   final List<String> planningRisks;
   final QuestPlanningMode planningMode;
   final List<String> assumptions;
+  final Map<QuestClarificationType, QuestConfirmedCondition>
+  confirmedConditions;
   final int version;
   final DateTime evaluatedAt;
 
@@ -42,6 +82,7 @@ class QuestUnderstanding {
     List<String>? planningRisks,
     QuestPlanningMode? planningMode,
     List<String>? assumptions,
+    Map<QuestClarificationType, QuestConfirmedCondition>? confirmedConditions,
     int? version,
     DateTime? evaluatedAt,
   }) {
@@ -57,6 +98,7 @@ class QuestUnderstanding {
       planningRisks: planningRisks ?? this.planningRisks,
       planningMode: planningMode ?? this.planningMode,
       assumptions: assumptions ?? this.assumptions,
+      confirmedConditions: confirmedConditions ?? this.confirmedConditions,
       version: version ?? this.version,
       evaluatedAt: evaluatedAt ?? this.evaluatedAt,
     );
@@ -88,6 +130,9 @@ class QuestUnderstanding {
         orElse: () => QuestPlanningMode.project,
       ),
       assumptions: _strings(data['assumptions']),
+      confirmedConditions: _confirmedConditionsFromJson(
+        data['confirmed_conditions'],
+      ),
       version: data['version'] as int? ?? 1,
       evaluatedAt: DateTime.tryParse(data['evaluated_at'] as String? ?? ''),
     );
@@ -105,10 +150,26 @@ class QuestUnderstanding {
     'planning_risks': planningRisks,
     'planning_mode': planningMode.name,
     'assumptions': assumptions,
+    'confirmed_conditions': {
+      for (final entry in confirmedConditions.entries)
+        entry.key.storageKey: entry.value.toJson(),
+    },
     'version': version,
     'evaluated_at': evaluatedAt.toIso8601String(),
   };
 
   static List<String> _strings(Object? value) =>
       (value as List?)?.whereType<String>().toList(growable: false) ?? const [];
+
+  static Map<QuestClarificationType, QuestConfirmedCondition>
+  _confirmedConditionsFromJson(Object? value) {
+    if (value is! Map) return const {};
+    final conditions = <QuestClarificationType, QuestConfirmedCondition>{};
+    for (final entry in value.entries) {
+      final type = questClarificationTypeFromStorage(entry.key);
+      final condition = QuestConfirmedCondition.fromJson(entry.value);
+      if (type != null && condition != null) conditions[type] = condition;
+    }
+    return conditions;
+  }
 }

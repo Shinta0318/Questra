@@ -3,6 +3,7 @@ status: local_contract_ready
 locale: ja_JP
 theme: dark
 golden_baseline:
+  compact_viewports: [360x800, 390x844, 430x932]
   compact_viewport: 390x844
   large_text_scale: 2.0
   reduce_motion: true
@@ -46,3 +47,21 @@ screens:
     primary_action: 次へ_or_旅を始める
     states: [initial, resumed, saving, error]
     evidence: [apps/mobile/test/qst_505_onboarding_resume_controls_test.dart, apps/mobile/test/qst_406_onboarding_replay_test.dart]
+  - id: mission
+    route: /mission
+    purpose: Questに紐づく中間成果を確認する
+    primary_action: 次のTaskを開く
+    states: [empty, content, loading, error, offline, permission_denied]
+    evidence: [apps/mobile/test/qst_263_mission_completion_integrity_test.dart]
+  - id: task
+    route: /task
+    purpose: 次の実行可能な行動を見つける
+    primary_action: Taskを始める_or_完了する
+    states: [empty, content, loading, error, offline, permission_denied]
+    evidence: [apps/mobile/test/qst_261_task_creation_flow_test.dart]
+  - id: route_review
+    route: /quest/:questId/route
+    purpose: 航路変更を確認し承認する
+    primary_action: 変更内容を確認する_or_元に戻す
+    states: [empty, content, loading, error, offline, permission_denied, ai_fallback, recovery_incomplete]
+    evidence: [apps/mobile/test/qst_523_route_recovery_accessibility_test.dart]

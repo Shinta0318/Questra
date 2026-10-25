@@ -48,11 +48,7 @@ abstract final class InputValidators {
   }) {
     final text = value?.trim() ?? '';
     if (text.isEmpty) return null;
-    return requiredText(
-      text,
-      fieldName: fieldName,
-      maxLength: maxLength,
-    );
+    return requiredText(text, fieldName: fieldName, maxLength: maxLength);
   }
 
   static String? email(String? value, {bool required = true}) {
@@ -89,6 +85,21 @@ abstract final class InputValidators {
       return 'メールアドレスの形式を確認してください。';
     }
     return null;
+  }
+
+  static String? suggestedEmailCorrection(String? value) {
+    final address = value?.trim() ?? '';
+    if (email(address) != null) return null;
+    final at = address.lastIndexOf('@');
+    const commonTypos = {
+      'gmai.com': 'gmail.com',
+      'gmial.com': 'gmail.com',
+      'gmail.con': 'gmail.com',
+    };
+    final correctedDomain =
+        commonTypos[address.substring(at + 1).toLowerCase()];
+    if (correctedDomain == null) return null;
+    return '${address.substring(0, at)}@$correctedDomain';
   }
 
   static String? loginId(String? value) {
@@ -156,10 +167,10 @@ abstract final class InputValidators {
   }
 
   static String? arcChat(String? value) => requiredText(
-        value,
-        fieldName: 'メッセージ',
-        maxLength: InputLimits.arcChatMessage,
-      );
+    value,
+    fieldName: 'メッセージ',
+    maxLength: InputLimits.arcChatMessage,
+  );
 
   static bool _containsUnsupportedControlCharacter(String value) {
     return value.codeUnits.any(

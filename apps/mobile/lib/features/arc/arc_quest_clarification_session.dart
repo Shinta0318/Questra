@@ -6,7 +6,7 @@ class ArcQuestClarificationSession {
     required this.suggestion,
     required this.questions,
     this.answers = const {},
-  }) : assert(questions.length <= 5);
+  }) : assert(questions.length <= 3);
 
   final ArcQuestSuggestion suggestion;
   final List<QuestClarificationQuestion> questions;
@@ -34,17 +34,10 @@ class ArcQuestClarificationSession {
   }
 
   ArcQuestSuggestion get resolvedSuggestion {
-    final lines = <String>[];
-    for (final question in questions) {
-      final answer = answers[question.type]?.trim();
-      if (answer == null || answer.isEmpty) continue;
-      lines.add('${question.label} $answer');
-    }
-    if (lines.isEmpty) return suggestion;
-    final context = lines.map((line) => '- $line').join('\n');
+    if (answers.isEmpty) return suggestion;
     return ArcQuestSuggestion(
       title: suggestion.title,
-      description: '${suggestion.description.trim()}\n\n航路条件:\n$context',
+      description: suggestion.description,
       category: suggestion.category,
       difficulty: suggestion.difficulty,
       sourceInput: suggestion.sourceInput.trim(),
@@ -52,6 +45,7 @@ class ArcQuestClarificationSession {
       successCondition: suggestion.successCondition,
       realityFrame: suggestion.realityFrame,
       reframedOutcome: suggestion.reframedOutcome,
+      confirmedAnswers: {...suggestion.confirmedAnswers, ...answers},
     );
   }
 }

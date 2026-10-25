@@ -114,10 +114,10 @@ class ConnectionStatusService {
 
     if (localMockPreview) {
       return const ConnectionStatusSnapshot(
-        summary: '現在は端末内のプレビューです。オンライン機能の確認結果にはなりません。',
+        summary: '現在は一時的なプレビューです。オンライン機能の確認結果にはなりません。',
         dataStorage: ConnectionCapability(
           title: 'データ保存',
-          detail: 'この端末のプレビュー内だけに保存します。',
+          detail: 'Questなどのデータは再読み込みで消え、実アカウントには保存されません。',
           statusLabel: 'プレビュー',
           state: ConnectionCapabilityState.preview,
         ),

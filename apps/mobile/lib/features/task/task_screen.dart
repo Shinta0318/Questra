@@ -11,6 +11,7 @@ import '../quest/quest_controller.dart';
 import 'task_availability_service.dart';
 import 'task_achievement_flow.dart';
 import 'task_controller.dart';
+import 'task_load_state.dart';
 import 'task_model.dart';
 import 'task_mutation_banner.dart';
 import 'task_mutation_state.dart';
@@ -22,6 +23,7 @@ class TaskScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tasks = ref.watch(taskControllerProvider);
     final mutation = ref.watch(taskMutationControllerProvider);
+    final loadState = ref.watch(taskLoadStateProvider);
     final quests = ref.watch(questControllerProvider);
     final today = ref.read(taskControllerProvider.notifier).todaysTask;
     final ordered = [
@@ -45,8 +47,32 @@ class TaskScreen extends ConsumerWidget {
                 ref.read(taskControllerProvider.notifier).discardPending(),
             onDismiss: () =>
                 ref.read(taskMutationControllerProvider.notifier).clear(),
+            onRefreshConflict: () =>
+                ref.read(taskControllerProvider.notifier).refreshConflict(),
           ),
           if (mutation.isActive) const SizedBox(height: 12),
+          if (loadState.status == TaskLoadStatus.failed) ...[
+            QuestraCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('TaskとMissionの最新状態を確認できませんでした。'),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () => ref
+                        .read(taskControllerProvider.notifier)
+                        .loadForQuestIds(
+                          quests.map((quest) => quest.id).toList(),
+                        ),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('再読み込み'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           Text('今日の一歩', style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 6),
           const Text('TaskはMissionを進めるための、今すぐ実行できる具体的な行動です。'),

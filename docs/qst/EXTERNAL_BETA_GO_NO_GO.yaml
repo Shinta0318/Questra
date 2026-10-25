@@ -1,15 +1,14 @@
 version: 1
-qst: QST-428
+qst: QST-367
 decision: no_go
 distribution_ready: false
-evaluated_at_utc: "2026-09-09T06:16:50.6009113Z"
-candidate_source_commit: "ecb80731190930cc5b1d12ff082b6abfec963059"
-review_source_commit: "b5fecd999f4df83890722ffa0b20181adbb34ee6"
-latest_local_migration: "202609150006_immutable_compensating_ai_budget_correction.sql"
-worktree_clean_at_evaluation: true
+evaluated_at_utc: "2026-10-25T13:57:19.514650Z"
+candidate_source_commit: "b8946d97586470c13158ae70b9260035154a16ec"
+latest_local_migration: "202610250004_export_mission_ownership_fix.sql"
+worktree_clean_at_evaluation: false
 summary:
   passed: 0
-  blocked: 12
+  blocked: 14
 gates:
   - id: candidate_identity
     title: "Candidate identity and immutable artifacts"
@@ -23,7 +22,20 @@ gates:
     evidence:
       - "docs/qst/HOSTED_EVIDENCE_RUN.yaml"
       - "docs/qst/BETA_SUPABASE_PROJECT.yaml"
+      - "docs/qst/HOSTED_ROUTE_EVIDENCE.json"
     blocker: "Deploy the latest migration and functions from this clean candidate SHA."
+  - id: auth_email_delivery
+    title: "Confirmation and recovery email delivery"
+    status: blocked
+    evidence:
+      - "docs/qst/BETA_EMAIL_DELIVERY_EVIDENCE.yaml"
+    blocker: "Configure custom SMTP and verify confirmation, sign-in, and password recovery with sanitized candidate-bound evidence."
+  - id: auth_redirects
+    title: "Authentication email redirect URLs"
+    status: blocked
+    evidence:
+      - "docs/qst/BETA_AUTH_REDIRECT_EVIDENCE.json"
+    blocker: "Set an approved HTTPS Site URL, allowlist exact Web and native callbacks, and verify confirmation and recovery links on this candidate."
   - id: ownership_rls
     title: "Two-account persistence and RLS"
     status: blocked
@@ -36,6 +48,7 @@ gates:
     status: blocked
     evidence:
       - "docs/qst/BETA_DEVICE_VALIDATION.yaml"
+      - "docs/qst/PRIMARY_SCREEN_STATE_EVIDENCE.json"
     blocker: "Capture candidate-bound physical Android and supported Web evidence."
   - id: accessibility_ime
     title: "TalkBack, 200% text, and Japanese IME"

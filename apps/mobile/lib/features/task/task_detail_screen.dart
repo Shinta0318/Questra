@@ -70,6 +70,8 @@ class TaskDetailScreen extends ConsumerWidget {
                 ref.read(taskControllerProvider.notifier).discardPending(),
             onDismiss: () =>
                 ref.read(taskMutationControllerProvider.notifier).clear(),
+            onRefreshConflict: () =>
+                ref.read(taskControllerProvider.notifier).refreshConflict(),
           ),
           if (mutation.isActive) const SizedBox(height: 12),
           if (const JourneyActionHierarchyFeatureFlags().enabled)

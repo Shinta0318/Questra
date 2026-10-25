@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "status": "pending",
+  "candidateSha": null,
+  "workingTreeCleanAtCapture": false,
+  "locale": "ja_JP",
+  "screenshots": [],
+  "physical": {
+    "talkback": "pending",
+    "keyboard": "pending",
+    "reduceMotion": "pending",
+    "haptics": "pending"
+  }
+}

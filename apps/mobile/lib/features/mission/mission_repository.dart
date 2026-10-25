@@ -8,6 +8,7 @@ const _missionColumns =
     'id,quest_id,title,description,guide_type,difficulty,status,progress_percent,sort_order,is_today,effort_estimate,parent_mission_id,dependency_ids,priority,category,estimated_cost_label,reference_hints,enterprise_support_hints,difficulty_score,estimated_duration_days,route_state,done_condition,expected_output,verification_type,action,is_optional,source_requirement,confidence,route_id,objective,success_condition,expected_outcome,required,order_index,weight,target_date,generated_by,generation_version,success_confirmed_at,hierarchy_role,created_at,updated_at,quests!inner(title)';
 
 abstract interface class MissionRepository {
+  Future<List<Mission>> findByIds(List<String> missionIds);
   Future<List<Mission>> findByQuest(
     String questId, {
     int limit = QuestraPerformanceLimits.missionListLimit,
@@ -23,6 +24,14 @@ abstract interface class MissionRepository {
 
 class InMemoryMissionRepository implements MissionRepository {
   final List<Mission> _missions = [];
+
+  @override
+  Future<List<Mission>> findByIds(List<String> missionIds) async {
+    final ids = missionIds.toSet();
+    return _missions
+        .where((mission) => ids.contains(mission.id))
+        .toList(growable: false);
+  }
 
   @override
   Future<List<Mission>> findByQuest(
@@ -84,6 +93,19 @@ class SupabaseMissionRepository implements MissionRepository {
   const SupabaseMissionRepository(this.client);
 
   final SupabaseClient client;
+
+  @override
+  Future<List<Mission>> findByIds(List<String> missionIds) async {
+    if (missionIds.isEmpty) return const [];
+    final rows = await client
+        .from('missions')
+        .select(_missionColumns)
+        .inFilter('id', missionIds)
+        .limit(missionIds.length + 1);
+    return rows
+        .map((row) => _missionFromRow(Map<String, dynamic>.from(row)))
+        .toList(growable: false);
+  }
 
   @override
   Future<List<Mission>> findByQuest(

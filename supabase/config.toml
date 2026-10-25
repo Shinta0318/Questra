@@ -38,8 +38,17 @@ site_url = "http://127.0.0.1:3000"
 additional_redirect_urls = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
+  "http://localhost:3000/?auth_callback=signup",
+  "http://127.0.0.1:3000/?auth_callback=signup",
+  "http://localhost:3000/?auth_callback=recovery",
+  "http://127.0.0.1:3000/?auth_callback=recovery",
   "http://localhost:5268/#/reset-password",
   "http://127.0.0.1:5268/#/reset-password",
+  "http://localhost:5268/?auth_callback=signup",
+  "http://127.0.0.1:5268/?auth_callback=signup",
+  "http://localhost:5268/?auth_callback=recovery",
+  "http://127.0.0.1:5268/?auth_callback=recovery",
+  "com.questra.questra://login-callback/confirm?auth_callback=signup",
   "com.questra.questra://login-callback"
 ]
 jwt_expiry = 3600
@@ -56,8 +65,12 @@ enable_confirmations = true
 secure_password_change = true
 
 [auth.hook.password_verification_attempt]
-enabled = true
+enabled = false
 uri = "pg-functions://postgres/public/hook_password_verification_attempt"
+
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/public/hook_questra_access_token"
 
 [edge_runtime]
 enabled = true

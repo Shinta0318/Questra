@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show FunctionException, SupabaseClient;
 import 'package:uuid/uuid.dart';
 
 import '../../core/config/supabase_config.dart';
@@ -116,6 +117,7 @@ class ArcQuestSuggestion {
     this.successCondition = '',
     this.realityFrame = 'uncertain',
     this.reframedOutcome,
+    this.confirmedAnswers = const {},
   });
 
   final String title;
@@ -127,6 +129,7 @@ class ArcQuestSuggestion {
   final String successCondition;
   final String realityFrame;
   final String? reframedOutcome;
+  final Map<QuestClarificationType, String> confirmedAnswers;
 }
 
 abstract interface class ArcChatService {
@@ -285,6 +288,10 @@ class SupabaseArcChatService implements ArcChatService {
         latencyClass: arcRemoteLatencyClass(stopwatch.elapsed),
       );
     } on Object catch (error) {
+      if (error is FunctionException) {
+        final legalFailure = legalGateFailure(error);
+        if (legalFailure != null) return legalFailure;
+      }
       await evidenceSink.record(
         RuntimeEvidence(
           eventId: const Uuid().v4(),
@@ -316,11 +323,36 @@ class SupabaseArcChatService implements ArcChatService {
     }
   }
 
-  static ArcChatResponse degradedResponse({required String failureReason}) {
+  static ArcChatResponse? legalGateFailure(FunctionException error) {
+    final details = error.details;
+    if (details is! Map) return null;
+    final code = details['error'];
+    if (error.status == 403 && code == 'consent_required') {
+      return degradedResponse(
+        failureReason: 'consent_required',
+        message: '登録時の利用条件の記録が見つかりません。確認できるまで、相談内容はAIへ送っていません。',
+        quickActions: const [],
+      );
+    }
+    if (error.status == 503 && code == 'consent_check_unavailable') {
+      return degradedResponse(
+        failureReason: 'consent_check_unavailable',
+        message: '利用条件の記録を確認できないため、相談内容はAIへ送っていません。入力は残っています。少し待ってから再試行してください。',
+        quickActions: const ['もう一度試す', 'あとで続ける'],
+      );
+    }
+    return null;
+  }
+
+  static ArcChatResponse degradedResponse({
+    required String failureReason,
+    String message = '今はオンラインの応答を受け取れなかったよ。入力は残してあるので、もう一度試せます。',
+    List<String> quickActions = const ['もう一度試す', '入力を編集する', 'あとで続ける'],
+  }) {
     return ArcChatResponse(
-      message: '今はオンラインの応答を受け取れなかったよ。入力は残してあるので、もう一度試せます。',
+      message: message,
       sourceType: 'remote_degraded',
-      quickActions: const ['もう一度試す', '入力を編集する', 'あとで続ける'],
+      quickActions: quickActions,
       deliveryMode: ArcChatDeliveryMode.degraded,
       intentType: ArcConversationIntent.conversationSupport,
       requiresClarification: false,

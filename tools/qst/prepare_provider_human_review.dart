@@ -8,7 +8,7 @@ Future<void> main() async {
     final rows = readReviewRows(providerResultsPath);
     final corpus = readReviewRows(providerCorpusPath);
     final safety = readReviewRows(providerSafetyPath);
-    final head = candidateHead();
+    final head = verifiedCandidateSource();
     final run = validateProviderResultIdentity(
       rows: rows,
       corpus: corpus,

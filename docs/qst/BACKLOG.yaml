@@ -6880,8 +6880,8 @@ items:
 
   - id: QST-517
     title: Route Snapshot Schema V2 Alignment
-    status: Planned
-    evidence_state: not_started
+    status: InProgress
+    evidence_state: local_partial
     priority: P0
     epic: PERSISTENCE-QUALITY
     goal: FlutterとSupabaseの航路snapshotをversion付きの同一契約へ揃え、再読込した未変更提案を偽staleにしない。
@@ -6899,12 +6899,12 @@ items:
       - Mission内容、Task進捗、Quest期限の実変更はstaleとして拒否する。
       - 旧version proposalは明示的な理由でfail closedまたは安全に移行する。
       - schema parityと再読込回帰テストを通す。
-    evidence: []
+    evidence: [reports/qst/QST-517.md]
 
   - id: QST-518
     title: Awaitable Route Undo Result Contract
-    status: Planned
-    evidence_state: not_started
+    status: InProgress
+    evidence_state: local_partial
     priority: P0
     epic: PERSISTENCE-QUALITY
     goal: 航路の元に戻す操作をawait可能にし、成功・stale・失敗・部分復旧をUIへ正確に返す。
@@ -6922,12 +6922,12 @@ items:
       - Undo中の二重操作を防ぎ、画面離脱後のcontext利用を行わない。
       - Supabase RPCとローカル経路を同一の結果型で扱う。
       - 成功、失敗、二重tap、画面破棄の回帰テストを通す。
-    evidence: []
+    evidence: [reports/qst/QST-518.md]
 
   - id: QST-519
     title: Route Undo Snapshot Retention and Compensating Recovery
-    status: Planned
-    evidence_state: not_started
+    status: InProgress
+    evidence_state: local_partial
     priority: P0
     epic: PERSISTENCE-QUALITY
     goal: Undo用snapshotを復旧完了まで保持し、Quest・Mission・Taskを保存確認付きで一貫して復元する。
@@ -6946,12 +6946,12 @@ items:
       - 中途失敗時にsnapshotと失敗対象を保持し、重複適用せず再試行できる。
       - 完了済みTaskを未完了へ戻さない既存DB契約を維持する。
       - localとSupabaseのRollback回帰を通す。
-    evidence: []
+    evidence: [reports/qst/QST-519.md]
 
   - id: QST-520
     title: Crash-safe Local Route Mutation Journal
-    status: Planned
-    evidence_state: not_started
+    status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: PERSISTENCE-QUALITY
     goal: ローカル航路承認・Undoの途中状態をowner単位で安全に記録し、強制終了後に復旧判断できるようにする。
@@ -6968,12 +6968,12 @@ items:
       - 再起動後に適用済み、復旧必要、不明を判別し勝手に再適用しない。
       - 成功時にjournalを消去し、期限切れと破損はfail closedにする。
       - Mock previewはremote保存保証ではないことを明示する。
-    evidence: []
+    evidence: [apps/mobile/test/qst_520_route_mutation_journal_test.dart, reports/qst/QST-520.md]
 
   - id: QST-521
     title: Remote Task Optimistic Concurrency RPC
-    status: Planned
-    evidence_state: not_started
+    status: InProgress
+    evidence_state: local_partial
     priority: P0
     epic: PERSISTENCE-QUALITY
     goal: 別端末・再読込前のTask通常編集が新しいremote状態を上書きしないよう、version条件付き保存をDB正本にする。
@@ -6992,12 +6992,12 @@ items:
       - owner、Quest、Missionの親整合性をRPC内で再検証する。
       - retryは同じoperationを冪等に扱い、別内容を同じkeyで受け付けない。
       - 二端末競合、owner越境、応答喪失のテストを通す。
-    evidence: []
+    evidence: [apps/mobile/test/qst_521_remote_task_cas_test.dart, reports/qst/QST-521.md]
 
   - id: QST-522
     title: Route Proposal Provenance and Generation Contract
-    status: Planned
-    evidence_state: not_started
+    status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: AI-TRANSPARENCY
     goal: 航路提案がrules、Gemini、手動のどの経路で生成されたかを監査可能にし、Arcの自然なUIを保ちながら透明性を高める。
@@ -7016,12 +7016,12 @@ items:
       - 監査情報へAPI key、会話全文、不要な個人情報を保存しない。
       - ユーザー向けにはArcをAI Assistantと呼ばず、必要な透明性だけを自然に表示する。
       - legacy proposalを安全に読める。
-    evidence: []
+    evidence: [apps/mobile/test/qst_522_route_provenance_test.dart, reports/qst/QST-522.md]
 
   - id: QST-523
     title: Route Recovery UX and Accessibility States
-    status: Planned
-    evidence_state: not_started
+    status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: UX-QUALITY
     goal: 航路の適用、Undo、競合、復旧失敗を視覚・音声読み上げ・操作状態で理解できるようにする。
@@ -7039,12 +7039,12 @@ items:
       - Snackbar action以外からも復旧状態を再確認できる。
       - 320px、200% text、keyboard focus、SemanticsのWidget testを通す。
       - 日本語copyが責任追及や失敗感を与えない。
-    evidence: []
+    evidence: [apps/mobile/test/qst_523_route_recovery_accessibility_test.dart, reports/qst/QST-523.md]
 
   - id: QST-524
     title: Primary State Golden and Physical Evidence Closure
-    status: Planned
-    evidence_state: not_started
+    status: InProgress
+    evidence_state: local_partial
     priority: P1
     epic: QUALITY-EVIDENCE
     goal: 主要画面と航路回復のloading、empty、error、offline、permission、AI失敗をGoldenと物理確認手順で閉じる。
@@ -7061,12 +7061,12 @@ items:
       - TalkBack、keyboard、reduce motion、hapticの未確認をPass扱いしない。
       - backend error、offline、permission、AI fallback fixtureを再現できる。
       - 証跡欠落時にrelease gateが失敗する。
-    evidence: []
+    evidence: [docs/qst/PRIMARY_SCREEN_STATE_EVIDENCE.json, apps/mobile/test/qst_524_primary_state_gate_test.dart, reports/qst/QST-524.md]
 
   - id: QST-525
     title: Current-SHA Hosted Route RLS and Failure Injection Gate
-    status: Planned
-    evidence_state: not_started
+    status: InProgress
+    evidence_state: external_pending
     priority: P0
     epic: RELEASE-MANAGEMENT
     goal: snapshot V2、Undo、Task CASを含むcurrent candidate SHAをHosted Supabaseで二アカウント・失敗注入付きで実証する。
@@ -7085,12 +7085,12 @@ items:
       - snapshot再読込、apply、Undo、version conflict、応答喪失をHosted環境で実行する。
       - test dataを削除し、秘密値とprivate journey本文を証跡へ残さない。
       - working tree dirtyまたはSHA不一致でgateが失敗する。
-    evidence: []
+    evidence: [docs/qst/HOSTED_ROUTE_EVIDENCE.json, apps/mobile/test/qst_525_hosted_route_gate_test.dart, reports/qst/QST-525.md]
 
   - id: QST-526
     title: QST-517-525 Cross-functional Quality Review
-    status: Planned
-    evidence_state: not_started
+    status: InProgress
+    evidence_state: external_pending
     priority: P0
     epic: QUALITY-REVIEW
     goal: QST-517〜525をコード、UI/UX、AI、DB、セキュリティ、Master Spec準拠で横断レビューし、次の10件へ反映する。
@@ -7104,7 +7104,1382 @@ items:
       - CriticalとHighの未解決を重複確認後に採番する。
       - 自動テストと外部証跡を区別し、未確認をPass扱いしない。
       - 次の10件へ優先順位、依存関係、rollbackを反映する。
-    evidence: []
+    evidence: [reports/qst/QST-526.md]
+
+  - id: QST-527
+    title: Arc Clarification and Quest Context Integrity
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: CORE-JOURNEY-UX
+    goal: Arc確認質問を必要な最大3問に抑え、回答済み条件を質問文や重複見出しとしてQuest詳細へ表示しない。
+    depends_on: [QST-250, QST-252, QST-267]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/quest/quest_clarification_service.dart
+      - apps/mobile/lib/features/arc/arc_quest_clarification_session.dart
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - apps/mobile/lib/features/quest/quest_detail_screen.dart
+      - apps/mobile/test/quest_clarification_service_test.dart
+      - docs/qst/QST-527.md
+    acceptance:
+      - 明確な願いでは質問を省略でき、必要な場合も合計3問を超えない。
+      - 希望年月と回答済み条件を型付きで保持し、本人確認済みの値と推測を区別する。
+      - Quest詳細へ質問文の羅列や重複した航路条件を表示しない。
+      - 旧Questを壊さず、Gemini失敗時に回答を失わない。
+      - 320/360/390/430px、日本語IME、200%文字、Web/Androidで検証する。
+    evidence: [reports/qst/LAUNCH_RETENTION_AUDIT_20260930.md, docs/qst/QST-527.md, reports/qst/QST-527.md]
+
+  - id: QST-528
+    title: Close Remote Task CAS Bypass
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: ROUTE-TRANSACTION
+    goal: 直接upsertのTask更新を閉じ、旧クライアントと複数Task作成/補償を含めてversion競合をDBで拒否する。
+    depends_on: [QST-521, QST-526]
+    blocks: [QST-525, External Beta]
+    likely_files:
+      - apps/mobile/lib/features/task/task_repository.dart
+      - supabase/migrations
+      - apps/mobile/test
+    acceptance:
+      - 既存Taskの通常/一括更新がexpected versionを必須とし、古い端末の上書きを拒否する。
+      - 新規Task作成、航路補償、旧クライアントを段階移行し、二重保存と部分保存を防ぐ。
+      - 二端末/二アカウント/応答喪失/rollbackを実Supabaseで検証する。
+    evidence: [reports/qst/QST-526.md, reports/qst/QST-528.md, apps/mobile/test/qst_528_task_batch_cas_test.dart]
+
+  - id: QST-529
+    title: Restart-safe Route Journal Reconciliation
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: ROUTE-TRANSACTION
+    goal: 再起動後の未解決Journalを画面へ復元し、利用者が航路を安全に照合・復旧できるようにする。
+    depends_on: [QST-519, QST-520, QST-526]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/quest/route_mutation_journal.dart
+      - apps/mobile/lib/features/quest/route_replanning_controller.dart
+      - apps/mobile/lib/features/quest/quest_route_screen.dart
+    acceptance:
+      - 未解決/破損/期限切れJournalで新しい航路適用を止める。
+      - 再起動後にbefore/current/afterを照合し、後続変更を上書きせず復旧または手動確認できる。
+      - 正常な照合と利用者確認なしにJournalを消去しない。
+    evidence: [reports/qst/QST-526.md, reports/qst/QST-529.md, apps/mobile/test/qst_529_restart_route_journal_test.dart]
+
+  - id: QST-530
+    title: Quest Detail Route Recovery UX Parity
+    status: InProgress
+    evidence_state: local_partial
+    priority: P1
+    epic: ROUTE-UX
+    goal: Quest詳細の航路更新をReview画面と同じ処理中、Undo、失敗、復旧の状態契約へ揃える。
+    depends_on: [QST-518, QST-523, QST-526]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/quest/quest_detail_screen.dart
+      - apps/mobile/test
+    acceptance:
+      - 二重tapを防ぎ、成功・競合・部分復旧を日本語とSemanticsで区別する。
+      - Snackbar消失後もUndoと復旧状態へアクセスできる。
+      - 320/360/390/430pxと200%文字で検証し、実機読み上げ証跡を残す。
+    evidence: [reports/qst/QST-526.md, reports/qst/QST-530.md, apps/mobile/test/qst_530_route_review_entry_test.dart]
+
+  - id: QST-531
+    title: Task Retry Journal Integrity
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: ROUTE-TRANSACTION
+    goal: Taskの再試行で版番号と操作種別を保持し、保存後の端末内記録整理失敗を未保存と誤認させない。
+    depends_on: [QST-528]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/task/task_controller.dart
+      - apps/mobile/lib/features/task/task_offline_queue_repository.dart
+      - apps/mobile/lib/features/task/task_mutation_state.dart
+      - apps/mobile/test/qst_531_task_retry_integrity_test.dart
+    acceptance:
+      - 再起動用記録がTask版番号、作成元、操作種別を保持する。
+      - 並べ替え再試行は作成専用RPCへ流れず、同じ冪等キーを使う。
+      - 保存後の記録整理失敗はTaskを取り消さず、整理完了まで後続変更を止める。
+      - Hosted RPC、Android Secure Storage、再起動後の復旧を実環境で検証する。
+    evidence: [reports/qst/QST-531.md, apps/mobile/test/qst_531_task_retry_integrity_test.dart]
+
+  - id: QST-532
+    title: Task CAS Conflict Recovery
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: ROUTE-TRANSACTION
+    goal: 別端末とのTask競合後、古い画面状態を最新と誤認させず、安全に再読み込みする。
+    depends_on: [QST-528, QST-531]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/task/task_controller.dart
+      - apps/mobile/lib/features/task/task_mutation_state.dart
+      - apps/mobile/test/qst_532_task_conflict_recovery_test.dart
+    acceptance:
+      - 競合したMissionのTaskだけをサーバーから再取得し、無関係なMissionの状態を保持する。
+      - 再取得失敗または結果が取得上限を超える場合、最新状態を確認できないことを明示する。
+      - 競合時に再試行記録の整理が失敗しても後続変更で上書きしない。
+      - アカウント切替中の遅延応答を別ユーザーへ表示しない。
+      - Hosted二端末競合と通信断を実環境で検証する。
+    evidence: [reports/qst/QST-532.md, apps/mobile/test/qst_532_task_conflict_recovery_test.dart]
+
+  - id: QST-533
+    title: Task Conflict Refresh Gate
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: ROUTE-TRANSACTION
+    goal: Task競合後の再取得失敗を閉じられない警告として保持し、該当Missionを再取得するまで新しい書込みを拒否する。
+    depends_on: [QST-528, QST-532]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/task/task_controller.dart
+      - apps/mobile/lib/features/task/task_mutation_state.dart
+      - apps/mobile/lib/features/task/task_mutation_banner.dart
+      - apps/mobile/test/qst_533_task_conflict_refresh_gate_test.dart
+    acceptance:
+      - 競合後の再取得に失敗したら警告を閉じられず、書込みを拒否する。
+      - 利用者が該当MissionのTaskだけを再取得でき、成功後は最新値で操作を再開できる。
+      - 再取得失敗、アカウント切替、取得上限超過で古い値を最新と見なさない。
+      - 320pxと200%文字でも警告の操作が欠けない。
+      - Hosted二端末競合とAndroid実機で検証する。
+    evidence: [reports/qst/QST-533.md, apps/mobile/test/qst_533_task_conflict_refresh_gate_test.dart]
+
+  - id: QST-534
+    title: Single Task Replay Monotonicity
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: ROUTE-TRANSACTION
+    goal: Task単体更新と完了の応答喪失時、同一操作だけを冪等に再送し、後続変更を古い成功応答で隠さない。
+    depends_on: [QST-521, QST-528, QST-533]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/migrations/202610040001_task_single_replay_guard.sql
+      - supabase/tests/rls_behavior.sql
+      - apps/mobile/lib/features/task/task_repository.dart
+      - apps/mobile/test/qst_534_task_single_replay_guard_test.dart
+    acceptance:
+      - Task更新と完了は同一操作の直後の再送だけを成功として扱う。
+      - 後続変更後の古い再送、別Taskへの操作ID再利用、越境操作は競合または拒否される。
+      - 完了の版番号と時刻が欠けた応答をFlutterは成功扱いしない。
+      - 完了イベントとStardustは再送で二重計上されない。
+      - 一時PostgreSQLとHosted二アカウント/二端末でSQL・失敗注入を実証する。
+    evidence: [reports/qst/QST-534.md, apps/mobile/test/qst_534_task_single_replay_guard_test.dart]
+
+  - id: QST-535
+    title: Atomic Task Reopen and Mission Confirmation Integrity
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: ROUTE-TRANSACTION
+    goal: 完了済みTaskの取り消しを専用RPCで安全に保存し、必須Task再開時のMission達成確認を原子的に解除する。
+    depends_on: [QST-534]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/migrations/202610040002_task_reopen_atomic.sql
+      - supabase/tests/rls_behavior.sql
+      - apps/mobile/lib/features/task/task_repository.dart
+      - apps/mobile/lib/features/task/task_controller.dart
+      - apps/mobile/lib/features/mission/mission_controller.dart
+      - apps/mobile/test/qst_535_task_reopen_contract_test.dart
+    acceptance:
+      - 完了取り消しは所有者の期待版と操作IDを検証し、同一操作の直後の再送だけを受理する。
+      - 必須Task再開でMissionの明示達成確認を同じ取引内で解除し、再完了で自動復帰しない。
+      - 後続Taskが進行中/完了済みなら再開を拒否し、Stardustを二重計上しない。
+      - 拒否時には画面側のMission確認を先に消さず、サーバー側のMissionをクライアントから上書きしない。
+      - 一時PostgreSQL、Hosted二アカウント/二端末、AndroidでSQLとUIを実証する。
+    evidence: [reports/qst/QST-535.md, apps/mobile/test/qst_535_task_reopen_contract_test.dart]
+
+  - id: QST-536
+    title: QST-527-535 Cross-functional Review and External Verification Triage
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: ROUTE-TRANSACTION
+    goal: 直近10作業単位のコード、UI/UX、AI、DB、Security、Master Spec準拠を横断確認し、外部証跡の欠落を次の作業へ反映する。
+    depends_on: [QST-527, QST-528, QST-529, QST-530, QST-531, QST-532, QST-533, QST-534, QST-535]
+    blocks: [External Beta]
+    likely_files:
+      - reports/qst/QST-536.md
+      - docs/qst/HOSTED_ROUTE_EVIDENCE.json
+      - docs/qst/PRIMARY_SCREEN_STATE_EVIDENCE.json
+    acceptance:
+      - 実施したローカル検証と未実施のHosted/実機検証を分離する。
+      - 6観点の問題を重複QSTを増やさず既存QSTまたは次の単位へ割り当てる。
+      - 外部ゲートが不足証跡を検出し、NO-GO判定を維持する。
+      - Hosted二アカウント、Android実機、Gemini、画面証跡を同一のclean candidate SHAで再検証する。
+    evidence: [reports/qst/QST-536.md]
+
+  - id: QST-537
+    title: Authoritative Mission Refresh After Remote Task Reopen
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: ROUTE-TRANSACTION
+    goal: 別端末のTask再開と再完了後も、Missionの明示達成確認を古いローカル値から復活させない。
+    depends_on: [QST-535, QST-536]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/task/task_controller.dart
+      - apps/mobile/lib/features/mission/mission_controller.dart
+      - apps/mobile/lib/features/mission/mission_repository.dart
+      - apps/mobile/test/qst_537_mission_authority_refresh_test.dart
+    acceptance:
+      - Task競合回復/再読込時に該当Missionのサーバー権威状態を取得する。
+      - 再取得失敗やowner切替では古い達成確認を成功表示せず、再試行可能な状態を示す。
+      - 再開後の再完了だけでMissionを自動完了しない。
+      - 二端末競合と再起動後のHosted検証を行う。
+    evidence: [reports/qst/QST-536.md, reports/qst/QST-537.md, apps/mobile/test/qst_537_mission_authority_refresh_test.dart]
+
+  - id: QST-538
+    title: Signup Email Typo Confirmation and Delivery Release Gate
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 確認メールの宛先誤記を送信前に本人が修正でき、配信未実証のまま外部Betaを公開できないようにする。
+    depends_on: [QST-169, QST-414]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/core/validation/input_validators.dart
+      - apps/mobile/lib/features/auth/signup_screen.dart
+      - apps/mobile/test/qst_538_signup_email_confirmation_test.dart
+      - docs/qst/BETA_EMAIL_DELIVERY_EVIDENCE.yaml
+      - tools/qst/external_beta_go_no_go.dart
+    acceptance:
+      - よくあるメールドメインの誤記は候補を示すが、本人の明示操作なしに入力値を変更しない。
+      - 疑わしい宛先の登録前に本人確認を求め、修正・そのまま登録の両方を選べる。
+      - 不明な独自ドメインを誤記として拒否しない。
+      - カスタムSMTP、確認メール受信、リンク完了、初回ログイン、再設定メール受信を同一clean candidateで実証するまで公開ゲートはblockedを維持する。
+      - 実送信先、認証情報、メール本文をQST証跡へ保存しない。
+    evidence: [reports/qst/QST-538.md, apps/mobile/test/qst_538_signup_email_confirmation_test.dart, apps/mobile/test/qst_538_email_delivery_gate_test.dart, docs/qst/BETA_EMAIL_DELIVERY_EVIDENCE.yaml]
+
+  - id: QST-539
+    title: Auth Email Redirect Contract and External Beta Gate
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 登録確認・パスワード回復メールのリンクをQuestraへ戻し、未設定のHosted URLで外部Betaを公開しない。
+    depends_on: [QST-169, QST-538]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/auth/auth_redirects.dart
+      - apps/mobile/lib/features/auth/auth_controller.dart
+      - apps/mobile/test/qst_539_auth_redirect_gate_test.dart
+      - docs/qst/BETA_AUTH_REDIRECT_EVIDENCE.json
+      - tools/qst/external_beta_go_no_go.dart
+    acceptance:
+      - 登録確認メールはWebの専用戻り先またはモバイルの確認専用コールバックを明示する。
+      - 回復メールはWebの再設定画面またはモバイル認証コールバックを明示する。
+      - 外部BetaのSite URLは承認済みHTTPS Originであり、登録確認・回復・モバイルの正確な戻り先が許可一覧にある。
+      - clean candidateでWeb/モバイルの確認・回復リンクが実アプリへ戻る証跡がない限り公開ゲートはblockedを維持する。
+      - リンクのトークン、送信先メールアドレス、認証情報を証跡へ保存しない。
+    evidence: [reports/qst/QST-539.md, apps/mobile/test/qst_539_auth_redirect_gate_test.dart, docs/qst/BETA_AUTH_REDIRECT_EVIDENCE.json]
+
+  - id: QST-540
+    title: Signup Confirmation Resend and Recovery UX
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 確認メール未着時にユーザーが自分で安全に再送を依頼でき、パスワード再設定へ誤誘導されないようにする。
+    depends_on: [QST-538, QST-539]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/auth/confirm_email_help_screen.dart
+      - apps/mobile/lib/features/auth/auth_controller.dart
+      - apps/mobile/lib/features/auth/login_screen.dart
+      - apps/mobile/lib/core/router/app_router.dart
+      - apps/mobile/test/qst_540_confirmation_resend_test.dart
+    acceptance:
+      - 登録直後と再訪時の両方でログイン画面から確認メール再送へ進める。
+      - メール形式とよくあるドメイン誤記を確認し、本人の明示操作なしに宛先を変えない。
+      - Supabaseのsignup再送APIを使用し、アカウントの有無や受信完了を断定しない。
+      - 再送成功後は60秒の連続操作を防ぎ、失敗時は成功表示を出さず再試行できる。
+      - 接続のないモックでは実メールが送れたように表示しない。
+      - カスタムSMTP導入後、確認メール再送・到達・リンク復帰をWeb/Androidで実証する。
+    evidence: [reports/qst/QST-540.md, apps/mobile/test/qst_540_confirmation_resend_test.dart]
+
+  - id: QST-541
+    title: Unconfirmed Signup Login Recovery Guidance
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 確認メール未完了の可能性があるログイン失敗時に、アカウントの有無を漏らさず再送導線を示す。
+    depends_on: [QST-538, QST-539, QST-540]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/auth/login_screen.dart
+      - apps/mobile/test/qst_541_login_confirmation_guidance_test.dart
+    acceptance:
+      - ログイン失敗時だけ、確認メール未完了の可能性と再送導線を一般的な案内として表示する。
+      - 実際のアカウント有無、確認状態、メール到達を断定しない。
+      - 小型画面と文字拡大で案内が欠けない。
+      - カスタムSMTPとRedirect URLsの実設定、確認リンクからの初回ログインは別途実証する。
+    evidence: [reports/qst/QST-541.md, apps/mobile/test/qst_541_login_confirmation_guidance_test.dart]
+
+  - id: QST-542
+    title: Signup Confirmation Callback Session Separation
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 確認リンクからの自動ログインを防ぎ、回復リンクだけを認証セッション交換へ通す。
+    depends_on: [QST-539, QST-540]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/auth/auth_redirects.dart
+      - apps/mobile/lib/features/auth/email_confirmation_return_screen.dart
+      - apps/mobile/lib/main.dart
+      - apps/mobile/lib/core/router/app_router.dart
+      - apps/mobile/test/qst_542_confirmation_callback_policy_test.dart
+    acceptance:
+      - 登録確認リンクの戻り先を再設定リンクから分離し、初回ログインを本人に求める。
+      - Webの確認リンクに含まれる一時コードをブラウザのURLから除去する。
+      - 回復リンクはセッション交換を継続し、一般画面URLは認証コールバックとして扱わない。
+      - 新旧Web確認リンクと新モバイル確認リンクを判定できる。
+      - 実メール受信とWeb/Androidのコールバック往復をclean candidateで検証するまでは外部Betaを止める。
+    evidence: [reports/qst/QST-542.md, apps/mobile/test/qst_542_confirmation_callback_policy_test.dart]
+
+  - id: QST-543
+    title: Authenticated User Boundary for Direct AI Functions
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: SECURITY
+    goal: 公開APIキーだけでArc/Geminiを実行できないよう、全ての直接AI関数で本人セッションを検証してからproviderを呼ぶ。
+    depends_on: [QST-342, QST-343]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/functions/_shared/ai_auth.ts
+      - supabase/functions/_shared/ai_provider.ts
+      - supabase/functions/arc-chat/index.ts
+      - supabase/functions/arc-quest-guide/index.ts
+      - supabase/functions/_shared/ai_auth.test.mjs
+    acceptance:
+      - Arc Chat、Quest Guide、旧Mission/Guide/Advice/Star Map、Safety分類の直接AI関数は本人JWTなしでAI/検索を呼ばない。
+      - Gatewayのverify_jwtが受理する公開キーやlegacy anon JWTだけでは利用者として扱わない。
+      - Supabase Authで検証したuser IDをAI利用記録へ渡し、欠落時は共有providerも失敗扱いにする。
+      - 既存のQuest PlanningとMission Researchの認証境界を維持する。
+      - 同一clean candidateをHostedへ配備し、公開キーのみの拒否とログイン済みの正常動作を両方実証する。
+      - 全直接AI経路の利用量上限は既存QST-342へ追記し、未強制のまま外部Betaを公開しない。
+    evidence: [reports/qst/QST-543.md, supabase/functions/_shared/ai_auth.test.mjs, tools/qst/verify_hosted_ai_auth_boundary.test.mjs]
+
+  - id: QST-544
+    title: Budgeted Gemini Path for Direct Arc Text Generation
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: SECURITY
+    goal: 旧Arc系の直接Gemini生成をatomic AI budget予約・精算の経路へ統合し、予算を通らない有料provider呼び出しを防ぐ。
+    depends_on: [QST-342, QST-543]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/functions/_shared/ai_provider.ts
+      - supabase/functions/_shared/quest_planning/ai_budget_admission.ts
+      - supabase/functions/_shared/direct_ai_budget.test.mjs
+    acceptance:
+      - 直接AI生成は本人user IDを持ち、Provider前のatomic reserveを通過する。
+      - 予算否認・予算サービス停止ではGeminiを呼ばず、OpenAIの未予算経路も閉じる。
+      - Provider成功時は実input/output tokenを台帳へ精算し、usage欠落を成功にしない。
+      - 旧Arcのsource_type契約、入力保持、fallback UIを維持する。
+      - Grounded Searchの独立経路は別QSTで同じ予算・課金監査を行う。
+      - 同一clean candidateでHosted並列上限・成功/失敗・Gemini usageを実証するまで外部Betaを公開しない。
+    evidence: [reports/qst/QST-544.md, supabase/functions/_shared/direct_ai_budget.test.mjs]
+
+  - id: QST-545
+    title: Budgeted and Source-Bound Grounded Search
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: SECURITY
+    goal: Arc ChatとMission調査のGoogle Search経路に本人境界、検索query予算、token精算、出典必須条件を適用する。
+    depends_on: [QST-342, QST-543, QST-544]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/functions/_shared/grounded_search_provider.ts
+      - supabase/functions/arc-chat/index.ts
+      - supabase/functions/research-mission-resources/index.ts
+      - supabase/functions/_shared/grounded_search_budget.test.mjs
+    acceptance:
+      - Arc ChatとMission調査は本人user IDを持ち、Google Search前にAI budgetとquery budgetを予約する。
+      - 予算否認とuser ID欠落では外部検索もGeminiも呼ばない。
+      - 実token数と確認済みquery数を精算し、出典のない回答をgrounded情報として見せない。
+      - Missionのowner検証と既存cache/freshness条件を維持する。
+      - 同一clean candidateのHosted Gemini検索、budget ledger、二アカウント隔離、UI出典表示を実証する。
+    evidence: [reports/qst/QST-545.md, supabase/functions/_shared/grounded_search_budget.test.mjs]
+
+  - id: QST-546
+    title: Gemini Search Query Attribution Contract
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: SECURITY
+    goal: Interactions APIのgoogle_search_call.arguments.queriesを実際のbillable queryとして抽出し、欠落時の0件精算を禁止する。
+    depends_on: [QST-448, QST-545]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/functions/_shared/quest_planning/interactions_adapter.ts
+      - supabase/functions/_shared/quest_planning/ai_budget_admission.ts
+      - supabase/functions/_shared/grounded_search_budget.test.mjs
+    acceptance:
+      - nested arguments.queriesと従来の直接query形式をどちらも読み、重複・空文字をbillable件数へ加算しない。
+      - 検索呼び出しにquery情報が欠落したら0件の精算を成功扱いにしない。
+      - 実モデルのsearch stepとbudget ledgerを同一candidateで照合する。
+      - 差額・未精算reservationを既存reconciliation運用で処理できることを実証する。
+    evidence: [reports/qst/QST-546.md, supabase/functions/_shared/grounded_search_budget.test.mjs]
+
+  - id: QST-547
+    title: Cross-functional Review of QST-537 through QST-546
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: RELEASE_READINESS
+    goal: 10件ごとのコード、UI/UX、AI、DB、セキュリティ、Master Spec整合を現在の実装とHosted証跡で再判定し、次の修正へ反映する。
+    depends_on: [QST-537, QST-538, QST-539, QST-540, QST-541, QST-542, QST-543, QST-544, QST-545, QST-546]
+    blocks: [External Beta]
+    acceptance:
+      - ローカルのPASSとHosted未配備を混同せず、6観点の根拠・残件・優先順を示す。
+      - 新しいFindingは既存QSTへ戻すか、独立した変更単位だけを新規採番する。
+      - 外部Beta判定を現在の証跡で再実行し、NO-GOなら解除条件を明示する。
+    evidence: [reports/qst/QST-547.md]
+
+  - id: QST-548
+    title: Auth Input Contrast Across Recovery and Signup
+    status: InProgress
+    evidence_state: local_partial
+    priority: P1
+    epic: AUTHENTICATION
+    goal: 認証・再設定画面の入力文字と背景色を対で定義し、白文字が白背景へ溶け込む状態を防ぐ。
+    depends_on: [QST-538, QST-540, QST-541, QST-542]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/auth/forgot_password_screen.dart
+      - apps/mobile/lib/features/auth/reset_password_screen.dart
+      - apps/mobile/test/auth_recovery_screen_test.dart
+      - apps/mobile/test/qst_548_auth_input_contrast_test.dart
+    acceptance:
+      - ログイン、新規登録、確認メール案内、再設定メール、新パスワードの各入力欄で本文と背景のコントラストが4.5:1以上になる。
+      - WebとAndroidの実画面で入力文字、IME編集中の文字、オートフィル後の文字を確認する。
+      - 既存の認証ロジック、確認メール、ロックアウト、パスワード再設定処理を変更しない。
+      - 実接続の確認済みアカウントで再設定後のログイン成功を別途確認する。秘密情報を証跡へ保存しない。
+    evidence: [reports/qst/QST-548.md, apps/mobile/test/qst_548_auth_input_contrast_test.dart]
+
+  - id: QST-549
+    title: Hosted AI User Boundary Release Gate
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: SECURITY
+    goal: AI関数の配備後、匿名拒否と認証済み到達の両方を実測するまでHosted証跡をverifiedにしない。
+    depends_on: [QST-343, QST-543, QST-544, QST-545, QST-546]
+    blocks: [External Beta]
+    likely_files:
+      - tools/qst/verify_hosted_ai_auth_boundary.mjs
+      - tools/qst/verify_hosted_ai_auth_boundary.test.mjs
+      - tools/qst/run_hosted_evidence_gate.ps1
+      - tools/qst/external_beta_go_no_go.dart
+      - tools/qst/verify_hosted_evidence_bundle.dart
+    acceptance:
+      - 七つの直接AI関数がpublishable keyだけの呼び出しをすべて401で拒否する。
+      - 同じ七関数がSupabase Authで確認済みの一時的ユーザーJWTを受け入れ、不正JSONの非生成リクエストに所定の400/200を返す。
+      - 両方の実測が通る前にai_user_boundaryをpassedとしてHosted証跡へ記録しない。
+      - 検証用JWTをログや証跡へ記録せず、配備用の子プロセスへ引き継がない。
+      - clean candidate SHAで配備・検証し、ローカルテストをHosted成功の代用にしない。
+    evidence: [reports/qst/QST-549.md, tools/qst/verify_hosted_ai_auth_boundary.test.mjs]
+
+  - id: QST-550
+    title: Login Failure Boundary and Recovery Truthfulness
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: ログイン関数の認証失敗と通信・配備・DB障害を区別し、確認済みユーザーを誤ってメール未確認と案内しない。
+    depends_on: [QST-538, QST-539, QST-541]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/auth/auth_controller.dart
+      - apps/mobile/lib/features/auth/auth_error_feedback.dart
+      - apps/mobile/test/auth_login_function_error_test.dart
+      - supabase/functions/auth-login/index.ts
+    acceptance:
+      - 401 invalid_credentialsはアカウント存在や確認状態を漏らさない汎用案内にする。
+      - 通信・Relay・サーバー・DB照会障害をパスワード不一致と表示しない。
+      - 429では再試行を促し、失敗回数ロックの既存契約を維持する。
+      - 確認済みアカウントのパスワード再設定から実ログインまで同一Hosted候補で確認する。
+      - 新規アカウントのメール受信と確認リンク往復はQST-538/539で別途実証する。
+      - 認証情報をログ・証跡・テストコードへ保存せず、二アカウント分離を維持する。
+    evidence: [reports/qst/QST-550.md, apps/mobile/test/auth_login_function_error_test.dart]
+
+  - id: QST-551
+    title: Touched-only Auth Field Validation Feedback
+    status: InProgress
+    evidence_state: local_partial
+    priority: P1
+    epic: AUTHENTICATION
+    goal: 認証画面で一つの項目を入力しただけで未操作の項目をエラー表示せず、本人が編集した欄と送信時の全欄だけを適切に検証する。
+    depends_on: [QST-548, QST-550]
+    likely_files:
+      - apps/mobile/lib/features/auth/login_screen.dart
+      - apps/mobile/lib/features/auth/signup_screen.dart
+      - apps/mobile/lib/features/auth/reset_password_screen.dart
+      - apps/mobile/test/qst_551_auth_field_validation_timing_test.dart
+    acceptance:
+      - ログインID入力だけで未操作のパスワード欄を赤くしない。
+      - 呼び名入力だけで未操作のログインID・メール欄を赤くしない。
+      - 新パスワード入力だけで未操作の確認欄を赤くしない。
+      - 編集した欄の不正値はその欄で示し、送信時には必須項目全体を検証する。
+      - Webの390px実画面で少なくともログイン・新規登録を確認し、Android IME・文字拡大も別途確認する。
+      - 認証ロジック、DB、メール送信、ロックアウトは変更しない。
+    evidence: [reports/qst/QST-551.md, apps/mobile/test/qst_551_auth_field_validation_timing_test.dart]
+
+  - id: QST-552
+    title: Hosted Login to Owner Profile Acceptance
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 確認済みアカウントのログイン関数、Supabase Auth、本人プロフィール参照を同じHostedプロジェクトで一往復実証する。
+    depends_on: [QST-538, QST-539, QST-550]
+    blocks: [External Beta]
+    likely_files:
+      - tools/qst/verify_hosted_login_roundtrip.mjs
+      - tools/qst/verify_hosted_login_roundtrip.test.mjs
+      - tools/qst/README.md
+    acceptance:
+      - Hosted auth-loginの成功レスポンスだけでなく、返されたJWTでAuth本人とuser_profiles本人行の両方を確認する。
+      - ログイン拒否、Auth拒否、プロフィール欠落、通信失敗を個別の失敗段階として示す。
+      - テスト用パスワード、JWT、メールアドレス、プロフィール本文を標準出力や証跡へ記録しない。
+      - Questやプロフィールへの書き込みは行わない。ログインによる失敗回数・最終ログイン時刻の更新はあり得るため、ロックアウトを避けるため一回の実行で止める。
+      - 確認済みアカウントの再設定後、同一候補で実ログイン・本人プロフィール参照を実証するまでは完了扱いにしない。
+    evidence: [reports/qst/QST-552.md, tools/qst/verify_hosted_login_roundtrip.test.mjs]
+
+  - id: QST-553
+    title: Auth Login Transport and Counter Consistency
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: Supabase Auth通信障害とログイン失敗・成功カウンターのDB障害を資格情報の誤りと混同せず、成功記録前にセッショントークンを返さない。
+    depends_on: [QST-550, QST-552]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/functions/auth-login/index.ts
+      - supabase/functions/auth-login/auth_io.ts
+      - supabase/functions/auth-login/auth_io.test.mjs
+    acceptance:
+      - Auth password grantの通信失敗または5xxは503を返し、誤パスワード案内や失敗回数加算にしない。
+      - Auth password grantは有限のタイムアウトを持つ。
+      - 不正資格情報の失敗回数記録がDB障害で失敗した場合は503を返し、401を成功した監査として扱わない。
+      - 正しい資格情報でも成功回数記録がDB障害で失敗した場合はトークンを返さず503にする。
+      - 既存の10回ロック、CORS、アカウント存在非開示、認証画面の案内を維持する。
+      - 同一候補をHostedへ配備し、Auth障害と成功ログインを実証するまで完了扱いにしない。
+    evidence: [reports/qst/QST-553.md, supabase/functions/auth-login/auth_io.test.mjs]
+
+  - id: QST-554
+    title: Bounded Public Login Request Parsing
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 公開auth-login関数の本文を最大4KBまでストリームで読み、巨大本文・不正UTF-8・非オブジェクトJSONをDB/Auth呼び出し前に拒否する。
+    depends_on: [QST-550, QST-553]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/functions/auth-login/index.ts
+      - supabase/functions/auth-login/bounded_request.ts
+      - supabase/functions/auth-login/bounded_request.test.mjs
+    acceptance:
+      - Content-Lengthを偽装または省略しても実バイト数4KB超過で413を返し、全文をメモリへ読み込まない。
+      - null・配列・不正JSON・不正UTF-8は400として拒否し、資格情報や内部例外を返さない。
+      - 正常なJSONオブジェクトのログイン経路と既存CORS・ロックアウト契約を維持する。
+      - ストリーム読取には全体の時間上限を設け、終了しない通信を408で打ち切る。
+      - Deno型チェックとHosted関数配備後の正常・異常系を同一候補で確認するまで完了扱いにしない。
+    evidence: [reports/qst/QST-554.md, supabase/functions/auth-login/bounded_request.test.mjs]
+
+  - id: QST-555
+    title: Gemini Bootstrap and Privacy Gate Alignment
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: RELEASE_READINESS
+    goal: Gemini Interactionsへの分離後も静的Supabase・プライバシー検証器が実際のAdapter・Model Registry・予算経路を検証し、古いファイル配置の文字列に依存しないようにする。
+    depends_on: [QST-544, QST-545, QST-546]
+    blocks: [External Beta]
+    likely_files:
+      - tools/qst/ai_provider_contract.dart
+      - tools/qst/ai_provider_contract_test.dart
+      - tools/qst/verify_supabase_beta_bootstrap.dart
+      - tools/qst/verify_beta_privacy_copy_readiness.dart
+    acceptance:
+      - 現行のv1 Interactions Adapter、server-side Gemini key、store=false、出力・thinking・timeout・予算予約精算・モデルpreview制限を静的に確認する。
+      - OpenAI無予算経路を本番生成へ通さない現行契約を確認する。
+      - store=falseや予算予約・preview制限を削った変更では検証が失敗する。
+      - Supabase静的bootstrapとプライバシーcopy検証が通り、Hosted実モデル利用の証拠と混同しない。
+      - 現行候補のHosted Gemini応答・budget台帳・同意・プライバシー表示は別途実測する。
+    evidence: [reports/qst/QST-555.md, tools/qst/ai_provider_contract_test.dart]
+
+  - id: QST-556
+    title: Cross-functional Review of QST-547 through QST-555
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: RELEASE_READINESS
+    goal: 10件ごとにコード、UI/UX、AI、DB、セキュリティ、Master Spec整合を証拠別に再判定し、残件を次のQSTへ反映する。
+    depends_on: [QST-547, QST-548, QST-549, QST-550, QST-551, QST-552, QST-553, QST-554, QST-555]
+    blocks: [External Beta]
+    likely_files:
+      - reports/qst/QST-556.md
+      - docs/qst/BACKLOG.yaml
+    acceptance:
+      - ローカル・実画面・過去Hosted観測・未確認を分離し、六観点で問題を特定する。
+      - 既存QSTを優先し、DB認証契約の独立した不足のみQST-557へ割り当てる。
+      - 実ログインとHosted Geminiを未証明のまま公開可能と判断しない。
+      - 次の10件で再レビューし、未解決のblockerを引き継ぐ。
+    evidence: [reports/qst/QST-556.md]
+
+  - id: QST-557
+    title: Atomic Login Counter Result and Lockout Decision
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: ログイン成功・失敗カウンターのDB結果を明示し、対象行不在や同時ロックアウト競合を認証成功と誤認しない。
+    depends_on: [QST-553, QST-554, QST-556]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/migrations/202610080001_auth_login_atomic_decision.sql
+      - supabase/functions/auth-login/index.ts
+      - supabase/tests/auth_login_atomic_decision.sql
+      - supabase/tests/auth_login_atomic_concurrency.sh
+      - supabase/functions/auth-login/auth_io.test.mjs
+    acceptance:
+      - 新しいmigrationで更新対象0件、記録成功、ロック中を区別できる返却契約を用意し、既存migrationを書き換えない。
+      - 正しいAuthパスワードでもDBが現在ロック中ならトークンを返さない。
+      - 誤パスワード10回到達と同時成功の競合をDBの行ロック下で検証する。
+      - RPC失敗または対象行不在を503等の安全な非成功として扱い、アカウント存在を外部へ漏らさない。
+      - 二アカウント分離とservice_role限定権限、10回30分ロック、失敗回数窓を維持する。
+      - SQL/Edge/Hostedテストを同じclean candidate SHAで実行し、再設定後の実ログインをQST-552と合わせて証明する。
+    evidence: [reports/qst/QST-556.md, reports/qst/QST-557.md]
+
+  - id: QST-558
+    title: Signup Account Form First-Viewport Focus
+    status: InProgress
+    evidence_state: local_partial
+    priority: P1
+    epic: AUTHENTICATION
+    goal: 規約確認後のアカウント入力で大きな画像ヘッダーが入力欄を押し下げないようにし、小型画面でも必要項目を見つけやすくする。
+    depends_on: [QST-548, QST-551, QST-556]
+    likely_files:
+      - apps/mobile/lib/features/auth/auth_journey_scaffold.dart
+      - apps/mobile/lib/features/auth/signup_screen.dart
+      - apps/mobile/test/qst_558_signup_form_viewport_test.dart
+    acceptance:
+      - 年齢・規約確認画面とデスクトップのArc表示を維持し、モバイルのアカウント入力段階だけ小型ヘッダーにする。
+      - 390px幅の初期表示で呼び名、ログインID、メールアドレス欄が読める。
+      - 320px幅でオーバーフローせず、ArcとQuestraの存在が分かる。
+      - 入力文字のコントラストと登録バリデーション・保存処理を変えない。
+      - Web実画面とWidget Testで確認し、Android IMEと文字拡大は別途検証する。
+    evidence: [reports/qst/QST-558.md, reports/qst/evidence/QST-558/signup-account-typed-390.png]
+
+  - id: QST-559
+    title: Independent Edge Function Type and Auth Contract Gate
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: RELEASE_READINESS
+    goal: Flutterの先行失敗に隠されず、全Edge関数のDeno型エラーと認証・AI境界のNode契約違反をPRで検出する。
+    depends_on: [QST-543, QST-553, QST-554, QST-556, QST-557]
+    blocks: [External Beta]
+    likely_files:
+      - .github/workflows/edge-contract.yml
+      - supabase/functions
+      - tools/qst/verify_hosted_ai_auth_boundary.test.mjs
+      - tools/qst/verify_hosted_login_roundtrip.test.mjs
+    acceptance:
+      - PRで13個のEdge関数entrypointをDenoで型チェックし、関数の追加も自動対象にする。
+      - 認証・直接AI・HostedプローブのNode契約テストをFlutterゲートとは独立に実行する。
+      - CIが型エラーまたは契約テスト失敗で非ゼロ終了し、未検証を成功と扱わない。
+      - ローカルNodeテストとworkflow構文を確認し、実際のPR実行結果が出るまで完了扱いにしない。
+      - Deno型チェックをSupabase Hosted配備・実リクエストの代用にしない。
+    evidence: [reports/qst/QST-559.md, .github/workflows/edge-contract.yml]
+
+  - id: QST-560
+    title: Readable Shared Authentication Error Notice
+    status: InProgress
+    evidence_state: local_partial
+    priority: P1
+    epic: AUTHENTICATION
+    goal: 濃紺の認証画面でログイン・登録・復旧エラーを確実に読める共通表示へ統一し、失敗時の回復導線を見失わせない。
+    depends_on: [QST-548, QST-550, QST-556]
+    likely_files:
+      - apps/mobile/lib/features/auth/auth_error_notice.dart
+      - apps/mobile/lib/features/auth/login_screen.dart
+      - apps/mobile/lib/features/auth/signup_screen.dart
+      - apps/mobile/lib/features/auth/forgot_password_screen.dart
+      - apps/mobile/lib/features/auth/reset_password_screen.dart
+      - apps/mobile/lib/features/auth/confirm_email_help_screen.dart
+      - apps/mobile/test/qst_560_auth_error_notice_test.dart
+    acceptance:
+      - 認証5画面の共通エラー本文を明るい文字色とエラーアイコンで表示し、色だけに依存しない。
+      - 本文は背景に対して4.5対1以上、アイコンは3対1以上のコントラストを保つ。
+      - 320px幅・文字200%・長い日本語でも欠けやオーバーフローを起こさない。
+      - ライト・ダークのWidget TestとWeb実画面で確認し、認証処理やエラー分類を変えない。
+      - Hostedログイン成功やAndroid読み上げは別の既存ゲートで検証し、このUI改善だけで完了としない。
+    evidence: [reports/qst/QST-560.md]
+
+  - id: QST-561
+    title: Mobile Login Retry First-Viewport Recovery
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: AUTHENTICATION
+    goal: ログイン失敗後もエラーと再試行操作をモバイル初期表示内に収め、回復導線を探させない。
+    depends_on: [QST-558, QST-560]
+    likely_files:
+      - apps/mobile/lib/features/auth/login_screen.dart
+      - apps/mobile/test/qst_561_login_retry_viewport_test.dart
+    acceptance:
+      - 390x844のログイン失敗時にエラーの下へ再試行ボタン全体を表示し、下端に16px以上の余白を残す。
+      - ログイン画面だけ小型Arcヘッダーを使い、失敗時にレイアウトが急変しない。
+      - 確認メール・パスワード再設定の導線、入力文字コントラスト、デスクトップの分割表示を維持する。
+      - 320px幅・文字200%でオーバーフローせずスクロールして再試行できる。
+      - Widget TestとWeb実画面で確認し、認証APIやDBの挙動は変更しない。
+    evidence: [reports/qst/QST-561.md]
+
+  - id: QST-562
+    title: Isolated Developer Offline Preview Auto-Entry
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: RELEASE_READINESS
+    goal: 開発者が認証なしで画面を確認できるオフラインモックを提供し、実接続の認証・AI・DB証拠との混同を防ぐ。
+    depends_on: [QST-417, QST-561]
+    likely_files:
+      - tools/qst/run_mock.ps1
+      - apps/mobile/lib/core/config/supabase_config.dart
+      - apps/mobile/lib/features/auth/auth_controller.dart
+      - apps/mobile/lib/features/guild/guild_discovery_providers.dart
+      - apps/mobile/lib/features/guild/guild_discovery_screen.dart
+      - docs/product/connected_preview_runbook.md
+    acceptance:
+      - 明示的な-Offline起動時のみログインを省いて保護Routeの直リンクへ入れる。
+      - Supabase接続時とリリースビルドでは自動入場できない。
+      - Guildは空の検索UIを表示し、実データの公開・取り込み操作を提供しない。
+      - 320px幅でオーバーフローせず、切替タブの文字が読める。
+      - 関連Widget Test、静的検査、実ブラウザーで確認する。
+    evidence: [reports/qst/QST-562.md, apps/mobile/test/developer_mock_access_test.dart, apps/mobile/test/guild_discovery_screen_test.dart]
+
+  - id: QST-563
+    title: Honest Local Preview Credential Boundary
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: AUTHENTICATION
+    goal: オフラインモックで未登録のIDとパスワードを認証成功と誤表示せず、明示的なモック入場と実接続ログインを区別する。
+    depends_on: [QST-562]
+    likely_files:
+      - apps/mobile/lib/features/auth/auth_controller.dart
+      - apps/mobile/lib/features/auth/auth_state.dart
+      - apps/mobile/lib/features/auth/auth_error_feedback.dart
+      - apps/mobile/test/local_mock_login_test.dart
+    acceptance:
+      - ローカルアカウント未登録時は任意のIDとパスワードで認証できない。
+      - ローカル登録後は一致するIDまたはメールとパスワードだけを受け付ける。
+      - ローカルの失敗案内にHosted専用の10回ロックアウトを表示しない。
+      - ローカル失敗時に実接続専用の確認メール・再設定案内を重ねて表示しない。
+      - 明示的な「モックを開く」と開発者用自動入場を維持する。
+      - Supabase接続時のログイン処理と本番Auth/DB契約を変更しない。
+      - 関連テストと静的解析を実行し、接続版の成功は別途実証する。
+    evidence: [reports/qst/QST-563.md, apps/mobile/test/local_mock_login_test.dart]
+
+  - id: QST-564
+    title: Offline Auth Email Capability Truthfulness
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: AUTHENTICATION
+    goal: メールを送れないオフラインモックで確認・再設定導線を成功可能に見せず、実接続版の回復導線を維持する。
+    depends_on: [QST-540, QST-563]
+    likely_files:
+      - apps/mobile/lib/features/auth/auth_email_availability.dart
+      - apps/mobile/lib/features/auth/login_screen.dart
+      - apps/mobile/lib/features/auth/forgot_password_screen.dart
+      - apps/mobile/lib/features/auth/reset_password_screen.dart
+      - apps/mobile/lib/features/auth/auth_controller.dart
+      - apps/mobile/test/auth_recovery_screen_test.dart
+      - docs/product/connected_preview_runbook.md
+    acceptance:
+      - オフラインログイン画面では確認メール・再設定メールのリンクを表示しない。
+      - オフラインの復旧画面直リンクは送信フォームや更新ボタンを出さず利用不可を示す。
+      - オフラインの認証処理を直接呼んでも送信成功・パスワード変更を記録しない。
+      - Supabase接続版の確認メール・再設定フォーム、入力検証、失敗時案内を維持する。
+      - Widget Testと静的解析を通し、実メール送信はHostedで別途検証する。
+    evidence: [reports/qst/QST-564.md, apps/mobile/test/auth_recovery_screen_test.dart]
+
+  - id: QST-565
+    title: Honest Offline Preview Data Retention Copy
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: RELEASE_READINESS
+    goal: メモリ内だけの開発モックを端末に永続保存されるように見せず、再読み込み時のデータ消失を主要画面で明示する。
+    depends_on: [QST-562, QST-564]
+    likely_files:
+      - apps/mobile/lib/core/router/app_shell.dart
+      - apps/mobile/lib/features/splash/splash_screen.dart
+      - apps/mobile/lib/features/profile/profile_screen.dart
+      - apps/mobile/lib/features/settings/connection_status_service.dart
+      - apps/mobile/lib/features/settings/settings_information_architecture_service.dart
+      - apps/mobile/test/qst_418_connection_status_test.dart
+      - reports/qst/QST-565.md
+    acceptance:
+      - オフラインのQuest・Mission・Task・Trail・Arc Memoryがメモリ実装であることを確認する。
+      - 開発モックの主要案内から端末内への永続保存を示唆する文言を除く。
+      - 再読み込みでQuestなどが消え、実アカウントに保存されないことを明示する。
+      - 実接続版の保存案内と永続化処理を変更しない。
+      - 関連Widget・単体テスト、静的解析、Web画面を確認する。
+    evidence: [reports/qst/QST-565.md, apps/mobile/test/qst_565_preview_data_retention_test.dart]
+
+  - id: QST-566
+    title: Developer Preview Identity Truthfulness
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: AUTHENTICATION
+    goal: ログイン不要の開発モックを実アカウントとして表示せず、プロフィール上の偽のメールアドレス・ログアウト操作・初期設定状態を除く。
+    depends_on: [QST-562, QST-565]
+    likely_files:
+      - apps/mobile/lib/features/profile/profile_screen.dart
+      - apps/mobile/test/qst_566_preview_profile_identity_test.dart
+      - apps/mobile/test/qst_501_profile_dark_surface_alignment_test.dart
+    acceptance:
+      - 自動入場モックのプロフィールに実アカウントへの未接続を明示する。
+      - 自動入場モックに仮のメール・ログアウト・初期設定完了を表示しない。
+      - 通常のゲストとSupabase接続版の認証UIを維持する。
+      - Widget Test、静的解析、Web画面で確認する。
+    evidence: [reports/qst/QST-566.md, apps/mobile/test/qst_566_preview_profile_identity_test.dart]
+
+  - id: QST-567
+    title: Cross-functional Review of QST-557 through QST-566
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: RELEASE_READINESS
+    goal: 直近10件の認証、開発プレビュー、AI/DB境界をコード、UI/UX、テスト、セキュリティ、Master Specの観点で再評価し、未解決事項を既存QSTへ戻す。
+    depends_on: [QST-557, QST-558, QST-559, QST-560, QST-561, QST-562, QST-563, QST-564, QST-565, QST-566]
+    blocks: [External Beta]
+    likely_files:
+      - reports/qst/QST-567.md
+      - docs/qst/BACKLOG.yaml
+    acceptance:
+      - ローカルテスト、実画面、過去Hosted観測、未確認を区別してレビューする。
+      - 認証、AI、DB、RLS、モックの境界とリグレッションを評価する。
+      - 発見事項を既存QSTまたは独立した次のQSTへ振り分ける。
+      - 実ログインとGeminiを未証明のままBeta公開可能と判定しない。
+    evidence: [reports/qst/QST-567.md]
+
+  - id: QST-568
+    title: Stable Loginless Offline Web Preview Launcher
+    status: Completed
+    evidence_state: local_verified
+    priority: P1
+    epic: DEVELOPER_EXPERIENCE
+    goal: 開発用オフラインモックを新規ブラウザタブで白画面にせず表示し、ログイン不要のGuildレビューを安定して再現できるようにする。
+    depends_on: [QST-562, QST-565, QST-566, QST-567]
+    likely_files:
+      - tools/qst/run_mock.ps1
+      - tools/qst/verify_connected_preview_launcher.dart
+      - docs/product/connected_preview_runbook.md
+      - reports/qst/QST-568.md
+    acceptance:
+      - オフラインモックを非releaseのprofileモードで起動する。
+      - 新規ブラウザタブからGuildへログインなしで入れる。
+      - releaseモードの自動入場禁止と実接続版の認証を変更しない。
+      - ランチャー検証と実ブラウザ確認を通す。
+      - オフラインのSupabase/Gemini未接続と再読み込み時のデータ消失を案内する。
+    evidence: [reports/qst/QST-568.md, tools/qst/verify_connected_preview_launcher.dart]
+
+  - id: QST-569
+    title: Free-plan Auth Token Lock Boundary
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: Supabase Freeで使えないPassword Verification Hookへの依存を外し、ロック中の新規パスワードトークン発行をFree対応Hookで拒否する。
+    depends_on: [QST-557, QST-567]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/config.toml
+      - supabase/migrations/202610160001_auth_free_tier_token_lock.sql
+      - supabase/tests/auth_free_tier_token_lock.sql
+      - .github/workflows/supabase-db-contract.yml
+      - docs/product/authentication_spec_v1.md
+      - reports/qst/QST-569.md
+    acceptance:
+      - FreeのCustom Access Token Hookでロック中のパスワードトークン発行を拒否する。
+      - 回復と既存セッションの更新を妨げない。
+      - Auth実行ロールによるRLS越しの参照とanon/authenticatedの拒否をDBテストで実証する。
+      - 直接Auth APIの失敗回数が未計測である限界を仕様と公開判定に残す。
+      - 同一候補のHostedで登録、10回失敗、正しいPWの拒否、回復、直接APIを実証する。
+    evidence: [reports/qst/QST-569.md, supabase/tests/auth_free_tier_token_lock.sql]
+
+  - id: QST-570
+    title: Cross-browser Web Password Recovery and Verified Reset Form
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: メールの再設定リンクを別ブラウザーで開いても回復セッションを検証でき、無効リンクではパスワードを入力させない。
+    depends_on: [QST-538, QST-539, QST-550, QST-552, QST-569]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/auth/auth_redirects.dart
+      - apps/mobile/lib/features/auth/password_recovery_service.dart
+      - apps/mobile/lib/features/auth/auth_controller.dart
+      - apps/mobile/lib/features/auth/reset_password_screen.dart
+      - apps/mobile/lib/main.dart
+      - apps/mobile/test/qst_570_password_recovery_callback_test.dart
+      - docs/product/authentication_spec_v1.md
+      - reports/qst/QST-570.md
+    acceptance:
+      - Webの回復メールは現在のOriginの専用callbackへ戻り、異なるブラウザーでも検証できる。
+      - 回復トークンはSDK初期化前にURLから除き、typeと完全性を検査する。
+      - 検証済み回復セッションだけが新パスワードフォームを表示する。
+      - モバイルのPKCE経路と既発行Web PKCEリンクの移行経路を維持する。
+      - Supabaseの完全一致Redirect URLと実メール往復、新パスワードでのログインを同一候補で証明する。
+      - 実リンク、パスワード、トークンをテストログやレポートへ保存しない。
+    evidence: [reports/qst/QST-570.md, apps/mobile/test/qst_570_password_recovery_callback_test.dart, apps/mobile/test/auth_recovery_screen_test.dart]
+
+  - id: QST-571
+    title: Connected Preview Login Entry Preflight
+    status: Completed
+    evidence_state: external_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 接続版モックの起動前にauth-login関数の到達性とプレビューOrigin向けCORSを確認し、入口疎通と実ログイン成功を区別する。
+    depends_on: [QST-417, QST-569, QST-570]
+    blocks: []
+    likely_files:
+      - tools/qst/run_connected_preview.ps1
+      - tools/qst/connected_preview_login_probe.ps1
+      - tools/qst/test_connected_preview.ps1
+      - tools/qst/verify_connected_preview_launcher.dart
+      - docs/product/connected_preview_runbook.md
+      - reports/qst/QST-571.md
+    acceptance:
+      - 実IDやパスワードを送らず空入力でauth-loginの401とinvalid_credentialsを検証する。
+      - 起動ポートに対応するOriginのCORS許可を検証する。
+      - 関数未配備、異常応答、CORS不一致なら接続版モック起動前に失敗する。
+      - 入口probeを実アカウントのログイン成功やDB保存の証明と扱わない。
+      - ランチャーテストとBeta環境の安全な疎通確認を通す。
+    evidence: [reports/qst/QST-571.md, tools/qst/test_connected_preview.ps1]
+
+  - id: QST-572
+    title: Connected Web Preview Stable Rendering
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 実接続プレビューの新規ブラウザータブでログイン画面が白画面にならず、Supabase認証必須のまま表示できるようにする。
+    depends_on: [QST-568, QST-570, QST-571]
+    blocks: [External Beta]
+    likely_files:
+      - tools/qst/run_connected_preview.ps1
+      - tools/qst/verify_connected_preview_launcher.dart
+      - docs/product/connected_preview_runbook.md
+      - reports/qst/QST-572.md
+    acceptance:
+      - 接続版Web Serverをprofileモードで起動し、実接続設定とログイン必須を維持する。
+      - 新しいブラウザータブでログイン画面が描画される。
+      - HTTP 200のみを画面表示成功と扱わない。
+      - Auth、Data API、auth-login入口の事前probeとランチャーテストを通す。
+      - 実ID/PWのログイン成功やGemini応答は別途検証し、表示成功と混同しない。
+    evidence: [reports/qst/QST-572.md, tools/qst/verify_connected_preview_launcher.dart, reports/qst/evidence/QST-572/connected_login_profile.jpg]
+
+  - id: QST-573
+    title: Distinguish Upstream Auth Failures from Wrong Passwords
+    status: Completed
+    evidence_state: local_verified
+    priority: P0
+    epic: AUTHENTICATION
+    goal: Supabase Authの未知の失敗をID/PW不一致として誤案内せず、確認前メールも失敗回数へ加算しない。
+    depends_on: [QST-569, QST-570, QST-571]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/functions/auth-login/auth_error.ts
+      - supabase/functions/auth-login/index.ts
+      - supabase/functions/auth-login/auth_error.test.mjs
+      - apps/mobile/test/auth_login_function_error_test.dart
+      - docs/product/authentication_spec_v1.md
+      - reports/qst/QST-573.md
+    acceptance:
+      - Authの資格情報不一致だけを失敗回数へ加算する。
+      - メール未確認は失敗回数へ加算せず公開応答でアカウント状態を明かさない。
+      - 未知のAuth失敗を資格情報誤りとして表示しない。
+      - EdgeとFlutterの対象テストを通す。
+      - Hosted未配備を実ログイン成功と混同しない。
+    evidence: [reports/qst/QST-573.md, supabase/functions/auth-login/auth_error.test.mjs, apps/mobile/test/auth_login_function_error_test.dart]
+
+  - id: QST-574
+    title: Hosted Auth-login Contract Drift Preflight
+    status: Completed
+    evidence_state: external_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 入口401だけで旧Hostedログイン関数を現行実装と誤認しないよう、配備契約の差分を検知する。
+    depends_on: [QST-569, QST-571, QST-573]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/functions/auth-login/index.ts
+      - tools/qst/connected_preview_login_probe.ps1
+      - tools/qst/run_connected_preview.ps1
+      - tools/qst/run_mock.ps1
+      - tools/qst/test_connected_preview.ps1
+      - tools/qst/verify_connected_preview_launcher.dart
+      - docs/product/connected_preview_runbook.md
+      - reports/qst/QST-574.md
+    acceptance:
+      - 現行auth-login応答に公開契約バージョンを付ける。
+      - 旧Hosted関数で通常プレビューは警告し、厳格検証は失敗する。
+      - 厳格検証とリモートprobeの迂回併用を拒否する。
+      - 実アカウントやパスワードを使わずBetaで差分を確認する。
+      - 契約一致だけを実ログイン成功の証明としない。
+    evidence: [reports/qst/QST-574.md, tools/qst/test_connected_preview.ps1]
+
+  - id: QST-575
+    title: Incremental Supabase Migration Rehearsal from Beta Head
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: RELEASE_READINESS
+    goal: Betaの現行Migration版から未適用分をローカル隔離DBへ順次適用し、認証RPCを含む配備経路を検証する。
+    depends_on: [QST-569, QST-574]
+    blocks: [External Beta]
+    likely_files:
+      - .github/workflows/supabase-db-contract.yml
+      - docs/qst/BETA_SUPABASE_PROJECT.yaml
+      - reports/qst/QST-575.md
+    acceptance:
+      - Betaの適用済み最新Migrationを読み取りで確認する。
+      - ローカル隔離DBで全Migrationの空DB適用とBeta版からの増分適用を両方実行する。
+      - 増分適用後に最新Migration版と認証用RPCの存在を検証する。
+      - CI結果を確認するまで実行成功と扱わない。
+      - Betaの既存データにresetやMigrationを実行しない。
+    evidence: [reports/qst/QST-575.md, .github/workflows/supabase-db-contract.yml]
+
+  - id: QST-576
+    title: Legal Consent Gate and Hosted Schema Reconciliation
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: RELEASE_READINESS
+    goal: 同意済みユーザーを安全にHomeへ進め、同意記録を確認できない状態と未同意を区別する。
+    depends_on: [QST-575]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/auth/auth_controller.dart
+      - apps/mobile/lib/features/auth/auth_state.dart
+      - apps/mobile/lib/features/trust/legal_eligibility_screen.dart
+      - supabase/migrations/202608180001_versioned_legal_eligibility_gate.sql
+      - reports/qst/QST-576.md
+    acceptance:
+      - 同意済み記録があるユーザーは再同意なしでHomeへ進む。
+      - 同意記録の確認不能を未同意と区別し、古い認証エラーを表示しない。
+      - 同意保存後にサーバー側の記録を再確認してからHomeへ進む。
+      - 新規登録前に現行のサーバー同意ポリシーを確認し、未配備ならアカウントを作らない。
+      - 登録時の同意申告だけでアクセスを許可せず、既存アカウントには一度だけ簡潔な確認を用意する。
+      - Betaへ順序どおりMigrationを配備し、既存ユーザーで同意からHomeまで実証する。
+      - DB未配備時に利用条件を黙って迂回しない。
+    evidence: [reports/qst/QST-576.md, apps/mobile/test/qst_339_legal_gate_test.dart]
+
+  - id: QST-577
+    title: First Consent Persistence and RLS Contract
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: RELEASE_READINESS
+    goal: 初回登録の同意がサーバーに一度だけ記録され、後続ログインで再同意不要となるDB契約を隔離環境で検証する。
+    depends_on: [QST-575, QST-576]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/tests/legal_consent_once.sql
+      - .github/workflows/supabase-db-contract.yml
+      - reports/qst/QST-577.md
+    acceptance:
+      - 登録triggerがuserごとに一件の同意記録を作る。
+      - 同じ版の再確認は冪等で、版違いは拒否される。
+      - 認証ユーザーは他人の同意記録を読めず、直接書き換えられない。
+      - 既存アカウントの明示確認が一件の記録を作る。
+      - 隔離DBのCI実行結果を確認するまで完了扱いしない。
+    evidence: [reports/qst/QST-577.md, supabase/tests/legal_consent_once.sql]
+
+  - id: QST-578
+    title: Cross-functional Review of QST-568 through QST-577
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: RELEASE_READINESS
+    goal: 直近10件の認証・プレビュー・同意基盤をコード、UI/UX、AI、DB、セキュリティ、Master Specに照らして再評価し、結果を次の作業へ反映する。
+    depends_on: [QST-568, QST-569, QST-570, QST-571, QST-572, QST-573, QST-574, QST-575, QST-576, QST-577]
+    blocks: [External Beta]
+    likely_files:
+      - reports/qst/QST-578.md
+      - docs/qst/BACKLOG.yaml
+    acceptance:
+      - ローカルテスト、過去の実画面観測、現行Hosted、未確認を区別する。
+      - 認証、同意、AI、RLS、プレビュー、Master Spec準拠を横断評価する。
+      - 発見事項を既存QSTの受入条件または次の実装項目へ振り分ける。
+      - 実ログインと同意DB未証明のままBeta公開可能と判定しない。
+    evidence: [reports/qst/QST-578.md]
+
+  - id: QST-579
+    title: Active Legal Policy Version Gate
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: サーバーの有効な利用条件とアプリ版を照合し、古い同意記録による通過と旧版フォームでの再同意を防ぐ。
+    depends_on: [QST-576, QST-578]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/trust/legal_policy.dart
+      - apps/mobile/lib/features/trust/legal_eligibility_screen.dart
+      - apps/mobile/lib/features/auth/auth_controller.dart
+      - apps/mobile/lib/features/auth/auth_state.dart
+      - apps/mobile/lib/features/auth/auth_error_feedback.dart
+      - apps/mobile/lib/core/router/auth_route_guard.dart
+      - apps/mobile/test/qst_339_legal_gate_test.dart
+      - apps/mobile/test/auth_route_guard_test.dart
+      - apps/mobile/test/qst_548_auth_input_contrast_test.dart
+      - apps/mobile/test/qst_551_auth_field_validation_timing_test.dart
+      - reports/qst/QST-579.md
+    acceptance:
+      - ログイン後に現行サーバーポリシーと同意記録の両方を確認する。
+      - 版ずれなら旧版への再同意を求めず更新を案内し、Homeへ通さない。
+      - 新規登録も版ずれならAuthユーザー作成前に停止する。
+      - 同意記録がある現行版では再同意なしで進み、確認不能時は安全に停止する。
+      - Flutterの対象テストと解析を通し、Hostedの版変更E2Eを別途記録する。
+    evidence: [reports/qst/QST-579.md, apps/mobile/test/qst_339_legal_gate_test.dart]
+
+  - id: QST-580
+    title: Server-Verified One-Time Consent at the Gemini Boundary
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 登録時の同意を一度だけ記録し、以後は再同意を求めずにサーバー記録で判定する。記録がない場合はGemini送信を停止する。
+    depends_on: [QST-575, QST-577, QST-579]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/lib/features/auth/auth_controller.dart
+      - supabase/functions/_shared/ai_legal_gate.ts
+      - supabase/functions/_shared/quest_planning/interactions_adapter.ts
+      - supabase/functions/_shared/quest_planning/tool_interaction_orchestrator.ts
+      - supabase/migrations/202610180001_ai_legal_consent_gate.sql
+      - supabase/tests/legal_consent_once.sql
+      - reports/qst/QST-580.md
+    acceptance:
+      - 同意済みの現行版アカウントは二回目の同意なしに利用できる。
+      - 同意記録を確認できない場合は再同意済みと推測せずGemini送信前に停止する。
+      - Function Callingで同意判定とTool権限に使用する利用者IDが一致しない場合は副作用前に停止する。
+      - 同意保存成功後は確認可能状態を同じセッションへ反映する。
+      - サービスロール限定の同意判定をDB契約とEdge共有テストで確認する。
+      - Beta移行、二アカウントRLS、実ログインを別途実証する。
+    evidence: [reports/qst/QST-580.md, supabase/functions/_shared/ai_legal_gate.test.mjs]
+
+  - id: QST-581
+    title: Explicit Consent Failure Across AI Entry Points
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: AUTHENTICATION
+    goal: 初回同意のサーバー記録をAI送信前に確認し、未記録と確認不能を全AI経路で区別して案内する。
+    depends_on: [QST-580]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/functions/_shared/ai_legal_http.ts
+      - supabase/functions/arc-chat/index.ts
+      - supabase/functions/arc-quest-guide/index.ts
+      - supabase/functions/quest-planning-v2/index.ts
+      - supabase/functions/moderate-quest-intent/index.ts
+      - supabase/functions/research-mission-resources/index.ts
+      - apps/mobile/lib/core/safety/ai_legal_failure.dart
+      - tools/qst/verify_hosted_ai_auth_boundary.mjs
+      - tools/qst/verify_hosted_ai_auth_boundary.test.mjs
+      - reports/qst/QST-581.md
+    acceptance:
+      - 認証済みのAI要求は外部送信前に現行版のサーバー同意を確認する。
+      - 同意未記録は403、照会不能は503とし、一般の生成失敗や固定候補に置き換えない。
+      - 安全判定、既存データの閲覧、承認済みプレビューの保存は非AI経路として保持する。
+      - Flutter上で入力を保持し、同意未記録と一時的な確認不能を区別して表示する。
+      - ローカル単体テストに加え、Hostedの二アカウント・障害注入テストで送信停止を実証する。
+    evidence: [reports/qst/QST-581.md, supabase/functions/_shared/ai_legal_gate.test.mjs, apps/mobile/test/ai_legal_failure_test.dart, apps/mobile/test/qst_581_route_consent_feedback_test.dart, tools/qst/verify_hosted_ai_auth_boundary.test.mjs]
+
+  - id: QST-582
+    title: Candidate-Bound Edge Function Deployment Evidence
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: BETA_RELEASE
+    goal: Edge Functionごとの配備記録を候補SHAへ結び、古い関数記録でHosted必須ゲートを通過させない。
+    depends_on: [QST-575, QST-581]
+    blocks: [External Beta]
+    likely_files:
+      - tools/qst/bootstrap_supabase_beta.ps1
+      - tools/qst/verify_supabase_beta_bootstrap.dart
+      - tools/qst/verify_supabase_beta_bootstrap_test.dart
+      - reports/qst/QST-582.md
+    acceptance:
+      - 各関数の配備成功後に時刻と候補SHAを記録する。
+      - Hosted必須ゲートは欠落・重複・異なるSHA・不正な時刻の関数記録を拒否する。
+      - 現行の未配備記録は引き続きNO-GOとなる。
+      - 実配備後もリモート関数バージョンと同一候補の動作確認を別途実施する。
+    evidence: [reports/qst/QST-582.md, tools/qst/verify_supabase_beta_bootstrap_test.dart]
+
+  - id: QST-583
+    title: Hosted Missing-Consent Denial Probe
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: BETA_RELEASE
+    goal: 実Supabaseで同意未記録の認証済み利用者がAI入口から拒否されることを、妥当なリクエストで確かめる。
+    depends_on: [QST-581, QST-582]
+    blocks: [External Beta]
+    likely_files:
+      - tools/qst/verify_hosted_ai_auth_boundary.mjs
+      - tools/qst/verify_hosted_ai_auth_boundary.test.mjs
+      - reports/qst/QST-583.md
+    acceptance:
+      - 使い捨ての同意未記録アカウントでのみ追加プローブを明示的に有効化する。
+      - 個人データを含まない妥当な入力で、所有データ不要のAI入口すべてが403 consent_requiredを返す。
+      - 最初の想定外応答で後続呼び出しを停止し、503や別の403を成功扱いしない。
+      - 使い捨ての所有Quest/Missionがある場合は2つの所有データ依存経路も検証し、照会障害の注入は別のHosted検証で証明する。
+      - 配備済み候補SHAで実行し、結果を記録するまでは完了にしない。
+    evidence: [reports/qst/QST-583.md, tools/qst/verify_hosted_ai_auth_boundary.test.mjs]
+
+  - id: QST-584
+    title: Candidate-Wide Secret Scan Inventory
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: BETA_RELEASE
+    goal: 候補に含まれる文書・テスト・移行・ツールも秘密情報の検査対象にし、対象外ファイルを黙って見逃さない。
+    depends_on: [QST-384]
+    blocks: [Candidate cut]
+    likely_files:
+      - tools/qst/verify_candidate_preflight.dart
+      - tools/qst/verify_candidate_preflight_test.dart
+      - docs/qst/CANDIDATE_PREFLIGHT.yaml
+      - .github/workflows/release-gate.yml
+      - reports/qst/QST-584.md
+    acceptance:
+      - Git追跡済みと非ignoreの未追跡ファイルを候補全体から列挙する。
+      - UTF-8テキストを領域に関係なく検査し、既知の大容量テキスト・読めないテキスト・シンボリックリンクを明示的に拒否する。
+      - 検出時はファイル名だけ報告し、秘密値を出力しない。
+      - 追跡済み文書・未追跡レポート・ignore対象を使う回帰テストをCIで実行する。
+      - パターン検査は完全な秘密情報監査の代わりではなく、候補はcleanなSHAで別途検証する。
+    evidence: [reports/qst/QST-584.md, tools/qst/verify_candidate_preflight_test.dart]
+
+  - id: QST-585
+    title: Fail-Closed Quest Safety Moderation Recovery
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: BETA_RELEASE
+    goal: AI安全確認の失敗を安全許可に変換せず、入力を保持して再試行を案内する。
+    depends_on: [QST-581]
+    blocks: [External Beta]
+    likely_files:
+      - supabase/functions/moderate-quest-intent/index.ts
+      - supabase/functions/_shared/quest_safety_failure.test.mjs
+      - apps/mobile/lib/core/safety/quest_safety_service.dart
+      - apps/mobile/lib/core/safety/ai_legal_failure.dart
+      - apps/mobile/lib/features/arc/arc_screen.dart
+      - apps/mobile/test/quest_safety_service_test.dart
+      - apps/mobile/test/qst_585_arc_safety_retry_test.dart
+      - reports/qst/QST-585.md
+    acceptance:
+      - モデレーションAIが応答しない場合は503 safety_check_unavailableとし、allowを返さない。
+      - 接続済みアプリは通信失敗や旧safety_fallbackをallowとして扱わない。
+      - 同意拒否と照会障害は既存の専用エラーを保持する。
+      - ローカルの決定的なblockと自傷へのreframeは保持し、安全確認障害を違反シグナルに記録しない。
+      - Arc会話の再試行は失敗した入力を保持し、同じ入力で再実行できる。
+      - サーバーとFlutterの回帰テスト、およびHostedの障害注入で安全な停止を確認する。
+    evidence: [reports/qst/QST-585.md, supabase/functions/_shared/quest_safety_failure.test.mjs, apps/mobile/test/quest_safety_service_test.dart]
+
+  - id: QST-586
+    title: Candidate Scope Classification Completeness
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: BETA_RELEASE
+    goal: README、依存固定ファイル、Supabase設定を候補範囲へ明示的に分類し、未分類や重複を引き続き拒否する。
+    depends_on: [QST-393]
+    blocks: [Candidate cut]
+    likely_files:
+      - tools/qst/verify_candidate_scope_partition.dart
+      - tools/qst/verify_candidate_scope_partition_test.dart
+      - docs/qst/CANDIDATE_SCOPE_PARTITION.yaml
+      - .github/workflows/release-gate.yml
+      - reports/qst/QST-586.md
+    acceptance:
+      - 変更されたREADME、pubspec.lock、supabase/config.tomlをそれぞれ一つの適切な範囲へ分類する。
+      - 未知のファイルや範囲重複を許可しない。
+      - 分類テストをRelease Gateで実行する。
+      - 実作業ツリーの分類が通っても、clean SHA要件を緩めない。
+    evidence: [reports/qst/QST-586.md, tools/qst/verify_candidate_scope_partition_test.dart]
+
+  - id: QST-587
+    title: Current Pending Migration Plan Reconciliation
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: BETA_RELEASE
+    goal: 古いBeta移行計画を現行45本へ揃え、過去候補の証拠を上書きせずHosted実行を準備する。
+    depends_on: [QST-580, QST-586]
+    blocks: [External Beta]
+    likely_files:
+      - docs/qst/SUPABASE_MIGRATION_DRIFT.yaml
+      - docs/qst/HOSTED_MIGRATION_DEPLOYMENT.yaml
+      - docs/qst/BETA_RLS_EVIDENCE.yaml
+      - docs/qst/HOSTED_EVIDENCE_RUN.yaml
+      - reports/qst/QST-587.md
+    acceptance:
+      - リモートの観測済みhead以降のローカル45本を順序どおり計画へ記載する。
+      - 実配備・現在候補SHA・RLS合格を推測しない。
+      - 古い候補マニフェストは新しいclean SHAを作るまで検査で拒否される。
+      - CLI再認証、リモートhead再確認、dry-run、バックアップ地点の後にのみ配備する。
+    evidence: [reports/qst/QST-587.md, docs/qst/HOSTED_MIGRATION_DEPLOYMENT.yaml]
+
+  - id: QST-588
+    title: Dependency Notice Inventory Refresh
+    status: InProgress
+    evidence_state: local_partial
+    priority: P0
+    epic: BETA_RELEASE
+    goal: 現行FlutterロックファイルとEdge依存を通知へ反映し、法務承認前の在庫欠落をなくす。
+    depends_on: [QST-586]
+    blocks: [External Beta]
+    likely_files:
+      - apps/mobile/pubspec.lock
+      - docs/legal/THIRD_PARTY_NOTICES.md
+      - docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml
+      - reports/qst/QST-588.md
+    acceptance:
+      - 解決済みFlutter/Dart全パッケージの通知が存在し、ライセンスファイル欠落が0である。
+      - Edge npm importの版固定と登録済みライセンス証拠を検証する。
+      - 未コミット候補の生成結果を法務承認や公開許可と扱わない。
+      - clean候補SHAで再生成しProductとLegalが承認するまではGOにしない。
+    evidence: [reports/qst/QST-588.md, docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml]
 
 deferred_existing_items:
   - id: QST-044

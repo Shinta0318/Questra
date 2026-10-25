@@ -12,6 +12,7 @@ class AuthJourneyScaffold extends StatelessWidget {
     this.title,
     required this.message,
     required this.child,
+    this.mobileFormHeader = false,
     super.key,
   });
 
@@ -19,6 +20,7 @@ class AuthJourneyScaffold extends StatelessWidget {
   final String? title;
   final String message;
   final Widget child;
+  final bool mobileFormHeader;
 
   @override
   Widget build(BuildContext context) {
@@ -49,17 +51,75 @@ class AuthJourneyScaffold extends StatelessWidget {
             slivers: [
               SliverToBoxAdapter(
                 child: SizedBox(
-                  height: compactHero ? 196 : 270,
-                  child: _ArcVoyagePanel(message: message, compact: true),
+                  height: mobileFormHeader
+                      ? MediaQuery.paddingOf(context).top + 76
+                      : (compactHero ? 196 : 270),
+                  child: mobileFormHeader
+                      ? const _CompactFormHeader()
+                      : _ArcVoyagePanel(message: message, compact: true),
                 ),
               ),
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _AuthPanel(eyebrow: eyebrow, title: title, child: child),
-              ),
+              if (mobileFormHeader)
+                SliverToBoxAdapter(
+                  child: _AuthPanel(
+                    eyebrow: eyebrow,
+                    title: title,
+                    topAligned: true,
+                    child: child,
+                  ),
+                )
+              else
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _AuthPanel(
+                    eyebrow: eyebrow,
+                    title: title,
+                    child: child,
+                  ),
+                ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _CompactFormHeader extends StatelessWidget {
+  const _CompactFormHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: Image.asset(
+                ArcAssetPaths.approvedPortrait,
+                width: 44,
+                height: 44,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
+                semanticLabel: 'Arc',
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            const Expanded(
+              child: Text(
+                'Questra',
+                style: TextStyle(
+                  color: AppColors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -142,50 +202,61 @@ class _AuthPanel extends StatelessWidget {
     required this.eyebrow,
     required this.title,
     required this.child,
+    this.topAligned = false,
   });
 
   final String eyebrow;
   final String? title;
   final Widget child;
+  final bool topAligned;
 
   @override
   Widget build(BuildContext context) {
+    final form = ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 440),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            eyebrow,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: AppColors.gold,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (title case final title?) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: AppColors.white,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.xxl),
+          child,
+        ],
+      ),
+    );
     return ColoredBox(
       color: AppColors.deepNavy,
       child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xxl),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    eyebrow,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  if (title case final title?) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w800,
-                          ),
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.xxl),
-                  child,
-                ],
+        child: topAligned
+            ? Padding(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: 1,
+                  child: form,
+                ),
+              )
+            : Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.xxl),
+                  child: form,
+                ),
               ),
-            ),
-          ),
-        ),
       ),
     );
   }

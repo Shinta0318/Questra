@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'candidate_git_state.dart';
+
 const packagePath = 'docs/qst/CANDIDATE_ASSET_PACKAGE.yaml';
 
 Future<void> main(List<String> arguments) async {
@@ -61,9 +63,11 @@ Future<void> main(List<String> arguments) async {
       failures.add('Missing guardrail: $required');
   }
   if (requireRelease) {
-    final head = _command(['git', 'rev-parse', 'HEAD']).trim();
-    if (candidateSourceCommit != head) {
-      failures.add('Release candidate asset package is not bound to HEAD.');
+    if (candidateSourceCommit == null ||
+        !candidateSourceHasOnlyEvidenceCommits(candidateSourceCommit)) {
+      failures.add(
+        'Release candidate asset package is not bound to an unchanged candidate source.',
+      );
     }
     for (final required in const [
       'status: approved',
@@ -119,12 +123,6 @@ Future<String?> _sha256(String path) async {
   return RegExp(
     r'\b[a-fA-F0-9]{64}\b',
   ).firstMatch(result.stdout as String)?.group(0)?.toLowerCase();
-}
-
-String _command(List<String> command) {
-  final result = Process.runSync(command.first, command.skip(1).toList());
-  if (result.exitCode != 0) _fail(result.stderr as String);
-  return result.stdout as String;
 }
 
 Never _fail(String message) {

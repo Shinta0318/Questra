@@ -134,6 +134,32 @@ void main() {
       PersistenceSyncStatus.idle,
     );
   });
+
+  test('対象Questがなくなった読込は通知を残さない', () async {
+    final container = ProviderContainer(
+      overrides: [
+        authControllerProvider.overrideWith(_SignedInAuthController.new),
+        missionRepositoryProvider.overrideWithValue(
+          InMemoryMissionRepository(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(missionControllerProvider.notifier);
+    container
+        .read(missionSyncControllerProvider.notifier)
+        .loading(
+          'Missionを読み込んでいます...',
+          operation: PersistenceSyncOperation.load,
+        );
+
+    await controller.loadForQuests(const []);
+
+    expect(
+      container.read(missionSyncControllerProvider).status,
+      PersistenceSyncStatus.idle,
+    );
+  });
 }
 
 class _SignedInAuthController extends AuthController {

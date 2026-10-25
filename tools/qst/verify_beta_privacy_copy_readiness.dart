@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'ai_provider_contract.dart';
+
 const noticePath = 'docs/legal/beta_privacy_notice_ja_draft.md';
 const privacyPath = 'docs/legal/privacy_policy_draft.md';
 const termsPath = 'docs/legal/terms_of_service_draft.md';
@@ -7,7 +9,6 @@ const reviewPath = 'docs/product/beta_privacy_legal_copy_review.md';
 const evidencePath = 'docs/qst/BETA_LEGAL_SIGNOFF.yaml';
 const servicePath =
     'apps/mobile/lib/features/trust/trust_privacy_review_service.dart';
-const providerPath = 'supabase/functions/_shared/ai_provider.ts';
 
 void main(List<String> arguments) {
   final requireSignoff = arguments.contains('--require-signoff');
@@ -18,7 +19,8 @@ void main(List<String> arguments) {
   final review = _read(reviewPath, failures);
   final evidence = _read(evidencePath, failures);
   final service = _read(servicePath, failures);
-  final provider = _read(providerPath, failures);
+  final provider = _read(aiProviderEntryPath, failures);
+  final interactionsAdapter = _read(interactionsAdapterPath, failures);
 
   for (final snippet in [
     '保存するデータ',
@@ -62,7 +64,9 @@ void main(List<String> arguments) {
   ]) {
     _expect(service, snippet, servicePath, failures);
   }
-  _expect(provider, 'store: false', providerPath, failures);
+  failures.addAll(
+    verifyStatelessAiPath(entry: provider, adapter: interactionsAdapter),
+  );
   for (final snippet in [
     'operator:',
     'privacy_contact:',

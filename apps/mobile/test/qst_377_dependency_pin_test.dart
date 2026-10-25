@@ -54,7 +54,7 @@ void main() {
     expect(manifest, contains('legal_reviewer_approval: pending'));
   });
 
-  test('dependency evidence binds HEAD only for an approved release', () {
+  test('dependency release allows evidence-only candidate descendants', () {
     final verifier = File(
       '${repo.path}/tools/qst/verify_dependency_notices.dart',
     ).readAsStringSync();
@@ -62,7 +62,7 @@ void main() {
     expect(verifier, contains('if (requireRelease)'));
     expect(
       verifier,
-      contains('Release dependency evidence is not bound to current HEAD.'),
+      contains('candidateSourceHasOnlyEvidenceCommits(candidateSourceCommit)'),
     );
   });
 }

@@ -17,7 +17,8 @@ param(
   [string]$DashboardEvidence,
 
   [string]$SecretEnvFile = 'supabase/functions/.env.beta.local',
-  [switch]$Apply
+  [switch]$Apply,
+  [switch]$CommitEvidence
 )
 
 $ErrorActionPreference = 'Stop'
@@ -28,7 +29,7 @@ function Quote-Yaml([string]$Value) {
   return '"' + $Value.Replace('\', '\\').Replace('"', '\"') + '"'
 }
 
-$sourceCommit = (& git rev-parse HEAD).Trim()
+$sourceCommit = (& dart "$PSScriptRoot/read_candidate_source_commit.dart").Trim()
 if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') {
   throw 'Unable to resolve the candidate source commit.'
 }
@@ -36,6 +37,35 @@ $workingTreeStatus = (& git status --porcelain)
 if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect the working tree.' }
 if ($workingTreeStatus) {
   throw 'Hosted evidence must start from a clean candidate working tree.'
+}
+if ($Apply -and -not $CommitEvidence) {
+  throw 'Apply requires -CommitEvidence so every hosted stage starts clean.'
+}
+if ($CommitEvidence -and -not $Apply) {
+  throw '-CommitEvidence is valid only together with -Apply.'
+}
+if ($Apply) {
+  & git var GIT_AUTHOR_IDENT *> $null
+  if ($LASTEXITCODE -ne 0) { throw 'Git author identity is required.' }
+  & git var GIT_COMMITTER_IDENT *> $null
+  if ($LASTEXITCODE -ne 0) { throw 'Git committer identity is required.' }
+}
+
+function Commit-StageEvidence([string]$Path) {
+  & "$PSScriptRoot/commit_hosted_evidence.ps1" -Path $Path `
+    -ExpectedSha $sourceCommit
+  if ($LASTEXITCODE -ne 0) { throw "Evidence commit failed: $Path" }
+}
+$probeUserJwt = $null
+if ($Apply) {
+  if (-not $env:SUPABASE_ANON_KEY -or -not $env:SUPABASE_USER_JWT) {
+    throw 'Hosted AI auth verification requires SUPABASE_ANON_KEY and a temporary SUPABASE_USER_JWT in the process environment.'
+  }
+  if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    throw 'Hosted AI auth verification requires Node.js.'
+  }
+  $probeUserJwt = $env:SUPABASE_USER_JWT
+  Remove-Item Env:SUPABASE_USER_JWT
 }
 
 dart run tools/qst/verify_hosted_evidence_runner_v2.dart
@@ -47,6 +77,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Hosted evidence V2 preflight failed.' }
   -ConfirmProjectRef $(if ($Apply) { $ProjectRef } else { '' }) `
   -Execute:$Apply
 if ($LASTEXITCODE -ne 0) { throw 'Hosted migration deployment failed.' }
+if ($Apply) { Commit-StageEvidence 'docs/qst/HOSTED_MIGRATION_DEPLOYMENT.yaml' }
 
 & "$PSScriptRoot/bootstrap_supabase_beta.ps1" `
   -ProjectRef $ProjectRef `
@@ -56,24 +87,42 @@ if ($LASTEXITCODE -ne 0) { throw 'Hosted migration deployment failed.' }
   -SecretEnvFile $SecretEnvFile `
   -Apply:$Apply
 if ($LASTEXITCODE -ne 0) { throw 'Supabase bootstrap failed.' }
+if ($Apply) { Commit-StageEvidence 'docs/qst/BETA_SUPABASE_PROJECT.yaml' }
 if (-not $Apply) {
-  Write-Host 'Hosted evidence preflight passed. Re-run with -Apply to deploy and test.'
+  Write-Host 'Hosted evidence preflight passed. Re-run with -Apply -CommitEvidence to deploy and test.'
   exit 0
+}
+
+$env:SUPABASE_URL = "https://$ProjectRef.supabase.co"
+$env:SUPABASE_USER_JWT = $probeUserJwt
+try {
+  node tools/qst/verify_hosted_ai_auth_boundary.mjs
+  $aiAuthProbeExit = $LASTEXITCODE
+} finally {
+  Remove-Item Env:SUPABASE_USER_JWT -ErrorAction SilentlyContinue
+  $probeUserJwt = $null
+}
+if ($aiAuthProbeExit -ne 0) {
+  throw 'Hosted AI user boundary failed. Do not mark this deployment verified.'
 }
 
 & "$PSScriptRoot/capture_cloud_rls_evidence.ps1" `
   -ProjectRef $ProjectRef `
   -LinkedCli
 if ($LASTEXITCODE -ne 0) { throw 'Cloud RLS evidence capture failed.' }
+Commit-StageEvidence 'docs/qst/BETA_RLS_EVIDENCE.yaml'
 
 & "$PSScriptRoot/run_qst199_cloud_acceptance.ps1" -ProjectRef $ProjectRef
 if ($LASTEXITCODE -ne 0) { throw 'Dual-account hosted acceptance failed.' }
+Commit-StageEvidence 'docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml'
 
 & "$PSScriptRoot/run_data_rights_hosted_drill.ps1" -ProjectRef $ProjectRef
 if ($LASTEXITCODE -ne 0) { throw 'Hosted Data Rights operations drill failed.' }
+Commit-StageEvidence 'docs/qst/DATA_RIGHTS_FULFILLMENT_DRILL.yaml'
 
 & "$PSScriptRoot/run_observability_hosted_drill.ps1" -ProjectRef $ProjectRef
 if ($LASTEXITCODE -ne 0) { throw 'Hosted observability drill failed.' }
+Commit-StageEvidence 'docs/qst/OBSERVABILITY_SINK_EVIDENCE.yaml'
 
 dart run tools/qst/verify_supabase_beta_bootstrap.dart --require-cloud
 if ($LASTEXITCODE -ne 0) { throw 'Hosted Supabase verification failed.' }
@@ -97,6 +146,7 @@ $lines = @(
   "latest_migration: $(Quote-Yaml $latestMigration.Name)",
   'gates:',
   '  migrations_and_functions: passed',
+  '  ai_user_boundary: passed',
   '  rls_behavior: passed',
   '  dual_account_journey: passed',
   '  data_export_owner_scope: passed',
@@ -123,5 +173,6 @@ dart run tools/qst/verify_hosted_evidence_bundle.dart `
   --require-cloud `
   --expected-sha=$sourceCommit
 if ($LASTEXITCODE -ne 0) { throw 'Combined hosted evidence verification failed.' }
+Commit-StageEvidence 'docs/qst/HOSTED_EVIDENCE_RUN.yaml'
 
-Write-Host 'Hosted evidence gate passed. Commit only sanitized evidence files.'
+Write-Host 'Hosted evidence gate passed. Push only the reviewed evidence commits.'

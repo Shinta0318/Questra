@@ -96,6 +96,7 @@ export type ProviderErrorCode =
   | "budget_exhausted"
   | "budget_unavailable"
   | "ai_disabled"
+  | "consent_required"
   | "unknown";
 
 export type ProviderError = {

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "status": "pending",
+  "candidateSha": null,
+  "migrationHead": null,
+  "projectRef": null,
+  "workingTreeCleanAtExecution": false,
+  "checks": {
+    "snapshotV2Reload": "pending",
+    "applyAndUndo": "pending",
+    "taskVersionConflict": "pending",
+    "lostResponseRetry": "pending",
+    "crossAccountDenied": "pending",
+    "ephemeralDataRemoved": "pending"
+  },
+  "sanitizedEvidencePaths": []
+}

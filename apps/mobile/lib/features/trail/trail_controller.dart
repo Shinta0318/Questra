@@ -314,9 +314,15 @@ class TrailController extends Notifier<List<Trail>> {
           if (identical(trail, updatedTrail)) previous else trail,
       ];
     }
+    final syncState = ref.read(trailSyncControllerProvider);
     return TrailUpdateResult(
       saved ? TrailUpdateStatus.saved : TrailUpdateStatus.failed,
-      message: saved ? null : '保存できませんでした。入力を残したまま再試行できます。',
+      message: saved
+          ? null
+          : (syncState.status == TrailSyncStatus.failed
+                    ? syncState.message
+                    : null) ??
+                '保存できませんでした。入力を残したまま再試行できます。',
     );
   }
 

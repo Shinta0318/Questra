@@ -26,12 +26,9 @@ $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/provider_eval_material.ps1"
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 Set-Location $repoRoot
-$sourceCommit = (& git rev-parse HEAD).Trim()
-if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') { throw 'Unable to resolve candidate source commit.' }
+$sourceCommit = (& dart "$PSScriptRoot/read_candidate_source_commit.dart").Trim()
+if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') { throw 'Unable to resolve valid candidate source commit.' }
 if (& git status --porcelain) { throw 'Provider-backed evaluation requires a clean candidate worktree.' }
-if ((Get-Content -Raw -Encoding UTF8 'docs/qst/BETA_CANDIDATE.yaml') -notmatch "source_commit: `"$sourceCommit`"") {
-  throw 'Provider-backed evaluation requires the Beta candidate manifest to match HEAD.'
-}
 if (-not (Get-Command $SupabaseCommand -ErrorAction SilentlyContinue)) { throw 'Supabase CLI was not found.' }
 foreach ($pair in @(@($CasesPath, 'tools/qst/quest_planning_eval_200.json'), @($SafetyCasesPath, 'tools/qst/quest_planning_safety_eval_cases.json'))) {
   if ((Resolve-Path $pair[0]).Path -ne (Resolve-Path $pair[1]).Path) {

@@ -5,12 +5,37 @@ void main() {
   final required = <String, List<String>>{
     'tools/qst/run_connected_preview.ps1': [
       'QUESTRA_PREVIEW_CONFIG',
+      '.questra/beta-preview.env',
       'Preview configuration must be stored outside the repository.',
       'Only a Supabase anon client key is allowed.',
       "APP_ENVIRONMENT = 'production'",
       r'ALLOW_MOCK_PERSISTENCE = $false',
       '--dart-define-from-file=',
+      "\$arguments += @('--profile', '--web-hostname=127.0.0.1'",
       'server-side Edge Function',
+      '/rest/v1/quests?select=id&limit=0',
+      'anonymous Quest access denied',
+      r'Invoke-LoginEntryProbe -BaseUri $BaseUri -Key $Key -Port $Port',
+    ],
+    'tools/qst/connected_preview_login_probe.ps1': [
+      '/functions/v1/auth-login',
+      'invalid_credentials',
+      'Access-Control-Allow-Origin',
+      'x-questra-auth-contract',
+      '2026-10-18.1',
+      'older or unverified',
+      'real credentials not tested',
+    ],
+    'supabase/functions/auth-login/index.ts': [
+      'const AUTH_CONTRACT_VERSION = "2026-10-18.1"',
+      '"x-questra-auth-contract": AUTH_CONTRACT_VERSION',
+    ],
+    'tools/qst/run_mock.ps1': [
+      'run_connected_preview.ps1',
+      r'-ValidateOnly:$ValidateOnly',
+      'Supabase and Gemini are disabled.',
+      '-Offline',
+      '--profile',
     ],
     'tools/qst/test_connected_preview.ps1': [
       'publishable-key',
@@ -18,6 +43,7 @@ void main() {
       'service-role-rejected',
       'prohibited-server-secret-name',
       'http-url-rejected',
+      'login-entry-wrong-cors',
     ],
     'docs/product/connected_preview_runbook.md': [
       'Supabase Auth',

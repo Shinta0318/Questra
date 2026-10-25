@@ -135,7 +135,7 @@ if (-not $Apply) {
   exit 0
 }
 
-$sourceCommit = (& git rev-parse HEAD).Trim()
+$sourceCommit = (& dart "$PSScriptRoot/read_candidate_source_commit.dart").Trim()
 if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') {
   throw 'Unable to resolve candidate source commit.'
 }
@@ -173,11 +173,12 @@ foreach ($requiredSecret in @('AI_PROVIDER', 'GEMINI_API_KEY')) {
   }
 }
 
-$deployedAt = [DateTime]::UtcNow.ToString('o')
+$functionDeployTimes = @{}
 foreach ($functionName in $requiredFunctions) {
   Invoke-SupabaseCommand @(
     'functions', 'deploy', $functionName, '--project-ref', $ProjectRef
   ) | Out-Null
+  $functionDeployTimes[$functionName] = [DateTime]::UtcNow.ToString('o')
 }
 
 $updatedAt = [DateTime]::UtcNow.ToString('o')
@@ -205,7 +206,8 @@ $lines.Add('functions:')
 foreach ($functionName in $requiredFunctions) {
   $lines.Add("  - name: $functionName")
   $lines.Add('    status: deployed')
-  $lines.Add("    deployed_at_utc: $(Quote-Yaml $deployedAt)")
+  $lines.Add("    deployed_at_utc: $(Quote-Yaml $functionDeployTimes[$functionName])")
+  $lines.Add("    source_commit: $(Quote-Yaml $sourceCommit)")
 }
 $lines.Add('secrets:')
 $lines.Add('  status: verified')

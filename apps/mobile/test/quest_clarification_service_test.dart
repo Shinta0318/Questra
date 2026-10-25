@@ -1,21 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/features/quest/quest_clarification_service.dart';
+import 'package:questra/features/quest/quest_understanding.dart';
 
 void main() {
-  test('travel collects five route-changing dimensions', () {
+  test('travel asks at most three route-changing questions', () {
     final questions = QuestClarificationService.resolve(
       input: 'シンガポールへ行きたい',
       category: '冒険',
       targetDate: null,
     );
 
-    expect(questions, hasLength(5));
+    expect(questions, hasLength(3));
     expect(questions.map((question) => question.type), [
       QuestClarificationType.deadline,
       QuestClarificationType.party,
       QuestClarificationType.budget,
-      QuestClarificationType.travelActivity,
-      QuestClarificationType.travelStyle,
     ]);
   });
 
@@ -70,7 +69,7 @@ void main() {
       },
     );
 
-    expect(description, contains('期限: 2027年4月1日'));
+    expect(description, contains('希望時期: 2027年4月'));
     expect(description, contains('予算: 20万円まで'));
     expect(description, contains('重視するアクティビティ・体験: 食文化と現地交流'));
     expect(description, contains('旅行スタイル: ゆったり食文化を楽しむ'));
@@ -91,6 +90,74 @@ void main() {
     expect(
       questions.map((question) => question.type),
       isNot(contains(QuestClarificationType.party)),
+    );
+  });
+
+  test('known dated outcome needs no follow-up question', () {
+    final questions = QuestClarificationService.resolve(
+      input: '2027年3月までにシンガポールへ行きたい',
+      category: '旅行',
+      targetDate: DateTime(2027, 3),
+    );
+    expect(questions, isEmpty);
+  });
+
+  test('existing context is not appended twice', () {
+    const existing = 'シンガポールへ行く\n\n航路条件:\n- 同行者: 家族と';
+    expect(
+      QuestClarificationService.appendAnsweredContext(
+        description: existing,
+        targetDate: null,
+        answers: const {QuestClarificationType.party: '家族と'},
+      ),
+      existing,
+    );
+  });
+
+  test('confirmed context survives the existing Quest understanding JSON', () {
+    final understanding = QuestUnderstanding(
+      originalWish: 'シンガポールへ行きたい',
+      questOutcome: 'シンガポールへ行く',
+      successEvidence: '',
+      motivation: '',
+      currentState: '',
+      constraints: const [],
+      knownResources: const [],
+      unknowns: const [],
+      planningRisks: const [],
+      planningMode: QuestPlanningMode.project,
+      assumptions: const [],
+      confirmedConditions: {
+        QuestClarificationType.party: QuestConfirmedCondition(
+          value: '家族と',
+          source: QuestConditionSource.userConfirmed,
+          confirmedAt: DateTime.utc(2026, 9, 30),
+        ),
+      },
+    );
+    final restored = QuestUnderstanding.fromJson(understanding.toJson())!;
+    expect(
+      restored.confirmedConditions[QuestClarificationType.party]?.value,
+      '家族と',
+    );
+    expect(
+      restored.confirmedConditions[QuestClarificationType.party]?.source,
+      QuestConditionSource.userConfirmed,
+    );
+    expect(
+      QuestUnderstanding.fromJson({
+        ...understanding.toJson(),
+        'confirmed_conditions': null,
+      })?.confirmedConditions,
+      isEmpty,
+    );
+  });
+
+  test('typed context is shown once without dropping following prose', () {
+    const source = '旅行したい\n\n航路条件:\n- 同行者: 家族と\n- 予算: 30万円\n叶えたい理由: 家族の思い出';
+    expect(
+      QuestClarificationService.descriptionWithoutAnsweredContext(source),
+      '旅行したい\n\n叶えたい理由: 家族の思い出',
     );
   });
 }

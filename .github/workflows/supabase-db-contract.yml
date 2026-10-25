@@ -1,0 +1,101 @@
+name: Supabase DB Contract
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/rls_behavior.sql'
+      - 'supabase/tests/hosted_rls_inventory.sql'
+      - 'supabase/tests/auth_login_atomic_decision.sql'
+      - 'supabase/tests/auth_free_tier_token_lock.sql'
+      - 'supabase/tests/operator_role_guard.sql'
+      - 'supabase/tests/legal_consent_once.sql'
+      - 'supabase/tests/auth_login_atomic_concurrency.sh'
+      - '.github/workflows/supabase-db-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3.0.1
+        with:
+          version: 2.118.0
+      - name: Start isolated PostgreSQL
+        run: supabase db start
+      - name: Apply every migration from scratch
+        run: supabase db reset --local --no-seed
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client
+      - name: Rehearse incremental migrations from the observed Beta head
+        env:
+          PGPASSWORD: postgres
+        run: |
+          supabase db reset --local --no-seed --version 202608080006
+          supabase migration up --local
+          version=$(psql --host 127.0.0.1 --port 54322 --username postgres \
+            --dbname postgres --tuples-only --no-align \
+            --command 'select max(version) from supabase_migrations.schema_migrations')
+          latest_file=$(find supabase/migrations -maxdepth 1 -type f -name '*.sql' -printf '%f\n' | sort | tail -1)
+          test "$version" = "${latest_file%%_*}"
+          rpc_ready=$(psql --host 127.0.0.1 --port 54322 --username postgres \
+            --dbname postgres --tuples-only --no-align \
+            --command "select to_regprocedure('public.record_auth_login_failure_v2(uuid)') is not null and to_regprocedure('public.record_auth_login_success_v2(uuid)') is not null and to_regprocedure('public.hook_questra_access_token(jsonb)') is not null and to_regclass('public.legal_acceptances') is not null and to_regclass('public.legal_release_policies') is not null and to_regprocedure('public.accept_current_legal_policy(text,text,text,text,text,boolean,timestamptz)') is not null and to_regprocedure('public.has_current_ai_legal_acceptance(uuid)') is not null")
+          test "$rpc_ready" = 't'
+      - name: Verify owner and cross-account RLS behavior
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/rls_behavior.sql
+      - name: Verify hosted RLS inventory query
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/hosted_rls_inventory.sql
+      - name: Verify operator RPCs reject missing and client roles
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/operator_role_guard.sql
+      - name: Verify atomic login counter and lockout behavior
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/auth_login_atomic_decision.sql
+      - name: Verify one-time legal consent and cross-account isolation
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/legal_consent_once.sql
+      - name: Verify Free-plan token hook logic and Auth role grants
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/auth_free_tier_token_lock.sql
+      - name: Verify concurrent lockout decision
+        env:
+          PGPASSWORD: postgres
+        run: bash supabase/tests/auth_login_atomic_concurrency.sh
+      - name: Stop isolated PostgreSQL
+        if: always()
+        run: supabase stop --no-backup

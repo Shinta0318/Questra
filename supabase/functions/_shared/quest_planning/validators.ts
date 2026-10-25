@@ -196,6 +196,6 @@ function isRecord(value: unknown): value is Record<string, unknown> { return typ
 function text(value: unknown) { return typeof value === "string" && value.trim() ? value.trim() : null; }
 function normalize(value: string) { return value.toLowerCase().replace(/[\s、。,.!！?？「」『』()（）]/g, ""); }
 function integerBetween(value: unknown, min: number, max: number) { return Number.isInteger(value) && Number(value) >= min && Number(value) <= max; }
-function issue(path: string, code: string, message: string, missionClientId?: string): ValidationIssue { return { path, code, message, missionClientId }; }
+function issue(path: string, code: string, message: string, missionClientId?: string | null): ValidationIssue { return { path, code, message, missionClientId: missionClientId ?? undefined }; }
 function invalid(path: string, code: string, message: string): ValidationResult { return { valid: false, issues: [issue(path, code, message)] }; }
 function tokens(value: string) { return [...new Set(value.toLowerCase().split(/[\s、。,.!！?？「」『』()（）]+/).filter((part) => part.length >= 2))].slice(0, 12); }

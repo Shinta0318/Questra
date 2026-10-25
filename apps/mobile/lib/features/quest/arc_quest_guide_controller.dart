@@ -102,7 +102,12 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
     } catch (error) {
       state = state.copyWith(
         loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
-        errorsByQuest: {...state.errorsByQuest, quest.id: error.toString()},
+        errorsByQuest: {
+          ...state.errorsByQuest,
+          quest.id: error is StateError
+              ? error.message.toString()
+              : error.toString(),
+        },
       );
     }
   }

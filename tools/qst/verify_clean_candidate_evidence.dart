@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'candidate_git_state.dart';
+import 'candidate_artifacts.dart';
 
 void main(List<String> arguments) {
   final expected = arguments
@@ -12,37 +13,11 @@ void main(List<String> arguments) {
     _fail('A valid --expected-sha is required.');
   }
   final head = Process.runSync('git', ['rev-parse', 'HEAD']);
-  if (head.exitCode != 0 || head.stdout.toString().trim() != expected) {
-    _fail('Expected candidate SHA does not match current HEAD.');
+  if (head.exitCode != 0 || !candidateSourceHasOnlyEvidenceCommits(expected)) {
+    _fail('Candidate source is not an ancestor with evidence-only commits.');
   }
-  const allowedEvidenceOutputs = {
-    'docs/qst/BETA_CANDIDATE.yaml',
-    'docs/qst/HOSTED_EVIDENCE_RUN.yaml',
-    'docs/qst/HOSTED_MIGRATION_DEPLOYMENT.yaml',
-    'docs/qst/DATA_RIGHTS_FULFILLMENT_DRILL.yaml',
-    'docs/qst/RUNTIME_SLO_DRILL.yaml',
-    'docs/qst/OBSERVABILITY_SINK_EVIDENCE.yaml',
-    'docs/qst/PHYSICAL_ACCESSIBILITY_EVIDENCE.yaml',
-    'docs/qst/WEB_CANDIDATE_SESSION.yaml',
-    'docs/qst/ANDROID_CANDIDATE_SESSION.yaml',
-    'docs/qst/LEGAL_SIGNOFF_INTAKE.yaml',
-    'docs/qst/BETA_LEGAL_SIGNOFF.yaml',
-    'docs/qst/LEGAL_VERSION_RECONCILIATION.yaml',
-    'docs/qst/DEPENDENCY_LICENSE_MANIFEST.yaml',
-    'docs/legal/THIRD_PARTY_NOTICES.md',
-    'docs/qst/CANDIDATE_ASSET_PACKAGE.yaml',
-    'docs/qst/ARC_ASSET_RELEASE_DECISION.yaml',
-    'docs/qst/BETA_FEEDBACK_OPERATIONS.yaml',
-    'docs/qst/BETA_ISSUE_REGISTER.yaml',
-    'docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml',
-    'reports/qst/QST-256-REGRESSION.json',
-    'reports/qst/QST-400-HUMAN-REVIEW.json',
-    'docs/qst/PROVIDER_EVAL_RUN.yaml',
-    'docs/qst/INCIDENT_LIVE_DRILL.yaml',
-    'tools/qst/quest_planning_eval_results.json',
-  };
   final changed = candidateChangedPaths();
-  final nonEvidenceChanges = changed.difference(allowedEvidenceOutputs);
+  final nonEvidenceChanges = changed.difference(candidateEvidenceOutputs);
   if (nonEvidenceChanges.isNotEmpty) {
     _fail(
       'Candidate contains non-evidence changes: ${nonEvidenceChanges.join(', ')}',
@@ -173,8 +148,8 @@ void main(List<String> arguments) {
     if (!candidate.contains(required))
       _fail('Candidate gate missing: $required');
   }
-  if (!RegExp(r'sha256: "[a-f0-9]{64}"').hasMatch(candidate)) {
-    _fail('Candidate artifact checksum is missing.');
+  if (!candidateArtifactsVerified(candidate, expected)) {
+    _fail('Candidate Web and Android artifact checksums do not match files.');
   }
   stdout.writeln('Clean candidate evidence is complete and SHA-consistent.');
 }

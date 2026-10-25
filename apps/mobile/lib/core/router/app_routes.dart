@@ -3,6 +3,8 @@ abstract final class AppRoutes {
   static const login = '/login';
   static const signup = '/signup';
   static const forgotPassword = '/forgot-password';
+  static const confirmEmailHelp = '/confirm-email-help';
+  static const emailConfirmationReturn = '/email-confirmation-return';
   static const resetPassword = '/reset-password';
   static const legalConsent = '/legal-consent';
   static const onboarding = '/onboarding';

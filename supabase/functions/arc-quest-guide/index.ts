@@ -1,4 +1,6 @@
 import { generateAiText } from "../_shared/ai_provider.ts";
+import { authenticatedAiUser } from "../_shared/ai_auth.ts";
+import { aiLegalFailureResponse } from "../_shared/ai_legal_http.ts";
 import {
   jsonResponse,
   preflightResponse,
@@ -93,6 +95,8 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, { status: 405 });
   }
+  const userId = await authenticatedAiUser(req);
+  if (!userId) return jsonResponse({ error: "authentication_required" }, { status: 401 });
   const payload = await readJson<{
     mode?: string;
     wish?: string;
@@ -117,7 +121,9 @@ Deno.serve(async (req) => {
     if (safety) {
       return jsonResponse({ error: "unsafe_intent", safety }, { status: 422 });
     }
-    const intent = await buildQuestIntent(wish, payload.target_date ?? null);
+    const legalFailure = await aiLegalFailureResponse(userId);
+    if (legalFailure) return legalFailure;
+    const intent = await buildQuestIntent(wish, payload.target_date ?? null, userId);
     return intent ? jsonResponse(intent) : planningUnavailable("quest_intent");
   }
   if (payload.mode === "regenerate_mission") {
@@ -129,10 +135,13 @@ Deno.serve(async (req) => {
     if (safety) {
       return jsonResponse({ error: "unsafe_intent", safety }, { status: 422 });
     }
+    const legalFailure = await aiLegalFailureResponse(userId);
+    if (legalFailure) return legalFailure;
     const regeneration = await buildMissionRegeneration(
       quest,
       mission,
       payload.regeneration_intent ?? "moreSpecific",
+      userId,
     );
     return regeneration
       ? jsonResponse(regeneration)
@@ -152,10 +161,13 @@ Deno.serve(async (req) => {
       { status: 422 },
     );
   }
+  const legalFailure = await aiLegalFailureResponse(userId);
+  if (legalFailure) return legalFailure;
   const guide = await buildArcQuestGuide(
     sanitizedQuest,
     planningFeedback ?? [],
     payload.quest_understanding,
+    userId,
   );
   return guide ? jsonResponse(guide) : planningUnavailable("quest_guide");
 });
@@ -243,10 +255,11 @@ function questIntentSchema() {
   };
 }
 
-async function buildQuestIntent(wish: string, targetDate: string | null) {
+async function buildQuestIntent(wish: string, targetDate: string | null, userId: string) {
   try {
     const result = await generateAiText({
       feature: "quest_intent",
+      userId,
       promptVersion: "quest_intent_v2",
       systemInstruction:
         "You are Arc's private Quest intent planner. Understand the Japanese wish semantically. Never create a title by appending generic phrases such as 小さく試す, 習慣にする, 本格的に取り組む, 挑戦する, or 達成する. If the intent is clear, return clarity=clear, no questions, and an empty directions array. Ask only questions whose answers materially change the route, safety, or success evidence, maximum three. Return 2-3 directions only when there are genuinely different achievable outcomes; never return mere paraphrases. A habit Quest is valid only when the meaning is actually habitual. Do not generate Missions in this operation. Use natural Japanese and schema JSON only.",
@@ -321,10 +334,12 @@ async function buildMissionRegeneration(
   quest: QuestPayload,
   mission: Record<string, unknown>,
   intent: string,
+  userId: string,
 ) {
   try {
     const result = await generateAiText({
       feature: "mission_regeneration",
+      userId,
       promptVersion: "mission_regeneration_v1",
       systemInstruction:
         "You are Arc's private route planner. Rewrite exactly one incomplete Mission according to the requested intent. Preserve the Quest outcome and dependencies. Return one concrete action with observable completion evidence. Never rewrite a completed Mission, invent current facts, or mutate data. For travel, policy, qualification, health, finance, prices, schedules, or applications, require recent official or professional verification. Return only schema JSON.",
@@ -346,6 +361,10 @@ async function buildMissionRegeneration(
       reason: textOr(parsed.reason, "選んだ方針に合わせて、実行可能な一歩へ描き直しました。"),
       mission_candidate: candidate,
       source_type: `${result.provider}_mission_regeneration`,
+      model: result.model,
+      prompt_version: "mission_regeneration_v1",
+      schema_version: "mission_regeneration_v1",
+      grounded: false,
     };
   } catch (_error) {
     return null;
@@ -388,13 +407,15 @@ function sanitizePlanningContext(
 async function buildArcQuestGuide(
   quest: QuestPayload,
   planningFeedback: PlanningFeedback[],
-  understanding?: QuestUnderstanding,
+  understanding: QuestUnderstanding | undefined,
+  userId: string,
 ) {
   const template = resolveQuestPlanningTemplate(quest);
   const feedbackHint = summarizePlanningFeedback(planningFeedback);
   try {
     const result = await generateAiText({
       feature: "arc_quest_guide",
+      userId,
       promptVersion: "quest_guide_v2",
       systemInstruction:
         `You are Arc, Questra's star navigator and journey planner. Reply only as compact JSON in natural Japanese. Never describe Arc as an assistant. A Quest is the desired outcome; a Mission is one concrete action that advances it. Design the smallest complete route from the Quest's success condition and explicit constraints, not from a category template. Choose 3-20 Missions or Milestones dynamically; never pad to a round number. Never reuse the Quest title as a Mission title or emit duplicates. Each Mission must produce one observable outcome and its description must end with 「〜したら完了です」. Use stable plan_key values and only reference existing plan keys in parent_plan_key and dependency_plan_keys; keep the graph acyclic. A parent represents decomposition, while a dependency represents execution order. Use planning_context only when consent_granted is true. Treat omitted or null values as unknown and never infer them. Adjust Mission volume and active effort to weekly_minutes, while keeping necessary future Milestones visible. Offer lower-cost alternatives when budget is constrained. Evaluate the Quest and every Mission. Estimates are guidance, not promises. Use this quality and safety viewpoint only to catch omissions, never to copy wording or order: ${template.safety} ${feedbackHint} Infer a new plan shape for an unfamiliar intent. Do not invent current prices, laws, visa rules, schedules, medical outcomes, financial returns, or availability; create a verification Mission using official or professional sources. Enterprise support hints must be generic support categories, never hidden promotion or a fabricated company offer.`,
@@ -418,7 +439,7 @@ async function buildArcQuestGuide(
       `${result.provider}_arc_quest_guide`,
     );
     if (!initialGuide) return null;
-    return await critiqueAndRepairGuide(quest, initialGuide, understanding);
+    return await critiqueAndRepairGuide(quest, initialGuide, understanding, userId);
   } catch (_error) {
     return null;
   }
@@ -427,11 +448,13 @@ async function buildArcQuestGuide(
 async function critiqueAndRepairGuide(
   quest: QuestPayload,
   initialGuide: NonNullable<ReturnType<typeof normalizeGuide>>,
-  understanding?: QuestUnderstanding,
+  understanding: QuestUnderstanding | undefined,
+  userId: string,
 ) {
   try {
     const result = await generateAiText({
       feature: "arc_quest_guide_critic",
+      userId,
       promptVersion: "quest_guide_critic_v1",
       systemInstruction:
         "You are the private quality critic for a Questra Quest route. Evaluate relevance, user specificity, concreteness, feasibility, done-condition verifiability, ordering, coverage, duplication, granularity, duration realism, and source freshness. Return the complete Mission list, preserving every good Mission exactly and repairing only failing Missions. Never expose critic reasoning to the user. Keep the graph acyclic and retain stable plan_key values where possible. Do not add commercial promotion. Perform at most this one repair pass.",
@@ -448,7 +471,7 @@ async function critiqueAndRepairGuide(
     });
     if (!result) return null;
     const parsed = JSON.parse(stripJsonFence(result.text));
-    const rawCandidates = Array.isArray(parsed.mission_candidates)
+    const rawCandidates: unknown[] = Array.isArray(parsed.mission_candidates)
       ? parsed.mission_candidates
       : [];
     const repaired = reviewMissionCandidates(
@@ -718,7 +741,7 @@ function scoreMissionCandidates(candidates: MissionCandidate[]) {
     if (item.done_condition.trim().length >= 6) score += 0.15;
     if (item.expected_output.trim().length >= 2) score += 0.1;
     if (/完了です[。]?$/.test(item.description)) score += 0.1;
-    if (item.effort_estimate.active_effort_minutes > 0) score += 0.1;
+    if ((item.effort_estimate?.active_effort_minutes ?? 0) > 0) score += 0.1;
     if (item.estimated_duration_days > 0) score += 0.1;
     return sum + Math.min(1, score);
   }, 0);

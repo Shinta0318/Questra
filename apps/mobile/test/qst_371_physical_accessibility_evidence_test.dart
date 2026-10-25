@@ -14,7 +14,7 @@ void main() {
     'physical evidence is candidate-bound, hashed, and privacy-reviewed',
     () {
       expect(recorder, contains("git', 'status', '--porcelain"));
-      expect(recorder, contains('Candidate SHA does not match HEAD'));
+      expect(recorder, contains('candidateSourceHasOnlyEvidenceCommits'));
       expect(recorder, contains('privacy review confirmation'));
       expect(recorder, contains('sha256:'));
       expect(recorder, contains("'ro.kernel.qemu'"));
@@ -30,12 +30,17 @@ void main() {
     expect(verifier, contains('artifacts/qst376/'));
   });
 
-  test('asset package binds HEAD only at the explicit release gate', () {
-    final packageVerifier = File(
-      '../../tools/qst/verify_candidate_asset_package.dart',
-    ).readAsStringSync();
-    expect(packageVerifier, contains("git', 'rev-parse', 'HEAD"));
-    expect(packageVerifier, contains('if (candidateSourceCommit != head)'));
-    expect(packageVerifier, contains('has no valid source commit'));
-  });
+  test(
+    'asset package permits only evidence commits after candidate source',
+    () {
+      final packageVerifier = File(
+        '../../tools/qst/verify_candidate_asset_package.dart',
+      ).readAsStringSync();
+      expect(
+        packageVerifier,
+        contains('candidateSourceHasOnlyEvidenceCommits'),
+      );
+      expect(packageVerifier, contains('has no valid source commit'));
+    },
+  );
 }

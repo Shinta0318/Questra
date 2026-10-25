@@ -223,6 +223,11 @@ abstract final class AdaptiveRouteService {
     return const RouteProposalValidator().validate(
       RouteChangeProposal(
         questId: quest.id,
+        provenance: const RouteProposalProvenance(
+          generator: RouteProposalGenerator.rules,
+          version: 'adaptive-route-v1',
+          schemaVersion: 'route-proposal-v1',
+        ),
         reason: switch (evaluated.reason) {
           RouteReplanReason.deadlineRisk => RouteProposalReason.deadlineRisk,
           RouteReplanReason.stalled => RouteProposalReason.stalled,
