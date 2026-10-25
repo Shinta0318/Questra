@@ -9,7 +9,7 @@ generated_at_utc: "2026-10-25T13:57:17.173156Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
-  latest_local_migration: "202610250003_operator_role_null_guard_sweep.sql"
+  latest_local_migration: "202610250004_export_mission_ownership_fix.sql"
   remote_migration_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   edge_function_count: 13
   edge_functions:

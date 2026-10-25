@@ -305,6 +305,16 @@ select pg_temp.qst_assert_eq((select count(*) from public.quests where id = :'ow
 select pg_temp.qst_assert_eq((select count(*) from public.quests where id = :'other_private_quest_id'), 0, 'owner cannot read another private Quest');
 select pg_temp.qst_assert_eq((select count(*) from public.missions where id = :'owner_private_mission_id'), 1, 'owner can read own private Mission');
 select pg_temp.qst_assert_eq((select count(*) from public.missions where id = :'other_private_mission_id'), 0, 'owner cannot read another private Mission');
+select pg_temp.qst_assert_eq(
+  (select count(*) from jsonb_array_elements(public.export_my_questra_data()->'missions') mission
+   where mission->>'id' = :'owner_private_mission_id'),
+  1, 'owner data export includes own Mission'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from jsonb_array_elements(public.export_my_questra_data()->'missions') mission
+   where mission->>'id' = :'other_private_mission_id'),
+  0, 'owner data export excludes another account Mission'
+);
 select pg_temp.qst_assert_eq((select count(*) from public.trails where id = :'owner_private_trail_id'), 1, 'owner can read own private Trail');
 select pg_temp.qst_assert_eq((select count(*) from public.trails where id = :'other_private_trail_id'), 0, 'owner cannot read another private Trail');
 insert into public.trails (

@@ -6,10 +6,22 @@ import 'candidate_git_state.dart';
 
 const evidencePath = 'docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml';
 
-Future<void> main() async {
+Future<void> main(List<String> arguments) async {
   final config = _Config.fromEnvironment();
   final projectRef = config.projectUrl.host.split('.').first;
-  _requireProjectEvidence(projectRef);
+  if (arguments.any((argument) => argument != '--database-only')) {
+    throw ArgumentError('Unknown persistence test argument.');
+  }
+  final databaseOnly = arguments.contains('--database-only');
+  if (databaseOnly) {
+    if (projectRef != 'tpynzjjqajpkzivgapfq') {
+      throw StateError(
+        'Database-only mode is restricted to the validation project.',
+      );
+    }
+  } else {
+    _requireProjectEvidence(projectRef);
+  }
 
   final ids = _TestIds.create();
   final siblingQuestId = _uuid();
@@ -61,7 +73,7 @@ Future<void> main() async {
       'title': 'Verify persistence after re-login',
       'status': 'todo',
     });
-    await accountA.insert('tasks', {
+    final taskPayload = <String, Object?>{
       'id': ids.task,
       'owner_id': accountA.userId,
       'quest_id': ids.quest,
@@ -72,13 +84,20 @@ Future<void> main() async {
       'status': 'pending',
       'required': true,
       'order_index': 0,
-    });
+      'verification_type': 'self',
+      'version': 1,
+      'generated_by': 'user',
+      'origin': 'user',
+    };
+    await accountA.createTask(taskPayload);
     taskCreated = true;
-    await accountA.expectArcTaskContext(
-      questId: ids.quest,
-      missionId: ids.mission,
-      taskId: ids.task,
-    );
+    if (!databaseOnly) {
+      await accountA.expectArcTaskContext(
+        questId: ids.quest,
+        missionId: ids.mission,
+        taskId: ids.task,
+      );
+    }
     await accountA.insert('quests', {
       'id': siblingQuestId,
       'owner_id': accountA.userId,
@@ -94,7 +113,7 @@ Future<void> main() async {
       'title': 'Sibling Mission for parent guard',
       'status': 'todo',
     });
-    await accountA.insert('arc_memories', {
+    final memoryPayload = <String, Object?>{
       'id': ids.memory,
       'user_id': accountA.userId,
       'quest_id': ids.quest,
@@ -103,7 +122,10 @@ Future<void> main() async {
       'content': 'Automated Beta acceptance record',
       'source_type': 'arc_memory',
       'user_visible': true,
-    });
+    };
+    await accountA.expectInsertDenied('arc_memories', memoryPayload);
+    await accountA.grantArcMemoryConsent();
+    await accountA.insert('arc_memories', memoryPayload);
     memoryCreated = true;
 
     await accountA.insert('trails', {
@@ -230,7 +252,8 @@ Future<void> main() async {
       'generated_by': 'user',
       'generation_reason': 'Cross-account Route write must fail',
     });
-    await accountB.expectInsertDenied('tasks', {
+    await accountB.expectTaskCreateDenied({
+      'id': _uuid(),
       'owner_id': accountB.userId,
       'quest_id': ids.quest,
       'mission_id': ids.mission,
@@ -238,8 +261,12 @@ Future<void> main() async {
       'action': 'Attempt a write against another owner Mission',
       'done_condition': 'The database rejects this row',
       'status': 'pending',
+      'required': true,
+      'order_index': 0,
+      'version': 1,
     });
-    await accountA.expectInsertDenied('tasks', {
+    await accountA.expectTaskCreateDenied({
+      'id': _uuid(),
       'owner_id': accountA.userId,
       'quest_id': ids.quest,
       'mission_id': siblingMissionId,
@@ -247,6 +274,9 @@ Future<void> main() async {
       'action': 'Attempt to mix a Quest and Mission hierarchy',
       'done_condition': 'The database rejects this row',
       'status': 'pending',
+      'required': true,
+      'order_index': 0,
+      'version': 1,
     });
     await accountA.expectInsertDenied('trails', {
       'id': _uuid(),
@@ -264,11 +294,13 @@ Future<void> main() async {
       missionId: ids.mission,
       idempotencyKey: 'qst273-denied:${ids.task}',
     );
-    await accountA.expectTaskExpansionReady(
-      questId: ids.quest,
-      missionId: ids.mission,
-      idempotencyKey: 'qst273-owner:${ids.task}',
-    );
+    if (!databaseOnly) {
+      await accountA.expectTaskExpansionReady(
+        questId: ids.quest,
+        missionId: ids.mission,
+        idempotencyKey: 'qst273-owner:${ids.task}',
+      );
+    }
     await accountB.expectRpcDenied('apply_route_change_proposal', {
       'p_proposal_id': ids.routeProposal,
       'p_accepted_item_ids': <String>[ids.routeItem],
@@ -331,7 +363,8 @@ Future<void> main() async {
       'after_data': {'orderIndex': 7},
       'safety_level': 1,
     });
-    await accountA.update('tasks', 'id', ids.task, {
+    await accountA.updateTask({
+      ...taskPayload,
       'scheduled_date': DateTime.now()
           .toUtc()
           .add(const Duration(days: 2))
@@ -403,14 +436,17 @@ Future<void> main() async {
       'status': 'completed',
       'success_confirmed_at': DateTime.now().toUtc().toIso8601String(),
     });
-    await accountA.update('tasks', 'id', ids.task, {'status': 'completed'});
-    await accountA.update('tasks', 'id', ids.task, {'status': 'completed'});
+    await accountA.completeTaskTwice(ids.task);
     final completionEvents = await accountA.countWhere('task_progress_events', {
       'task_id': 'eq.${ids.task}',
       'event_name': 'eq.task_completed',
     });
-    if (completionEvents != 1) {
-      throw StateError('Task completion retry created duplicate events.');
+    final operationEvents = await accountA.countWhere('task_progress_events', {
+      'task_id': 'eq.${ids.task}',
+      'event_key': 'eq.journey:qst199-complete:${ids.task}',
+    });
+    if (completionEvents != 2 || operationEvents != 1) {
+      throw StateError('Task completion replay created duplicate events.');
     }
     await accountA.confirmMissionOutcome(ids.mission);
     await accountA.expectFieldValue(
@@ -473,15 +509,22 @@ Future<void> main() async {
 
     await accountA.delete('arc_memories', 'id', ids.memory);
     memoryCreated = false;
-    await accountA.delete('tasks', 'id', ids.task);
+    await accountA.deleteTask(ids.task);
     taskCreated = false;
     await accountA.delete('quests', 'id', ids.quest);
     questCreated = false;
     await accountA.delete('quests', 'id', siblingQuestId);
     siblingQuestCreated = false;
-    await _writeEvidence(projectRef);
-    stdout.writeln('Dual-account persistence acceptance passed.');
-    stdout.writeln('Sanitized evidence written to $evidencePath');
+    if (databaseOnly) {
+      stdout.writeln('Staging database-only persistence checks passed.');
+      stdout.writeln(
+        'AI generation was skipped; no Beta evidence was written.',
+      );
+    } else {
+      await _writeEvidence(projectRef);
+      stdout.writeln('Dual-account persistence acceptance passed.');
+      stdout.writeln('Sanitized evidence written to $evidencePath');
+    }
   } finally {
     if (accountA != null) {
       if (memoryCreated) {
@@ -499,7 +542,7 @@ Future<void> main() async {
         await accountA.delete('media', 'id', ids.media);
       }
       if (taskCreated) {
-        await accountA.delete('tasks', 'id', ids.task);
+        await accountA.deleteTask(ids.task);
       }
       if (questCreated) {
         await accountA.delete('quests', 'id', ids.quest);
@@ -844,6 +887,111 @@ class _Session {
       body: body,
       expectedStatuses: {200, 204},
     );
+  }
+
+  Future<void> createTask(Map<String, Object?> task) async {
+    final result =
+        jsonDecode(
+              await _rpc('create_tasks_if_absent', {
+                'p_operation_id': 'qst199-create:${task['id']}',
+                'p_tasks': [task],
+              }),
+            )
+            as Map<String, dynamic>;
+    if (result['status'] != 'applied' || result['count'] != 1) {
+      throw StateError('Task creation RPC did not apply one Task.');
+    }
+  }
+
+  Future<void> grantArcMemoryConsent() async {
+    await _rpc('set_user_consent', {
+      'p_purpose_code': 'arc_personalization',
+      'p_purpose_version': 1,
+      'p_granted': true,
+      'p_source': 'contextual_prompt',
+    });
+  }
+
+  Future<void> expectTaskCreateDenied(Map<String, Object?> task) async {
+    final body = await _request(
+      'POST',
+      'rpc/create_tasks_if_absent',
+      body: {
+        'p_operation_id': 'qst199-denied:${task['id']}',
+        'p_tasks': [task],
+      },
+      expectedStatuses: {400, 401, 403},
+    );
+    final error = jsonDecode(body) as Map<String, dynamic>;
+    if (error['message'] != 'task_parent_scope_mismatch') {
+      throw StateError('Task creation was denied for the wrong reason.');
+    }
+  }
+
+  Future<int> taskVersion(String taskId) async {
+    final rows =
+        jsonDecode(
+              await _request(
+                'GET',
+                'tasks',
+                query: {'select': 'version', 'id': 'eq.$taskId'},
+                expectedStatuses: {200},
+              ),
+            )
+            as List<dynamic>;
+    if (rows.length != 1) throw StateError('Task version was not readable.');
+    return (rows.single as Map<String, dynamic>)['version'] as int;
+  }
+
+  Future<void> updateTask(Map<String, Object?> task) async {
+    final taskId = task['id'] as String;
+    final result =
+        jsonDecode(
+              await _rpc('update_task_if_version', {
+                'p_task_id': taskId,
+                'p_expected_version': await taskVersion(taskId),
+                'p_operation_id': 'qst199-update:$taskId',
+                'p_payload': task,
+              }),
+            )
+            as Map<String, dynamic>;
+    if (result['status'] != 'applied') {
+      throw StateError('Task update RPC did not apply.');
+    }
+  }
+
+  Future<void> completeTaskTwice(String taskId) async {
+    final body = {
+      'p_task_id': taskId,
+      'p_operation_id': 'qst199-complete:$taskId',
+      'p_expected_version': await taskVersion(taskId),
+    };
+    final first =
+        jsonDecode(await _rpc('complete_task_journey', body))
+            as Map<String, dynamic>;
+    final retry =
+        jsonDecode(await _rpc('complete_task_journey', body))
+            as Map<String, dynamic>;
+    if (first['status'] != 'completed' ||
+        first['already_applied'] != false ||
+        retry['status'] != 'completed' ||
+        retry['already_applied'] != true) {
+      throw StateError('Task completion replay was not idempotent.');
+    }
+  }
+
+  Future<void> deleteTask(String taskId) async {
+    final result =
+        jsonDecode(
+              await _rpc('delete_task_with_data_rights_audit', {
+                'p_task_id': taskId,
+                'p_confirmation': 'DELETE:$taskId',
+              }),
+            )
+            as Map<String, dynamic>;
+    if (result['deleted'] != true) {
+      throw StateError('Task cleanup RPC did not delete the Task.');
+    }
   }
 
   Future<void> expectDataExportContains({

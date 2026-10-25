@@ -13,7 +13,7 @@ project:
   cli_version: "2.111.0"
 migrations:
   status: local_pending_deployment
-  latest_local: "202610250003_operator_role_null_guard_sweep.sql"
+  latest_local: "202610250004_export_mission_ownership_fix.sql"
   remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   remote_head_checked_at_utc: "2026-10-17T23:09:06Z"
   command: "supabase migration list --linked"
