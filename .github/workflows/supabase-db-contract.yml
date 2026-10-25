@@ -8,6 +8,7 @@ on:
       - 'supabase/tests/rls_behavior.sql'
       - 'supabase/tests/auth_login_atomic_decision.sql'
       - 'supabase/tests/auth_free_tier_token_lock.sql'
+      - 'supabase/tests/operator_role_guard.sql'
       - 'supabase/tests/legal_consent_once.sql'
       - 'supabase/tests/auth_login_atomic_concurrency.sh'
       - '.github/workflows/supabase-db-contract.yml'
@@ -55,6 +56,13 @@ jobs:
           psql --host 127.0.0.1 --port 54322 --username postgres
           --dbname postgres --set ON_ERROR_STOP=1
           --file supabase/tests/rls_behavior.sql
+      - name: Verify operator RPCs reject missing and client roles
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/operator_role_guard.sql
       - name: Verify atomic login counter and lockout behavior
         env:
           PGPASSWORD: postgres
