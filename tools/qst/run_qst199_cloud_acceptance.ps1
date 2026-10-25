@@ -9,6 +9,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 Set-Location $repoRoot
+. "$PSScriptRoot/hosted_auth_fixture.ps1"
 
 if (-not (Get-Command $SupabaseCommand -ErrorAction SilentlyContinue)) {
   throw "Supabase CLI was not found: $SupabaseCommand"
@@ -17,17 +18,9 @@ if (-not (Get-Command dart -ErrorAction SilentlyContinue)) {
   throw 'Dart CLI was not found.'
 }
 
-$keyJson = & $SupabaseCommand projects api-keys --project-ref $ProjectRef 2>$null |
-  Out-String |
-  ConvertFrom-Json
-$anonKey = ($keyJson.keys | Where-Object { $_.name -eq 'anon' }).api_key
-$serviceRoleKey = (
-  $keyJson.keys | Where-Object { $_.name -eq 'service_role' }
-).api_key
-if ([string]::IsNullOrWhiteSpace($anonKey) -or
-    [string]::IsNullOrWhiteSpace($serviceRoleKey)) {
-  throw 'Required anon or service_role key was not returned.'
-}
+$keys = Get-HostedApiKeys -SupabaseCommand $SupabaseCommand -ProjectRef $ProjectRef
+$anonKey = $keys.AnonKey
+$serviceRoleKey = $keys.ServiceRoleKey
 
 $runId = [Guid]::NewGuid().ToString('N')
 $accountAEmail = "qst199-a-$runId@example.test"
@@ -39,6 +32,8 @@ $adminHeaders = @{
   apikey = $serviceRoleKey
   Authorization = "Bearer $serviceRoleKey"
 }
+$fixtureMetadata = Get-HostedLegalFixtureMetadata `
+  -ProjectUrl $projectUrl -AdminHeaders $adminHeaders
 $accountAId = $null
 $accountBId = $null
 $environmentNames = @(
@@ -67,7 +62,7 @@ function New-QstUser {
     email = $Email
     password = $Password
     email_confirm = $true
-    user_metadata = @{ nickname = $Nickname }
+    user_metadata = $fixtureMetadata + @{ nickname = $Nickname }
   } | ConvertTo-Json -Depth 4
   return Invoke-RestMethod `
     -Uri "$projectUrl/auth/v1/admin/users" `
