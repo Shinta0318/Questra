@@ -40,7 +40,12 @@ Preflight makes no remote changes:
   -DashboardEvidence <sanitized-description>
 ```
 
-After reviewing the candidate and local secret file, repeat with `-Apply`.
+After reviewing the candidate, project backup and rollback plan, and local
+secret file, repeat with `-Apply -CommitEvidence`. Both switches are required:
+the runner makes a sanitized evidence-only Git commit after each hosted stage
+so the next stage starts from a genuinely clean worktree. These commits keep
+the original candidate source SHA; they are not pushed automatically. Review
+the evidence commits before pushing them.
 Never place secret values, test account identifiers, private journey content, or
 database URLs in committed evidence.
 
@@ -49,4 +54,7 @@ database URLs in committed evidence.
 Any migration mismatch, RLS failure, cleanup failure, or candidate SHA mismatch
 stops the run. Do not mark a later step passed manually. Use a forward migration
 or function fix and rerun from a new clean candidate; do not use destructive
-database down migrations.
+database down migrations. A failed run may leave already-applied migrations and
+local evidence commits. Inspect both before retrying; do not assume that a
+database rollback happened. Do not deploy to the Free-plan Beta without an
+independently verified recovery plan.

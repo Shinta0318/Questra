@@ -11,7 +11,7 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 Set-Location $repoRoot
 . "$PSScriptRoot/hosted_auth_fixture.ps1"
 
-$sourceCommit = (& git rev-parse HEAD).Trim()
+$sourceCommit = (& dart "$PSScriptRoot/read_candidate_source_commit.dart").Trim()
 if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') {
   throw 'Unable to resolve candidate source commit.'
 }

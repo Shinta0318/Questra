@@ -52,8 +52,8 @@ from pg_class c
 join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
   and c.relkind in ('r', 'p')
-order by c.relname;
-
-select 'QST-395 hosted dynamic RLS inventory passed' as qst_message;
+union all
+select 'QST-395 hosted dynamic RLS inventory passed'
+order by qst_inventory;
 
 rollback;

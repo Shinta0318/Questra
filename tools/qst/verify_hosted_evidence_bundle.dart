@@ -28,6 +28,7 @@ void main(List<String> arguments) {
     'verify_cloud_rls_evidence.dart --require-cloud',
     'verify_dual_account_persistence.dart --require-cloud',
     'verify_hosted_evidence_runner_v2.dart',
+    'commit_hosted_evidence.ps1',
     'run_data_rights_hosted_drill.ps1',
     'run_observability_hosted_drill.ps1',
     'data_rights_fulfillment: passed_retention_review_pending',

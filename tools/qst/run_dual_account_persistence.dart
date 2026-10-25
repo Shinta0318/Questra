@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'candidate_git_state.dart';
+
 const evidencePath = 'docs/qst/BETA_DUAL_ACCOUNT_PERSISTENCE.yaml';
 
 Future<void> main() async {
@@ -576,11 +578,9 @@ void _requireProjectEvidence(String projectRef) {
 }
 
 Future<void> _writeEvidence(String projectRef) async {
-  final commitResult = await Process.run('git', ['rev-parse', 'HEAD']);
-  final commit = (commitResult.stdout as String).trim();
-  if (commitResult.exitCode != 0 ||
-      !RegExp(r'^[0-9a-f]{40}$').hasMatch(commit)) {
-    throw StateError('Unable to resolve source commit at execution.');
+  final commit = candidateSourceCommit();
+  if (!candidateSourceHasOnlyEvidenceCommits(commit)) {
+    throw StateError('Hosted evidence must follow the fixed candidate source.');
   }
   final statusResult = await Process.run('git', ['status', '--porcelain']);
   final workingTreeClean = (statusResult.stdout as String).trim().isEmpty;

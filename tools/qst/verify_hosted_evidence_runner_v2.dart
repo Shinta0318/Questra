@@ -8,10 +8,11 @@ void main() {
     'supabase/migrations/202608250007_data_rights_fulfillment_sla.sql',
     failures,
   );
-  final observability = _read(
-    'supabase/migrations/202608250008_privacy_safe_runtime_observability.sql',
-    failures,
-  ) +
+  final observability =
+      _read(
+        'supabase/migrations/202608250008_privacy_safe_runtime_observability.sql',
+        failures,
+      ) +
       _read(
         'supabase/migrations/202608250009_runtime_observability_exact_operator_drill.sql',
         failures,
@@ -23,6 +24,9 @@ void main() {
   for (final required in const [
     'Hosted evidence must start from a clean candidate working tree.',
     'read_candidate_source_commit.dart',
+    'commit_hosted_evidence.ps1',
+    'Apply requires -CommitEvidence',
+    'Commit-StageEvidence',
     'verify_hosted_evidence_runner_v2.dart',
     'bootstrap_supabase_beta.ps1',
     'capture_cloud_rls_evidence.ps1',
