@@ -22,6 +22,7 @@ void main() {
   );
   for (final required in const [
     'Hosted evidence must start from a clean candidate working tree.',
+    'read_candidate_source_commit.dart',
     'verify_hosted_evidence_runner_v2.dart',
     'bootstrap_supabase_beta.ps1',
     'capture_cloud_rls_evidence.ps1',
