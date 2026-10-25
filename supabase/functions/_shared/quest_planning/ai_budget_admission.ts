@@ -171,15 +171,13 @@ export async function settleAiBudget(
     p_reservation_id: reservationId,
   });
   if (!reconciliation?.ok) {
-    console.warn(`AI budget settlement failed: HTTP ${result?.status ?? "unavailable"}`);
+    console.warn(`AI budget settlement failed: HTTP ${reconciliation?.status ?? "unavailable"}`);
     return false;
   }
   const outcome = await safeJson(reconciliation);
-  if (!isRecord(outcome) || outcome.reconciled !== true) {
-    console.warn("AI budget reconciliation incomplete");
-    return false;
-  }
-  return true;
+  if (isRecord(outcome) && outcome.reconciled === true) return true;
+  console.warn("AI budget reconciliation incomplete");
+  return false;
 }
 
 export async function releaseAiBudget(
