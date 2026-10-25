@@ -23,4 +23,23 @@ Expect-Rejected -Plan '{"dryRun":true,"migrations":["202608090001_first.sql","20
 Expect-Rejected -Plan '{not-json}' -Expected $expected
 
 Assert-HostedMigrationDryRun -Output '{"dryRun":true,"migrations":[],"roles":[],"seeds":[]}' -ExpectedMigrationFiles @()
+$migrationList = '{"migrations":[{"local":"202608080006","remote":"202608080006"},{"local":"202608090001","remote":""}],"message":"Migrations listed"}'
+$versions = @(Get-HostedRemoteVersions -Output "Connecting to remote database...`n$migrationList")
+if ($versions.Count -ne 1 -or $versions[0] -cne '202608080006') {
+  throw 'Hosted migration history was not parsed correctly.'
+}
+Expect-Rejected -Plan '{"dryRun":true,"migrations":[]}' -Expected @('missing.sql')
+foreach ($invalidList in @(
+  '{"migrations":[{"local":"202608080006","remote":"202608080007"}],"message":"Migrations listed"}',
+  '{"migrations":[{"local":"202608090001","remote":""},{"local":"202608080006","remote":"202608080006"}],"message":"Migrations listed"}',
+  '{"migrations":[{"local":"202608080006","remote":"202608080006"},{"local":"202608080005","remote":"202608080005"}],"message":"Migrations listed"}',
+  '{"migrations":[{"local":"202608080006","remote":"bad"}],"message":"Migrations listed"}'
+)) {
+  try {
+    Get-HostedRemoteVersions -Output $invalidList | Out-Null
+  } catch {
+    continue
+  }
+  throw 'Unsafe migration history was accepted.'
+}
 Write-Host 'Hosted migration dry-run contract tests passed.'

@@ -28,15 +28,6 @@ function Invoke-SupabaseCommand {
   return ($output -join [Environment]::NewLine)
 }
 
-function Get-RemoteVersions([string]$MigrationList) {
-  return @(
-    $MigrationList -split "`r?`n" |
-      ForEach-Object {
-        if ($_ -match '^\s*\d*\s*\|\s*(\d{14})\s*\|') { $Matches[1] }
-      }
-  )
-}
-
 function Quote-Yaml([string]$Value) {
   return '"' + $Value.Replace('\', '\\').Replace('"', '\"') + '"'
 }
@@ -86,7 +77,7 @@ $pendingPlan = @($localMigrations | Select-Object -Skip ($plannedRemoteIndex + 1
 
 $cliVersion = Invoke-SupabaseCommand @('--version')
 $beforeList = Invoke-SupabaseCommand @('migration', 'list', '--linked')
-$remoteVersionsBefore = @(Get-RemoteVersions $beforeList)
+$remoteVersionsBefore = @(Get-HostedRemoteVersions -Output $beforeList)
 if ($remoteVersionsBefore.Count -eq 0) { throw 'Unable to resolve hosted migration head.' }
 $remoteHeadBefore = $remoteVersionsBefore[-1]
 if ($remoteHeadBefore -ne $plannedRemoteVersion -and $remoteHeadBefore -ne $latestVersion) {
@@ -110,7 +101,7 @@ if ($pendingAtExecution -gt 0) {
   Invoke-SupabaseCommand @('db', 'push', '--linked') | Out-Null
 }
 $afterList = Invoke-SupabaseCommand @('migration', 'list', '--linked')
-$remoteVersionsAfter = @(Get-RemoteVersions $afterList)
+$remoteVersionsAfter = @(Get-HostedRemoteVersions -Output $afterList)
 if ($remoteVersionsAfter.Count -eq 0 -or $remoteVersionsAfter[-1] -ne $latestVersion) {
   throw 'Hosted migration head did not reach the latest local migration.'
 }
