@@ -265,6 +265,7 @@ async function releaseAndFail(
   thinkingLevel?: ProviderResponse["thinkingLevel"],
   attemptedModels: string[] = [],
 ) {
+  console.warn(`Gemini interaction failed: ${code}; HTTP ${status ?? "unavailable"}; model ${model}`);
   await releaseAiBudget(reservationId, code);
   return failure(
     request,

@@ -27,6 +27,11 @@ jobs:
           node-version: '24'
       - name: Type-check every Edge Function entrypoint
         run: deno check supabase/functions/*/index.ts
+      - name: Test pinned Gemini model routing and fallback
+        run: >-
+          deno test --allow-env
+          supabase/functions/_shared/quest_planning/model_registry_test.ts
+          supabase/functions/_shared/quest_planning/interactions_adapter_test.ts
       - name: Test auth and direct AI contracts
         run: >-
           node --test

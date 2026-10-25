@@ -28,7 +28,7 @@ Deno.test("fallback failure reports the model and thinking level actually execut
     SUPABASE_URL: "https://example.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "test-service-role",
     GEMINI_MODEL_STRATEGIC_PLANNER: "gemini-3.6-flash",
-    GEMINI_FALLBACK_MODEL_STRATEGIC_PLANNER: "gemini-3.5-flash",
+    GEMINI_FALLBACK_MODEL_STRATEGIC_PLANNER: "gemini-3.5-flash-lite",
   };
   const previousEnv = Object.fromEntries(
     Object.keys(env).map((key) => [key, Deno.env.get(key)]),
@@ -65,9 +65,9 @@ Deno.test("fallback failure reports the model and thinking level actually execut
 
     const result = await callGeminiInteraction(request());
 
-    assertArrayEquals(reservedModels, ["gemini-3.6-flash", "gemini-3.5-flash"]);
-    assertArrayEquals(providerModels, ["gemini-3.6-flash", "gemini-3.5-flash"]);
-    assertEquals(result.model, "gemini-3.5-flash");
+    assertArrayEquals(reservedModels, ["gemini-3.5-flash-lite", "gemini-3.6-flash"]);
+    assertArrayEquals(providerModels, ["gemini-3.6-flash", "gemini-3.5-flash-lite"]);
+    assertEquals(result.model, "gemini-3.5-flash-lite");
     assertEquals(result.thinkingLevel, "high");
     assertEquals(result.error?.code, "unavailable");
   } finally {

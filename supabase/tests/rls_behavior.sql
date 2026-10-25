@@ -19,6 +19,23 @@ begin
 end;
 $$;
 
+select pg_temp.qst_assert_eq(
+  (
+    select count(*) from pg_proc p
+    where p.oid in (
+      'public.record_ai_provider_execution_receipt(uuid,text,text,integer,integer,text,uuid)'::regprocedure,
+      'public.record_ai_provider_execution_receipt_v2(uuid,text,text,integer,integer,text,uuid,integer)'::regprocedure,
+      'public.record_ai_provider_execution_receipt_v4(uuid,text,text,integer,integer,text,uuid,integer,text,text,text,text)'::regprocedure
+    )
+    and exists (
+      select 1 from unnest(p.proconfig) config
+      where config like 'search_path=extensions, public, pg_temp%'
+    )
+  ),
+  3,
+  'AI receipt functions can resolve hosted pgcrypto'
+);
+
 create function pg_temp.qst_assert_raises(
   statement text,
   label text

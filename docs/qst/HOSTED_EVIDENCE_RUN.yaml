@@ -5,7 +5,7 @@ executed_at_utc: null
 candidate_source_commit: null
 working_tree_clean_at_start: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
-latest_migration: "202610250004_export_mission_ownership_fix.sql"
+latest_migration: "202610260002_fix_ai_receipt_pgcrypto_path.sql"
 gates:
   migrations_and_functions: pending
   rls_behavior: pending
