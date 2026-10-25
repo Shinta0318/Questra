@@ -39,7 +39,7 @@ if ($LinkedCli) {
     $escapedValue = $variables[$name].Replace("'", "''")
     $linkedSql = $linkedSql.Replace(":'$name'", "'$escapedValue'")
   }
-  if ($linkedSql -match '(?m)^\\') {
+  if ($linkedSql -match '(?m)^\\' -or $linkedSql -match '\\gset\b') {
     throw 'Unsupported psql metacommand remains after linked CLI conversion.'
   }
   if ($linkedSql -match ":'[A-Za-z_][A-Za-z0-9_]*'") {

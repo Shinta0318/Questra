@@ -528,20 +528,20 @@ select pg_temp.qst_assert_eq(
   2, 'QST-528 stale reorder leaves both Tasks unchanged'
 );
 
-select (to_jsonb(task) || jsonb_build_object('title', 'First edit'))::text
-  as qst534_first_payload
-from public.tasks task where id = :'owner_qst534_task_id' \gset
+create temp table qst534_payload_snapshot on commit drop as
+select to_jsonb(task) || jsonb_build_object('title', 'First edit') as payload
+from public.tasks task where id = :'owner_qst534_task_id';
 select pg_temp.qst_assert_eq(
   (public.update_task_if_version(
     :'owner_qst534_task_id'::uuid, 1, 'qst534-first-edit',
-    :'qst534_first_payload'::jsonb
+    (select payload from pg_temp.qst534_payload_snapshot)
   )->>'version')::bigint,
   2, 'QST-534 first Task update advances version once'
 );
 select pg_temp.qst_assert_eq(
   (public.update_task_if_version(
     :'owner_qst534_task_id'::uuid, 1, 'qst534-first-edit',
-    :'qst534_first_payload'::jsonb
+    (select payload from pg_temp.qst534_payload_snapshot)
   )->>'status' = 'already_applied')::integer,
   1, 'QST-534 immediate lost-response retry is idempotent'
 );
@@ -556,7 +556,7 @@ select pg_temp.qst_assert_eq(
 select pg_temp.qst_assert_eq(
   (public.update_task_if_version(
     :'owner_qst534_task_id'::uuid, 1, 'qst534-first-edit',
-    :'qst534_first_payload'::jsonb
+    (select payload from pg_temp.qst534_payload_snapshot)
   )->>'status' = 'conflict')::integer,
   1, 'QST-534 stale replay cannot hide the later Task edit'
 );
@@ -629,11 +629,12 @@ select pg_temp.qst_assert_eq(
   (public.reopen_task_journey(:'owner_qst534_task_id'::uuid, 'qst535-reopen', 5)->>'status' = 'conflict')::integer,
   1, 'QST-535 stale replay does not hide later Task edit'
 );
-select count(*) as completion_events_before_recomplete
+create temp table qst535_completion_snapshot on commit drop as
+select count(*)::integer as event_count
 from public.task_progress_events
 where owner_id = :'owner_id' and task_id = :'owner_qst534_task_id'
   and event_name = 'task_completed'
-  and event_key like ('task_completed:' || :'owner_qst534_task_id' || ':%') \gset
+  and event_key like ('task_completed:' || :'owner_qst534_task_id' || ':%');
 select pg_temp.qst_assert_eq(
   (public.complete_task_journey(:'owner_qst534_task_id'::uuid, 'qst535-recomplete', 7)->>'version')::bigint,
   8, 'QST-535 Task may complete again after reopen'
@@ -643,7 +644,7 @@ select pg_temp.qst_assert_eq(
    where owner_id = :'owner_id' and task_id = :'owner_qst534_task_id'
      and event_name = 'task_completed'
      and event_key like ('task_completed:' || :'owner_qst534_task_id' || ':%')),
-  :'completion_events_before_recomplete'::integer + 1,
+  (select event_count from pg_temp.qst535_completion_snapshot) + 1,
   'rapid Task re-completion records another status transition'
 );
 select pg_temp.qst_assert_eq(
