@@ -54,6 +54,8 @@ void main(List<String> arguments) {
     'Hosted migration deployment requires a clean worktree.',
     'Linked Supabase project does not match the requested project.',
     "'db', 'push', '--linked', '--dry-run'",
+    'Assert-HostedMigrationDryRun',
+    'hosted_migration_dry_run.ps1',
     "'db', 'push', '--linked'",
     "'migration', 'list', '--linked'",
     'Unexpected hosted migration head',

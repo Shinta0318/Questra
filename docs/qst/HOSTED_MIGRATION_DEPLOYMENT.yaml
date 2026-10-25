@@ -71,6 +71,7 @@ execution:
     - linked_project_match
     - authenticated_supabase_cli
     - successful_db_push_dry_run
+    - exact_dry_run_migration_plan
     - expected_remote_head_or_already_current
 guardrails:
   destructive_repair_allowed: false

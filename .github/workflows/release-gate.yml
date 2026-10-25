@@ -43,6 +43,7 @@ jobs:
         run: |
           dart run tools/qst/verify_migration_drift.dart
           dart run tools/qst/verify_hosted_migration_deployment.dart
+          pwsh -NoProfile -File tools/qst/test_hosted_migration_dry_run.ps1
           dart run tools/qst/verify_dynamic_rls_coverage.dart
           dart run tools/qst/verify_cloud_rls_evidence.dart
           dart run tools/qst/verify_device_session_preflight.dart
