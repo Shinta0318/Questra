@@ -89,7 +89,7 @@ if ($Apply) { Commit-StageEvidence 'docs/qst/HOSTED_MIGRATION_DEPLOYMENT.yaml' }
 if ($LASTEXITCODE -ne 0) { throw 'Supabase bootstrap failed.' }
 if ($Apply) { Commit-StageEvidence 'docs/qst/BETA_SUPABASE_PROJECT.yaml' }
 if (-not $Apply) {
-  Write-Host 'Hosted evidence preflight passed. Re-run with -Apply to deploy and test.'
+  Write-Host 'Hosted evidence preflight passed. Re-run with -Apply -CommitEvidence to deploy and test.'
   exit 0
 }
 
