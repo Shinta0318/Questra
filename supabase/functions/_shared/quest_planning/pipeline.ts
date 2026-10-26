@@ -5,6 +5,7 @@ import { planningTools } from "./tool_registry.ts";
 import { activePrompt, PROMPTS } from "./prompt_registry.ts";
 import { decideGrounding, validateGroundedMissionReferences, validateGroundingEvidence } from "./grounding.ts";
 import { validateMissionArchitectureSemantics, validateRouteMissionPlan, validateTaskPlan } from "./validators.ts";
+import { planningPassIdempotencyKey } from "./pass_idempotency.ts";
 
 export type PlanningInput = {
   questId: string;
@@ -319,6 +320,13 @@ async function evaluateMissionPlan(
 async function runPass(key: keyof typeof PROMPTS, payload: unknown, input: PlanningInput, traceId: string, versions: Record<string, number>, tools: ProviderRequest["tools"] = []) {
   const prompt = activePrompt(key);
   versions[key] = prompt.version;
+  const idempotencyKey = await planningPassIdempotencyKey(input.idempotencyKey, key, {
+    payload,
+    promptVersion: prompt.version,
+    schemaVersion: prompt.schemaVersion,
+    thinkingLevel: prompt.thinkingLevel,
+    tools,
+  });
   const request: ProviderRequest = {
     operation: `quest_planning.${key}`,
     modelRole: prompt.modelRole,
@@ -332,7 +340,7 @@ async function runPass(key: keyof typeof PROMPTS, payload: unknown, input: Plann
     temperature: prompt.temperature,
     maxOutputTokens: key.includes("generation") || key.includes("repair") ? 8_192 : 3_072,
     timeoutMs: 45_000,
-    idempotencyKey: `${input.idempotencyKey}:${key}`,
+    idempotencyKey,
     traceId,
     userId: input.userId,
     abuseKeyHash: input.abuseKeyHash,

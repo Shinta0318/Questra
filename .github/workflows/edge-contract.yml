@@ -33,6 +33,7 @@ jobs:
           supabase/functions/_shared/quest_planning/model_registry_test.ts
           supabase/functions/_shared/quest_planning/interactions_adapter_test.ts
           supabase/functions/_shared/quest_planning/http_status_test.ts
+          supabase/functions/_shared/quest_planning/pass_idempotency_test.ts
       - name: Test auth and direct AI contracts
         run: >-
           node --test
