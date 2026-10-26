@@ -483,7 +483,11 @@ function dedupeIssues(issues: ValidationIssue[]) {
   });
 }
 function failed(traceId: string, passes: PlanningPass[], prompts: Record<string, number>, retryable = false) {
-  return result(traceId, retryable ? "retryable_error" : "manual_path", passes, null, [], prompts);
+  const error = [...passes].reverse().find((pass) => pass.provider?.error)?.provider?.error;
+  const issues: ValidationIssue[] = error
+    ? [{ path: "$.passes", code: error.code, message: "Planning provider pass failed" }]
+    : [];
+  return result(traceId, retryable ? "retryable_error" : "manual_path", passes, null, issues, prompts);
 }
 function result(traceId: string, status: PlanningPipelineResult["status"], passes: PlanningPass[], preview: unknown, issues: ValidationIssue[], prompts: Record<string, number>): PlanningPipelineResult {
   return { traceId, status, passes, preview, issues, versions: { pipeline: "4.0", schema: "mission-architecture-4.0", prompts }, persistenceAllowed: false };
