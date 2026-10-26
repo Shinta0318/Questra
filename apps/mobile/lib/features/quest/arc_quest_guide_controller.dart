@@ -13,6 +13,7 @@ import 'arc_quest_guide_service.dart';
 import '../mission/mission_controller.dart';
 import '../task/task_controller.dart';
 import 'planning_preferences_controller.dart';
+import 'planning_cooldown_repository.dart';
 import 'quest_model.dart';
 
 final arcQuestGuideServiceProvider = Provider<ArcQuestGuideService>((ref) {
@@ -65,13 +66,45 @@ class ArcQuestGuideState {
 
 class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
   @override
-  ArcQuestGuideState build() => const ArcQuestGuideState();
+  ArcQuestGuideState build() {
+    ref.watch(authControllerProvider.select((auth) => auth.profile?.id));
+    return const ArcQuestGuideState();
+  }
+
+  Future<void> hydrateCooldownForQuest(String questId) async {
+    await _restoreCooldown(questId);
+  }
+
+  Future<DateTime?> _restoreCooldown(String questId) async {
+    final ownerId = ref.read(authControllerProvider).profile?.id;
+    if (ownerId == null) return null;
+    try {
+      final retryAt = await ref
+          .read(planningCooldownRepositoryProvider)
+          .load(ownerId, questId);
+      if (ref.read(authControllerProvider).profile?.id != ownerId ||
+          retryAt == null ||
+          !retryAt.isAfter(DateTime.now())) {
+        return null;
+      }
+      state = state.copyWith(
+        retryAfterByQuest: {...state.retryAfterByQuest, questId: retryAt},
+      );
+      return retryAt;
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<void> generateForQuest(Quest quest) async {
     if (state.isLoading(quest.id) ||
         (state.retryAfterFor(quest.id)?.isAfter(DateTime.now()) ?? false)) {
       return;
     }
+    if (await _restoreCooldown(quest.id) != null || state.isLoading(quest.id)) {
+      return;
+    }
+    final ownerId = ref.read(authControllerProvider).profile?.id;
 
     state = state.copyWith(
       loadingQuestIds: {...state.loadingQuestIds, quest.id},
@@ -83,6 +116,7 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
       final safety = await ref
           .read(questSafetyServiceProvider)
           .assess('${quest.title}\n${quest.description}');
+      if (ref.read(authControllerProvider).profile?.id != ownerId) return;
       if (safety.action != QuestSafetyAction.allow) {
         unawaited(
           ref
@@ -102,20 +136,32 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
       final guide = await ref
           .read(arcQuestGuideServiceProvider)
           .generate(quest: quest, planningContext: planning.contextForPlanning);
+      if (ref.read(authControllerProvider).profile?.id != ownerId) return;
       state = state.copyWith(
         guidesByQuest: {...state.guidesByQuest, quest.id: guide},
         loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
         retryAfterByQuest: {...state.retryAfterByQuest}..remove(quest.id),
       );
+      if (ownerId != null) {
+        try {
+          await ref
+              .read(planningCooldownRepositoryProvider)
+              .clear(ownerId, quest.id);
+        } catch (_) {
+          // Successful planning stays available if local storage is unavailable.
+        }
+      }
       unawaited(_rememberGuide(quest, guide));
     } catch (error) {
+      if (ref.read(authControllerProvider).profile?.id != ownerId) return;
+      final retryAt = error is PlanningRateLimitException
+          ? DateTime.now().add(error.retryAfter)
+          : null;
+      final cooldowns = {...state.retryAfterByQuest};
+      if (retryAt != null) cooldowns[quest.id] = retryAt;
       state = state.copyWith(
         loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
-        retryAfterByQuest: {
-          ...state.retryAfterByQuest,
-          if (error is PlanningRateLimitException)
-            quest.id: DateTime.now().add(error.retryAfter),
-        },
+        retryAfterByQuest: cooldowns,
         errorsByQuest: {
           ...state.errorsByQuest,
           quest.id: error is StateError
@@ -123,6 +169,15 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
               : error.toString(),
         },
       );
+      if (ownerId != null && retryAt != null) {
+        try {
+          await ref
+              .read(planningCooldownRepositoryProvider)
+              .save(ownerId, quest.id, retryAt);
+        } catch (_) {
+          // Keep the active-screen cooldown even if durable storage fails.
+        }
+      }
     }
   }
 

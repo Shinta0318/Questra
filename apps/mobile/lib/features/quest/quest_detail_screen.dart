@@ -24,6 +24,7 @@ import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../auth/auth_controller.dart';
 import '../business_foundation/quest_lifecycle_stage.dart';
 import '../business_foundation/quest_stage_repository.dart';
 import '../challenge_graph/challenge_graph_preview_service.dart';
@@ -96,7 +97,9 @@ class QuestDetailScreen extends ConsumerWidget {
     final hasActiveArcGuide =
         arcGuideState.isLoading(questId) ||
         arcGuideState.guideFor(questId) != null ||
-        arcGuideState.errorFor(questId) != null;
+        arcGuideState.errorFor(questId) != null ||
+        (arcGuideState.retryAfterFor(questId)?.isAfter(DateTime.now()) ??
+            false);
     final pendingRouteProposal = ref.watch(
       routeReplanningControllerProvider.select((state) => state[questId]),
     );
@@ -125,6 +128,7 @@ class QuestDetailScreen extends ConsumerWidget {
         child: QuestraResponsiveListView(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
           children: [
+            _ArcQuestGuideCooldownHydrator(questId: questId),
             _QuestHeader(
               quest: quest,
               onEdit: () => _showQuestEditDialog(context, ref, quest),
@@ -2311,6 +2315,43 @@ class _MilestoneTile extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+class _ArcQuestGuideCooldownHydrator extends ConsumerStatefulWidget {
+  const _ArcQuestGuideCooldownHydrator({required this.questId});
+
+  final String questId;
+
+  @override
+  ConsumerState<_ArcQuestGuideCooldownHydrator> createState() =>
+      _ArcQuestGuideCooldownHydratorState();
+}
+
+class _ArcQuestGuideCooldownHydratorState
+    extends ConsumerState<_ArcQuestGuideCooldownHydrator> {
+  String? _hydratedOwnerId;
+  String? _hydratedQuestId;
+
+  @override
+  Widget build(BuildContext context) {
+    final ownerId = ref.watch(
+      authControllerProvider.select((auth) => auth.profile?.id),
+    );
+    if (ownerId != null &&
+        (_hydratedOwnerId != ownerId || _hydratedQuestId != widget.questId)) {
+      _hydratedOwnerId = ownerId;
+      _hydratedQuestId = widget.questId;
+      unawaited(
+        Future<void>.microtask(() async {
+          if (!mounted) return;
+          await ref
+              .read(arcQuestGuideControllerProvider.notifier)
+              .hydrateCooldownForQuest(widget.questId);
+        }),
+      );
+    }
+    return const SizedBox.shrink();
   }
 }
 
