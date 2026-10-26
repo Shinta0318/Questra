@@ -283,6 +283,14 @@ insert into public.quest_planning_pass_checkpoints (
   :'owner_id',:'owner_private_quest_id','quest_planning.quest_understanding',
   repeat('a',64),'{}'::jsonb,'{"provider":"gemini"}'::jsonb,now() + interval '1 hour'
 );
+select pg_temp.qst_assert_raises(
+  format(
+    'insert into public.quest_planning_pass_checkpoints (owner_id,quest_id,pass_name,input_fingerprint,output,provider_metadata,expires_at) values (%L,%L,%L,repeat(%L,64),%L::jsonb,%L::jsonb,now() + interval %L)',
+    :'other_id', :'owner_private_quest_id', 'quest_planning.quest_understanding',
+    'b', '{}', '{"provider":"gemini"}', '1 hour'
+  ),
+  'checkpoint cannot bind another account to an owner Quest'
+);
 insert into public.mission_plan_drafts (
   id,owner_id,quest_id,planning_run_id,preview_id,schema_version,model_name,thinking_level
 ) values (

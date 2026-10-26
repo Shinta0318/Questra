@@ -8,8 +8,8 @@ executed_at_utc: null
 cli_version: null
 migrations:
   remote_head_before: "202608080006_route_proposal_stale_conflict_guard.sql"
-  latest_local: "202610260003_quest_planning_pass_checkpoints.sql"
-  pending_at_plan: 52
+  latest_local: "202610260004_checkpoint_quest_owner_guard.sql"
+  pending_at_plan: 53
   pending_at_execution: null
   applied_during_run: null
   remote_head_after: null
@@ -67,6 +67,7 @@ migrations:
     - "202610260001_disable_unlisted_gemini_model.sql"
     - "202610260002_fix_ai_receipt_pgcrypto_path.sql"
     - "202610260003_quest_planning_pass_checkpoints.sql"
+    - "202610260004_checkpoint_quest_owner_guard.sql"
 execution:
   runner: tools/qst/run_hosted_migration_deployment.ps1
   requires:
