@@ -2,14 +2,14 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "85b45f354cbc19fb78679bfb55e8d08160965759"
-rollback_commit: "ad60e286cf4df47703ff975e4f511f72ed180cc2"
+source_commit: "34db309516bd5f19e4530f82e637dd223af8ba27"
+rollback_commit: "38af220b5ba6c32fd4eb256ed79197f1bfca6b3b"
 branch: "codex/gemini-free-tier-validation"
-generated_at_utc: "2026-10-26T05:15:38.697198Z"
+generated_at_utc: "2026-10-26T13:11:51.127986Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
-  latest_local_migration: "202610260003_quest_planning_pass_checkpoints.sql"
+  latest_local_migration: "202610260004_checkpoint_quest_owner_guard.sql"
   remote_migration_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   edge_function_count: 13
   edge_functions:
