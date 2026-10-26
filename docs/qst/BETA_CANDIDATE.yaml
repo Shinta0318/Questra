@@ -2,10 +2,10 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "5733180d9437e8cdd4cd76fa20dbf1fe3b685582"
-rollback_commit: "033fd457534855e99c409e792804767277ce0872"
+source_commit: "f0985d34a4885a29f85df7ff120cd7c6f91ddcd1"
+rollback_commit: "e471ed8f19be279939cde61a22625483e41e059d"
 branch: "codex/gemini-free-tier-validation"
-generated_at_utc: "2026-10-26T13:46:31.422384Z"
+generated_at_utc: "2026-10-26T14:14:54.493991Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
@@ -26,7 +26,7 @@ inventory:
     - "quest-planning-v2"
     - "reconcile-ai-budget"
     - "research-mission-resources"
-  flutter_test_file_count: 330
+  flutter_test_file_count: 331
   supabase_evidence_status: "local_migration_pending_deployment"
   supabase_evidence_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
   rls_evidence_status: "local_migration_pending_deployment"
