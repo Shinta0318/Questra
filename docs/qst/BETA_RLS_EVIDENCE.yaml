@@ -6,7 +6,7 @@ working_tree_clean_at_execution: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
 migrations:
   status: local_pending_deployment
-  latest_local: "202610260002_fix_ai_receipt_pgcrypto_path.sql"
+latest_local: "202610260003_quest_planning_pass_checkpoints.sql"
   remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   command: "supabase migration list --linked"
 rls_behavior:

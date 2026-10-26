@@ -62,6 +62,8 @@ export type ProviderUsage = {
 
 export type ProviderResponse = {
   provider: AiProviderName;
+  // A reused planning Pass consumed no provider tokens in this request.
+  cacheHit?: boolean;
   providerInteractionId?: string;
   model: string;
   modelVersion: string;

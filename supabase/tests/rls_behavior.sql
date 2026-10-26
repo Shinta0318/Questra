@@ -277,6 +277,12 @@ insert into public.quest_plan_previews (
 ) values (
   :'owner_plan_preview_id',:'owner_id',:'owner_private_quest_id',:'owner_planning_run_id','{}'::jsonb
 );
+insert into public.quest_planning_pass_checkpoints (
+  owner_id,quest_id,pass_name,input_fingerprint,output,provider_metadata,expires_at
+) values (
+  :'owner_id',:'owner_private_quest_id','quest_planning.quest_understanding',
+  repeat('a',64),'{}'::jsonb,'{"provider":"gemini"}'::jsonb,now() + interval '1 hour'
+);
 insert into public.mission_plan_drafts (
   id,owner_id,quest_id,planning_run_id,preview_id,schema_version,model_name,thinking_level
 ) values (
@@ -377,6 +383,14 @@ select pg_temp.qst_assert_eq((select count(*) from public.route_change_items whe
 select pg_temp.qst_assert_eq((select count(*) from public.quest_progress_events where event_id = :'owner_progress_event_id'), 1, 'owner can read own progress event');
 select pg_temp.qst_assert_eq((select count(*) from public.quest_dna_versions where id = :'owner_dna_version_id'), 1, 'owner can read own Quest DNA version');
 select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id = :'owner_consent_id'), 1, 'owner can read own consent');
+select pg_temp.qst_assert_eq(
+  has_table_privilege('authenticated', 'public.quest_planning_pass_checkpoints', 'SELECT')::integer,
+  0, 'checkpoint output cannot be read directly by authenticated clients'
+);
+select pg_temp.qst_assert_eq(
+  has_table_privilege('authenticated', 'public.quest_planning_pass_checkpoints', 'INSERT')::integer,
+  0, 'checkpoint output cannot be written directly by authenticated clients'
+);
 select pg_temp.qst_assert_eq((select count(*) from public.tasks where id = :'owner_private_task_id'), 1, 'owner can read own private Task');
 select pg_temp.qst_assert_eq(
   has_table_privilege('authenticated', 'public.tasks', 'INSERT')::integer,

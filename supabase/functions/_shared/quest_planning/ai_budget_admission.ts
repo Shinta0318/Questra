@@ -281,7 +281,7 @@ export async function failAiToolContinuationAttribution(
   return result?.ok === true;
 }
 
-function budgetOperation(operation: string) {
+export function budgetOperation(operation: string) {
   if (
     operation === "arc_chat" || operation === "arc_advice" ||
     operation === "arc_grounded_search" ||

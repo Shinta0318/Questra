@@ -6,6 +6,7 @@ import { activePrompt, PROMPTS } from "./prompt_registry.ts";
 import { decideGrounding, validateGroundedMissionReferences, validateGroundingEvidence } from "./grounding.ts";
 import { validateMissionArchitectureSemantics, validateRouteMissionPlan, validateTaskPlan } from "./validators.ts";
 import { planningPassIdempotencyKey } from "./pass_idempotency.ts";
+import { planningModelPayload, runCheckpointedPlanningPass } from "./pass_checkpoint.ts";
 
 export type PlanningInput = {
   questId: string;
@@ -320,8 +321,9 @@ async function evaluateMissionPlan(
 async function runPass(key: keyof typeof PROMPTS, payload: unknown, input: PlanningInput, traceId: string, versions: Record<string, number>, tools: ProviderRequest["tools"] = []) {
   const prompt = activePrompt(key);
   versions[key] = prompt.version;
+  const modelPayload = planningModelPayload(payload);
   const idempotencyKey = await planningPassIdempotencyKey(input.idempotencyKey, key, {
-    payload,
+    payload: modelPayload,
     promptVersion: prompt.version,
     schemaVersion: prompt.schemaVersion,
     thinkingLevel: prompt.thinkingLevel,
@@ -333,7 +335,7 @@ async function runPass(key: keyof typeof PROMPTS, payload: unknown, input: Plann
     promptVersion: `${prompt.key}.v${prompt.version}`,
     schemaVersion: prompt.schemaVersion,
     systemInstruction: prompt.systemInstruction,
-    input: payload,
+    input: modelPayload,
     responseSchema: prompt.schema,
     tools,
     thinkingLevel: prompt.thinkingLevel,
@@ -352,7 +354,7 @@ async function runPass(key: keyof typeof PROMPTS, payload: unknown, input: Plann
         approved: false,
       })
       : missingUserForTools(request)
-    : await callGeminiInteraction(request);
+    : await runCheckpointedPlanningPass(input.questId, request, () => callGeminiInteraction(request));
   const {
     output: _,
     text: __,
