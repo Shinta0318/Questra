@@ -15,7 +15,9 @@ import 'mission_plan_quality.dart';
 
 String? planningFailureMessageFromException(Object error) {
   if (error is! FunctionException || error.details is! Map) return null;
-  if (error.status != 422 && error.status != 503) return null;
+  if (error.status != 422 && error.status != 429 && error.status != 503) {
+    return null;
+  }
   final details = Map<String, dynamic>.from(error.details as Map);
   if (details['status'] != 'retryable_error' &&
       details['status'] != 'manual_path') {
@@ -45,7 +47,11 @@ String planningFailureMessage(Map<String, dynamic> data) {
   for (final code in codes) {
     switch (code) {
       case 'rate_limited':
-        return 'Geminiの利用枠に達しました。入力は残っています。少し時間をおいて再試行するか、Missionを手動で追加できます。';
+        final retryAfter = data['retryAfterSeconds'];
+        final wait = retryAfter is int && retryAfter > 0
+            ? '${(retryAfter / 60).ceil()}分ほど待ってから'
+            : '少し時間をおいて';
+        return 'Geminiの利用枠に達しました。入力は残っています。$wait再試行するか、Missionを手動で追加できます。';
       case 'budget_exhausted':
         return '今月の航路づくり枠を使い切りました。入力は残っています。時間をおくか、Missionを手動で追加できます。';
       case 'ai_disabled':
@@ -59,6 +65,23 @@ String planningFailureMessage(Map<String, dynamic> data) {
     }
   }
   return 'Mission候補の品質確認を完了できませんでした。入力を保ったまま再試行できます。';
+}
+
+class PlanningRateLimitException implements Exception {
+  const PlanningRateLimitException(this.message, this.retryAfter);
+
+  final String message;
+  final Duration retryAfter;
+
+  @override
+  String toString() => message;
+}
+
+Duration? planningRateLimitWait(Map<String, dynamic> data) {
+  if (data['status'] != 'retryable_error') return null;
+  final seconds = data['retryAfterSeconds'];
+  if (seconds is! int || seconds < 1) return null;
+  return Duration(seconds: seconds.clamp(1, 3600));
 }
 
 class ArcMissionCandidate {
@@ -355,15 +378,31 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
         );
       }
       if (data['status'] != 'preview_ready' || data['preview'] is! Map) {
+        final retryAfter = planningRateLimitWait(data);
+        if (retryAfter != null) {
+          throw PlanningRateLimitException(
+            planningFailureMessage(data),
+            retryAfter,
+          );
+        }
         throw StateError(planningFailureMessage(data));
       }
       return _guideFromPlanningPreview(quest, data);
     } catch (error) {
-      if (error is StateError) rethrow;
+      if (error is StateError || error is PlanningRateLimitException) rethrow;
       final legalMessage = aiLegalFailureMessage(error);
       if (legalMessage != null) throw StateError(legalMessage);
       final planningMessage = planningFailureMessageFromException(error);
-      if (planningMessage != null) throw StateError(planningMessage);
+      if (planningMessage != null) {
+        if (error is FunctionException && error.details is Map) {
+          final details = Map<String, dynamic>.from(error.details as Map);
+          final retryAfter = planningRateLimitWait(details);
+          if (retryAfter != null) {
+            throw PlanningRateLimitException(planningMessage, retryAfter);
+          }
+        }
+        throw StateError(planningMessage);
+      }
       throw StateError('ArcがMission構造を確認できませんでした。固定候補には置き換えず、もう一度試せます。');
     }
   }

@@ -2333,6 +2333,38 @@ class _ArcQuestGuidePanel extends ConsumerStatefulWidget {
 class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
   ArcQuestGuide? _loadedGuide;
   MissionPlanDraft? _draft;
+  Timer? _retryTimer;
+  DateTime? _scheduledRetryAt;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncRetryTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ArcQuestGuidePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncRetryTimer();
+  }
+
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    super.dispose();
+  }
+
+  void _syncRetryTimer() {
+    final retryAt = widget.state.retryAfterFor(widget.quest.id);
+    if (retryAt == _scheduledRetryAt) return;
+    _retryTimer?.cancel();
+    _scheduledRetryAt = retryAt;
+    if (retryAt != null && retryAt.isAfter(DateTime.now())) {
+      _retryTimer = Timer(retryAt.difference(DateTime.now()), () {
+        if (mounted) setState(() {});
+      });
+    }
+  }
 
   void _syncGuide(ArcQuestGuide? guide) {
     if (guide != null && !identical(guide, _loadedGuide)) {
@@ -2557,6 +2589,9 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
     final guide = widget.state.guideFor(widget.quest.id);
     final isLoading = widget.state.isLoading(widget.quest.id);
     final error = widget.state.errorFor(widget.quest.id);
+    final cooldownActive =
+        widget.state.retryAfterFor(widget.quest.id)?.isAfter(DateTime.now()) ??
+        false;
     _syncGuide(guide);
     final draft = _draft;
 
@@ -2591,15 +2626,25 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
               ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: () => ref
-                  .read(arcQuestGuideControllerProvider.notifier)
-                  .generateForQuest(widget.quest),
+              onPressed: cooldownActive
+                  ? null
+                  : () => ref
+                        .read(arcQuestGuideControllerProvider.notifier)
+                        .generateForQuest(widget.quest),
               icon: const Icon(Icons.auto_awesome_outlined),
               label: Text(
-                widget.missions.isEmpty ? 'Arcガイドを生成' : 'AIで残りの航路を作る',
+                cooldownActive
+                    ? '時間をおいて再試行'
+                    : widget.missions.isEmpty
+                    ? 'Arcガイドを生成'
+                    : 'AIで残りの航路を作る',
               ),
             ),
           ] else ...[
+            if (error != null) ...[
+              Text(error, style: const TextStyle(color: QuestraColors.slate)),
+              const SizedBox(height: 8),
+            ],
             ArcWidget(
               emotion: ArcEmotion.support,
               size: 70,
@@ -2623,11 +2668,13 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
               const Text('Missionを保存しました。必要になったら、別の航路も描き直せます。'),
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: () => ref
-                    .read(arcQuestGuideControllerProvider.notifier)
-                    .generateForQuest(widget.quest),
+                onPressed: cooldownActive
+                    ? null
+                    : () => ref
+                          .read(arcQuestGuideControllerProvider.notifier)
+                          .generateForQuest(widget.quest),
                 icon: const Icon(Icons.refresh_outlined),
-                label: const Text('Mission候補を描き直す'),
+                label: Text(cooldownActive ? '時間をおいて再試行' : 'Mission候補を描き直す'),
               ),
             ] else ...[
               if (guide.replacesExistingRoute) ...[
@@ -2713,11 +2760,13 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
                     label: const Text('候補を追加'),
                   ),
                   OutlinedButton.icon(
-                    onPressed: () => ref
-                        .read(arcQuestGuideControllerProvider.notifier)
-                        .generateForQuest(widget.quest),
+                    onPressed: cooldownActive
+                        ? null
+                        : () => ref
+                              .read(arcQuestGuideControllerProvider.notifier)
+                              .generateForQuest(widget.quest),
                     icon: const Icon(Icons.refresh_outlined),
-                    label: const Text('全体構成を見直す'),
+                    label: Text(cooldownActive ? '時間をおいて再試行' : '全体構成を見直す'),
                   ),
                 ],
               ),

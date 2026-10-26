@@ -105,6 +105,7 @@ export type ProviderError = {
   code: ProviderErrorCode;
   retryable: boolean;
   status?: number;
+  retryAfterSeconds?: number;
   message: string;
 };
 

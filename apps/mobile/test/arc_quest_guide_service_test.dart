@@ -54,6 +54,33 @@ void main() {
     expect(message, isNot(contains('provider details')));
   });
 
+  test('provider rate limit wait time is shown without provider details', () {
+    final message = planningFailureMessageFromException(
+      const FunctionException(
+        status: 429,
+        details: {
+          'status': 'retryable_error',
+          'retryAfterSeconds': 120,
+          'issues': [
+            {'code': 'rate_limited'},
+          ],
+          'passes': [
+            {
+              'provider': {
+                'error': {
+                  'code': 'rate_limited',
+                  'message': 'private quota detail',
+                },
+              },
+            },
+          ],
+        },
+      ),
+    );
+    expect(message, contains('2分ほど待ってから'));
+    expect(message, isNot(contains('private quota detail')));
+  });
+
   test('grounding failure does not imply a route was created', () {
     expect(
       planningFailureMessage({

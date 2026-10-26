@@ -32,11 +32,13 @@ class ArcQuestGuideState {
     this.guidesByQuest = const {},
     this.loadingQuestIds = const {},
     this.errorsByQuest = const {},
+    this.retryAfterByQuest = const {},
   });
 
   final Map<String, ArcQuestGuide> guidesByQuest;
   final Set<String> loadingQuestIds;
   final Map<String, String> errorsByQuest;
+  final Map<String, DateTime> retryAfterByQuest;
 
   ArcQuestGuide? guideFor(String questId) => guidesByQuest[questId];
 
@@ -44,15 +46,19 @@ class ArcQuestGuideState {
 
   String? errorFor(String questId) => errorsByQuest[questId];
 
+  DateTime? retryAfterFor(String questId) => retryAfterByQuest[questId];
+
   ArcQuestGuideState copyWith({
     Map<String, ArcQuestGuide>? guidesByQuest,
     Set<String>? loadingQuestIds,
     Map<String, String>? errorsByQuest,
+    Map<String, DateTime>? retryAfterByQuest,
   }) {
     return ArcQuestGuideState(
       guidesByQuest: guidesByQuest ?? this.guidesByQuest,
       loadingQuestIds: loadingQuestIds ?? this.loadingQuestIds,
       errorsByQuest: errorsByQuest ?? this.errorsByQuest,
+      retryAfterByQuest: retryAfterByQuest ?? this.retryAfterByQuest,
     );
   }
 }
@@ -62,13 +68,15 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
   ArcQuestGuideState build() => const ArcQuestGuideState();
 
   Future<void> generateForQuest(Quest quest) async {
-    if (state.isLoading(quest.id)) {
+    if (state.isLoading(quest.id) ||
+        (state.retryAfterFor(quest.id)?.isAfter(DateTime.now()) ?? false)) {
       return;
     }
 
     state = state.copyWith(
       loadingQuestIds: {...state.loadingQuestIds, quest.id},
       errorsByQuest: {...state.errorsByQuest}..remove(quest.id),
+      retryAfterByQuest: {...state.retryAfterByQuest}..remove(quest.id),
     );
 
     try {
@@ -97,11 +105,17 @@ class ArcQuestGuideController extends Notifier<ArcQuestGuideState> {
       state = state.copyWith(
         guidesByQuest: {...state.guidesByQuest, quest.id: guide},
         loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
+        retryAfterByQuest: {...state.retryAfterByQuest}..remove(quest.id),
       );
       unawaited(_rememberGuide(quest, guide));
     } catch (error) {
       state = state.copyWith(
         loadingQuestIds: {...state.loadingQuestIds}..remove(quest.id),
+        retryAfterByQuest: {
+          ...state.retryAfterByQuest,
+          if (error is PlanningRateLimitException)
+            quest.id: DateTime.now().add(error.retryAfter),
+        },
         errorsByQuest: {
           ...state.errorsByQuest,
           quest.id: error is StateError

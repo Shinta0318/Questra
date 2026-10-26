@@ -34,6 +34,7 @@ export type PlanningPass = {
 export type PlanningPipelineResult = {
   traceId: string;
   status: "preview_ready" | "needs_clarification" | "retryable_error" | "manual_path";
+  retryAfterSeconds?: number;
   passes: PlanningPass[];
   preview: unknown | null;
   issues: ValidationIssue[];
@@ -500,5 +501,8 @@ function failed(traceId: string, passes: PlanningPass[], prompts: Record<string,
   return result(traceId, retryable ? "retryable_error" : "manual_path", passes, null, issues, prompts);
 }
 function result(traceId: string, status: PlanningPipelineResult["status"], passes: PlanningPass[], preview: unknown, issues: ValidationIssue[], prompts: Record<string, number>): PlanningPipelineResult {
-  return { traceId, status, passes, preview, issues, versions: { pipeline: "4.0", schema: "mission-architecture-4.0", prompts }, persistenceAllowed: false };
+  const rateLimit = status === "retryable_error"
+    ? [...passes].reverse().find((pass) => pass.provider?.error?.code === "rate_limited")?.provider?.error
+    : undefined;
+  return { traceId, status, ...(rateLimit ? { retryAfterSeconds: rateLimit.retryAfterSeconds ?? 60 } : {}), passes, preview, issues, versions: { pipeline: "4.0", schema: "mission-architecture-4.0", prompts }, persistenceAllowed: false };
 }

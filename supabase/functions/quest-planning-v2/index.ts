@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
   });
   if (pipeline.status !== "preview_ready" || !pipeline.preview) {
     await recordRun(userId, questId, idempotencyKey, pipeline, null);
-    return jsonResponse(pipeline, { status: planningHttpStatus(pipeline.status) });
+    return planningFailureResponse(pipeline);
   }
   const stored = await recordRun(userId, questId, idempotencyKey, pipeline, pipeline.preview);
   if (!stored) return jsonResponse({ ...pipeline, status: "retryable_error", preview: null, error: "preview_store_failed" }, { status: 503 });
@@ -126,7 +126,7 @@ async function expandTasks(
     },
   });
   if (pipeline.status !== "preview_ready" || !pipeline.preview) {
-    return jsonResponse(pipeline, { status: planningHttpStatus(pipeline.status) });
+    return planningFailureResponse(pipeline);
   }
   return jsonResponse({
     status: pipeline.status,
@@ -134,6 +134,14 @@ async function expandTasks(
     task_plan: pipeline.preview,
     passes: pipeline.passes,
     versions: pipeline.versions,
+  });
+}
+
+function planningFailureResponse(pipeline: Awaited<ReturnType<typeof runQuestPlanningPipeline>>) {
+  const retryAfter = pipeline.retryAfterSeconds;
+  return jsonResponse(pipeline, {
+    status: planningHttpStatus(pipeline.status, retryAfter),
+    headers: retryAfter === undefined ? undefined : { "Retry-After": String(retryAfter) },
   });
 }
 

@@ -5,5 +5,6 @@ Deno.test("planning response status preserves retry semantics", () => {
   assertEquals(planningHttpStatus("preview_ready"), 200);
   assertEquals(planningHttpStatus("needs_clarification"), 200);
   assertEquals(planningHttpStatus("retryable_error"), 503);
+  assertEquals(planningHttpStatus("retryable_error", 120), 429);
   assertEquals(planningHttpStatus("manual_path"), 422);
 });
