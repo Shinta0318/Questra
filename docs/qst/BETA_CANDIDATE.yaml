@@ -2,10 +2,10 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "264c718393c252a05145e40f51e99e9883f75b47"
-rollback_commit: "a0e8c92a78bf80a1fa4bbcadfce9b3350c99fcc0"
+source_commit: "33b9ba56b165cb78c51a3cd71c4c3c3e0b2e89ac"
+rollback_commit: "7fc43d0d94574b3837dfbdcb7ce15e25fa394e79"
 branch: "codex/gemini-free-tier-validation"
-generated_at_utc: "2026-10-25T22:51:51.028667Z"
+generated_at_utc: "2026-10-26T04:38:28.535880Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
