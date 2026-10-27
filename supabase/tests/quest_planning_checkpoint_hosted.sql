@@ -69,6 +69,37 @@ begin
       'public.quest_planning_pass_checkpoints', 'INSERT')
   then raise exception 'checkpoint_client_access_allowed'; end if;
 
+  insert into public.quest_planning_pass_checkpoints (
+    owner_id, quest_id, pass_name, input_fingerprint,
+    output, provider_metadata, created_at, expires_at
+  ) values (
+    v_owner, v_quest, 'quest_planning.expired_fixture',
+    repeat('c', 64), v_output, '{}'::jsonb,
+    now() - interval '25 hours', now() - interval '1 hour'
+  );
+
+  if public.prune_expired_quest_planning_checkpoints() != 1 then
+    raise exception 'checkpoint_expiry_cleanup_count_wrong';
+  end if;
+  if exists (
+    select 1 from public.quest_planning_pass_checkpoints
+    where owner_id = v_owner and input_fingerprint = repeat('c', 64)
+  ) then raise exception 'expired_checkpoint_retained'; end if;
+  if not exists (
+    select 1 from public.quest_planning_pass_checkpoints
+    where owner_id = v_owner and input_fingerprint = repeat('a', 64)
+  ) then raise exception 'active_checkpoint_deleted'; end if;
+  if has_function_privilege('authenticated',
+      'public.prune_expired_quest_planning_checkpoints()', 'EXECUTE')
+  then raise exception 'checkpoint_cleanup_client_access_allowed'; end if;
+  if not exists (
+    select 1 from cron.job
+    where jobname = 'questra-planning-checkpoint-prune'
+      and schedule = '0 * * * *'
+      and command = 'select public.prune_expired_quest_planning_checkpoints()'
+      and active
+  ) then raise exception 'checkpoint_cleanup_schedule_missing'; end if;
+
   begin
     insert into public.quest_planning_pass_checkpoints (
       owner_id, quest_id, pass_name, input_fingerprint,
