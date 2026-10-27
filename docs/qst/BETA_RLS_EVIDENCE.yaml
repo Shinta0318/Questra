@@ -6,7 +6,7 @@ working_tree_clean_at_execution: false
 project_ref: "dhbmgwarnrtelrcrmmfk"
 migrations:
   status: local_pending_deployment
-latest_local: "202610260004_checkpoint_quest_owner_guard.sql"
+  latest_local: "202610270001_schedule_planning_checkpoint_cleanup.sql"
   remote_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   command: "supabase migration list --linked"
 rls_behavior:
