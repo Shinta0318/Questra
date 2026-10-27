@@ -2,14 +2,14 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "8bab295e87429c026aac80f0f00f69622be6fd26"
-rollback_commit: "590ebbf40d0ad0f2125da761ae47f23cce03ed82"
-branch: "codex/initial-questra-structure-pr"
-generated_at_utc: "2026-10-25T14:27:47.681893Z"
+source_commit: "156f300b3129f00d72de4527a1ebe7324f1650d5"
+rollback_commit: "72f42b7632350337e0328785d1d544cd57082b79"
+branch: "codex/gemini-free-tier-validation"
+generated_at_utc: "2026-10-27T00:49:56.468269Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
-  latest_local_migration: "202610250004_export_mission_ownership_fix.sql"
+  latest_local_migration: "202610270001_schedule_planning_checkpoint_cleanup.sql"
   remote_migration_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   edge_function_count: 13
   edge_functions:
@@ -26,7 +26,7 @@ inventory:
     - "quest-planning-v2"
     - "reconcile-ai-budget"
     - "research-mission-resources"
-  flutter_test_file_count: 330
+  flutter_test_file_count: 331
   supabase_evidence_status: "local_migration_pending_deployment"
   supabase_evidence_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
   rls_evidence_status: "local_migration_pending_deployment"

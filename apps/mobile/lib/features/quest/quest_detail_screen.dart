@@ -24,6 +24,7 @@ import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../auth/auth_controller.dart';
 import '../business_foundation/quest_lifecycle_stage.dart';
 import '../business_foundation/quest_stage_repository.dart';
 import '../challenge_graph/challenge_graph_preview_service.dart';
@@ -96,7 +97,9 @@ class QuestDetailScreen extends ConsumerWidget {
     final hasActiveArcGuide =
         arcGuideState.isLoading(questId) ||
         arcGuideState.guideFor(questId) != null ||
-        arcGuideState.errorFor(questId) != null;
+        arcGuideState.errorFor(questId) != null ||
+        (arcGuideState.retryAfterFor(questId)?.isAfter(DateTime.now()) ??
+            false);
     final pendingRouteProposal = ref.watch(
       routeReplanningControllerProvider.select((state) => state[questId]),
     );
@@ -125,6 +128,7 @@ class QuestDetailScreen extends ConsumerWidget {
         child: QuestraResponsiveListView(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
           children: [
+            _ArcQuestGuideCooldownHydrator(questId: questId),
             _QuestHeader(
               quest: quest,
               onEdit: () => _showQuestEditDialog(context, ref, quest),
@@ -2314,6 +2318,43 @@ class _MilestoneTile extends ConsumerWidget {
   }
 }
 
+class _ArcQuestGuideCooldownHydrator extends ConsumerStatefulWidget {
+  const _ArcQuestGuideCooldownHydrator({required this.questId});
+
+  final String questId;
+
+  @override
+  ConsumerState<_ArcQuestGuideCooldownHydrator> createState() =>
+      _ArcQuestGuideCooldownHydratorState();
+}
+
+class _ArcQuestGuideCooldownHydratorState
+    extends ConsumerState<_ArcQuestGuideCooldownHydrator> {
+  String? _hydratedOwnerId;
+  String? _hydratedQuestId;
+
+  @override
+  Widget build(BuildContext context) {
+    final ownerId = ref.watch(
+      authControllerProvider.select((auth) => auth.profile?.id),
+    );
+    if (ownerId != null &&
+        (_hydratedOwnerId != ownerId || _hydratedQuestId != widget.questId)) {
+      _hydratedOwnerId = ownerId;
+      _hydratedQuestId = widget.questId;
+      unawaited(
+        Future<void>.microtask(() async {
+          if (!mounted) return;
+          await ref
+              .read(arcQuestGuideControllerProvider.notifier)
+              .hydrateCooldownForQuest(widget.questId);
+        }),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+}
+
 class _ArcQuestGuidePanel extends ConsumerStatefulWidget {
   const _ArcQuestGuidePanel({
     required this.quest,
@@ -2333,6 +2374,38 @@ class _ArcQuestGuidePanel extends ConsumerStatefulWidget {
 class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
   ArcQuestGuide? _loadedGuide;
   MissionPlanDraft? _draft;
+  Timer? _retryTimer;
+  DateTime? _scheduledRetryAt;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncRetryTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ArcQuestGuidePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncRetryTimer();
+  }
+
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    super.dispose();
+  }
+
+  void _syncRetryTimer() {
+    final retryAt = widget.state.retryAfterFor(widget.quest.id);
+    if (retryAt == _scheduledRetryAt) return;
+    _retryTimer?.cancel();
+    _scheduledRetryAt = retryAt;
+    if (retryAt != null && retryAt.isAfter(DateTime.now())) {
+      _retryTimer = Timer(retryAt.difference(DateTime.now()), () {
+        if (mounted) setState(() {});
+      });
+    }
+  }
 
   void _syncGuide(ArcQuestGuide? guide) {
     if (guide != null && !identical(guide, _loadedGuide)) {
@@ -2557,6 +2630,9 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
     final guide = widget.state.guideFor(widget.quest.id);
     final isLoading = widget.state.isLoading(widget.quest.id);
     final error = widget.state.errorFor(widget.quest.id);
+    final cooldownActive =
+        widget.state.retryAfterFor(widget.quest.id)?.isAfter(DateTime.now()) ??
+        false;
     _syncGuide(guide);
     final draft = _draft;
 
@@ -2591,15 +2667,25 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
               ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: () => ref
-                  .read(arcQuestGuideControllerProvider.notifier)
-                  .generateForQuest(widget.quest),
+              onPressed: cooldownActive
+                  ? null
+                  : () => ref
+                        .read(arcQuestGuideControllerProvider.notifier)
+                        .generateForQuest(widget.quest),
               icon: const Icon(Icons.auto_awesome_outlined),
               label: Text(
-                widget.missions.isEmpty ? 'Arcガイドを生成' : 'AIで残りの航路を作る',
+                cooldownActive
+                    ? '時間をおいて再試行'
+                    : widget.missions.isEmpty
+                    ? 'Arcガイドを生成'
+                    : 'AIで残りの航路を作る',
               ),
             ),
           ] else ...[
+            if (error != null) ...[
+              Text(error, style: const TextStyle(color: QuestraColors.slate)),
+              const SizedBox(height: 8),
+            ],
             ArcWidget(
               emotion: ArcEmotion.support,
               size: 70,
@@ -2623,11 +2709,13 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
               const Text('Missionを保存しました。必要になったら、別の航路も描き直せます。'),
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: () => ref
-                    .read(arcQuestGuideControllerProvider.notifier)
-                    .generateForQuest(widget.quest),
+                onPressed: cooldownActive
+                    ? null
+                    : () => ref
+                          .read(arcQuestGuideControllerProvider.notifier)
+                          .generateForQuest(widget.quest),
                 icon: const Icon(Icons.refresh_outlined),
-                label: const Text('Mission候補を描き直す'),
+                label: Text(cooldownActive ? '時間をおいて再試行' : 'Mission候補を描き直す'),
               ),
             ] else ...[
               if (guide.replacesExistingRoute) ...[
@@ -2713,11 +2801,13 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
                     label: const Text('候補を追加'),
                   ),
                   OutlinedButton.icon(
-                    onPressed: () => ref
-                        .read(arcQuestGuideControllerProvider.notifier)
-                        .generateForQuest(widget.quest),
+                    onPressed: cooldownActive
+                        ? null
+                        : () => ref
+                              .read(arcQuestGuideControllerProvider.notifier)
+                              .generateForQuest(widget.quest),
                     icon: const Icon(Icons.refresh_outlined),
-                    label: const Text('全体構成を見直す'),
+                    label: Text(cooldownActive ? '時間をおいて再試行' : '全体構成を見直す'),
                   ),
                 ],
               ),

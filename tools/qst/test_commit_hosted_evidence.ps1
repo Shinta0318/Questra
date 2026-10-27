@@ -3,6 +3,10 @@ $sourceRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $tempParent = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
 $root = Join-Path $tempParent "questra-hosted-evidence-$([Guid]::NewGuid().ToString('N'))"
 $root = [System.IO.Path]::GetFullPath($root)
+$scopeManifest = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $sourceRoot 'docs/qst/CANDIDATE_SCOPE_PARTITION.yaml')
+$branchMatches = [regex]::Matches($scopeManifest, '(?m)^branch:\s*(codex/[a-z0-9][a-z0-9-]*)\s*$')
+if ($branchMatches.Count -ne 1) { throw 'Candidate scope manifest must pin one fixture branch.' }
+$candidateBranch = $branchMatches[0].Groups[1].Value
 if (-not $root.StartsWith($tempParent, [StringComparison]::OrdinalIgnoreCase)) {
   throw 'Temporary evidence fixture escaped the temporary directory.'
 }
@@ -12,7 +16,7 @@ try {
     Out-Null
   Set-Location $root
   & git init -q
-  & git checkout -q -b codex/initial-questra-structure-pr
+  & git checkout -q -b $candidateBranch
   & git config user.name 'Questra evidence fixture'
   & git config user.email 'fixture@example.invalid'
   & git config commit.gpgsign false

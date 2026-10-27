@@ -6,6 +6,7 @@ on:
     paths:
       - 'supabase/migrations/**'
       - 'supabase/tests/rls_behavior.sql'
+      - 'supabase/tests/quest_planning_checkpoint_hosted.sql'
       - 'supabase/tests/hosted_rls_inventory.sql'
       - 'supabase/tests/auth_login_atomic_decision.sql'
       - 'supabase/tests/auth_free_tier_token_lock.sql'
@@ -57,6 +58,13 @@ jobs:
           psql --host 127.0.0.1 --port 54322 --username postgres
           --dbname postgres --set ON_ERROR_STOP=1
           --file supabase/tests/rls_behavior.sql
+      - name: Verify planning checkpoint ownership and rollback
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/quest_planning_checkpoint_hosted.sql
       - name: Verify hosted RLS inventory query
         env:
           PGPASSWORD: postgres

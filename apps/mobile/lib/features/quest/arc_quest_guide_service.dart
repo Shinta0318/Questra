@@ -1,4 +1,5 @@
-import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show FunctionException, SupabaseClient;
 
 import '../../core/config/supabase_config.dart';
 import '../../core/safety/ai_legal_failure.dart';
@@ -11,6 +12,77 @@ import 'quest_model.dart';
 import 'planning_context.dart';
 import 'quest_understanding.dart';
 import 'mission_plan_quality.dart';
+
+String? planningFailureMessageFromException(Object error) {
+  if (error is! FunctionException || error.details is! Map) return null;
+  if (error.status != 422 && error.status != 429 && error.status != 503) {
+    return null;
+  }
+  final details = Map<String, dynamic>.from(error.details as Map);
+  if (details['status'] != 'retryable_error' &&
+      details['status'] != 'manual_path') {
+    return null;
+  }
+  return planningFailureMessage(details);
+}
+
+String planningFailureMessage(Map<String, dynamic> data) {
+  final codes = <Object?>[];
+  final issues = data['issues'];
+  if (issues is List) {
+    for (final issue in issues.reversed) {
+      if (issue is Map) codes.add(issue['code']);
+    }
+  }
+  final passes = data['passes'];
+  if (passes is List) {
+    for (final pass in passes.reversed) {
+      if (pass is! Map || pass['provider'] is! Map) continue;
+      final provider = pass['provider'] as Map;
+      if (provider['error'] is Map) {
+        codes.add((provider['error'] as Map)['code']);
+      }
+    }
+  }
+  for (final code in codes) {
+    switch (code) {
+      case 'rate_limited':
+        final retryAfter = data['retryAfterSeconds'];
+        final wait = retryAfter is int && retryAfter > 0
+            ? '${(retryAfter / 60).ceil()}分ほど待ってから'
+            : '少し時間をおいて';
+        return 'Geminiの利用枠に達しました。入力は残っています。$wait再試行するか、Missionを手動で追加できます。';
+      case 'budget_exhausted':
+        return '今月の航路づくり枠を使い切りました。入力は残っています。時間をおくか、Missionを手動で追加できます。';
+      case 'ai_disabled':
+        return '航路づくりを一時停止しています。入力は残っています。時間をおいて再試行してください。';
+      case 'budget_unavailable':
+        return '航路づくりの利用状況を確認できませんでした。入力を保ったまま再試行できます。';
+      case 'timeout':
+        return '航路づくりに時間がかかっています。入力は残っています。少し待ってから再試行してください。';
+      case 'grounding_failed':
+        return '最新情報を確認できなかったため、航路はまだ作成していません。入力を保ったまま再試行できます。';
+    }
+  }
+  return 'Mission候補の品質確認を完了できませんでした。入力を保ったまま再試行できます。';
+}
+
+class PlanningRateLimitException implements Exception {
+  const PlanningRateLimitException(this.message, this.retryAfter);
+
+  final String message;
+  final Duration retryAfter;
+
+  @override
+  String toString() => message;
+}
+
+Duration? planningRateLimitWait(Map<String, dynamic> data) {
+  if (data['status'] != 'retryable_error') return null;
+  final seconds = data['retryAfterSeconds'];
+  if (seconds is! int || seconds < 1) return null;
+  return Duration(seconds: seconds.clamp(1, 3600));
+}
 
 class ArcMissionCandidate {
   const ArcMissionCandidate({
@@ -306,35 +378,33 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
         );
       }
       if (data['status'] != 'preview_ready' || data['preview'] is! Map) {
-        throw StateError(_planningFailureMessage(data));
+        final retryAfter = planningRateLimitWait(data);
+        if (retryAfter != null) {
+          throw PlanningRateLimitException(
+            planningFailureMessage(data),
+            retryAfter,
+          );
+        }
+        throw StateError(planningFailureMessage(data));
       }
       return _guideFromPlanningPreview(quest, data);
     } catch (error) {
-      if (error is StateError) rethrow;
+      if (error is StateError || error is PlanningRateLimitException) rethrow;
       final legalMessage = aiLegalFailureMessage(error);
       if (legalMessage != null) throw StateError(legalMessage);
+      final planningMessage = planningFailureMessageFromException(error);
+      if (planningMessage != null) {
+        if (error is FunctionException && error.details is Map) {
+          final details = Map<String, dynamic>.from(error.details as Map);
+          final retryAfter = planningRateLimitWait(details);
+          if (retryAfter != null) {
+            throw PlanningRateLimitException(planningMessage, retryAfter);
+          }
+        }
+        throw StateError(planningMessage);
+      }
       throw StateError('ArcがMission構造を確認できませんでした。固定候補には置き換えず、もう一度試せます。');
     }
-  }
-
-  String _planningFailureMessage(Map<String, dynamic> data) {
-    final passes = data['passes'] as List? ?? const [];
-    for (final rawPass in passes.reversed) {
-      if (rawPass is! Map) continue;
-      final provider = rawPass['provider'];
-      if (provider is! Map) continue;
-      final error = provider['error'];
-      if (error is! Map) continue;
-      switch (error['code']) {
-        case 'budget_exhausted':
-          return '今月の航路づくり枠を使い切りました。入力は残っています。時間をおくか、Missionを手動で追加できます。';
-        case 'ai_disabled':
-          return '航路づくりを一時停止しています。入力は残っています。時間をおいて再試行してください。';
-        case 'budget_unavailable':
-          return '航路づくりの利用状況を確認できませんでした。入力を保ったまま再試行できます。';
-      }
-    }
-    return 'Mission候補の品質確認を完了できませんでした。入力を保ったまま再試行できます。';
   }
 
   @override

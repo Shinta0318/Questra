@@ -113,11 +113,17 @@ export async function settleAiBudget(
   if (
     response.usage.inputTokens === undefined ||
     response.usage.outputTokens === undefined
-  ) return false;
+  ) {
+    console.warn("AI budget settlement skipped: provider usage missing");
+    return false;
+  }
   const groundingQueryCount = verifiedGroundingQueryCount(
     response.groundingMetadata,
   );
-  if (groundingQueryCount === null) return false;
+  if (groundingQueryCount === null) {
+    console.warn("AI budget settlement skipped: grounding evidence invalid");
+    return false;
+  }
   const receipt = await serviceRpc(
     binding
       ? "record_ai_provider_execution_receipt_v4"
@@ -141,9 +147,15 @@ export async function settleAiBudget(
       : {}),
     },
   );
-  if (!receipt?.ok) return false;
+  if (!receipt?.ok) {
+    const issue = receipt ? await safeJson(receipt) : null;
+    const code = isRecord(issue) ? stringValue(issue.code) : null;
+    console.warn(`AI budget receipt failed: HTTP ${receipt?.status ?? "unavailable"}; code ${code ?? "unknown"}`);
+    return false;
+  }
   const receiptOutcome = await safeJson(receipt);
   if (!isRecord(receiptOutcome) || receiptOutcome.recorded !== true) {
+    console.warn("AI budget receipt rejected");
     return false;
   }
   const result = await serviceRpc("settle_ai_usage_budget", {
@@ -154,12 +166,18 @@ export async function settleAiBudget(
     p_finish_reason: response.finishReason.slice(0, 80),
   });
   if (result?.ok === true) return true;
+  console.warn(`AI budget settlement RPC failed: HTTP ${result?.status ?? "unavailable"}`);
   const reconciliation = await serviceRpc("reconcile_ai_usage_budget", {
     p_reservation_id: reservationId,
   });
-  if (!reconciliation?.ok) return false;
+  if (!reconciliation?.ok) {
+    console.warn(`AI budget settlement failed: HTTP ${reconciliation?.status ?? "unavailable"}`);
+    return false;
+  }
   const outcome = await safeJson(reconciliation);
-  return isRecord(outcome) && outcome.reconciled === true;
+  if (isRecord(outcome) && outcome.reconciled === true) return true;
+  console.warn("AI budget reconciliation incomplete");
+  return false;
 }
 
 export async function releaseAiBudget(
@@ -263,7 +281,7 @@ export async function failAiToolContinuationAttribution(
   return result?.ok === true;
 }
 
-function budgetOperation(operation: string) {
+export function budgetOperation(operation: string) {
   if (
     operation === "arc_chat" || operation === "arc_advice" ||
     operation === "arc_grounded_search" ||

@@ -92,6 +92,20 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
       });
       if (!response.ok) {
         lastError = classifyProviderError(response.status);
+        if (response.status === 429) {
+          return await releaseAndFail(
+            request,
+            startedAt,
+            reservation.reservationId,
+            lastError.code,
+            lastError.message,
+            response.status,
+            model.name,
+            thinkingLevel,
+            attemptedModels,
+            retryAfterSeconds(response.headers.get("Retry-After")),
+          );
+        }
         const providerMessage = await safeProviderErrorMessage(response);
         if (shouldRetry(lastError, attempt)) {
           await delay(attempt * 400);
@@ -264,7 +278,9 @@ async function releaseAndFail(
   model = "unresolved",
   thinkingLevel?: ProviderResponse["thinkingLevel"],
   attemptedModels: string[] = [],
+  retryAfterSeconds?: number,
 ) {
+  console.warn(`Gemini interaction failed: ${code}; HTTP ${status ?? "unavailable"}; model ${model}`);
   await releaseAiBudget(reservationId, code);
   return failure(
     request,
@@ -275,6 +291,7 @@ async function releaseAndFail(
     model,
     thinkingLevel,
     attemptedModels,
+    retryAfterSeconds,
   );
 }
 
@@ -295,6 +312,7 @@ function failure(
   model = "unresolved",
   thinkingLevel?: ProviderResponse["thinkingLevel"],
   attemptedModels: string[] = [],
+  retryAfterSeconds?: number,
 ): ProviderResponse {
   return {
     provider: "gemini",
@@ -318,10 +336,21 @@ function failure(
         "budget_unavailable",
       ].includes(code),
       status,
+      retryAfterSeconds,
       message,
     },
     attemptedModels: [...attemptedModels],
   };
+}
+
+function retryAfterSeconds(header: string | null): number {
+  const numeric = header === null ? NaN : Number(header);
+  const seconds = Number.isFinite(numeric)
+    ? numeric
+    : header ? (Date.parse(header) - Date.now()) / 1_000 : NaN;
+  return Number.isFinite(seconds)
+    ? Math.min(3_600, Math.max(1, Math.ceil(seconds)))
+    : 60;
 }
 
 function extractText(data: Record<string, unknown>) {

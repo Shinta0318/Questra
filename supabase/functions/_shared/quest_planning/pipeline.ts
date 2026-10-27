@@ -5,6 +5,8 @@ import { planningTools } from "./tool_registry.ts";
 import { activePrompt, PROMPTS } from "./prompt_registry.ts";
 import { decideGrounding, validateGroundedMissionReferences, validateGroundingEvidence } from "./grounding.ts";
 import { validateMissionArchitectureSemantics, validateRouteMissionPlan, validateTaskPlan } from "./validators.ts";
+import { planningPassIdempotencyKey } from "./pass_idempotency.ts";
+import { planningModelPayload, runCheckpointedPlanningPass } from "./pass_checkpoint.ts";
 
 export type PlanningInput = {
   questId: string;
@@ -32,6 +34,7 @@ export type PlanningPass = {
 export type PlanningPipelineResult = {
   traceId: string;
   status: "preview_ready" | "needs_clarification" | "retryable_error" | "manual_path";
+  retryAfterSeconds?: number;
   passes: PlanningPass[];
   preview: unknown | null;
   issues: ValidationIssue[];
@@ -319,20 +322,28 @@ async function evaluateMissionPlan(
 async function runPass(key: keyof typeof PROMPTS, payload: unknown, input: PlanningInput, traceId: string, versions: Record<string, number>, tools: ProviderRequest["tools"] = []) {
   const prompt = activePrompt(key);
   versions[key] = prompt.version;
+  const modelPayload = planningModelPayload(payload);
+  const idempotencyKey = await planningPassIdempotencyKey(input.idempotencyKey, key, {
+    payload: modelPayload,
+    promptVersion: prompt.version,
+    schemaVersion: prompt.schemaVersion,
+    thinkingLevel: prompt.thinkingLevel,
+    tools,
+  });
   const request: ProviderRequest = {
     operation: `quest_planning.${key}`,
     modelRole: prompt.modelRole,
     promptVersion: `${prompt.key}.v${prompt.version}`,
     schemaVersion: prompt.schemaVersion,
     systemInstruction: prompt.systemInstruction,
-    input: payload,
+    input: modelPayload,
     responseSchema: prompt.schema,
     tools,
     thinkingLevel: prompt.thinkingLevel,
     temperature: prompt.temperature,
     maxOutputTokens: key.includes("generation") || key.includes("repair") ? 8_192 : 3_072,
     timeoutMs: 45_000,
-    idempotencyKey: `${input.idempotencyKey}:${key}`,
+    idempotencyKey,
     traceId,
     userId: input.userId,
     abuseKeyHash: input.abuseKeyHash,
@@ -344,7 +355,7 @@ async function runPass(key: keyof typeof PROMPTS, payload: unknown, input: Plann
         approved: false,
       })
       : missingUserForTools(request)
-    : await callGeminiInteraction(request);
+    : await runCheckpointedPlanningPass(input.questId, request, () => callGeminiInteraction(request));
   const {
     output: _,
     text: __,
@@ -483,8 +494,15 @@ function dedupeIssues(issues: ValidationIssue[]) {
   });
 }
 function failed(traceId: string, passes: PlanningPass[], prompts: Record<string, number>, retryable = false) {
-  return result(traceId, retryable ? "retryable_error" : "manual_path", passes, null, [], prompts);
+  const error = [...passes].reverse().find((pass) => pass.provider?.error)?.provider?.error;
+  const issues: ValidationIssue[] = error
+    ? [{ path: "$.passes", code: error.code, message: "Planning provider pass failed" }]
+    : [];
+  return result(traceId, retryable ? "retryable_error" : "manual_path", passes, null, issues, prompts);
 }
 function result(traceId: string, status: PlanningPipelineResult["status"], passes: PlanningPass[], preview: unknown, issues: ValidationIssue[], prompts: Record<string, number>): PlanningPipelineResult {
-  return { traceId, status, passes, preview, issues, versions: { pipeline: "4.0", schema: "mission-architecture-4.0", prompts }, persistenceAllowed: false };
+  const rateLimit = status === "retryable_error"
+    ? [...passes].reverse().find((pass) => pass.provider?.error?.code === "rate_limited")?.provider?.error
+    : undefined;
+  return { traceId, status, ...(rateLimit ? { retryAfterSeconds: rateLimit.retryAfterSeconds ?? 60 } : {}), passes, preview, issues, versions: { pipeline: "4.0", schema: "mission-architecture-4.0", prompts }, persistenceAllowed: false };
 }

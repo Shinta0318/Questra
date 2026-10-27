@@ -4,6 +4,7 @@ import { validateRouteMissionPlan } from "../_shared/quest_planning/validators.t
 import { deterministicSafetyAssessment } from "../_shared/safety_guard.ts";
 import { buildExistingRouteContext } from "../_shared/quest_planning/existing_route_context.ts";
 import { aiLegalFailureResponse } from "../_shared/ai_legal_http.ts";
+import { planningHttpStatus } from "../_shared/quest_planning/http_status.ts";
 
 type RequestBody = {
   mode?: "plan" | "approve" | "expand_tasks";
@@ -67,8 +68,7 @@ Deno.serve(async (req) => {
   });
   if (pipeline.status !== "preview_ready" || !pipeline.preview) {
     await recordRun(userId, questId, idempotencyKey, pipeline, null);
-    const status = pipeline.status === "needs_clarification" ? 200 : 422;
-    return jsonResponse(pipeline, { status });
+    return planningFailureResponse(pipeline);
   }
   const stored = await recordRun(userId, questId, idempotencyKey, pipeline, pipeline.preview);
   if (!stored) return jsonResponse({ ...pipeline, status: "retryable_error", preview: null, error: "preview_store_failed" }, { status: 503 });
@@ -126,8 +126,7 @@ async function expandTasks(
     },
   });
   if (pipeline.status !== "preview_ready" || !pipeline.preview) {
-    const status = pipeline.status === "retryable_error" ? 503 : 422;
-    return jsonResponse(pipeline, { status });
+    return planningFailureResponse(pipeline);
   }
   return jsonResponse({
     status: pipeline.status,
@@ -135,6 +134,14 @@ async function expandTasks(
     task_plan: pipeline.preview,
     passes: pipeline.passes,
     versions: pipeline.versions,
+  });
+}
+
+function planningFailureResponse(pipeline: Awaited<ReturnType<typeof runQuestPlanningPipeline>>) {
+  const retryAfter = pipeline.retryAfterSeconds;
+  return jsonResponse(pipeline, {
+    status: planningHttpStatus(pipeline.status, retryAfter),
+    headers: retryAfter === undefined ? undefined : { "Retry-After": String(retryAfter) },
   });
 }
 

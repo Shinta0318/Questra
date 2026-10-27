@@ -19,6 +19,23 @@ begin
 end;
 $$;
 
+select pg_temp.qst_assert_eq(
+  (
+    select count(*) from pg_proc p
+    where p.oid in (
+      'public.record_ai_provider_execution_receipt(uuid,text,text,integer,integer,text,uuid)'::regprocedure,
+      'public.record_ai_provider_execution_receipt_v2(uuid,text,text,integer,integer,text,uuid,integer)'::regprocedure,
+      'public.record_ai_provider_execution_receipt_v4(uuid,text,text,integer,integer,text,uuid,integer,text,text,text,text)'::regprocedure
+    )
+    and exists (
+      select 1 from unnest(p.proconfig) config
+      where config like 'search_path=extensions, public, pg_temp%'
+    )
+  ),
+  3,
+  'AI receipt functions can resolve hosted pgcrypto'
+);
+
 create function pg_temp.qst_assert_raises(
   statement text,
   label text
@@ -260,6 +277,20 @@ insert into public.quest_plan_previews (
 ) values (
   :'owner_plan_preview_id',:'owner_id',:'owner_private_quest_id',:'owner_planning_run_id','{}'::jsonb
 );
+insert into public.quest_planning_pass_checkpoints (
+  owner_id,quest_id,pass_name,input_fingerprint,output,provider_metadata,expires_at
+) values (
+  :'owner_id',:'owner_private_quest_id','quest_planning.quest_understanding',
+  repeat('a',64),'{}'::jsonb,'{"provider":"gemini"}'::jsonb,now() + interval '1 hour'
+);
+select pg_temp.qst_assert_raises(
+  format(
+    'insert into public.quest_planning_pass_checkpoints (owner_id,quest_id,pass_name,input_fingerprint,output,provider_metadata,expires_at) values (%L,%L,%L,repeat(%L,64),%L::jsonb,%L::jsonb,now() + interval %L)',
+    :'other_id', :'owner_private_quest_id', 'quest_planning.quest_understanding',
+    'b', '{}', '{"provider":"gemini"}', '1 hour'
+  ),
+  'checkpoint cannot bind another account to an owner Quest'
+);
 insert into public.mission_plan_drafts (
   id,owner_id,quest_id,planning_run_id,preview_id,schema_version,model_name,thinking_level
 ) values (
@@ -360,6 +391,14 @@ select pg_temp.qst_assert_eq((select count(*) from public.route_change_items whe
 select pg_temp.qst_assert_eq((select count(*) from public.quest_progress_events where event_id = :'owner_progress_event_id'), 1, 'owner can read own progress event');
 select pg_temp.qst_assert_eq((select count(*) from public.quest_dna_versions where id = :'owner_dna_version_id'), 1, 'owner can read own Quest DNA version');
 select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id = :'owner_consent_id'), 1, 'owner can read own consent');
+select pg_temp.qst_assert_eq(
+  has_table_privilege('authenticated', 'public.quest_planning_pass_checkpoints', 'SELECT')::integer,
+  0, 'checkpoint output cannot be read directly by authenticated clients'
+);
+select pg_temp.qst_assert_eq(
+  has_table_privilege('authenticated', 'public.quest_planning_pass_checkpoints', 'INSERT')::integer,
+  0, 'checkpoint output cannot be written directly by authenticated clients'
+);
 select pg_temp.qst_assert_eq((select count(*) from public.tasks where id = :'owner_private_task_id'), 1, 'owner can read own private Task');
 select pg_temp.qst_assert_eq(
   has_table_privilege('authenticated', 'public.tasks', 'INSERT')::integer,

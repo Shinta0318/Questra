@@ -3,13 +3,13 @@ import { resolveFallbackModel, resolveModel } from "./model_registry.ts";
 Deno.test("configured primary fails over to a different stable model", () => {
   withEnv(
     {
-      GEMINI_MODEL_MISSION_GENERATOR: "gemini-3.5-flash",
+      GEMINI_MODEL_MISSION_GENERATOR: "gemini-3.5-flash-lite",
       GEMINI_FALLBACK_MODEL_MISSION_GENERATOR: null,
     },
     () => {
       const primary = resolveModel("mission_generator");
       const fallback = resolveFallbackModel("mission_generator", primary.name);
-      assertEquals(primary.name, "gemini-3.5-flash");
+      assertEquals(primary.name, "gemini-3.5-flash-lite");
       assertEquals(fallback.name, "gemini-3.6-flash");
       assertNotEquals(primary.name, fallback.name);
       assertEquals(fallback.releaseType, "stable");
@@ -44,10 +44,16 @@ Deno.test("unknown model overrides fail closed to pinned routes", () => {
         "quest_understanding",
         primary.name,
       );
-      assertEquals(primary.name, "gemini-3.5-flash");
+      assertEquals(primary.name, "gemini-3.6-flash");
       assertEquals(fallback.name, "gemini-3.5-flash-lite");
     },
   );
+});
+
+Deno.test("unlisted model override cannot become a production route", () => {
+  withEnv({ GEMINI_MODEL_QUEST_UNDERSTANDING: "gemini-3.5-flash" }, () => {
+    assertEquals(resolveModel("quest_understanding").name, "gemini-3.6-flash");
+  });
 });
 
 function withEnv(values: Record<string, string | null>, body: () => void) {
