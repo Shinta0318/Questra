@@ -2,14 +2,14 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "156f300b3129f00d72de4527a1ebe7324f1650d5"
-rollback_commit: "72f42b7632350337e0328785d1d544cd57082b79"
+source_commit: "36cc83436456af6bea823827279df8c1a0ae6863"
+rollback_commit: "3d056a3efcfb4ccafbec950cd2547a0d49bb4c44"
 branch: "codex/gemini-free-tier-validation"
-generated_at_utc: "2026-10-27T00:49:56.468269Z"
+generated_at_utc: "2026-11-03T13:51:05.972486Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
-  latest_local_migration: "202610270001_schedule_planning_checkpoint_cleanup.sql"
+  latest_local_migration: "202611010002_quest_mission_count_floor.sql"
   remote_migration_head: "202608080006_route_proposal_stale_conflict_guard.sql"
   edge_function_count: 13
   edge_functions:
@@ -26,7 +26,7 @@ inventory:
     - "quest-planning-v2"
     - "reconcile-ai-budget"
     - "research-mission-resources"
-  flutter_test_file_count: 331
+  flutter_test_file_count: 334
   supabase_evidence_status: "local_migration_pending_deployment"
   supabase_evidence_commit: "a5e0cad266e1dd8b5e9fae65414c988c4342d409"
   rls_evidence_status: "local_migration_pending_deployment"
@@ -36,15 +36,15 @@ inventory:
   candidate_asset_package_status: "blocked_ownership_review_pending"
   dependency_license_status: "generated_review_pending"
 automated_gates:
-  dependency_resolution: "not_run"
-  static_analysis: "not_run"
-  flutter_tests: "not_run"
-  rls_static_readiness: "not_run"
+  dependency_resolution: "passed"
+  static_analysis: "passed"
+  flutter_tests: "passed"
+  rls_static_readiness: "passed"
   performance_readiness: "not_run"
   feedback_readiness: "not_run"
   error_capture_contract: "not_run"
   privacy_copy_contract: "not_run"
-  release_notes_contract: "not_run"
+  release_notes_contract: "passed"
 external_evidence:
   complete: false
   matches_candidate_sha: false
@@ -59,9 +59,14 @@ external_evidence:
     - candidate_asset_package
     - dependency_license_notices
 artifacts:
-  - status: not_built
-    path: null
-    sha256: null
+  - status: found
+    path: "artifacts/candidate/questra-web-36cc83436456af6bea823827279df8c1a0ae6863.tar.gz"
+    bytes: 16037175
+    sha256: "7876fc548782f2c74ac7225a710b8cc2415b7495127f173b012efdd7f69df7bb"
+  - status: found
+    path: "artifacts/candidate/questra-android-36cc83436456af6bea823827279df8c1a0ae6863.apk"
+    bytes: 65526646
+    sha256: "95ff77bbf91a619df958caf52372aa93785992bd31d0c8fa8d9955753352f5d2"
 guardrails:
   local_fallback_is_cloud_evidence: false
   automated_checks_replace_external_evidence: false
