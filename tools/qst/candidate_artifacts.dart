@@ -5,6 +5,8 @@ bool candidateArtifactsVerified(
   String manifest,
   String sourceCommit, {
   bool Function(String path, int bytes, String sha256)? verifyFile,
+  String? buildAttestation,
+  String? expectedProjectRef,
 }) {
   if (!RegExp(r'^[a-f0-9]{40}$').hasMatch(sourceCommit)) return false;
   final section = RegExp(
@@ -25,6 +27,7 @@ bool candidateArtifactsVerified(
   }
 
   final kinds = <String>{};
+  final hashes = <String, String>{};
   for (final match in matches) {
     final Object? decodedPath;
     try {
@@ -42,6 +45,7 @@ bool candidateArtifactsVerified(
         ? 'android'
         : null;
     if (kind == null || !kinds.add(kind)) return false;
+    hashes[kind] = match.group(3)!;
     final bytes = int.tryParse(match.group(2)!);
     if (bytes == null ||
         !(verifyFile ?? candidateArtifactFileMatches)(
@@ -52,7 +56,49 @@ bool candidateArtifactsVerified(
       return false;
     }
   }
-  return kinds.containsAll(const {'web', 'android'});
+  return kinds.containsAll(const {'web', 'android'}) &&
+      candidateBuildAttestationMatches(
+        sourceCommit,
+        hashes['web']!,
+        hashes['android']!,
+        attestation: buildAttestation,
+        expectedProjectRef: expectedProjectRef,
+      );
+}
+
+bool candidateBuildAttestationMatches(
+  String sourceCommit,
+  String webSha256,
+  String androidSha256, {
+  String? attestation,
+  String? expectedProjectRef,
+}) {
+  if (!RegExp(r'^[a-f0-9]{40}$').hasMatch(sourceCommit) ||
+      !RegExp(r'^[a-f0-9]{64}$').hasMatch(webSha256) ||
+      !RegExp(r'^[a-f0-9]{64}$').hasMatch(androidSha256)) {
+    return false;
+  }
+  final file = File('artifacts/candidate/questra-build-$sourceCommit.txt');
+  final content =
+      attestation ?? (file.existsSync() ? file.readAsStringSync() : '');
+  final fields = <String, String>{};
+  for (final line in const LineSplitter().convert(content)) {
+    if (line.isEmpty) continue;
+    final separator = line.indexOf('=');
+    if (separator <= 0 || fields.containsKey(line.substring(0, separator))) {
+      return false;
+    }
+    fields[line.substring(0, separator)] = line.substring(separator + 1);
+  }
+  return fields.length == 6 &&
+      fields['candidate_sha'] == sourceCommit &&
+      fields['build_mode'] == 'connected' &&
+      RegExp(r'^[a-z0-9]{20}$').hasMatch(fields['project_ref'] ?? '') &&
+      (expectedProjectRef == null ||
+          fields['project_ref'] == expectedProjectRef) &&
+      fields['web_sha256'] == webSha256 &&
+      fields['android_sha256'] == androidSha256 &&
+      RegExp(r'^[1-9][0-9]*$').hasMatch(fields['run_id'] ?? '');
 }
 
 bool candidateArtifactFileMatches(String path, int bytes, String sha256) {

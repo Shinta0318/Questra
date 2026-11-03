@@ -80,6 +80,18 @@ SUPABASE_URL=http://abcdefghijklmnopqrst.supabase.co
 SUPABASE_ANON_KEY=$validKey
 "@
 
+  Invoke-Scenario -Name 'url-path-rejected' -ShouldPass $false `
+    -Message 'hosted HTTPS Supabase project URL' -Content @"
+SUPABASE_URL=https://abcdefghijklmnopqrst.supabase.co/other
+SUPABASE_ANON_KEY=$validKey
+"@
+
+  Invoke-Scenario -Name 'url-query-rejected' -ShouldPass $false `
+    -Message 'hosted HTTPS Supabase project URL' -Content @"
+SUPABASE_URL=https://abcdefghijklmnopqrst.supabase.co/?target=other
+SUPABASE_ANON_KEY=$validKey
+"@
+
   Assert-LoginEntryResponse -StatusCode 401 `
     -Content '{"code":"invalid_credentials"}' `
     -AllowedOrigin 'http://127.0.0.1:5268' `

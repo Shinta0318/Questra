@@ -36,6 +36,8 @@ const requiredManifestSnippets = [
   'external_evidence:',
   'matches_candidate_sha:',
   'status: "evidence_missing"',
+  'build_connection:',
+  'attestation_path:',
   'artifacts:',
   'local_fallback_is_cloud_evidence: false',
 ];
@@ -125,6 +127,10 @@ void _checkInventory(List<String> failures) {
       content.contains('distribution_ready: true');
   if (approved && !content.contains('flutter_tests: "passed"')) {
     failures.add('Approved candidate requires passed Flutter tests.');
+  }
+  if (approved &&
+      !content.contains('build_connection:\n  status: "verified"')) {
+    failures.add('Approved candidate requires a connected build attestation.');
   }
   if (migrations.isEmpty ||
       !content.contains('latest_local_migration: "${migrations.last}"')) {

@@ -17,6 +17,22 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Prepare connected release configuration
+        if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        env:
+          SUPABASE_URL: ${{ vars.BETA_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.BETA_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          & pwsh -NoProfile -File tools/qst/run_connected_preview.ps1 -ConfigPath '' -ValidateOnly -SkipRemoteProbe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          @{
+            SUPABASE_URL = $env:SUPABASE_URL
+            SUPABASE_ANON_KEY = $env:SUPABASE_ANON_KEY
+            APP_ENVIRONMENT = 'production'
+            ALLOW_MOCK_PERSISTENCE = $false
+            QUESTRA_BUILD_VERSION = $env:GITHUB_SHA
+          } | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $env:RUNNER_TEMP 'questra-release-defines.json') -Encoding UTF8
       - name: Candidate source preflight
         run: |
           dart run tools/qst/verify_backlog_ssot.dart
@@ -90,7 +106,12 @@ jobs:
           dart run tools/qst/verify_beta_release_notes_readiness.dart
       - name: Build Web artifact
         working-directory: apps/mobile
-        run: flutter build web --release --no-pub
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            flutter build web --release --no-pub --dart-define-from-file="$RUNNER_TEMP/questra-release-defines.json"
+          else
+            flutter build web --release --no-pub
+          fi
       # Flutter can leave dev-only plugins in GeneratedPluginRegistrant when a
       # release follows `pub get` with `--no-pub`. Regenerate release build
       # configuration first so the registrant matches the release classpath.
@@ -99,20 +120,38 @@ jobs:
         run: flutter build apk --config-only
       - name: Build Android artifact
         working-directory: apps/mobile
-        run: flutter build apk --release --no-pub
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            flutter build apk --release --no-pub --dart-define-from-file="$RUNNER_TEMP/questra-release-defines.json"
+          else
+            flutter build apk --release --no-pub
+          fi
       - name: Package Web artifact
         run: tar -czf questra-web-${{ github.sha }}.tar.gz -C apps/mobile/build/web .
       - name: Record candidate and artifact checksums
+        env:
+          SUPABASE_URL: ${{ vars.BETA_SUPABASE_URL }}
         run: |
-          printf "candidate_sha=%s\n" "${{ github.sha }}" > candidate-build.txt
           sha256sum \
             apps/mobile/build/app/outputs/flutter-apk/app-release.apk \
             questra-web-${{ github.sha }}.tar.gz \
             > artifact-checksums.sha256
+          android_sha=$(sha256sum apps/mobile/build/app/outputs/flutter-apk/app-release.apk | cut -d ' ' -f1)
+          web_sha=$(sha256sum questra-web-${{ github.sha }}.tar.gz | cut -d ' ' -f1)
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            project_ref=$(printf '%s' "$SUPABASE_URL" | sed -E 's#^https://([a-z0-9]{20})\.supabase\.co/?$#\1#')
+            build_mode=connected
+          else
+            project_ref=none
+            build_mode=disconnected_ci_only
+          fi
+          printf 'candidate_sha=%s\nbuild_mode=%s\nproject_ref=%s\nweb_sha256=%s\nandroid_sha256=%s\nrun_id=%s\n' \
+            "${{ github.sha }}" "$build_mode" "$project_ref" "$web_sha" "$android_sha" "${{ github.run_id }}" \
+            > candidate-build.txt
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: questra-release-${{ github.sha }}
+          name: ${{ github.event_name == 'workflow_dispatch' && format('questra-release-{0}', github.sha) || format('questra-ci-preview-{0}', github.sha) }}
           if-no-files-found: error
           path: |
             apps/mobile/build/web

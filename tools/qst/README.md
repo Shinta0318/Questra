@@ -95,6 +95,16 @@ file is not a distribution-ready decision.
 The approved manifest must name both SHA-bound Web and Android files under
 `artifacts/candidate/`. The release check measures each file's byte count and
 SHA-256 again; a manifest checksum alone is not artifact evidence.
+Pull-request builds are disconnected CI previews, not distribution candidates.
+For a connected `workflow_dispatch` build, configure the repository variable
+`BETA_SUPABASE_URL` and secret `BETA_SUPABASE_PUBLISHABLE_KEY` for the approved
+Beta project. The workflow rejects missing, non-HTTPS, or privileged keys;
+Gemini remains server-side. Download the successful run's artifact and place
+`candidate-build.txt` at `artifacts/candidate/questra-build-<source SHA>.txt`
+alongside the SHA-named Web archive and APK before generating the candidate
+manifest. The release gate checks build mode, project ref, source SHA, and both
+artifact hashes. A connected build still does not replace hosted login, RLS,
+Gemini, physical-device, and rollback evidence.
 
 ### Edge Function PR Contract
 

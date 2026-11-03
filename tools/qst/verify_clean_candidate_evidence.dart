@@ -148,7 +148,18 @@ void main(List<String> arguments) {
     if (!candidate.contains(required))
       _fail('Candidate gate missing: $required');
   }
-  if (!candidateArtifactsVerified(candidate, expected)) {
+  final projectRef = RegExp(
+    r'^  ref: "([a-z0-9]{20})"$',
+    multiLine: true,
+  ).firstMatch(_read('docs/qst/BETA_SUPABASE_PROJECT.yaml'))?.group(1);
+  if (projectRef == null) {
+    _fail('Beta project reference is missing.');
+  }
+  if (!candidateArtifactsVerified(
+    candidate,
+    expected,
+    expectedProjectRef: projectRef,
+  )) {
     _fail('Candidate Web and Android artifact checksums do not match files.');
   }
   stdout.writeln('Clean candidate evidence is complete and SHA-consistent.');
