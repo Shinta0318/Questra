@@ -2,10 +2,10 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "dc6a057bb11e51bb0db42b1bfb77754f1969f1f7"
-rollback_commit: "7245f9c78c8c19cf64d6a1d48481bd53f6ac50f4"
+source_commit: "55fe1dfc7cd3e3975c58e47396a5f1fbe2c2940c"
+rollback_commit: "26f75346aef6df9394d01f2a03e2070f7cb22670"
 branch: "codex/gemini-free-tier-validation"
-generated_at_utc: "2026-11-03T14:23:49.824824Z"
+generated_at_utc: "2026-11-03T14:30:42.728228Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
@@ -60,7 +60,7 @@ external_evidence:
     - dependency_license_notices
 build_connection:
   status: "missing_or_unconnected"
-  attestation_path: "artifacts/candidate/questra-build-dc6a057bb11e51bb0db42b1bfb77754f1969f1f7.txt"
+  attestation_path: "artifacts/candidate/questra-build-55fe1dfc7cd3e3975c58e47396a5f1fbe2c2940c.txt"
 artifacts:
   - status: not_built
     path: null
