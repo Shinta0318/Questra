@@ -2,10 +2,10 @@ version: 1
 candidate_status: "draft"
 distribution_ready: false
 app_version: "1.0.0+1"
-source_commit: "36cc83436456af6bea823827279df8c1a0ae6863"
-rollback_commit: "3d056a3efcfb4ccafbec950cd2547a0d49bb4c44"
+source_commit: "dc6a057bb11e51bb0db42b1bfb77754f1969f1f7"
+rollback_commit: "7245f9c78c8c19cf64d6a1d48481bd53f6ac50f4"
 branch: "codex/gemini-free-tier-validation"
-generated_at_utc: "2026-11-03T13:51:05.972486Z"
+generated_at_utc: "2026-11-03T14:23:49.824824Z"
 worktree_clean_before_manifest: true
 readiness_matrix: "docs/qst/BETA_LAUNCH_READINESS.yaml"
 inventory:
@@ -36,15 +36,15 @@ inventory:
   candidate_asset_package_status: "blocked_ownership_review_pending"
   dependency_license_status: "generated_review_pending"
 automated_gates:
-  dependency_resolution: "passed"
-  static_analysis: "passed"
-  flutter_tests: "passed"
-  rls_static_readiness: "passed"
+  dependency_resolution: "not_run"
+  static_analysis: "not_run"
+  flutter_tests: "not_run"
+  rls_static_readiness: "not_run"
   performance_readiness: "not_run"
   feedback_readiness: "not_run"
   error_capture_contract: "not_run"
   privacy_copy_contract: "not_run"
-  release_notes_contract: "passed"
+  release_notes_contract: "not_run"
 external_evidence:
   complete: false
   matches_candidate_sha: false
@@ -58,15 +58,13 @@ external_evidence:
     - arc_asset_provenance
     - candidate_asset_package
     - dependency_license_notices
+build_connection:
+  status: "missing_or_unconnected"
+  attestation_path: "artifacts/candidate/questra-build-dc6a057bb11e51bb0db42b1bfb77754f1969f1f7.txt"
 artifacts:
-  - status: found
-    path: "artifacts/candidate/questra-web-36cc83436456af6bea823827279df8c1a0ae6863.tar.gz"
-    bytes: 16037175
-    sha256: "7876fc548782f2c74ac7225a710b8cc2415b7495127f173b012efdd7f69df7bb"
-  - status: found
-    path: "artifacts/candidate/questra-android-36cc83436456af6bea823827279df8c1a0ae6863.apk"
-    bytes: 65526646
-    sha256: "95ff77bbf91a619df958caf52372aa93785992bd31d0c8fa8d9955753352f5d2"
+  - status: not_built
+    path: null
+    sha256: null
 guardrails:
   local_fallback_is_cloud_evidence: false
   automated_checks_replace_external_evidence: false
