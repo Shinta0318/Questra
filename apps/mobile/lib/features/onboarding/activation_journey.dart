@@ -1,5 +1,7 @@
 import '../auth/auth_state.dart';
+import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
+import '../task/task_availability_service.dart';
 import '../task/task_load_state.dart';
 import '../task/task_model.dart';
 
@@ -40,6 +42,7 @@ class ActivationJourneyService {
     required List<Quest> quests,
     required List<QuestraTask> tasks,
     required TaskLoadState taskLoadState,
+    Iterable<Mission> missions = const [],
   }) {
     if (profile == null || !profile.legalAcceptanceCurrent) {
       return const ActivationJourneySnapshot(
@@ -70,7 +73,18 @@ class ActivationJourneyService {
       );
     }
 
-    final startedTask = tasks.where((task) {
+    final activeQuestIds = activeQuests.map((quest) => quest.id).toSet();
+    final activeTasks = tasks
+        .where((task) {
+          return activeQuestIds.contains(task.questId) &&
+              const TaskRouteAvailabilityService().canAct(
+                task,
+                quests: quests,
+                missions: missions,
+              );
+        })
+        .toList(growable: false);
+    final startedTask = activeTasks.where((task) {
       return task.status == TaskStatus.inProgress ||
           task.status == TaskStatus.completed;
     }).firstOrNull;
@@ -85,7 +99,14 @@ class ActivationJourneyService {
       );
     }
 
-    final nextTask = tasks.where((task) => task.isOpen).firstOrNull;
+    final nextTask = activeTasks.where((task) {
+      final missionTasks = activeTasks.where(
+        (item) => item.missionId == task.missionId,
+      );
+      return const TaskAvailabilityService()
+          .evaluate(task, missionTasks)
+          .canStart;
+    }).firstOrNull;
     if (nextTask != null) {
       return ActivationJourneySnapshot(
         stage: ActivationJourneyStage.firstTask,

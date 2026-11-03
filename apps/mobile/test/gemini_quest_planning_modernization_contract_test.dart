@@ -107,14 +107,23 @@ void main() {
     final migration = read(
       'supabase/migrations/202608010022_quest_mission_task_hierarchy.sql',
     );
+    final approvalGate = read(
+      'supabase/migrations/202610290001_atomic_edited_plan_approval.sql',
+    );
+    final endpoint = read('supabase/functions/quest-planning-v2/index.ts');
     expect(migration, contains('approve_quest_plan_preview'));
     expect(migration, contains('for update'));
     expect(migration, contains('v_preview.owner_id <> auth.uid()'));
     expect(migration, contains("v_preview.status = 'approved'"));
     expect(
-      migration,
-      contains('grant execute on function public.approve_quest_plan_preview'),
+      approvalGate,
+      contains('revoke execute on function public.approve_quest_plan_preview'),
     );
+    expect(approvalGate, contains('has_current_ai_legal_acceptance'));
+    expect(approvalGate, contains('approve_quest_plan_preview_with_selection'));
+    expect(approvalGate, contains('approve_quest_plan_preview_unedited'));
+    expect(endpoint, contains('approve_quest_plan_preview_with_selection'));
+    expect(endpoint, contains('approve_quest_plan_preview_unedited'));
   });
 
   test(

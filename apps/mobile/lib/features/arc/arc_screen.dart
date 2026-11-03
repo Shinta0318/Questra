@@ -49,7 +49,6 @@ import '../quest/quest_intent_resolution_service.dart';
 import '../quest/quest_title_service.dart';
 import '../quest/quest_model.dart';
 import '../quest/quest_understanding.dart';
-import '../quest/planning_preferences_controller.dart';
 import '../quest/quest_guide_model.dart';
 import '../trail/trail_controller.dart';
 import '../trail/trail_model.dart';
@@ -477,7 +476,27 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     if (result == null || !mounted) return;
 
     final quest = result.quest;
-    ref.read(questControllerProvider.notifier).add(quest);
+    final saved = result.startPlanning
+        ? await ref.read(questControllerProvider.notifier).addAndWait(quest)
+        : null;
+    if (!result.startPlanning) {
+      ref.read(questControllerProvider.notifier).add(quest);
+    }
+    if (!mounted) return;
+    if (result.startPlanning && saved != true) {
+      setState(() {
+        _messages.add(
+          ArcChatMessage(
+            text: 'Questを保存できませんでした。航路はまだ作っていません。Quest一覧で保存状態を確認してください。',
+            fromArc: true,
+            createdAt: DateTime.now(),
+          ),
+        );
+      });
+      _scrollToLatest();
+      context.go(AppRoutes.quest);
+      return;
+    }
     if (result.guide case final guide?) {
       ref
           .read(arcQuestGuideControllerProvider.notifier)
@@ -525,7 +544,9 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
       _pendingQuestSuggestion = null;
       _messages.add(
         ArcChatMessage(
-          text: result.missions.isEmpty
+          text: result.startPlanning
+              ? '「${quest.title}」を保存したよ。Arcの航路案を確認してからMissionを始めよう。'
+              : result.missions.isEmpty
               ? '「${quest.title}」を星図に灯したよ。Missionはまだ作らず、Questの詳細から自分のペースで整えられます。'
               : '「${quest.title}」を星図に灯し、${result.missions.length}つのMissionへ分けたよ。最初の一歩から始めよう。',
           fromArc: true,
@@ -536,7 +557,13 @@ class _ArcScreenState extends ConsumerState<ArcScreen> {
     await _clearDraft();
     _scrollToLatest();
     if (mounted) {
+      final routeController = result.startPlanning && saved == true
+          ? ref.read(arcQuestGuideControllerProvider.notifier)
+          : null;
       context.go('${AppRoutes.quest}/${quest.id}');
+      if (routeController != null) {
+        unawaited(routeController.generateForQuest(quest));
+      }
     }
   }
 
@@ -1787,11 +1814,13 @@ class _ArcQuestConfirmation {
     required this.quest,
     required this.guide,
     required this.missions,
+    this.startPlanning = false,
   });
 
   final Quest quest;
   final ArcQuestGuide? guide;
   final List<ArcMissionCandidate> missions;
+  final bool startPlanning;
 }
 
 class _ArcQuestCreationSheet extends ConsumerStatefulWidget {
@@ -2001,9 +2030,16 @@ class _ArcQuestCreationSheetState
   }
 
   String get _planningDescription {
-    final description = _suggestionPlanningContext.isNotEmpty
-        ? _suggestionPlanningContext
-        : _inputController.text;
+    final originalWish = _inputController.text.trim();
+    final proposedDescription = _suggestionPlanningContext.trim();
+    var description = originalWish;
+    if (proposedDescription.isNotEmpty) {
+      if (originalWish.isEmpty || proposedDescription.contains(originalWish)) {
+        description = proposedDescription;
+      } else if (!originalWish.contains(proposedDescription)) {
+        description = '$proposedDescription\n相談時の希望: $originalWish';
+      }
+    }
     final base = QuestClarificationService.appendAnsweredContext(
       description: description,
       targetDate: _targetDate,
@@ -2090,7 +2126,7 @@ class _ArcQuestCreationSheetState
     _invalidateGuide();
   }
 
-  Future<void> _generate() async {
+  Future<void> _generate(BuildContext modalContext) async {
     if (!_isIntentConfirmed) {
       setState(() => _error = 'まずArcとQuestを整理して、内容を確認してください。');
       return;
@@ -2130,20 +2166,6 @@ class _ArcQuestCreationSheetState
     if (intent.realityFrame == QuestRealityFrame.symbolic) {
       _titleController.text = intent.effectiveOutcome;
     }
-    final safety = await ref.read(questSafetyServiceProvider).assess(input);
-    if (safety.action != QuestSafetyAction.allow) {
-      if (!mounted) return;
-      setState(() => _error = safety.userMessage);
-      unawaited(
-        ref
-            .read(safetySignalRecorderProvider)
-            .record(
-              userId: ref.read(authControllerProvider).profile?.id,
-              assessment: safety,
-            ),
-      );
-      return;
-    }
     for (final question in _clarificationQuestions) {
       if (question.type == QuestClarificationType.deadline) continue;
       final answerError = InputValidators.optionalText(
@@ -2157,59 +2179,8 @@ class _ArcQuestCreationSheetState
       }
     }
 
-    final estimate = EffortEstimationService.forQuest(
-      title: _titleController.text.trim(),
-      category: _categoryController.text.trim(),
-    );
-    _difficulty = estimate.difficultyBand == '挑戦的'
-        ? QuestDifficulty.hard
-        : QuestDifficulty.normal;
-    final quest = Quest(
-      title: _titleController.text.trim(),
-      description: _planningDescription,
-      difficulty: _difficulty,
-      status: QuestStatus.active,
-      visibility: QuestVisibility.private,
-      category: _categoryController.text.trim().isEmpty
-          ? '冒険'
-          : _categoryController.text.trim(),
-      targetDate: _targetDate,
-      effortEstimate: estimate,
-    );
-    setState(() {
-      _isGenerating = true;
-      _manualMode = false;
-      _error = null;
-      _guide = null;
-      _intentDraft = intent;
-    });
-    try {
-      final guide = await ref
-          .read(arcQuestGuideServiceProvider)
-          .generate(
-            quest: quest,
-            planningContext: ref
-                .read(planningPreferencesControllerProvider)
-                .contextForPlanning,
-          );
-      if (!mounted) return;
-      setState(() {
-        _draftQuest = quest;
-        _guide = guide;
-        _selectedMissionIndexes = {
-          for (var index = 0; index < guide.missionCandidates.length; index++)
-            index,
-        };
-        _firstMissionIndex = guide.missionCandidates.isEmpty ? null : 0;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _error = '航路を描けませんでした。入力内容は残っています。もう一度試すか、Questだけ保存できます。';
-      });
-    } finally {
-      if (mounted) setState(() => _isGenerating = false);
-    }
+    setState(() => _intentDraft = intent);
+    await _confirmWithoutPlan(modalContext, startPlanning: true);
   }
 
   void _confirm(BuildContext modalContext) {
@@ -2300,7 +2271,10 @@ class _ArcQuestCreationSheetState
     });
   }
 
-  Future<void> _confirmWithoutPlan(BuildContext modalContext) async {
+  Future<void> _confirmWithoutPlan(
+    BuildContext modalContext, {
+    bool startPlanning = false,
+  }) async {
     if (_isConfirming || _isGenerating) return;
     final input = _inputController.text.trim();
     final title = _titleController.text.trim();
@@ -2323,12 +2297,6 @@ class _ArcQuestCreationSheetState
       _error = null;
     });
     try {
-      final safety = await ref.read(questSafetyServiceProvider).assess(input);
-      if (!mounted || !modalContext.mounted) return;
-      if (safety.action != QuestSafetyAction.allow) {
-        setState(() => _error = safety.userMessage);
-        return;
-      }
       final estimate = EffortEstimationService.forQuest(
         title: title,
         category: _categoryController.text.trim(),
@@ -2346,10 +2314,29 @@ class _ArcQuestCreationSheetState
         effortEstimate: estimate,
         understanding: _understandingWithConfirmedConditions(null),
       );
+      if (startPlanning) {
+        try {
+          planningWishWithAnswers(quest, const {});
+        } on StateError catch (error) {
+          setState(() => _error = error.message.toString());
+          return;
+        }
+      }
+      final safety = await ref.read(questSafetyServiceProvider).assess(input);
+      if (!mounted || !modalContext.mounted) return;
+      if (safety.action != QuestSafetyAction.allow) {
+        setState(() => _error = safety.userMessage);
+        return;
+      }
       _isConfirming = true;
       QuestraModalSheet.finish(
         modalContext,
-        _ArcQuestConfirmation(quest: quest, guide: null, missions: const []),
+        _ArcQuestConfirmation(
+          quest: quest,
+          guide: null,
+          missions: const [],
+          startPlanning: startPlanning,
+        ),
       );
     } catch (_) {
       if (!mounted) return;
@@ -2500,7 +2487,7 @@ class _ArcQuestCreationSheetState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Arcとの会話を引き継いで、QuestとMissionを保存前に確認できます。',
+                            'Arcとの会話を引き継いでQuestを保存します。航路案はその後に確認できます。',
                             style: TextStyle(color: AppColors.parchment),
                           ),
                         ],
@@ -2682,14 +2669,16 @@ class _ArcQuestCreationSheetState
                   ),
                   const SizedBox(height: AppSpacing.md),
                   FilledButton.icon(
-                    onPressed: _isGenerating ? null : _generate,
+                    onPressed: _isGenerating
+                        ? null
+                        : () => _generate(modalContext),
                     icon: _isGenerating
                         ? const SizedBox.square(
                             dimension: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.auto_awesome_outlined),
-                    label: Text(guide == null ? 'Arcと航路を描く' : '航路を描き直す'),
+                    label: const Text('Questを保存して航路を描く'),
                   ),
                 ],
                 if (_error != null) ...[
@@ -2697,7 +2686,9 @@ class _ArcQuestCreationSheetState
                   if (_recoveryV2Enabled)
                     _ArcPlanningRecoveryCard(
                       message: _error!,
-                      onRetry: _isIntentConfirmed ? _generate : _resolveIntent,
+                      onRetry: _isIntentConfirmed
+                          ? () => _generate(modalContext)
+                          : _resolveIntent,
                       onManual: _enterManualMode,
                       onLater: () => QuestraModalSheet.finish(modalContext),
                     )

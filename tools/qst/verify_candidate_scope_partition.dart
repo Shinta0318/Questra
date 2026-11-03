@@ -3,7 +3,6 @@ import 'dart:io';
 import 'candidate_git_state.dart';
 
 const manifestPath = 'docs/qst/CANDIDATE_SCOPE_PARTITION.yaml';
-const expectedBranch = 'codex/initial-questra-structure-pr';
 
 const scopeGroups = <String, List<String>>{
   'mobile_runtime': [
@@ -76,6 +75,10 @@ void main(List<String> arguments) {
     _fail('Missing $manifestPath');
   }
   final manifestText = manifest.readAsStringSync().replaceAll('\r\n', '\n');
+  final expectedBranch = candidateScopeBranch(manifestText);
+  if (expectedBranch == null) {
+    failures.add('Manifest must pin one codex/ candidate branch.');
+  }
   for (final required in [
     'every_changed_path_classified_once: true',
     'clean_worktree: required',
@@ -111,7 +114,7 @@ void main(List<String> arguments) {
     final branch = resolveCandidateBranch(
       gitBranch: branchResult.stdout.toString(),
     );
-    if (branch != expectedBranch) {
+    if (expectedBranch != null && branch != expectedBranch) {
       failures.add(
         'Candidate work must stay on $expectedBranch (resolved: ${branch.isEmpty ? 'unknown' : branch}).',
       );
@@ -163,6 +166,14 @@ void main(List<String> arguments) {
       stdout.writeln('- ${entry.key}: ${entry.value}');
     }
   }
+}
+
+String? candidateScopeBranch(String manifestText) {
+  final matches = RegExp(
+    r'^branch:\s*(codex/[a-z0-9][a-z0-9-]*)\s*$',
+    multiLine: true,
+  ).allMatches(manifestText).toList();
+  return matches.length == 1 ? matches.single.group(1) : null;
 }
 
 bool _matches(String path, String prefix) {

@@ -27,6 +27,27 @@ jobs:
           node-version: '24'
       - name: Type-check every Edge Function entrypoint
         run: deno check supabase/functions/*/index.ts
+      - name: Type-check every planning test
+        run: deno check supabase/functions/_shared/quest_planning/*_test.ts
+      - name: Test pinned Gemini model routing and fallback
+        run: >-
+          deno test --allow-env
+          supabase/functions/_shared/quest_planning/model_registry_test.ts
+          supabase/functions/_shared/quest_planning/grounding_test.ts
+          supabase/functions/_shared/quest_planning/json_schema_validator_test.ts
+          supabase/functions/_shared/quest_planning/interactions_adapter_test.ts
+          supabase/functions/_shared/quest_planning/http_status_test.ts
+          supabase/functions/_shared/quest_planning/pass_idempotency_test.ts
+          supabase/functions/_shared/quest_planning/pass_checkpoint_test.ts
+          supabase/functions/_shared/quest_planning/context_snapshot_test.ts
+          supabase/functions/_shared/quest_planning/approval_wish_test.ts
+          supabase/functions/_shared/quest_planning/approval_input_test.ts
+          supabase/functions/_shared/quest_planning/repair_scope_test.ts
+          supabase/functions/_shared/quest_planning/critic_score_test.ts
+          supabase/functions/_shared/quest_planning/target_date_test.ts
+          supabase/functions/_shared/quest_planning/preview_persistence_test.ts
+          supabase/functions/_shared/quest_planning/approval_rpc_error_test.ts
+          supabase/functions/_shared/quest_planning/tool_server_test.ts
       - name: Test auth and direct AI contracts
         run: >-
           node --test
@@ -34,3 +55,9 @@ jobs:
           supabase/functions/_shared/*.test.mjs
           tools/qst/verify_hosted_ai_auth_boundary.test.mjs
           tools/qst/verify_hosted_login_roundtrip.test.mjs
+      - name: Test Node-based planning contracts
+        run: >-
+          node --experimental-strip-types --test
+          supabase/functions/_shared/quest_planning/ai_budget_reconciliation_test.ts
+          supabase/functions/_shared/quest_planning/existing_route_context_test.ts
+          supabase/functions/_shared/quest_planning/tool_interaction_orchestrator_test.ts

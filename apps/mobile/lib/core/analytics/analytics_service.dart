@@ -41,6 +41,7 @@ class AnalyticsService {
         name: AnalyticsEventName.questCreated,
         userId: userId,
         questId: questId,
+        idempotencyKey: questId == null ? null : 'quest-created-$questId',
         properties: {
           'category': category,
           'difficulty': difficulty,

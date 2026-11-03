@@ -2,10 +2,10 @@ version: 1
 qst: QST-367
 decision: no_go
 distribution_ready: false
-evaluated_at_utc: "2026-10-25T13:57:19.514650Z"
-candidate_source_commit: "b8946d97586470c13158ae70b9260035154a16ec"
-latest_local_migration: "202610250004_export_mission_ownership_fix.sql"
-worktree_clean_at_evaluation: false
+evaluated_at_utc: "2026-11-03T14:36:35.396290Z"
+candidate_source_commit: "207220f56b9fc2c51c8813c24f8007074a0d41c6"
+latest_local_migration: "202611010002_quest_mission_count_floor.sql"
+worktree_clean_at_evaluation: true
 summary:
   passed: 0
   blocked: 14

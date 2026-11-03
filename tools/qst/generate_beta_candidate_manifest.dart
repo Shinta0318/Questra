@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'candidate_artifacts.dart';
+
 const defaultOutputPath = 'docs/qst/BETA_CANDIDATE.yaml';
 const readinessMatrixPath = 'docs/qst/BETA_LAUNCH_READINESS.yaml';
 const pubspecPath = 'apps/mobile/pubspec.yaml';
@@ -38,6 +40,7 @@ Future<void> main(List<String> arguments) async {
   final worktreeClean = await _isWorktreeClean(options.outputPath);
   final latestLocalMigration = _latestSqlMigration();
   final remoteMigrationHead = _yamlValue(supabaseEvidencePath, 'remote_head');
+  final projectRef = _yamlValue(supabaseEvidencePath, 'ref');
   final edgeFunctionNames = _edgeFunctionNames();
   final flutterTestFileCount = _flutterTestFileCount();
   final supabaseEvidenceStatus = _yamlValue(supabaseEvidencePath, 'status');
@@ -92,6 +95,27 @@ Future<void> main(List<String> arguments) async {
             artifact.exists &&
             artifact.sha256 != null,
       );
+  String? webSha256;
+  String? androidSha256;
+  for (final artifact in artifacts) {
+    if (artifact.path == 'artifacts/candidate/questra-web-$sourceCommit.zip' ||
+        artifact.path ==
+            'artifacts/candidate/questra-web-$sourceCommit.tar.gz') {
+      webSha256 = artifact.sha256;
+    } else if (artifact.path ==
+        'artifacts/candidate/questra-android-$sourceCommit.apk') {
+      androidSha256 = artifact.sha256;
+    }
+  }
+  final buildAttested =
+      hasArtifacts &&
+      projectRef != null &&
+      candidateBuildAttestationMatches(
+        sourceCommit,
+        webSha256!,
+        androidSha256!,
+        expectedProjectRef: projectRef,
+      );
   final automatedPassed = automatedGateNames.every(
     (name) => checks[name] == 'passed',
   );
@@ -109,6 +133,7 @@ Future<void> main(List<String> arguments) async {
       options.status == 'approved' &&
       worktreeClean &&
       hasArtifacts &&
+      buildAttested &&
       automatedPassed &&
       options.externalEvidenceComplete &&
       externalEvidenceMatchesCandidate;
@@ -124,6 +149,7 @@ Future<void> main(List<String> arguments) async {
     worktreeClean: worktreeClean,
     checks: checks,
     artifacts: artifacts,
+    buildAttested: buildAttested,
     externalEvidenceComplete: options.externalEvidenceComplete,
     externalEvidenceMatchesCandidate: externalEvidenceMatchesCandidate,
     latestLocalMigration: latestLocalMigration,
@@ -160,6 +186,7 @@ String _buildManifest({
   required bool worktreeClean,
   required Map<String, String> checks,
   required List<_ArtifactEvidence> artifacts,
+  required bool buildAttested,
   required bool externalEvidenceComplete,
   required bool externalEvidenceMatchesCandidate,
   required String latestLocalMigration,
@@ -239,6 +266,13 @@ String _buildManifest({
     ..writeln('    - arc_asset_provenance')
     ..writeln('    - candidate_asset_package')
     ..writeln('    - dependency_license_notices')
+    ..writeln('build_connection:')
+    ..writeln(
+      '  status: ${_yaml(buildAttested ? 'verified' : 'missing_or_unconnected')}',
+    )
+    ..writeln(
+      '  attestation_path: ${_yaml('artifacts/candidate/questra-build-$sourceCommit.txt')}',
+    )
     ..writeln('artifacts:');
 
   if (artifacts.isEmpty) {

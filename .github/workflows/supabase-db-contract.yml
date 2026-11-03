@@ -6,6 +6,11 @@ on:
     paths:
       - 'supabase/migrations/**'
       - 'supabase/tests/rls_behavior.sql'
+      - 'supabase/tests/qst_199_owner_isolation_hosted.sql'
+      - 'supabase/tests/quest_planning_checkpoint_hosted.sql'
+      - 'supabase/tests/qst_252_atomic_edited_approval.sql'
+      - 'supabase/tests/qst_345_task_current_route_guard_hosted.sql'
+      - 'supabase/tests/qst_456_approval_safe_ai_route_replacement.sql'
       - 'supabase/tests/hosted_rls_inventory.sql'
       - 'supabase/tests/auth_login_atomic_decision.sql'
       - 'supabase/tests/auth_free_tier_token_lock.sql'
@@ -57,6 +62,41 @@ jobs:
           psql --host 127.0.0.1 --port 54322 --username postgres
           --dbname postgres --set ON_ERROR_STOP=1
           --file supabase/tests/rls_behavior.sql
+      - name: Verify transaction-only hosted owner isolation
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/qst_199_owner_isolation_hosted.sql
+      - name: Verify Task current-route guard through owner RPCs
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/qst_345_task_current_route_guard_hosted.sql
+      - name: Verify planning checkpoint ownership and rollback
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/quest_planning_checkpoint_hosted.sql
+      - name: Verify edited-plan approval ownership and RPC contract
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/qst_252_atomic_edited_approval.sql
+      - name: Verify safe remaining-route replacement
+        env:
+          PGPASSWORD: postgres
+        run: >-
+          psql --host 127.0.0.1 --port 54322 --username postgres
+          --dbname postgres --set ON_ERROR_STOP=1
+          --file supabase/tests/qst_456_approval_safe_ai_route_replacement.sql
       - name: Verify hosted RLS inventory query
         env:
           PGPASSWORD: postgres

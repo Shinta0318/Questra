@@ -1,6 +1,12 @@
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/hosted_migration_dry_run.ps1"
 
+$runner = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'run_hosted_migration_deployment.ps1')
+if (([regex]::Matches($runner, "'migration', 'list', '--linked', '--output-format', 'json'")).Count -ne 2 -or
+    $runner -cnotmatch "'db', 'push', '--linked', '--dry-run', '--output-format', 'json'") {
+  throw 'Hosted runner must request JSON output for each parsed Supabase CLI command.'
+}
+
 function Expect-Rejected {
   param([string]$Plan, [string[]]$Expected)
   try {

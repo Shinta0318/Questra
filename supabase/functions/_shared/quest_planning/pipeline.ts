@@ -5,6 +5,12 @@ import { planningTools } from "./tool_registry.ts";
 import { activePrompt, PROMPTS } from "./prompt_registry.ts";
 import { decideGrounding, validateGroundedMissionReferences, validateGroundingEvidence } from "./grounding.ts";
 import { validateMissionArchitectureSemantics, validateRouteMissionPlan, validateTaskPlan } from "./validators.ts";
+import { planningPassIdempotencyKey } from "./pass_idempotency.ts";
+import { planningModelPayload, runCheckpointedPlanningPass } from "./pass_checkpoint.ts";
+import { missionRepairScope, taskRepairIds } from "./repair_scope.ts";
+import { criticReviewCoverage, passesMissionDimensionScores, passesOverallCriticScore } from "./critic_score.ts";
+import { validateJsonSchema } from "./json_schema_validator.ts";
+import { routeMissionPlanSchema } from "./schemas.ts";
 
 export type PlanningInput = {
   questId: string;
@@ -17,10 +23,18 @@ export type PlanningInput = {
   constraints?: string[];
   approvedContext?: Record<string, unknown>;
   existingRoute?: Record<string, unknown>;
+  toolContextFingerprint?: string;
   userId?: string | null;
   abuseKeyHash?: string | null;
   idempotencyKey: string;
+  passBudget?: { limit: 1; used: number };
 };
+
+export class PlanningContinuationNeeded extends Error {
+  constructor() {
+    super("Planning has a validated checkpoint and can continue in another request");
+  }
+}
 
 export type PlanningPass = {
   name: string;
@@ -32,6 +46,7 @@ export type PlanningPass = {
 export type PlanningPipelineResult = {
   traceId: string;
   status: "preview_ready" | "needs_clarification" | "retryable_error" | "manual_path";
+  retryAfterSeconds?: number;
   passes: PlanningPass[];
   preview: unknown | null;
   issues: ValidationIssue[];
@@ -72,10 +87,10 @@ export async function runQuestPlanningPipeline(input: PlanningInput): Promise<Pl
       "get_user_planning_preferences",
       "get_quest_dna",
       "get_relevant_arc_memory",
-    ]),
+    ], true),
     ...(grounding.required ? [{ type: "google_search" as const }] : []),
   ];
-  const strategy = await runPass("strategic_plan", { understanding: understandingOutput, successContract: success.response.output, achievementDomains: domains.response.output, groundingDecision: grounding, existingRoute: input.existingRoute }, input, traceId, prompts, strategyTools);
+  const strategy = await runPass("strategic_plan", { questId: input.questId, understanding: understandingOutput, successContract: success.response.output, achievementDomains: domains.response.output, groundingDecision: grounding, existingRoute: input.existingRoute }, input, traceId, prompts, strategyTools);
   passes.push(strategy.pass);
   if (!strategy.response || strategy.response.error) return failed(traceId, passes, prompts, strategy.response?.error?.retryable);
   const groundingValidation = validateGroundingEvidence(grounding, strategy.response.groundingMetadata);
@@ -91,12 +106,15 @@ export async function runQuestPlanningPipeline(input: PlanningInput): Promise<Pl
   let quality = await evaluateMissionPlan(plan, input, success.response.output, domains.response.output, traceId, prompts, grounding, strategy.response.groundingMetadata);
   passes.push(...quality.passes);
   if (quality.evaluationUnavailable) return result(traceId, "retryable_error", passes, null, missionQualityGateIssues(plan, quality), prompts);
-  for (let repairPass = 1; quality.failedIds.length > 0 && repairPass <= 1; repairPass++) {
+  const repairScope = missionRepairScope(plan, quality.failedIds);
+  for (let repairPass = 1; repairScope.needsRepair && repairPass <= 1; repairPass++) {
     const repair = await runPass("route_mission_repair", {
       quest: input, plan, successContract: success.response.output, achievementDomains: domains.response.output,
       granularity: quality.granularity, coverage: quality.coverage, critic: quality.critic,
       groundingMetadata: strategy.response.groundingMetadata,
-      failedMissionClientIds: quality.failedIds, repairPass, maxRepairPasses: 1,
+      failedMissionClientIds: repairScope.failedMissionClientIds,
+      coverageGap: repairScope.coverageGap,
+      repairPass, maxRepairPasses: 1,
     }, input, traceId, prompts);
     passes.push(repair.pass);
     if (!repair.response || repair.response.error) return failed(traceId, passes, prompts, repair.response?.error?.retryable);
@@ -123,8 +141,9 @@ export async function runQuestPlanningPipeline(input: PlanningInput): Promise<Pl
   if (!taskCritic.response || taskCritic.response.error) return failed(traceId, passes, prompts, taskCritic.response?.error?.retryable);
   let finalTaskCritic = taskCritic.response.output;
   let failedTaskIds = failedEntityIds(finalTaskCritic, "taskResults", taskValidation, allTaskIds(taskPlan));
-  if (failedTaskIds.length > 0) {
-    const taskRepair = await runPass("task_repair", { quest: input, mission: currentMission, taskPlan, critic: taskCritic.response.output, failedTaskClientIds: failedTaskIds, maxRepairPasses: 1 }, input, traceId, prompts);
+  const failedTaskRepairIds = taskRepairIds(taskPlan, failedTaskIds);
+  if (failedTaskRepairIds.length > 0) {
+    const taskRepair = await runPass("task_repair", { quest: input, mission: currentMission, taskPlan, critic: taskCritic.response.output, failedTaskClientIds: failedTaskRepairIds, maxRepairPasses: 1 }, input, traceId, prompts);
     passes.push(taskRepair.pass);
     if (!taskRepair.response || taskRepair.response.error) return failed(traceId, passes, prompts, taskRepair.response?.error?.retryable);
     taskPlan = taskRepair.response.output;
@@ -134,8 +153,8 @@ export async function runQuestPlanningPipeline(input: PlanningInput): Promise<Pl
     if (!repairedTaskCritic.response || repairedTaskCritic.response.error) return failed(traceId, passes, prompts, repairedTaskCritic.response?.error?.retryable);
     finalTaskCritic = repairedTaskCritic.response.output;
     failedTaskIds = failedEntityIds(finalTaskCritic, "taskResults", taskValidation, allTaskIds(taskPlan));
-    if (failedTaskIds.length > 0) taskValidation.push({ path: "$.tasks", code: "task_critic_rejected", message: "One or more Tasks did not meet the quality threshold" });
   }
+  if (failedTaskIds.length > 0) taskValidation.push({ path: "$.tasks", code: "task_critic_rejected", message: "One or more Tasks did not meet the quality threshold" });
   passes.push({ name: "task_final_validation", status: taskValidation.length ? "failed" : "completed", output: { issues: taskValidation } });
   if (taskValidation.length) return result(traceId, "manual_path", passes, null, taskValidation, prompts);
   return result(traceId, "preview_ready", passes, {
@@ -179,6 +198,9 @@ export async function revalidateApprovedMissionPlan(
   const traceId = crypto.randomUUID();
   const passes: PlanningPass[] = [];
   const prompts: Record<string, number> = {};
+  const schemaIssues = validateJsonSchema(plan, routeMissionPlanSchema);
+  passes.push({ name: "approved_subset_schema_validation", status: schemaIssues.length ? "failed" : "completed", output: { issues: schemaIssues } });
+  if (schemaIssues.length) return result(traceId, "manual_path", passes, null, schemaIssues, prompts);
   const grounding = decideGrounding(`${input.wish}\n${JSON.stringify(successContract)}`);
   const groundingValidation = validateGroundingEvidence(grounding, groundingMetadata);
   passes.push({ name: "approved_subset_grounding_validation", status: groundingValidation.valid ? "completed" : "failed", output: groundingValidation });
@@ -253,10 +275,11 @@ export async function runTaskExpansionPipeline(input: TaskExpansionInput): Promi
 
   let finalCritic = critic.response.output;
   let failedTaskIds = failedEntityIds(finalCritic, "taskResults", validation, allTaskIds(taskPlan));
-  if (failedTaskIds.length > 0) {
+  const failedTaskRepairIds = taskRepairIds(taskPlan, failedTaskIds);
+  if (failedTaskRepairIds.length > 0) {
     const repair = await runPass("task_repair", {
       quest: input.questContext ?? { title: input.wish }, mission: input.mission, taskPlan,
-      critic: critic.response.output, failedTaskClientIds: failedTaskIds, maxRepairPasses: 1,
+      critic: critic.response.output, failedTaskClientIds: failedTaskRepairIds, maxRepairPasses: 1,
     }, input, traceId, prompts);
     passes.push(repair.pass);
     if (!repair.response || repair.response.error) return failed(traceId, passes, prompts, repair.response?.error?.retryable);
@@ -270,8 +293,8 @@ export async function runTaskExpansionPipeline(input: TaskExpansionInput): Promi
     if (!repairedCritic.response || repairedCritic.response.error) return failed(traceId, passes, prompts, repairedCritic.response?.error?.retryable);
     finalCritic = repairedCritic.response.output;
     failedTaskIds = failedEntityIds(finalCritic, "taskResults", validation, allTaskIds(taskPlan));
-    if (failedTaskIds.length > 0) validation.push({ path: "$.tasks", code: "task_critic_rejected", message: "One or more Tasks did not meet the quality threshold" });
   }
+  if (failedTaskIds.length > 0) validation.push({ path: "$.tasks", code: "task_critic_rejected", message: "One or more Tasks did not meet the quality threshold" });
   passes.push({ name: "task_final_validation", status: validation.length ? "failed" : "completed", output: { issues: validation } });
   if (validation.length) return result(traceId, "manual_path", passes, null, validation, prompts);
   return result(traceId, "preview_ready", passes, {
@@ -317,34 +340,58 @@ async function evaluateMissionPlan(
 }
 
 async function runPass(key: keyof typeof PROMPTS, payload: unknown, input: PlanningInput, traceId: string, versions: Record<string, number>, tools: ProviderRequest["tools"] = []) {
+  const sliced = input.passBudget?.limit === 1;
+  if (sliced && input.passBudget!.used >= 1) {
+    throw new PlanningContinuationNeeded();
+  }
   const prompt = activePrompt(key);
   versions[key] = prompt.version;
+  const modelPayload = planningModelPayload(payload);
+  const idempotencyKey = await planningPassIdempotencyKey(input.idempotencyKey, key, {
+    payload: modelPayload,
+    toolContextFingerprint: input.toolContextFingerprint,
+    promptVersion: prompt.version,
+    schemaVersion: prompt.schemaVersion,
+    thinkingLevel: prompt.thinkingLevel,
+    tools,
+  });
   const request: ProviderRequest = {
     operation: `quest_planning.${key}`,
     modelRole: prompt.modelRole,
     promptVersion: `${prompt.key}.v${prompt.version}`,
     schemaVersion: prompt.schemaVersion,
     systemInstruction: prompt.systemInstruction,
-    input: payload,
+    input: modelPayload,
     responseSchema: prompt.schema,
     tools,
     thinkingLevel: prompt.thinkingLevel,
     temperature: prompt.temperature,
     maxOutputTokens: key.includes("generation") || key.includes("repair") ? 8_192 : 3_072,
     timeoutMs: 45_000,
-    idempotencyKey: `${input.idempotencyKey}:${key}`,
+    idempotencyKey,
     traceId,
     userId: input.userId,
     abuseKeyHash: input.abuseKeyHash,
   };
-  const response = tools.some((tool) => tool.type === "function")
+  const invoke = () => tools.some((tool) => tool.type === "function")
     ? input.userId
-      ? await callGeminiInteractionWithTools(request, {
+      ? callGeminiInteractionWithTools(request, {
         userId: input.userId,
+        questId: input.questId,
         approved: false,
       })
-      : missingUserForTools(request)
-    : await callGeminiInteraction(request);
+      : Promise.resolve(missingUserForTools(request))
+    : callGeminiInteraction(request);
+  const response = await runCheckpointedPlanningPass(
+    input.questId,
+    request,
+    invoke,
+    {},
+    sliced,
+  );
+  if (sliced && !response.cacheHit && !response.error) {
+    input.passBudget!.used++;
+  }
   const {
     output: _,
     text: __,
@@ -385,7 +432,7 @@ function criticFailedIds(value: unknown, issues: ValidationIssue[], granularity:
     for (const raw of (value as Record<string, unknown>).missionResults as unknown[]) {
       if (!raw || typeof raw !== "object" || typeof (raw as Record<string, unknown>).clientId !== "string") continue;
       const result = raw as Record<string, unknown>;
-      if (result.passed === false || result.verdict !== "pass" || belowMissionThreshold(result.scores)) ids.add(result.clientId as string);
+      if (result.passed === false || result.verdict !== "pass" || !passesMissionDimensionScores(result.scores)) ids.add(result.clientId as string);
     }
   }
   if (granularity && typeof granularity === "object" && Array.isArray((granularity as Record<string, unknown>).classifications)) {
@@ -424,30 +471,29 @@ function missionQualityGateIssues(
 ) {
   const issues = [...quality.validation];
   if (!quality.granularity) issues.push({ path: "$.granularity", code: "granularity_missing", message: "Mission granularity evaluation is required" });
+  else {
+    const rows = typeof quality.granularity === "object"
+      ? (quality.granularity as Record<string, unknown>).classifications
+      : null;
+    const coverage = criticReviewCoverage(allMissionIds(plan), rows, "candidateId");
+    for (const id of coverage.missing) issues.push({ path: "$.granularity.classifications", code: "granularity_result_missing", message: "Every Mission requires a granularity review", missionClientId: id });
+    for (const id of coverage.duplicate) issues.push({ path: "$.granularity.classifications", code: "granularity_result_duplicate", message: "A Mission was classified more than once", missionClientId: id });
+    if (coverage.unexpected.length > 0 || coverage.invalidCount > 0) issues.push({ path: "$.granularity.classifications", code: "granularity_result_unexpected", message: "Granularity results must match the Mission plan exactly" });
+  }
   if (!quality.coverage) issues.push({ path: "$.coverage", code: "coverage_missing", message: "Mission coverage evaluation is required" });
   if (!quality.critic || typeof quality.critic !== "object") {
     issues.push({ path: "$.critic", code: "critic_missing", message: "Mission critic evaluation is required" });
   } else {
     const critic = quality.critic as Record<string, unknown>;
     const expectedIds = allMissionIds(plan);
-    const results = Array.isArray(critic.missionResults) ? critic.missionResults : [];
-    const reviewedIds = new Set(results.map((item) => item && typeof item === "object" ? (item as Record<string, unknown>).clientId : null).filter((id): id is string => typeof id === "string"));
-    if (critic.passed !== true || typeof critic.overallScore !== "number" || Number(critic.overallScore) < 85) issues.push({ path: "$.critic", code: "critic_rejected", message: "Mission plan did not pass the overall critic threshold" });
-    for (const id of expectedIds) if (!reviewedIds.has(id)) issues.push({ path: "$.critic.missionResults", code: "critic_result_missing", message: "Every Mission requires an independent critic result", missionClientId: id });
+    const coverage = criticReviewCoverage(expectedIds, critic.missionResults);
+    if (critic.passed !== true || !passesOverallCriticScore(critic.overallScore)) issues.push({ path: "$.critic", code: "critic_rejected", message: "Mission plan did not pass the overall critic threshold" });
+    for (const id of coverage.missing) issues.push({ path: "$.critic.missionResults", code: "critic_result_missing", message: "Every Mission requires an independent critic result", missionClientId: id });
+    for (const id of coverage.duplicate) issues.push({ path: "$.critic.missionResults", code: "critic_result_duplicate", message: "A Mission was reviewed more than once", missionClientId: id });
+    if (coverage.unexpected.length > 0 || coverage.invalidCount > 0) issues.push({ path: "$.critic.missionResults", code: "critic_result_unexpected", message: "Critic results must match the Mission plan exactly" });
   }
   if (quality.failedIds.length > 0 && !issues.some((item) => item.code === "critic_rejected")) issues.push({ path: "$.missions", code: "critic_rejected", message: "One or more Missions did not meet the quality threshold" });
   return dedupeIssues(issues);
-}
-
-function belowMissionThreshold(value: unknown) {
-  if (!value || typeof value !== "object") return true;
-  const scores = value as Record<string, unknown>;
-  const minimums: Record<string, number> = {
-    questRelevance: 90, outcomeQuality: 85, missionGranularity: 90,
-    successConditionQuality: 90, personalization: 80, nonTemplateQuality: 90,
-    uniqueness: 90, sequencing: 80, completenessContribution: 85, taskSeparation: 95,
-  };
-  return Object.entries(minimums).some(([key, minimum]) => typeof scores[key] !== "number" || Number(scores[key]) < minimum);
 }
 
 function allMissionIds(plan: unknown) {
@@ -456,17 +502,20 @@ function allMissionIds(plan: unknown) {
 }
 function failedEntityIds(value: unknown, resultKey: string, issues: ValidationIssue[], expectedIds: string[]) {
   const ids = new Set(issues.map((item) => item.missionClientId).filter((item): item is string => Boolean(item)));
-  const reviewedIds = new Set<string>();
-  if (!value || typeof value !== "object" || (value as Record<string, unknown>).passed !== true || typeof (value as Record<string, unknown>).overallScore !== "number" || Number((value as Record<string, unknown>).overallScore) < 85) ids.add("__critic_overall__");
-  if (value && typeof value === "object" && Array.isArray((value as Record<string, unknown>)[resultKey])) {
-    for (const raw of (value as Record<string, unknown>)[resultKey] as unknown[]) {
+  if (!value || typeof value !== "object" || (value as Record<string, unknown>).passed !== true || !passesOverallCriticScore((value as Record<string, unknown>).overallScore)) ids.add("__critic_overall__");
+  const results = value && typeof value === "object"
+    ? (value as Record<string, unknown>)[resultKey]
+    : null;
+  const coverage = criticReviewCoverage(expectedIds, results);
+  if (coverage.duplicate.length > 0 || coverage.unexpected.length > 0 || coverage.invalidCount > 0) ids.add("__critic_overall__");
+  if (Array.isArray(results)) {
+    for (const raw of results as unknown[]) {
       if (!raw || typeof raw !== "object" || typeof (raw as Record<string, unknown>).clientId !== "string") continue;
       const clientId = (raw as Record<string, unknown>).clientId as string;
-      reviewedIds.add(clientId);
       if ((raw as Record<string, unknown>).passed !== true) ids.add(clientId);
     }
   }
-  for (const id of expectedIds) if (!reviewedIds.has(id)) ids.add(id);
+  for (const id of coverage.missing) ids.add(id);
   return [...ids];
 }
 function allTaskIds(plan: unknown) {
@@ -483,8 +532,15 @@ function dedupeIssues(issues: ValidationIssue[]) {
   });
 }
 function failed(traceId: string, passes: PlanningPass[], prompts: Record<string, number>, retryable = false) {
-  return result(traceId, retryable ? "retryable_error" : "manual_path", passes, null, [], prompts);
+  const error = [...passes].reverse().find((pass) => pass.provider?.error)?.provider?.error;
+  const issues: ValidationIssue[] = error
+    ? [{ path: "$.passes", code: error.code, message: "Planning provider pass failed" }]
+    : [];
+  return result(traceId, retryable ? "retryable_error" : "manual_path", passes, null, issues, prompts);
 }
 function result(traceId: string, status: PlanningPipelineResult["status"], passes: PlanningPass[], preview: unknown, issues: ValidationIssue[], prompts: Record<string, number>): PlanningPipelineResult {
-  return { traceId, status, passes, preview, issues, versions: { pipeline: "4.0", schema: "mission-architecture-4.0", prompts }, persistenceAllowed: false };
+  const rateLimit = status === "retryable_error"
+    ? [...passes].reverse().find((pass) => pass.provider?.error?.code === "rate_limited")?.provider?.error
+    : undefined;
+  return { traceId, status, ...(rateLimit ? { retryAfterSeconds: rateLimit.retryAfterSeconds ?? 60 } : {}), passes, preview, issues, versions: { pipeline: "4.0", schema: "mission-architecture-4.0", prompts }, persistenceAllowed: false };
 }

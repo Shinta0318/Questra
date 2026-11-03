@@ -36,8 +36,8 @@ export const PROMPTS: Record<string, PromptDefinition> = {
     systemInstruction: `Generate the minimum sufficient set of Quest-specific Missions from the approved success contract and strategic plan. Mission count is variable, normally 3-20 and never padded to a target. Detail near-term work; keep distant work broad. Every Mission must be actionable, verifiable, constrained, and have an acyclic dependency graph. ${common}`,
   },
   mission_critic: {
-    key: "mission_critic", version: 4, status: "active", modelRole: "mission_critic", thinkingLevel: "high", schemaKey: "MissionCriticResult", temperature: 0.1,
-    systemInstruction: `Independently score every Mission for Quest relevance, outcome quality, Mission granularity, success-condition quality, personalization, non-template quality, uniqueness, sequencing, completeness contribution, and Task separation. Reject internal planning artifacts such as defining success, listing known conditions, separating unknowns, or deciding to make a plan. Reject candidates that ignore explicit clarification answers. A standalone action cannot pass as a Mission. Return a verdict and repair instruction for each candidate. Do not rewrite Missions. ${common}`,
+    key: "mission_critic", version: 5, status: "active", modelRole: "mission_critic", thinkingLevel: "high", schemaKey: "MissionCriticResult", temperature: 0.1,
+    systemInstruction: `Score overallScore and every Mission score as integer percentage points on a 0-100 scale, never a 0-5 or 1-5 scale. A score of 5 means very poor, not perfect. Mark passed only when overallScore is at least 85 and every Mission meets the required dimension thresholds: questRelevance 90, outcomeQuality 85, missionGranularity 90, successConditionQuality 90, personalization 80, nonTemplateQuality 90, uniqueness 90, sequencing 80, completenessContribution 85, taskSeparation 95. Independently score every Mission for Quest relevance, outcome quality, Mission granularity, success-condition quality, personalization, non-template quality, uniqueness, sequencing, completeness contribution, and Task separation. Reject internal planning artifacts such as defining success, listing known conditions, separating unknowns, or deciding to make a plan. Reject candidates that ignore explicit clarification answers. A standalone action cannot pass as a Mission. Return a verdict and repair instruction for each candidate. Do not rewrite Missions. ${common}`,
   },
   targeted_repair: {
     key: "targeted_repair", version: 2, status: "active", modelRole: "targeted_repair", thinkingLevel: "medium", schemaKey: "MissionRepairResult", temperature: 0.2,
@@ -68,8 +68,8 @@ export const PROMPTS: Record<string, PromptDefinition> = {
     systemInstruction: `Repair only failed Task client IDs. Preserve passing Tasks byte-for-byte. Keep actions concrete, verifiable and small. ${common}`,
   },
   task_critic: {
-    key: "task_critic", version: 1, status: "active", modelRole: "mission_critic", thinkingLevel: "high", schemaKey: "TaskCriticResult", temperature: 0.1,
-    systemInstruction: `Independently evaluate every Task for Mission relevance, specificity, executability, objective completion criteria, duplication, sequencing, size and user-constraint alignment. Return failed Task client IDs only and do not rewrite. ${common}`,
+    key: "task_critic", version: 2, status: "active", modelRole: "mission_critic", thinkingLevel: "high", schemaKey: "TaskCriticResult", temperature: 0.1,
+    systemInstruction: `Score overallScore as percentage points on a 0-100 scale, never a 0-5 or 1-5 scale. A score of 5 means very poor, not perfect; passed requires overallScore at least 85 and every Task to pass. Independently evaluate every Task for Mission relevance, specificity, executability, objective completion criteria, duplication, sequencing, size and user-constraint alignment. Return failed Task client IDs only and do not rewrite. ${common}`,
   },
 };
 

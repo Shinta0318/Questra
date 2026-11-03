@@ -1,6 +1,9 @@
-const REQUIRED_PATTERNS = [
-  /旅行|入国|ビザ|パスポート|航空|交通|営業/, /資格|試験|申請|制度|法律|税|補助金/,
-  /医療|健康|薬|治療|安全/, /価格|料金|費用|製品/, /天候|季節|イベント|ソフトウェア|API|仕様/,
+const CURRENT_FACT_TOPICS = [
+  { pattern: /旅行|入国|ビザ|パスポート|航空|交通|営業/, intent: "official travel, entry, transport, and opening requirements" },
+  { pattern: /資格|試験|申請|制度|法律|税|補助金/, intent: "official qualifications, applications, laws, taxes, and grants" },
+  { pattern: /医療|健康|薬|治療|安全/, intent: "official health and safety guidance" },
+  { pattern: /価格|料金|費用|製品/, intent: "current official prices and fees" },
+  { pattern: /天候|季節|イベント|ソフトウェア|API|仕様/, intent: "current seasonal, event, and software requirements" },
 ];
 
 export type GroundingDecision = {
@@ -10,7 +13,7 @@ export type GroundingDecision = {
 };
 
 export function decideGrounding(questText: string): GroundingDecision {
-  const matched = REQUIRED_PATTERNS.some((pattern) => pattern.test(questText));
+  const matched = CURRENT_FACT_TOPICS.some(({ pattern }) => pattern.test(questText));
   return matched
     ? {
       required: true,
@@ -21,7 +24,10 @@ export function decideGrounding(questText: string): GroundingDecision {
 }
 
 export function sanitizeQueryIntent(value: string) {
-  return value.replace(/[\w.+-]+@[\w.-]+/g, "[email]").replace(/\b\d{2,4}[- ]?\d{2,4}[- ]?\d{3,4}\b/g, "[phone]").slice(0, 500);
+  const topics = CURRENT_FACT_TOPICS
+    .filter(({ pattern }) => pattern.test(value))
+    .map(({ intent }) => intent);
+  return `Verify ${topics.join("; ")} relevant to the Quest using primary sources. Use only public subjects such as a destination, exam, product, or event when needed for relevance. Omit names, contact details, private dates, budgets, and other personal circumstances from search queries.`;
 }
 
 export function validateGroundingEvidence(

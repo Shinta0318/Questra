@@ -1,7 +1,7 @@
 version: 1
 qst: QST-393
 status: partition_ready_clean_sha_pending
-branch: codex/initial-questra-structure-pr
+branch: codex/gemini-free-tier-validation
 phases:
   implementation:
     every_changed_path_classified_once: true

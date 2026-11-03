@@ -17,6 +17,8 @@ param(
   [string]$DashboardEvidence,
 
   [string]$SecretEnvFile = 'supabase/functions/.env.beta.local',
+  [string]$BackupEvidencePath = '',
+  [string]$PgRestorePath = '',
   [switch]$Apply,
   [switch]$CommitEvidence
 )
@@ -75,6 +77,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Hosted evidence V2 preflight failed.' }
   -ProjectRef $ProjectRef `
   -ExpectedSha $sourceCommit `
   -ConfirmProjectRef $(if ($Apply) { $ProjectRef } else { '' }) `
+  -BackupEvidencePath $BackupEvidencePath `
+  -PgRestorePath $PgRestorePath `
   -Execute:$Apply
 if ($LASTEXITCODE -ne 0) { throw 'Hosted migration deployment failed.' }
 if ($Apply) { Commit-StageEvidence 'docs/qst/HOSTED_MIGRATION_DEPLOYMENT.yaml' }

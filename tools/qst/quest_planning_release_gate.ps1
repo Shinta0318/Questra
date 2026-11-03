@@ -7,6 +7,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. "$PSScriptRoot/planning_eval_version_policy.ps1"
 if (-not (Test-Path $ResultsPath)) { throw "Evaluation results not found: $ResultsPath" }
 if (-not (Test-Path $HumanReviewPath)) { throw "Human review evidence not found: $HumanReviewPath" }
 $rows = @(Get-Content -Raw -Encoding UTF8 $ResultsPath | ConvertFrom-Json)
@@ -57,13 +58,7 @@ $latencies = @($planningRows | ForEach-Object { [int]$_.duration_ms } | Sort-Obj
 $p95Index = [math]::Min($latencies.Count - 1, [math]::Ceiling($latencies.Count * 0.95) - 1)
 $p95LatencyMs = $latencies[$p95Index]
 $totalCostUsd = [math]::Round((($planningRows | Measure-Object -Property estimated_cost_usd -Sum).Sum), 6)
-$versionFingerprints = @($planningRows | ForEach-Object {
-  [ordered]@{
-    models = @($_.model_versions)
-    thinking = @($_.thinking_levels)
-    versions = $_.versions
-  } | ConvertTo-Json -Depth 10 -Compress
-} | Sort-Object -Unique)
+$versionPolicy = Get-PlanningEvalVersionPolicy -PlanningRows $planningRows
 
 $gates = [ordered]@{
   quest_relevance = 90
@@ -84,7 +79,9 @@ if ($metrics.usage_coverage_rate -lt 95) { $failures += "usage_coverage_rate=$($
 if ($metrics.safety_non_fallback_rate -lt 100) { $failures += "safety_non_fallback_rate=$($metrics.safety_non_fallback_rate) < 100" }
 if ($p95LatencyMs -gt $MaxP95LatencyMs) { $failures += "p95_latency_ms=$p95LatencyMs > $MaxP95LatencyMs" }
 if ($totalCostUsd -gt $MaxTotalCostUsd) { $failures += "total_cost_usd=$totalCostUsd > $MaxTotalCostUsd" }
-if ($versionFingerprints.Count -ne 1) { $failures += "version_configuration_count=$($versionFingerprints.Count) != 1" }
+if ($versionPolicy.configuration_count -ne 1) { $failures += "version_configuration_count=$($versionPolicy.configuration_count) != 1" }
+if ($versionPolicy.prompt_version_conflict_count -gt 0) { $failures += "prompt_version_conflict_count=$($versionPolicy.prompt_version_conflict_count)" }
+if ($versionPolicy.missing_version_evidence_count -gt 0) { $failures += "missing_version_evidence_count=$($versionPolicy.missing_version_evidence_count)" }
 
 $report = [ordered]@{
   evaluated_at = (Get-Date).ToUniversalTime().ToString("o")
@@ -96,7 +93,9 @@ $report = [ordered]@{
   metrics = $metrics
   p95_latency_ms = $p95LatencyMs
   total_cost_usd = $totalCostUsd
-  version_configuration_count = $versionFingerprints.Count
+  version_configuration_count = $versionPolicy.configuration_count
+  prompt_version_conflict_count = $versionPolicy.prompt_version_conflict_count
+  missing_version_evidence_count = $versionPolicy.missing_version_evidence_count
   human_review = $humanReview
   gates = $gates
   passed = $failures.Count -eq 0

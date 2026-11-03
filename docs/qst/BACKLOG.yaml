@@ -8444,7 +8444,7 @@ items:
     evidence_state: local_partial
     priority: P0
     epic: BETA_RELEASE
-    goal: 古いBeta移行計画を現行45本へ揃え、過去候補の証拠を上書きせずHosted実行を準備する。
+    goal: 古いBeta移行計画を現在のローカル未適用Migration全件へ揃え、過去候補の証拠を上書きせずHosted実行を準備する。
     depends_on: [QST-580, QST-586]
     blocks: [External Beta]
     likely_files:
@@ -8454,7 +8454,7 @@ items:
       - docs/qst/HOSTED_EVIDENCE_RUN.yaml
       - reports/qst/QST-587.md
     acceptance:
-      - リモートの観測済みhead以降のローカル45本を順序どおり計画へ記載する。
+      - リモートの観測済みhead以降のローカル未適用Migration全件を順序どおり計画へ記載し、件数と最新ファイルを再検証する。
       - 実配備・現在候補SHA・RLS合格を推測しない。
       - 古い候補マニフェストは新しいclean SHAを作るまで検査で拒否される。
       - CLI再認証、リモートhead再確認、dry-run、バックアップ地点の後にのみ配備する。

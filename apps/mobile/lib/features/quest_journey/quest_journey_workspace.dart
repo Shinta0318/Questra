@@ -6,12 +6,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../core/theme/questra_colors.dart';
+import '../../widgets/feedback/questra_notification.dart';
 import '../../widgets/questra_card.dart';
 import '../mission/mission_model.dart';
 import '../quest/quest_model.dart';
 import '../task/task_controller.dart';
 import '../task/task_achievement_flow.dart';
 import '../task/task_model.dart';
+import '../task/task_mutation_state.dart';
 import 'quest_journey_contract.dart';
 
 class QuestJourneyWorkspace extends ConsumerStatefulWidget {
@@ -71,6 +73,9 @@ class _QuestJourneyWorkspaceState extends ConsumerState<QuestJourneyWorkspace> {
     final focusSelection = const QuestFocusSelectionService().selectTodayFocus(
       tasks: tasks,
       missions: widget.missions,
+      eligibleQuestIds: widget.quest.status == QuestStatus.active
+          ? {widget.quest.id}
+          : <String>{},
     );
 
     return Semantics(
@@ -155,7 +160,24 @@ class _QuestJourneyWorkspaceState extends ConsumerState<QuestJourneyWorkspace> {
     final ok = wasCompleted
         ? await controller.reopen(task.id)
         : await controller.completeFromWorkspace(task.id);
-    if (!mounted || !ok) return;
+    if (!mounted) return;
+    if (!ok) {
+      if (ref.read(taskMutationControllerProvider).needsRouteRefresh) {
+        final refreshed = await controller.refreshConflict();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            QuestraSnackBars.message(
+              refreshed
+                  ? '航路が変わったため、最新のQuestとMissionを読み込みました。'
+                  : '航路が変わりました。Task画面で最新の航路を読み込んでください。',
+              type: QuestraNotificationType.warning,
+            ),
+          );
+      }
+      return;
+    }
     if (!wasCompleted) {
       final tasks = ref.read(taskControllerProvider);
       final completed = tasks.where((item) => item.id == task.id).firstOrNull;
@@ -164,6 +186,8 @@ class _QuestJourneyWorkspaceState extends ConsumerState<QuestJourneyWorkspace> {
         context: context,
         completedTask: completed,
         allTasks: tasks,
+        quests: [widget.quest],
+        missions: widget.missions,
         onUndo: () => controller.reopen(completed.id),
       );
       return;

@@ -16,11 +16,17 @@ void main() {
         'run: flutter build apk --config-only',
       );
       final releaseIndex = workflow.indexOf(
-        'run: flutter build apk --release --no-pub',
+        'flutter build apk --release --no-pub',
       );
 
       expect(configureIndex, greaterThanOrEqualTo(0));
       expect(releaseIndex, greaterThan(configureIndex));
+      expect(
+        workflow,
+        contains(
+          'flutter build apk --release --no-pub --dart-define-from-file=',
+        ),
+      );
       expect(
         workflow,
         isNot(contains('prepare_android_release_registrant.dart')),

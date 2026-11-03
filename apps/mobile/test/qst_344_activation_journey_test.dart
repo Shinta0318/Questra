@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/features/auth/auth_state.dart';
+import 'package:questra/features/mission/mission_model.dart';
 import 'package:questra/features/onboarding/activation_journey.dart';
+import 'package:questra/features/quest/quest_guide_model.dart';
 import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/task/task_load_state.dart';
 import 'package:questra/features/task/task_model.dart';
@@ -74,6 +76,105 @@ void main() {
     expect(snapshot.stage, ActivationJourneyStage.complete);
     expect(snapshot.isComplete, isTrue);
   });
+
+  test('Task from an archived Quest does not complete or drive activation', () {
+    final snapshot = service.resolve(
+      profile: _profile(),
+      quests: [
+        _quest(),
+        _quest(id: 'old-quest', status: QuestStatus.archived),
+      ],
+      tasks: [
+        _task(
+          id: 'old-task',
+          questId: 'old-quest',
+          status: TaskStatus.completed,
+        ),
+        _task(status: TaskStatus.ready),
+      ],
+      taskLoadState: const TaskLoadState(status: TaskLoadStatus.loaded),
+    );
+
+    expect(snapshot.stage, ActivationJourneyStage.firstTask);
+    expect(snapshot.quest?.id, 'quest-1');
+    expect(snapshot.task?.id, 'task-1');
+  });
+
+  test('an archived ready Task is not the first Task of an active Quest', () {
+    final snapshot = service.resolve(
+      profile: _profile(),
+      quests: [
+        _quest(),
+        _quest(id: 'old-quest', status: QuestStatus.archived),
+      ],
+      tasks: [
+        _task(id: 'old-task', questId: 'old-quest', status: TaskStatus.ready),
+        _task(status: TaskStatus.ready),
+      ],
+      taskLoadState: const TaskLoadState(status: TaskLoadStatus.loaded),
+    );
+
+    expect(snapshot.stage, ActivationJourneyStage.firstTask);
+    expect(snapshot.task?.id, 'task-1');
+  });
+
+  test('deferred, blocked, and dependent Tasks are not offered as ready', () {
+    final snapshot = service.resolve(
+      profile: _profile(),
+      quests: [_quest()],
+      tasks: [
+        _task(id: 'later', status: TaskStatus.deferred),
+        _task(id: 'blocked', status: TaskStatus.blocked),
+        _task(
+          id: 'dependent',
+          status: TaskStatus.ready,
+          dependencyIds: const ['first'],
+        ),
+        _task(id: 'first', status: TaskStatus.ready),
+      ],
+      taskLoadState: const TaskLoadState(status: TaskLoadStatus.loaded),
+    );
+
+    expect(snapshot.stage, ActivationJourneyStage.firstTask);
+    expect(snapshot.task?.id, 'first');
+  });
+
+  test('only unavailable Tasks return to Quest confirmation', () {
+    final snapshot = service.resolve(
+      profile: _profile(),
+      quests: [_quest()],
+      tasks: [_task(status: TaskStatus.blocked)],
+      taskLoadState: const TaskLoadState(status: TaskLoadStatus.loaded),
+    );
+
+    expect(snapshot.stage, ActivationJourneyStage.questConfirm);
+    expect(snapshot.task, isNull);
+  });
+
+  test('a Task in a paused Mission cannot complete or drive activation', () {
+    final snapshot = service.resolve(
+      profile: _profile(),
+      quests: [_quest()],
+      tasks: [_task(status: TaskStatus.completed)],
+      missions: [
+        Mission(
+          id: 'mission-1',
+          questId: 'quest-1',
+          questTitle: 'シンガポール旅行を実現する',
+          title: '旅行条件を決める',
+          description: '旅行条件',
+          guideType: GuideType.route,
+          difficulty: MissionDifficulty.normal,
+          status: MissionStatus.todo,
+          routeState: MissionRouteState.paused,
+        ),
+      ],
+      taskLoadState: const TaskLoadState(status: TaskLoadStatus.loaded),
+    );
+
+    expect(snapshot.stage, ActivationJourneyStage.questConfirm);
+    expect(snapshot.task, isNull);
+  });
 }
 
 UserProfile _profile({
@@ -87,18 +188,26 @@ UserProfile _profile({
   legalAcceptanceCurrent: legalAcceptanceCurrent,
 );
 
-Quest _quest() => Quest(
-  id: 'quest-1',
+Quest _quest({
+  String id = 'quest-1',
+  QuestStatus status = QuestStatus.active,
+}) => Quest(
+  id: id,
   title: 'シンガポール旅行を実現する',
   description: '家族で行きたい場所を具体化する',
   difficulty: QuestDifficulty.normal,
-  status: QuestStatus.active,
+  status: status,
   visibility: QuestVisibility.private,
 );
 
-QuestraTask _task({required TaskStatus status}) => QuestraTask(
-  id: 'task-1',
-  questId: 'quest-1',
+QuestraTask _task({
+  String id = 'task-1',
+  String questId = 'quest-1',
+  required TaskStatus status,
+  List<String> dependencyIds = const [],
+}) => QuestraTask(
+  id: id,
+  questId: questId,
   missionId: 'mission-1',
   questTitle: 'シンガポール旅行を実現する',
   missionTitle: '旅行条件を決める',
@@ -106,4 +215,5 @@ QuestraTask _task({required TaskStatus status}) => QuestraTask(
   action: '同行者と予定を確認し、旅行できる月を一つ決める',
   doneCondition: '旅行できる年月が決まっている',
   status: status,
+  dependencyIds: dependencyIds,
 );

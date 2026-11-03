@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:questra/features/arc/arc_celebration_service.dart';
+import 'package:questra/features/mission/mission_model.dart';
+import 'package:questra/features/quest/quest_guide_model.dart';
+import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/task/task_achievement_flow.dart';
 import 'package:questra/features/task/task_model.dart';
 
@@ -55,6 +58,60 @@ void main() {
     expect(plan.missionReadyForReview, isTrue);
     expect(plan.nextActionLabel, 'Missionの成果を確認');
     expect(plan.message, contains('必須Task'));
+  });
+
+  test('Task完了後に停止したMissionのTaskを次に案内しない', () {
+    final completed = _task(
+      id: 'done',
+      title: '旅行日程を決める',
+      status: TaskStatus.completed,
+    );
+    final paused = _task(
+      id: 'paused',
+      title: '現在は使わない予約をする',
+      status: TaskStatus.ready,
+      missionId: 'mission-paused',
+    );
+    final plan = const TaskAchievementService().build(
+      completedTask: completed,
+      allTasks: [completed, paused],
+      quests: [
+        Quest(
+          id: 'quest-singapore',
+          title: 'シンガポールへ行く',
+          description: '旅行を実現する',
+          difficulty: QuestDifficulty.normal,
+          status: QuestStatus.active,
+          visibility: QuestVisibility.private,
+        ),
+      ],
+      missions: [
+        Mission(
+          id: 'mission-schedule',
+          questId: 'quest-singapore',
+          questTitle: 'シンガポールへ行く',
+          title: '日程を決める',
+          description: '日程を確定する',
+          guideType: GuideType.route,
+          difficulty: MissionDifficulty.normal,
+          status: MissionStatus.todo,
+        ),
+        Mission(
+          id: 'mission-paused',
+          questId: 'quest-singapore',
+          questTitle: 'シンガポールへ行く',
+          title: '予約する',
+          description: '現在は停止中',
+          guideType: GuideType.route,
+          difficulty: MissionDifficulty.normal,
+          status: MissionStatus.todo,
+          routeState: MissionRouteState.paused,
+        ),
+      ],
+    );
+
+    expect(plan.nextTask, isNull);
+    expect(plan.message, isNot(contains(paused.title)));
   });
 
   test('ArcはTask完了そのものを祝い、Trailを自動生成しない', () {

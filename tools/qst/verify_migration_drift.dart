@@ -9,6 +9,20 @@ const evidencePaths = <String>[
   'docs/qst/HOSTED_EVIDENCE_RUN.yaml',
   'docs/qst/EXTERNAL_BETA_GO_NO_GO.yaml',
 ];
+const historicalPendingEvidence = <String, Map<String, String>>{
+  'docs/qst/BETA_RLS_EVIDENCE.yaml': {
+    'status': 'local_migration_pending_deployment',
+    'working_tree_clean_at_execution': 'false',
+  },
+  'docs/qst/BETA_CANDIDATE.yaml': {
+    'candidate_status': 'draft',
+    'distribution_ready': 'false',
+  },
+  'docs/qst/HOSTED_EVIDENCE_RUN.yaml': {
+    'status': 'pending_candidate_run',
+    'executed_at_utc': 'null',
+  },
+};
 
 void main() {
   final failures = <String>[];
@@ -22,6 +36,7 @@ void main() {
         ..sort();
   if (migrations.isEmpty) failures.add('No migrations found.');
   final latest = migrations.isEmpty ? '' : migrations.last;
+  final stalePendingPaths = <String>[];
 
   final driftFile = File(driftPath);
   if (!driftFile.existsSync()) {
@@ -56,8 +71,15 @@ void main() {
       failures.add('Missing evidence document: $path');
       continue;
     }
-    if (!file.readAsStringSync().contains(latest)) {
-      failures.add('$path does not reference latest local migration $latest.');
+    final content = file.readAsStringSync();
+    if (!content.contains(latest)) {
+      if (isHistoricalPendingEvidence(path, content)) {
+        stalePendingPaths.add(path);
+      } else {
+        failures.add(
+          '$path does not reference latest local migration $latest.',
+        );
+      }
     }
   }
 
@@ -70,6 +92,28 @@ void main() {
   stdout.writeln(
     'Latest local migration: $latest; evidence documents: ${evidencePaths.length}.',
   );
+  if (stalePendingPaths.isNotEmpty) {
+    stdout.writeln(
+      'Historical pending evidence remains stale and cannot prove this candidate: '
+      '${stalePendingPaths.join(', ')}.',
+    );
+  }
+}
+
+bool isHistoricalPendingEvidence(String path, String content) {
+  final required = historicalPendingEvidence[path];
+  if (required == null) return false;
+  return required.entries.every(
+    (entry) => _rootScalar(content, entry.key) == entry.value,
+  );
+}
+
+String? _rootScalar(String yaml, String key) {
+  final match = RegExp(
+    '^${RegExp.escape(key)}:\\s*(?:"([^"]*)"|([^#\\s]+))\\s*\$',
+    multiLine: true,
+  ).firstMatch(yaml);
+  return match?.group(1) ?? match?.group(2);
 }
 
 String _quotedValue(String yaml, String key) =>

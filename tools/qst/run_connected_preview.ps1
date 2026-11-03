@@ -148,7 +148,10 @@ if (-not [uri]::TryCreate($supabaseUrl, [UriKind]::Absolute, [ref]$baseUri) -or
     $baseUri.Scheme -ne 'https') {
   throw 'SUPABASE_URL must be a hosted HTTPS Supabase project URL.'
 }
-if ($baseUri.Host -notmatch '^(?<ref>[a-z0-9]+)\.supabase\.co$') {
+if ($baseUri.Host -notmatch '^(?<ref>[a-z0-9]{20})\.supabase\.co$' -or
+    $baseUri.AbsolutePath -ne '/' -or $baseUri.Query -ne '' -or
+    $baseUri.Fragment -ne '' -or $baseUri.UserInfo -ne '' -or
+    -not $baseUri.IsDefaultPort) {
   throw 'SUPABASE_URL must be a hosted HTTPS Supabase project URL.'
 }
 $projectRef = $Matches.ref

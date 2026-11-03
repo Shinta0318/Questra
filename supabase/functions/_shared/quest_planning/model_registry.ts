@@ -32,18 +32,6 @@ export const GEMINI_MODELS: Record<string, ModelDefinition> = {
     supportedThinkingLevels: ["low", "medium", "high"],
     defaultThinkingLevel: "medium",
   },
-  "gemini-3.5-flash": {
-    name: "gemini-3.5-flash",
-    family: "gemini-3.5-flash",
-    releaseType: "stable",
-    enabled: true,
-    supportsInteractions: true,
-    supportsStructuredOutput: true,
-    supportsGoogleSearch: true,
-    supportsFunctionCalling: true,
-    supportedThinkingLevels: ["low", "medium", "high"],
-    defaultThinkingLevel: "medium",
-  },
   "gemini-3.5-flash-lite": {
     name: "gemini-3.5-flash-lite",
     family: "gemini-3.5-flash-lite",
@@ -71,14 +59,14 @@ export const GEMINI_MODELS: Record<string, ModelDefinition> = {
 };
 
 const ROUTES: Record<ModelRole, ModelRoute> = {
-  lightweight_classifier: { primary: "gemini-3.5-flash-lite", fallback: "gemini-3.5-flash" },
-  quest_understanding: { primary: "gemini-3.5-flash", fallback: "gemini-3.5-flash-lite" },
-  quest_proposal: { primary: "gemini-3.5-flash", fallback: "gemini-3.6-flash", preview: "gemini-3.1-pro-preview" },
-  strategic_planner: { primary: "gemini-3.6-flash", fallback: "gemini-3.5-flash", preview: "gemini-3.1-pro-preview" },
-  mission_generator: { primary: "gemini-3.6-flash", fallback: "gemini-3.5-flash", preview: "gemini-3.1-pro-preview" },
-  mission_critic: { primary: "gemini-3.6-flash", fallback: "gemini-3.5-flash", preview: "gemini-3.1-pro-preview" },
-  targeted_repair: { primary: "gemini-3.5-flash", fallback: "gemini-3.5-flash-lite" },
-  schema_repair: { primary: "gemini-3.5-flash-lite", fallback: "gemini-3.5-flash" },
+  lightweight_classifier: { primary: "gemini-3.5-flash-lite", fallback: "gemini-3.6-flash" },
+  quest_understanding: { primary: "gemini-3.6-flash", fallback: "gemini-3.5-flash-lite" },
+  quest_proposal: { primary: "gemini-3.6-flash", fallback: "gemini-3.5-flash-lite", preview: "gemini-3.1-pro-preview" },
+  strategic_planner: { primary: "gemini-3.6-flash", fallback: "gemini-3.5-flash-lite", preview: "gemini-3.1-pro-preview" },
+  mission_generator: { primary: "gemini-3.6-flash", fallback: "gemini-3.5-flash-lite", preview: "gemini-3.1-pro-preview" },
+  mission_critic: { primary: "gemini-3.6-flash", fallback: "gemini-3.5-flash-lite", preview: "gemini-3.1-pro-preview" },
+  targeted_repair: { primary: "gemini-3.5-flash-lite", fallback: "gemini-3.6-flash" },
+  schema_repair: { primary: "gemini-3.5-flash-lite", fallback: "gemini-3.6-flash" },
 };
 
 export function resolveModel(role: ModelRole, options: { allowPreview?: boolean } = {}) {

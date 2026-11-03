@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'candidate_git_state.dart';
+import 'read_candidate_branch.dart' show reviewedCandidateBranch;
 
 const provenancePath = 'docs/qst/ARC_ASSET_PROVENANCE.yaml';
 const packagePath = 'docs/qst/CANDIDATE_ASSET_PACKAGE.yaml';
 const decisionPath = 'docs/qst/ARC_ASSET_RELEASE_DECISION.yaml';
 const recordDirectory = 'docs/qst/arc_asset_chain_of_title';
 const candidatePath = 'docs/qst/BETA_CANDIDATE.yaml';
-const expectedBranch = 'codex/initial-questra-structure-pr';
 
 const runtimeAssetNames = <String>[
   'arc_celebrate.png',
@@ -24,7 +24,13 @@ Future<void> main(List<String> arguments) async {
   final options = _Options.parse(arguments);
   final head = options.candidateSha;
   final branch = _command(['git', 'branch', '--show-current']).trim();
-  if (branch != expectedBranch) _fail('Arc release must use $expectedBranch.');
+  final reviewedBranch = reviewedCandidateBranch(
+    _read('docs/qst/CANDIDATE_SCOPE_PARTITION.yaml'),
+    _read(candidatePath),
+  );
+  if (branch != reviewedBranch) {
+    _fail('Arc release branch does not match the reviewed candidate manifests.');
+  }
   if (!candidateSourceHasOnlyEvidenceCommits(head)) {
     _fail('Candidate SHA is not an unchanged source commit.');
   }

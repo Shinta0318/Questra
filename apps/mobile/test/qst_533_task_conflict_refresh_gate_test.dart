@@ -140,6 +140,43 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byTooltip('最新のTaskを再読み込み'), findsOneWidget);
   });
+
+  testWidgets('route-change warning requires refresh on a compact screen', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var refreshCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+            child: TaskMutationBanner(
+              state: const TaskMutationState(
+                status: TaskMutationStatus.routeChanged,
+                message: '別の端末で航路が変わりました。最新のQuestとMissionを読み込んでください。',
+              ),
+              onRetry: () async {},
+              onDiscard: () async {},
+              onDismiss: () {},
+              onRefreshConflict: () async {
+                refreshCount++;
+                return true;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.byTooltip('閉じる'), findsNothing);
+    expect(find.text('再試行'), findsNothing);
+    await tester.tap(find.byTooltip('最新の航路を再読み込み'));
+    expect(refreshCount, 1);
+  });
 }
 
 QuestraTask _task(String id) => QuestraTask(

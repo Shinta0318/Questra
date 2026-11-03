@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/features/home/home_screen.dart';
 import 'package:questra/features/home/home_today_task_journey.dart';
+import 'package:questra/features/quest/quest_controller.dart';
+import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/task/task_controller.dart';
 import 'package:questra/features/task/task_load_state.dart';
 import 'package:questra/features/task/task_model.dart';
@@ -84,6 +86,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          questControllerProvider.overrideWith(_HomeQuestController.new),
           taskControllerProvider.overrideWith(_HomeTaskController.new),
           taskLoadStateProvider.overrideWith(_LoadedTaskStateController.new),
         ],
@@ -109,6 +112,20 @@ void main() {
 class _HomeTaskController extends TaskController {
   @override
   List<QuestraTask> build() => [_task(status: TaskStatus.ready)];
+}
+
+class _HomeQuestController extends QuestController {
+  @override
+  List<Quest> build() => [
+    Quest(
+      id: 'quest-home',
+      title: '渡航準備を整える',
+      description: '旅行に必要な準備を進める',
+      difficulty: QuestDifficulty.normal,
+      status: QuestStatus.active,
+      visibility: QuestVisibility.private,
+    ),
+  ];
 }
 
 class _LoadedTaskStateController extends TaskLoadStateController {

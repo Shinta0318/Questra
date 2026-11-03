@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:questra/core/theme/app_field_sizes.dart';
 import 'package:questra/core/theme/app_theme.dart';
 import 'package:questra/features/quest/quest_form_screen.dart';
+import 'package:questra/features/quest/quest_controller.dart';
+import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/widgets/questra_card.dart';
 
 void main() {
@@ -81,4 +85,117 @@ void main() {
     expect(target, findsOneWidget);
     expect(find.text('YYYY / MM を選ぶ'), findsOneWidget);
   });
+
+  testWidgets('failed save retains input and retries the same Quest ID', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2500);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final saveGate = Completer<bool>();
+    late _FailingQuestController controller;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          questControllerProvider.overrideWith(() {
+            controller = _FailingQuestController(saveGate: saveGate);
+            return controller;
+          }),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const QuestFormScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const Key('quest-title-field')),
+      'シンガポールへ家族で行く',
+    );
+    await tester.tap(find.text('保存して航路を描く'));
+    await tester.pump();
+
+    expect(find.byType(QuestFormScreen), findsOneWidget);
+    expect(find.text('保存中...'), findsOneWidget);
+    expect(controller.attemptedIds, hasLength(1));
+
+    saveGate.complete(false);
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(QuestFormScreen), findsOneWidget);
+    expect(find.textContaining('Questを保存できませんでした'), findsOneWidget);
+    expect(controller.attemptedIds, hasLength(1));
+
+    await tester.tap(find.text('保存して航路を描く'));
+    await tester.pump();
+    expect(controller.attemptedIds, hasLength(2));
+    expect(controller.attemptedIds[1], controller.attemptedIds[0]);
+  });
+
+  testWidgets('failed edit remains on the form with its text preserved', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2500);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final original = Quest(
+      id: 'existing-quest',
+      title: '英語を学ぶ',
+      description: '旅行先で話す',
+      difficulty: QuestDifficulty.normal,
+      status: QuestStatus.active,
+      visibility: QuestVisibility.private,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          questControllerProvider.overrideWith(
+            () => _FailingQuestController(initialQuest: original),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const QuestFormScreen(questId: 'existing-quest'),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const Key('quest-title-field')),
+      '旅行先で英語を話す',
+    );
+    await tester.tap(find.text('変更を保存'));
+    await tester.pump();
+
+    expect(find.byType(QuestFormScreen), findsOneWidget);
+    expect(find.textContaining('変更を保存できませんでした'), findsOneWidget);
+    final title = tester.widget<TextFormField>(
+      find.byKey(const Key('quest-title-field')),
+    );
+    expect(title.controller?.text, '旅行先で英語を話す');
+  });
+}
+
+class _FailingQuestController extends QuestController {
+  _FailingQuestController({this.initialQuest, this.saveGate});
+
+  final Quest? initialQuest;
+  final Completer<bool>? saveGate;
+  final List<String> attemptedIds = [];
+
+  @override
+  List<Quest> build() => [?initialQuest];
+
+  @override
+  Future<bool> addAndWait(Quest quest) async {
+    attemptedIds.add(quest.id);
+    return saveGate?.future ?? false;
+  }
+
+  @override
+  Future<bool> updateAndWait(Quest quest) async => false;
 }

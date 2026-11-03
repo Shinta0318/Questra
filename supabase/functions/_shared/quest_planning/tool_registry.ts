@@ -16,13 +16,30 @@ export const QUESTRA_TOOLS: Record<string, QuestraToolDefinition> = {
   get_user_planning_preferences: { type: "function", name: "get_user_planning_preferences", description: "Gets only planning preferences the user allowed Questra to use.", parameters: { type: "object", additionalProperties: false, properties: {} }, access: "read", requiresApproval: false },
   get_quest_dna: { type: "function", name: "get_quest_dna", description: "Gets the current owner-scoped Quest DNA version.", parameters: questIdParameters, access: "read", requiresApproval: false },
   get_relevant_arc_memory: { type: "function", name: "get_relevant_arc_memory", description: "Gets a bounded set of consented, relevant Arc Memories.", parameters: { ...questIdParameters, properties: { ...(questIdParameters.properties as object), limit: { type: "integer", minimum: 1, maximum: 5 } } }, access: "read", requiresApproval: false },
-  validate_plan: { type: "function", name: "validate_plan", description: "Validates a plan without saving it.", parameters: questIdParameters, access: "read", requiresApproval: false },
   save_plan_preview: { type: "function", name: "save_plan_preview", description: "Saves an expiring owner-scoped preview only.", parameters: { type: "object", additionalProperties: false, properties: { questId: { type: "string", minLength: 1, maxLength: 100 }, idempotencyKey: { type: "string", minLength: 8, maxLength: 200 } }, required: ["questId", "idempotencyKey"] }, access: "preview_write", requiresApproval: false },
   approve_plan_transaction: { type: "function", name: "approve_plan_transaction", description: "Persists a previously reviewed preview transactionally.", parameters: { type: "object", additionalProperties: false, properties: { previewId: { type: "string", minLength: 1, maxLength: 100 }, approvalToken: { type: "string", minLength: 1, maxLength: 200 } }, required: ["previewId", "approvalToken"] }, access: "approved_write", requiresApproval: true },
 };
 
-export function planningTools(names: string[]): ProviderTool[] {
-  return names.map((name) => QUESTRA_TOOLS[name]).filter(Boolean).map(({ access: _, requiresApproval: __, ...tool }) => tool);
+const QUEST_SCOPED_READ_TOOLS = new Set([
+  "get_quest_context",
+  "get_mission_progress",
+  "get_quest_dna",
+  "get_relevant_arc_memory",
+]);
+
+export function isQuestScopedReadTool(name: string): boolean {
+  return QUEST_SCOPED_READ_TOOLS.has(name);
+}
+
+export function planningTools(names: string[], bindQuestId = false): ProviderTool[] {
+  return names.map((name) => QUESTRA_TOOLS[name]).filter(Boolean).map(({ access: _, requiresApproval: __, ...tool }) => {
+    if (!bindQuestId || !isQuestScopedReadTool(tool.name ?? "")) return tool;
+    const parameters = tool.parameters!;
+    const { questId: _questId, ...properties } = parameters.properties as Record<string, unknown>;
+    const required = (parameters.required as string[]).filter((field) => field !== "questId");
+    const { required: _required, ...otherParameters } = parameters;
+    return { ...tool, parameters: { ...otherParameters, properties, ...(required.length ? { required } : {}) } };
+  });
 }
 
 export function authorizeToolCall(name: string, context: { authenticated: boolean; approved: boolean }) {

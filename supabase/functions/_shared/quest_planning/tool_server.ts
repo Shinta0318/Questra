@@ -1,8 +1,10 @@
 import { authorizeToolCall, QUESTRA_TOOLS } from "./tool_registry.ts";
 import { validateJsonSchema } from "./json_schema_validator.ts";
+import { isValidUserId } from "../ai_auth.ts";
 
 export type ToolExecutionContext = {
   userId: string;
+  expectedQuestId?: string;
   traceId: string;
   approved: boolean;
 };
@@ -24,11 +26,19 @@ export async function executeQuestraTool(name: string, args: Record<string, unkn
     return { ok: false, error: "invalid_arguments" };
   }
   const questId = typeof args.questId === "string" ? args.questId : null;
-  if (questId && !await ownsQuest(questId, context.userId)) {
+  if (questId && !isValidUserId(questId)) {
+    await audit(name, args, context, "invalid_arguments");
+    return { ok: false, error: "invalid_arguments" };
+  }
+  if (questId && context.expectedQuestId && questId !== context.expectedQuestId) {
     await audit(name, args, context, "denied", questId);
     return { ok: false, error: "target_not_owned" };
   }
   try {
+    if (questId && !await ownsQuest(questId, context.userId)) {
+      await audit(name, args, context, "denied", questId);
+      return { ok: false, error: "target_not_owned" };
+    }
     let data: unknown;
     switch (name) {
       case "get_quest_context":
@@ -38,7 +48,7 @@ export async function executeQuestraTool(name: string, args: Record<string, unkn
         data = await select(`/rest/v1/missions?quest_id=eq.${questId}&select=id,title,status,sort_order,dependency_ids,estimated_duration_days&order=sort_order&limit=30`);
         break;
       case "get_quest_dna":
-        data = await select(`/rest/v1/quest_dna_profiles?quest_id=eq.${questId}&select=*&order=version.desc&limit=1`);
+        data = await select(`/rest/v1/quests?id=eq.${questId}&owner_id=eq.${context.userId}&select=quest_dna,quest_dna_version,quest_dna_evaluated_at&limit=1`);
         break;
       case "get_relevant_arc_memory":
         if (!await hasArcMemoryConsent(context.userId)) {
@@ -52,10 +62,7 @@ export async function executeQuestraTool(name: string, args: Record<string, unkn
         });
         break;
       case "get_user_planning_preferences":
-        data = await select(`/rest/v1/planning_context_preferences?owner_id=eq.${context.userId}&select=weekly_minutes,budget_label,location,experience,consent_granted&limit=1`);
-        break;
-      case "validate_plan":
-        data = { accepted: true, note: "Use server domain and semantic validators before preview persistence." };
+        data = consentedPlanningPreferences(await select(`/rest/v1/weekly_availability?user_id=eq.${context.userId}&select=planning_consent_granted,monday_minutes,tuesday_minutes,wednesday_minutes,thursday_minutes,friday_minutes,saturday_minutes,sunday_minutes,budget_label,location,experience&limit=1`));
         break;
       default:
         await audit(name, args, context, "denied", questId);
@@ -67,6 +74,21 @@ export async function executeQuestraTool(name: string, args: Record<string, unkn
     await audit(name, args, context, "failed", questId);
     return { ok: false, error: "tool_failed" };
   }
+}
+
+function consentedPlanningPreferences(value: unknown): unknown[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((row) => row && typeof row === "object" && row.planning_consent_granted === true).map((row) => {
+    const minutes = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+      .reduce((total, day) => total + (Number(row[`${day}_minutes`]) || 0), 0);
+    return {
+      weekly_minutes: minutes,
+      budget_label: row.budget_label,
+      location: row.location,
+      experience: row.experience,
+      consent_granted: true,
+    };
+  });
 }
 
 async function ownsQuest(questId: string, userId: string) {

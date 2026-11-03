@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:questra/features/home/home_screen.dart';
 import 'package:questra/features/quest/quest_controller.dart';
+import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/task/task_controller.dart';
 import 'package:questra/features/task/task_load_state.dart';
 import 'package:questra/features/task/task_model.dart';
@@ -58,6 +59,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          questControllerProvider.overrideWith(_FocusQuestController.new),
           taskControllerProvider.overrideWith(() => taskController),
           taskLoadStateProvider.overrideWith(_LoadedTaskStateController.new),
         ],
@@ -79,6 +81,45 @@ void main() {
     expect(find.text('quest-focus:task-focus'), findsOneWidget);
   });
 
+  testWidgets('Task開始が失敗したらHomeに残り、再読込と案内を行う', (tester) async {
+    final taskController = _FailingTaskController();
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+        GoRoute(
+          path: '/quest/:questId',
+          builder: (context, state) => const Scaffold(body: Text('Task focus')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          questControllerProvider.overrideWith(_FocusQuestController.new),
+          taskControllerProvider.overrideWith(() => taskController),
+          taskLoadStateProvider.overrideWith(_LoadedTaskStateController.new),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('このTaskを始める'));
+    await tester.pump();
+
+    expect(taskController.startedTaskId, 'task-focus');
+    expect(taskController.reloadCount, 1);
+    expect(find.text('Task focus'), findsNothing);
+    expect(find.text('このTaskを始める'), findsOneWidget);
+    expect(
+      find.text('Taskを開始できませんでした。通信とTaskの状態を確認して、もう一度お試しください。'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Task読込失敗を空状態に見せず再試行を示す', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -95,6 +136,25 @@ void main() {
     expect(find.text('もう一度読み込む'), findsOneWidget);
     expect(find.text('今日の航路はまだ自由です'), findsNothing);
   });
+
+  testWidgets('アーカイブ済みQuestのTaskだけでは今日の一歩を表示しない', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          questControllerProvider.overrideWith(_ArchivedQuestController.new),
+          taskControllerProvider.overrideWith(_ActionableTaskController.new),
+          taskLoadStateProvider.overrideWith(_LoadedTaskStateController.new),
+        ],
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('今日の一歩'), findsNothing);
+    expect(find.text('航空券の候補日を比較する'), findsNothing);
+    expect(find.text('進行中のQuest'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 class _ActionableTaskController extends TaskController {
@@ -107,6 +167,53 @@ class _ActionableTaskController extends TaskController {
   Future<bool> start(String taskId) async {
     startedTaskId = taskId;
     return true;
+  }
+}
+
+class _FocusQuestController extends QuestController {
+  @override
+  List<Quest> build() => [
+    Quest(
+      id: 'quest-focus',
+      title: '渡航準備',
+      description: '航空券を決める',
+      difficulty: QuestDifficulty.normal,
+      status: QuestStatus.active,
+      visibility: QuestVisibility.private,
+    ),
+  ];
+}
+
+class _ArchivedQuestController extends QuestController {
+  @override
+  List<Quest> build() => [
+    Quest(
+      id: 'quest-focus',
+      title: '渡航準備',
+      description: '航空券を決める',
+      difficulty: QuestDifficulty.normal,
+      status: QuestStatus.archived,
+      visibility: QuestVisibility.private,
+    ),
+  ];
+}
+
+class _FailingTaskController extends TaskController {
+  String? startedTaskId;
+  int reloadCount = 0;
+
+  @override
+  List<QuestraTask> build() => [_task];
+
+  @override
+  Future<bool> start(String taskId) async {
+    startedTaskId = taskId;
+    return false;
+  }
+
+  @override
+  Future<void> reload() async {
+    reloadCount++;
   }
 }
 

@@ -19,6 +19,23 @@ begin
 end;
 $$;
 
+select pg_temp.qst_assert_eq(
+  (
+    select count(*) from pg_proc p
+    where p.oid in (
+      'public.record_ai_provider_execution_receipt(uuid,text,text,integer,integer,text,uuid)'::regprocedure,
+      'public.record_ai_provider_execution_receipt_v2(uuid,text,text,integer,integer,text,uuid,integer)'::regprocedure,
+      'public.record_ai_provider_execution_receipt_v4(uuid,text,text,integer,integer,text,uuid,integer,text,text,text,text)'::regprocedure
+    )
+    and exists (
+      select 1 from unnest(p.proconfig) config
+      where config like 'search_path=extensions, public, pg_temp%'
+    )
+  ),
+  3,
+  'AI receipt functions can resolve hosted pgcrypto'
+);
+
 create function pg_temp.qst_assert_raises(
   statement text,
   label text
@@ -36,6 +53,32 @@ begin
       did_raise := true;
   end;
 
+  if not did_raise then
+    raise exception '%: expected statement to fail', label;
+  end if;
+end;
+$$;
+
+create function pg_temp.qst_assert_raises_message(
+  statement text,
+  expected_message text,
+  label text
+)
+returns void
+language plpgsql
+as $$
+declare
+  did_raise boolean := false;
+begin
+  begin
+    execute statement;
+  exception
+    when others then
+      if sqlerrm <> expected_message then
+        raise exception '%: expected %, got %', label, expected_message, sqlerrm;
+      end if;
+      did_raise := true;
+  end;
   if not did_raise then
     raise exception '%: expected statement to fail', label;
   end if;
@@ -260,6 +303,20 @@ insert into public.quest_plan_previews (
 ) values (
   :'owner_plan_preview_id',:'owner_id',:'owner_private_quest_id',:'owner_planning_run_id','{}'::jsonb
 );
+insert into public.quest_planning_pass_checkpoints (
+  owner_id,quest_id,pass_name,input_fingerprint,output,provider_metadata,expires_at
+) values (
+  :'owner_id',:'owner_private_quest_id','quest_planning.quest_understanding',
+  repeat('a',64),'{}'::jsonb,'{"provider":"gemini"}'::jsonb,now() + interval '1 hour'
+);
+select pg_temp.qst_assert_raises(
+  format(
+    'insert into public.quest_planning_pass_checkpoints (owner_id,quest_id,pass_name,input_fingerprint,output,provider_metadata,expires_at) values (%L,%L,%L,repeat(%L,64),%L::jsonb,%L::jsonb,now() + interval %L)',
+    :'other_id', :'owner_private_quest_id', 'quest_planning.quest_understanding',
+    'b', '{}', '{"provider":"gemini"}', '1 hour'
+  ),
+  'checkpoint cannot bind another account to an owner Quest'
+);
 insert into public.mission_plan_drafts (
   id,owner_id,quest_id,planning_run_id,preview_id,schema_version,model_name,thinking_level
 ) values (
@@ -360,6 +417,14 @@ select pg_temp.qst_assert_eq((select count(*) from public.route_change_items whe
 select pg_temp.qst_assert_eq((select count(*) from public.quest_progress_events where event_id = :'owner_progress_event_id'), 1, 'owner can read own progress event');
 select pg_temp.qst_assert_eq((select count(*) from public.quest_dna_versions where id = :'owner_dna_version_id'), 1, 'owner can read own Quest DNA version');
 select pg_temp.qst_assert_eq((select count(*) from public.user_consents where id = :'owner_consent_id'), 1, 'owner can read own consent');
+select pg_temp.qst_assert_eq(
+  has_table_privilege('authenticated', 'public.quest_planning_pass_checkpoints', 'SELECT')::integer,
+  0, 'checkpoint output cannot be read directly by authenticated clients'
+);
+select pg_temp.qst_assert_eq(
+  has_table_privilege('authenticated', 'public.quest_planning_pass_checkpoints', 'INSERT')::integer,
+  0, 'checkpoint output cannot be written directly by authenticated clients'
+);
 select pg_temp.qst_assert_eq((select count(*) from public.tasks where id = :'owner_private_task_id'), 1, 'owner can read own private Task');
 select pg_temp.qst_assert_eq(
   has_table_privilege('authenticated', 'public.tasks', 'INSERT')::integer,
@@ -930,6 +995,143 @@ select pg_temp.qst_assert_eq(
     jsonb_build_object(:'owner_private_task_id', 1, :'owner_qst528_task_id', 1)
   )->>'status' = 'conflict')::integer,
   1, 'QST-528 replay does not claim success after the mission Task set changed'
+);
+
+reset role;
+insert into public.missions
+  (id, quest_id, title, description, guide_type, difficulty, status, route_state)
+values
+  ('00000000-0000-4000-8000-000000014199', :'owner_private_quest_id',
+   'Route guard Mission', 'Current-route progress gate.', 'route', 'easy', 'todo', 'paused');
+insert into public.tasks
+  (id, owner_id, quest_id, mission_id, title, action, done_condition,
+   status, version, generated_by, origin, verification_type)
+values
+  ('00000000-0000-4000-8000-000000154199', :'owner_id',
+   :'owner_private_quest_id', '00000000-0000-4000-8000-000000014199',
+   'Route guard Task', 'Check the current route.', 'Route is current.',
+   'pending', 1, 'user', 'user', 'self');
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'owner_id', true);
+select pg_temp.qst_assert_raises_message(
+  format(
+    'select public.create_tasks_if_absent(%L, jsonb_build_array('
+    || '(select to_jsonb(t) || jsonb_build_object('
+    || '''id'', %L, ''status'', ''in_progress'') '
+    || 'from public.tasks t where t.id = %L::uuid)))',
+    'qst345-create-paused', '00000000-0000-4000-8000-000000154198',
+    '00000000-0000-4000-8000-000000154199'
+  ),
+  'task_route_inactive',
+  'paused Mission rejects in-progress Task creation through batch RPC'
+);
+select pg_temp.qst_assert_raises_message(
+  format(
+    'select public.update_task_if_version(%L::uuid, 1, %L, '
+    || '(select to_jsonb(t) || jsonb_build_object(''status'', ''in_progress'') '
+    || 'from public.tasks t where t.id = %L::uuid))',
+    '00000000-0000-4000-8000-000000154199', 'qst345-start-paused',
+    '00000000-0000-4000-8000-000000154199'
+  ),
+  'task_route_inactive',
+  'paused Mission rejects Task start through versioned RPC'
+);
+select pg_temp.qst_assert_raises_message(
+  'select public.complete_task_journey('
+  || '''00000000-0000-4000-8000-000000154199''::uuid, '
+  || '''qst345-complete-paused'', 1)',
+  'task_route_inactive',
+  'paused Mission rejects Task completion RPC'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.tasks
+   where id = '00000000-0000-4000-8000-000000154199'
+     and status = 'pending' and version = 1),
+  1, 'rejected Task progress leaves Task and version unchanged'
+);
+select pg_temp.qst_assert_eq(
+  (select count(*) from public.tasks
+   where id = '00000000-0000-4000-8000-000000154198'),
+  0, 'rejected Task creation leaves no Task behind'
+);
+reset role;
+update public.missions set route_state = 'removed'
+where id = '00000000-0000-4000-8000-000000014199';
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'owner_id', true);
+select pg_temp.qst_assert_raises_message(
+  'select public.complete_task_journey('
+  || '''00000000-0000-4000-8000-000000154199''::uuid, '
+  || '''qst345-complete-removed'', 1)',
+  'task_route_inactive',
+  'removed Mission rejects Task completion RPC'
+);
+reset role;
+select set_config('questra.mission_completion_rpc', 'on', true);
+update public.missions set status = 'completed', route_state = 'active'
+where id = '00000000-0000-4000-8000-000000014199';
+select set_config('questra.mission_completion_rpc', 'off', true);
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'owner_id', true);
+select pg_temp.qst_assert_raises_message(
+  format(
+    'select public.update_task_if_version(%L::uuid, 1, %L, '
+    || '(select to_jsonb(t) || jsonb_build_object(''status'', ''in_progress'') '
+    || 'from public.tasks t where t.id = %L::uuid))',
+    '00000000-0000-4000-8000-000000154199', 'qst345-start-completed-mission',
+    '00000000-0000-4000-8000-000000154199'
+  ),
+  'task_route_inactive',
+  'completed Mission rejects Task start through versioned RPC'
+);
+reset role;
+update public.missions set status = 'todo', route_state = 'active'
+where id = '00000000-0000-4000-8000-000000014199';
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'owner_id', true);
+select pg_temp.qst_assert_eq(
+  (public.update_task_if_version(
+    '00000000-0000-4000-8000-000000154199', 1, 'qst345-start-active',
+    (select to_jsonb(t) || jsonb_build_object('status', 'in_progress')
+     from public.tasks t
+     where t.id = '00000000-0000-4000-8000-000000154199')
+  )->>'version')::bigint,
+  2, 'active route permits Task start'
+);
+reset role;
+update public.quests set status = 'completed'
+where id = :'owner_private_quest_id';
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'owner_id', true);
+select pg_temp.qst_assert_raises_message(
+  'select public.complete_task_journey('
+  || '''00000000-0000-4000-8000-000000154199''::uuid, '
+  || '''qst345-complete-completed-quest'', 2)',
+  'task_route_inactive',
+  'completed Quest rejects Task completion RPC'
+);
+reset role;
+update public.quests set status = 'archived'
+where id = :'owner_private_quest_id';
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'owner_id', true);
+select pg_temp.qst_assert_raises_message(
+  'select public.complete_task_journey('
+  || '''00000000-0000-4000-8000-000000154199''::uuid, '
+  || '''qst345-complete-archived'', 2)',
+  'task_route_inactive',
+  'archived Quest rejects Task completion RPC'
+);
+reset role;
+update public.quests set status = 'active'
+where id = :'owner_private_quest_id';
+set role authenticated;
+select set_config('request.jwt.claim.sub', :'owner_id', true);
+select pg_temp.qst_assert_eq(
+  (public.complete_task_journey(
+    '00000000-0000-4000-8000-000000154199', 'qst345-complete-active', 2
+  )->>'version')::bigint,
+  3, 'active route permits Task completion'
 );
 
 rollback;

@@ -1,4 +1,58 @@
+import '../mission/mission_model.dart';
+import '../quest/quest_model.dart';
 import 'task_model.dart';
+
+class TaskRouteAvailabilityService {
+  const TaskRouteAvailabilityService();
+
+  bool canAct(
+    QuestraTask task, {
+    required Iterable<Quest> quests,
+    required Iterable<Mission> missions,
+  }) => _isOnCurrentRoute(
+    task,
+    quests: quests,
+    missions: missions,
+    allowCompletedMission: false,
+  );
+
+  bool canReopen(
+    QuestraTask task, {
+    required Iterable<Quest> quests,
+    required Iterable<Mission> missions,
+  }) => _isOnCurrentRoute(
+    task,
+    quests: quests,
+    missions: missions,
+    allowCompletedMission: true,
+  );
+
+  bool _isOnCurrentRoute(
+    QuestraTask task, {
+    required Iterable<Quest> quests,
+    required Iterable<Mission> missions,
+    required bool allowCompletedMission,
+  }) {
+    if (quests.isNotEmpty &&
+        !quests.any(
+          (quest) =>
+              quest.id == task.questId && quest.status == QuestStatus.active,
+        )) {
+      return false;
+    }
+    if (missions.isNotEmpty &&
+        !missions.any(
+          (mission) =>
+              mission.id == task.missionId &&
+              mission.questId == task.questId &&
+              (allowCompletedMission || mission.status == MissionStatus.todo) &&
+              mission.routeState == MissionRouteState.active,
+        )) {
+      return false;
+    }
+    return true;
+  }
+}
 
 class TaskAvailability {
   const TaskAvailability({
@@ -57,7 +111,8 @@ class TaskAvailabilityService {
       );
     }
 
-    final completedIds = completedTaskIds ??
+    final completedIds =
+        completedTaskIds ??
         missionTasks
             .where((item) => item.status == TaskStatus.completed)
             .map((item) => item.id)

@@ -59,7 +59,10 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 Set-Location $repoRoot
 $sourceCommit = (& dart "$PSScriptRoot/read_candidate_source_commit.dart").Trim()
 if ($LASTEXITCODE -ne 0 -or $sourceCommit -cne $CandidateSha) { throw 'Candidate SHA must match the verified candidate source.' }
-if ((& git branch --show-current).Trim() -ne 'codex/initial-questra-structure-pr') { throw 'Incident drill is restricted to the Questra candidate branch.' }
+$reviewedBranch = (& dart "$PSScriptRoot/read_candidate_branch.dart").Trim()
+if ($LASTEXITCODE -ne 0 -or (& git branch --show-current).Trim() -cne $reviewedBranch) {
+  throw 'Incident drill branch does not match the reviewed candidate manifests.'
+}
 if (& git status --porcelain) { throw 'Incident live drill requires a clean candidate worktree.' }
 if (-not (Get-Command $SupabaseCommand -ErrorAction SilentlyContinue)) { throw 'Supabase CLI was not found.' }
 

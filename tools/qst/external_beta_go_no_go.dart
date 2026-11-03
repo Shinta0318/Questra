@@ -116,14 +116,21 @@ ExternalBetaDecision evaluateExternalBetaReadiness() {
     hostedRouteEvidencePassed = false;
   }
 
+  final betaProjectRef = _nested(project, 'project', 'ref');
   final candidatePassed =
       sourceIsValid &&
+      betaProjectRef != null &&
       _top(candidate, 'candidate_status') == 'approved' &&
       _bool(candidate, 'distribution_ready') &&
+      _nested(candidate, 'build_connection', 'status') == 'verified' &&
       _top(candidate, 'source_commit') == sourceCommit &&
       _bool(candidate, 'worktree_clean_before_manifest') &&
       worktreeClean &&
-      candidateArtifactsVerified(candidate, sourceCommit);
+      candidateArtifactsVerified(
+        candidate,
+        sourceCommit,
+        expectedProjectRef: betaProjectRef,
+      );
   final hostedPassed =
       hostedRouteEvidencePassed &&
       _top(hosted, 'status') == 'verified' &&

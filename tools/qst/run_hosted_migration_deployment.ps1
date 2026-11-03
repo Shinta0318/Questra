@@ -9,6 +9,8 @@ param(
   [string]$ExpectedSha,
 
   [string]$ConfirmProjectRef = '',
+  [string]$BackupEvidencePath = '',
+  [string]$PgRestorePath = '',
   [switch]$Execute
 )
 
@@ -37,8 +39,9 @@ if ($LASTEXITCODE -ne 0 -or $sourceCommit -cne $ExpectedSha) {
   throw 'Candidate SHA does not match the verified candidate source.'
 }
 $branch = (& git branch --show-current).Trim()
-if ($branch -ne 'codex/initial-questra-structure-pr') {
-  throw 'Hosted migration deployment must run from the approved branch.'
+$reviewedBranch = (& dart "$PSScriptRoot/read_candidate_branch.dart").Trim()
+if ($LASTEXITCODE -ne 0 -or -not $reviewedBranch -or $branch -cne $reviewedBranch) {
+  throw 'Candidate branch does not match the reviewed manifests.'
 }
 if (& git status --porcelain) {
   throw 'Hosted migration deployment requires a clean worktree.'
@@ -76,7 +79,7 @@ if ($plannedRemoteIndex -lt 0) { throw 'Planned remote head is not in local migr
 $pendingPlan = @($localMigrations | Select-Object -Skip ($plannedRemoteIndex + 1))
 
 $cliVersion = Invoke-SupabaseCommand @('--version')
-$beforeList = Invoke-SupabaseCommand @('migration', 'list', '--linked')
+$beforeList = Invoke-SupabaseCommand @('migration', 'list', '--linked', '--output-format', 'json')
 $remoteVersionsBefore = @(Get-HostedRemoteVersions -Output $beforeList)
 if ($remoteVersionsBefore.Count -eq 0) { throw 'Unable to resolve hosted migration head.' }
 $remoteHeadBefore = $remoteVersionsBefore[-1]
@@ -84,7 +87,7 @@ if ($remoteHeadBefore -ne $plannedRemoteVersion -and $remoteHeadBefore -ne $late
   throw "Unexpected hosted migration head $remoteHeadBefore. Refusing push."
 }
 
-$dryRunOutput = Invoke-SupabaseCommand @('db', 'push', '--linked', '--dry-run')
+$dryRunOutput = Invoke-SupabaseCommand @('db', 'push', '--linked', '--dry-run', '--output-format', 'json')
 $expectedDryRun = if ($remoteHeadBefore -eq $latestVersion) {
   @()
 } else {
@@ -97,10 +100,20 @@ if (-not $Execute) {
 }
 
 $pendingAtExecution = if ($remoteHeadBefore -eq $latestVersion) { 0 } else { $pendingPlan.Count }
+$backupAttestation = $null
 if ($pendingAtExecution -gt 0) {
+  . "$PSScriptRoot/hosted_backup_attestation.ps1"
+  $backupAttestation = Assert-HostedBackupAttestation `
+    -EvidencePath $BackupEvidencePath `
+    -ProjectRef $ProjectRef `
+    -RemoteHead $plannedRemoteHeadFile
+  $backupEvidence = Get-Content -Raw -LiteralPath $BackupEvidencePath | ConvertFrom-Json
+  Assert-HostedBackupArchive `
+    -ArchivePath ([string]$backupEvidence.encrypted_archive_path) `
+    -PgRestorePath $PgRestorePath
   Invoke-SupabaseCommand @('db', 'push', '--linked') | Out-Null
 }
-$afterList = Invoke-SupabaseCommand @('migration', 'list', '--linked')
+$afterList = Invoke-SupabaseCommand @('migration', 'list', '--linked', '--output-format', 'json')
 $remoteVersionsAfter = @(Get-HostedRemoteVersions -Output $afterList)
 if ($remoteVersionsAfter.Count -eq 0 -or $remoteVersionsAfter[-1] -ne $latestVersion) {
   throw 'Hosted migration head did not reach the latest local migration.'
@@ -135,6 +148,10 @@ $lines.Add('  pending_plan:')
 foreach ($migration in $pendingPlan) {
   $lines.Add("    - $(Quote-Yaml $migration.Name)")
 }
+$lines.Add('backup:')
+$lines.Add("  attestation_sha256: $(if ($backupAttestation) { Quote-Yaml $backupAttestation.EvidenceSha256 } else { 'null' })")
+$lines.Add("  encrypted_archive_sha256: $(if ($backupAttestation) { Quote-Yaml $backupAttestation.ArchiveSha256 } else { 'null' })")
+$lines.Add("  restore_tested_at_utc: $(if ($backupAttestation) { Quote-Yaml $backupAttestation.RestoreTestedAtUtc } else { 'null' })")
 $lines.Add('execution:')
 $lines.Add('  runner: tools/qst/run_hosted_migration_deployment.ps1')
 $lines.Add('  requires:')
@@ -146,6 +163,7 @@ foreach ($requirement in @(
   'successful_db_push_dry_run',
   'exact_dry_run_migration_plan',
   'expected_remote_head_or_already_current'
+  'matching_backup_and_isolated_restore_attestation_when_migrations_pending'
 )) { $lines.Add("    - $requirement") }
 $lines.Add('guardrails:')
 $lines.Add('  destructive_repair_allowed: false')

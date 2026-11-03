@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../core/analytics/analytics_event.dart';
 import '../../core/analytics/analytics_service.dart';
@@ -24,6 +23,7 @@ import '../../widgets/questra_card.dart';
 import '../../widgets/questra_primary_button.dart';
 import '../arc/arc_celebration_service.dart';
 import '../arc/arc_guidance_providers.dart';
+import '../auth/auth_controller.dart';
 import '../business_foundation/quest_lifecycle_stage.dart';
 import '../business_foundation/quest_stage_repository.dart';
 import '../challenge_graph/challenge_graph_preview_service.dart';
@@ -68,8 +68,6 @@ import 'route_replanning_controller.dart';
 import 'route_replanning_model.dart';
 import 'quest_theme_card.dart';
 
-const _missionPlanUuid = Uuid();
-
 class QuestDetailScreen extends ConsumerWidget {
   const QuestDetailScreen({
     required this.questId,
@@ -96,7 +94,10 @@ class QuestDetailScreen extends ConsumerWidget {
     final hasActiveArcGuide =
         arcGuideState.isLoading(questId) ||
         arcGuideState.guideFor(questId) != null ||
-        arcGuideState.errorFor(questId) != null;
+        arcGuideState.errorFor(questId) != null ||
+        arcGuideState.clarificationQuestionsFor(questId).isNotEmpty ||
+        (arcGuideState.retryAfterFor(questId)?.isAfter(DateTime.now()) ??
+            false);
     final pendingRouteProposal = ref.watch(
       routeReplanningControllerProvider.select((state) => state[questId]),
     );
@@ -125,6 +126,7 @@ class QuestDetailScreen extends ConsumerWidget {
         child: QuestraResponsiveListView(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
           children: [
+            _ArcQuestGuideCooldownHydrator(questId: questId),
             _QuestHeader(
               quest: quest,
               onEdit: () => _showQuestEditDialog(context, ref, quest),
@@ -2314,6 +2316,43 @@ class _MilestoneTile extends ConsumerWidget {
   }
 }
 
+class _ArcQuestGuideCooldownHydrator extends ConsumerStatefulWidget {
+  const _ArcQuestGuideCooldownHydrator({required this.questId});
+
+  final String questId;
+
+  @override
+  ConsumerState<_ArcQuestGuideCooldownHydrator> createState() =>
+      _ArcQuestGuideCooldownHydratorState();
+}
+
+class _ArcQuestGuideCooldownHydratorState
+    extends ConsumerState<_ArcQuestGuideCooldownHydrator> {
+  String? _hydratedOwnerId;
+  String? _hydratedQuestId;
+
+  @override
+  Widget build(BuildContext context) {
+    final ownerId = ref.watch(
+      authControllerProvider.select((auth) => auth.profile?.id),
+    );
+    if (ownerId != null &&
+        (_hydratedOwnerId != ownerId || _hydratedQuestId != widget.questId)) {
+      _hydratedOwnerId = ownerId;
+      _hydratedQuestId = widget.questId;
+      unawaited(
+        Future<void>.microtask(() async {
+          if (!mounted) return;
+          await ref
+              .read(arcQuestGuideControllerProvider.notifier)
+              .hydrateCooldownForQuest(widget.questId);
+        }),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+}
+
 class _ArcQuestGuidePanel extends ConsumerStatefulWidget {
   const _ArcQuestGuidePanel({
     required this.quest,
@@ -2333,6 +2372,49 @@ class _ArcQuestGuidePanel extends ConsumerStatefulWidget {
 class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
   ArcQuestGuide? _loadedGuide;
   MissionPlanDraft? _draft;
+  final Map<String, String> _clarificationAnswers = {};
+  Timer? _retryTimer;
+  DateTime? _scheduledRetryAt;
+  bool _discardingPlan = false;
+  bool _approvingPlan = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncRetryTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ArcQuestGuidePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.quest.id != widget.quest.id) {
+      _clarificationAnswers.clear();
+    } else {
+      final questions = widget.state.clarificationQuestionsFor(widget.quest.id);
+      _clarificationAnswers.removeWhere(
+        (question, _) => !questions.contains(question),
+      );
+    }
+    _syncRetryTimer();
+  }
+
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    super.dispose();
+  }
+
+  void _syncRetryTimer() {
+    final retryAt = widget.state.retryAfterFor(widget.quest.id);
+    if (retryAt == _scheduledRetryAt) return;
+    _retryTimer?.cancel();
+    _scheduledRetryAt = retryAt;
+    if (retryAt != null && retryAt.isAfter(DateTime.now())) {
+      _retryTimer = Timer(retryAt.difference(DateTime.now()), () {
+        if (mounted) setState(() {});
+      });
+    }
+  }
 
   void _syncGuide(ArcQuestGuide? guide) {
     if (guide != null && !identical(guide, _loadedGuide)) {
@@ -2346,10 +2428,24 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
 
   Future<void> _confirmPlan() async {
     final draft = _draft;
-    if (draft == null || draft.validCandidates.isEmpty) return;
+    if (_approvingPlan || draft == null || draft.validCandidates.isEmpty) {
+      return;
+    }
     final guide = _loadedGuide;
-    if (guide?.previewId != null) {
-      if (guide!.replacesExistingRoute) {
+    if (guide == null ||
+        guide.previewId == null ||
+        guide.approvalToken == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('航路案の承認情報を確認できません。Missionは保存せず、案を作り直してください。'),
+        ),
+      );
+      return;
+    }
+    final ownerId = ref.read(authControllerProvider).profile?.id;
+    setState(() => _approvingPlan = true);
+    try {
+      if (guide.replacesExistingRoute) {
         final approved = await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
@@ -2373,183 +2469,113 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
         );
         if (approved != true || !mounted) return;
       }
-      try {
-        await ref
-            .read(arcQuestGuideControllerProvider.notifier)
-            .approveForQuest(
-              widget.quest,
-              guide,
-              draft.validCandidates
-                  .map((candidate) => candidate.toArcCandidate())
-                  .toList(growable: false),
-            );
-        if (!mounted) return;
-        setState(() => _draft = null);
-        showArcCelebrationSnackBar(
-          context,
-          ref
-              .read(arcCelebrationServiceProvider)
-              .build(
-                event: ArcCelebrationEvent.missionStarted,
-                subject: widget.quest.title,
-              ),
-        );
-      } catch (error) {
-        if (!mounted) return;
+      final refreshed = await ref
+          .read(arcQuestGuideControllerProvider.notifier)
+          .approveForQuest(
+            widget.quest,
+            guide,
+            draft.validCandidates
+                .map((candidate) => candidate.toArcCandidate())
+                .toList(growable: false),
+          );
+      if (!mounted || ref.read(authControllerProvider).profile?.id != ownerId) {
+        return;
+      }
+      unawaited(_recordPlanningFeedback(guide, draft));
+      setState(() => _draft = null);
+      if (!refreshed) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.toString().replaceFirst('Bad state: ', '')),
+          const SnackBar(
+            content: Text('航路は保存されましたが、表示を更新できませんでした。画面を開き直して確認してください。'),
           ),
         );
+        return;
       }
-      return;
-    }
-    final existingCount = ref
-        .read(missionControllerProvider)
-        .where((mission) => mission.questId == widget.quest.id)
-        .length;
-    final missionIds = {
-      for (final candidate in draft.validCandidates)
-        candidate.planKey: _missionPlanUuid.v4(),
-    };
-    for (var index = 0; index < draft.validCandidates.length; index++) {
-      final candidate = draft.validCandidates[index];
-      ref
-          .read(missionControllerProvider.notifier)
-          .addMissionDraft(
-            quest: widget.quest,
-            id: missionIds[candidate.planKey],
-            title: candidate.title.trim(),
-            description: candidate.description.trim(),
-            guideType: candidate.guideType,
-            difficulty: candidate.difficulty,
-            sortOrder: existingCount + index,
-            isToday: candidate.isToday,
-            effortEstimate: candidate.effortEstimate,
-            parentMissionId: missionIds[candidate.parentPlanKey],
-            dependencyIds: candidate.dependencyPlanKeys
-                .map((key) => missionIds[key])
-                .whereType<String>()
-                .toList(growable: false),
-            priority: candidate.priority,
-            category: candidate.category,
-            estimatedCostLabel: candidate.estimatedCostLabel,
-            referenceHints: candidate.referenceHints,
-            enterpriseSupportHints: candidate.enterpriseSupportHints,
-            difficultyScore: candidate.difficultyScore,
-            estimatedDurationDays: candidate.estimatedDurationDays,
-            doneCondition: candidate.doneCondition,
-            expectedOutput: candidate.expectedOutput,
-            verificationType: candidate.verificationType,
-            action: candidate.action,
-            isOptional: candidate.isOptional,
-            sourceRequirement: candidate.sourceRequirement,
-            confidence: candidate.confidence,
-          );
-    }
-    if (guide != null && guide.currentTaskCandidates.isNotEmpty) {
-      final missionId = missionIds[guide.currentMissionClientId];
-      final mission = draft.validCandidates
-          .where(
-            (candidate) => candidate.planKey == guide.currentMissionClientId,
-          )
-          .firstOrNull;
-      if (missionId != null && mission != null) {
-        final taskIds = {
-          for (final candidate in guide.currentTaskCandidates)
-            candidate.planKey: _missionPlanUuid.v4(),
-        };
-        final tasks = <QuestraTask>[];
-        for (
-          var index = 0;
-          index < guide.currentTaskCandidates.length;
-          index++
-        ) {
-          final candidate = guide.currentTaskCandidates[index];
-          tasks.add(
-            QuestraTask(
-              id: taskIds[candidate.planKey],
-              questId: widget.quest.id,
-              questTitle: widget.quest.title,
-              missionId: missionId,
-              missionTitle: mission.title,
-              title: candidate.title,
-              action: candidate.action,
-              purpose: candidate.purpose,
-              doneCondition: candidate.doneCondition,
-              expectedOutput: candidate.expectedOutput,
-              estimatedEffortMinutes: candidate.estimatedEffortMinutes,
-              required: candidate.required,
-              orderIndex: index,
-              dependencyIds: candidate.dependencyPlanKeys
-                  .map((key) => taskIds[key])
-                  .whereType<String>()
-                  .toList(growable: false),
-              generatedBy: TaskGeneratedBy.arc,
-              generationVersion: guide.planQuality?.generationVersion,
-            ),
-          );
-        }
-        await ref.read(taskControllerProvider.notifier).addTasks(tasks);
-      }
-    }
-    if (guide != null) {
-      if (guide.questEvaluation != null) {
+      showArcCelebrationSnackBar(
+        context,
         ref
-            .read(questControllerProvider.notifier)
-            .update(
-              widget.quest.copyWith(
-                evaluation: guide.questEvaluation,
-                dna: guide.questDna,
-                understanding: guide.questUnderstanding,
-                planQuality: guide.planQuality,
-              ),
-            );
-      }
-      final unchanged = <int>{};
-      for (
-        var index = 0;
-        index < draft.validCandidates.length &&
-            index < guide.missionCandidates.length;
-        index++
-      ) {
-        final candidate = draft.validCandidates[index];
-        final original = guide.missionCandidates[index];
-        if (candidate.title.trim() == original.title.trim() &&
-            candidate.description.trim() == original.description.trim()) {
-          unchanged.add(index);
-        }
-      }
-      unawaited(
-        ref
-            .read(questPlanningFeedbackRepositoryProvider)
-            .save(
-              QuestPlanningFeedback(
-                questId: widget.quest.id,
-                categoryKey: widget.quest.category.trim().toLowerCase(),
-                sourceType: guide.sourceType,
-                generatedCount: guide.missionCandidates.length,
-                acceptedCount: draft.validCandidates.length,
-                editedCount: draft.validCandidates.length - unchanged.length,
-                targetWindow: questTargetWindow(
-                  widget.quest.targetDate,
-                  DateTime.now(),
-                ),
-              ),
+            .read(arcCelebrationServiceProvider)
+            .build(
+              event: ArcCelebrationEvent.missionStarted,
+              subject: widget.quest.title,
             ),
       );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Bad state: ', '')),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _approvingPlan = false);
     }
-    if (!mounted) return;
-    showArcCelebrationSnackBar(
-      context,
-      ref
-          .read(arcCelebrationServiceProvider)
-          .build(
-            event: ArcCelebrationEvent.missionStarted,
-            subject: widget.quest.title,
-          ),
-    );
-    setState(() => _draft = null);
+  }
+
+  Future<void> _recordPlanningFeedback(
+    ArcQuestGuide guide,
+    MissionPlanDraft draft,
+  ) async {
+    final unchanged = <int>{};
+    for (
+      var index = 0;
+      index < draft.validCandidates.length &&
+          index < guide.missionCandidates.length;
+      index++
+    ) {
+      final candidate = draft.validCandidates[index];
+      final original = guide.missionCandidates[index];
+      if (candidate.title.trim() == original.title.trim() &&
+          candidate.description.trim() == original.description.trim()) {
+        unchanged.add(index);
+      }
+    }
+    try {
+      await ref
+          .read(questPlanningFeedbackRepositoryProvider)
+          .save(
+            QuestPlanningFeedback(
+              questId: widget.quest.id,
+              categoryKey: widget.quest.category.trim().toLowerCase(),
+              sourceType: guide.sourceType,
+              generatedCount: guide.missionCandidates.length,
+              acceptedCount: draft.validCandidates.length,
+              editedCount: draft.validCandidates.length - unchanged.length,
+              targetWindow: questTargetWindow(
+                widget.quest.targetDate,
+                DateTime.now(),
+              ),
+            ),
+          );
+    } catch (_) {
+      // Feedback failure must not reverse an approved route in the UI.
+    }
+  }
+
+  Future<void> _discardPlan({bool regenerate = false}) async {
+    if (_discardingPlan) return;
+    final guide = _loadedGuide;
+    if (guide == null) return;
+    setState(() => _discardingPlan = true);
+    try {
+      final controller = ref.read(arcQuestGuideControllerProvider.notifier);
+      await controller.rejectForQuest(widget.quest, guide);
+      if (!mounted) return;
+      setState(() {
+        _loadedGuide = null;
+        _draft = null;
+      });
+      if (regenerate) await controller.generateForQuest(widget.quest);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Bad state: ', '')),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _discardingPlan = false);
+    }
   }
 
   @override
@@ -2557,6 +2583,12 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
     final guide = widget.state.guideFor(widget.quest.id);
     final isLoading = widget.state.isLoading(widget.quest.id);
     final error = widget.state.errorFor(widget.quest.id);
+    final clarificationQuestions = widget.state.clarificationQuestionsFor(
+      widget.quest.id,
+    );
+    final cooldownActive =
+        widget.state.retryAfterFor(widget.quest.id)?.isAfter(DateTime.now()) ??
+        false;
     _syncGuide(guide);
     final draft = _draft;
 
@@ -2575,31 +2607,117 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
             const SizedBox(height: 12),
             const LinearProgressIndicator(),
           ] else if (guide == null) ...[
-            if (error != null) ...[
+            if (clarificationQuestions.isNotEmpty) ...[
+              Text(
+                '航路を描く前に、Arcから確認したいことがあります。',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              if (error != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  error,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
+              const SizedBox(height: 12),
+              for (final question in clarificationQuestions) ...[
+                Text(question),
+                const SizedBox(height: 8),
+                Semantics(
+                  label: question,
+                  child: TextField(
+                    key: ValueKey(
+                      'route-clarification-${widget.quest.id}-$question',
+                    ),
+                    minLines: 2,
+                    maxLines: 3,
+                    maxLength: 280,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '回答を書く',
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surface,
+                    ),
+                    onChanged: (value) => setState(() {
+                      _clarificationAnswers[question] = value;
+                    }),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              FilledButton.icon(
+                onPressed:
+                    cooldownActive ||
+                        clarificationQuestions.any(
+                          (question) => (_clarificationAnswers[question] ?? '')
+                              .trim()
+                              .isEmpty,
+                        )
+                    ? null
+                    : () => unawaited(
+                        ref
+                            .read(arcQuestGuideControllerProvider.notifier)
+                            .generateForQuest(
+                              widget.quest,
+                              clarificationAnswers: {
+                                for (final question in clarificationQuestions)
+                                  question: _clarificationAnswers[question]!
+                                      .trim(),
+                              },
+                            ),
+                      ),
+                icon: const Icon(Icons.send_outlined),
+                label: Text(cooldownActive ? '時間をおいて再試行' : '回答して航路を描く'),
+              ),
+            ] else if (error != null) ...[
               ArcWidget(
                 emotion: ArcEmotion.worried,
                 size: 70,
                 message: '星雲が少し濃いみたい。今は手動でMissionを作る航路に切り替えられます。',
               ),
               const SizedBox(height: 8),
-              Text(error, style: const TextStyle(color: QuestraColors.slate)),
+              Text(
+                error,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
             ] else
               Text(
                 widget.missions.isEmpty
                     ? 'ArcがこのQuestの進め方と最初のMission候補をまとめます。'
                     : '現在のMissionと進捗を読み、完了した成果を残したまま残りの航路を組み直します。',
               ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: () => ref
-                  .read(arcQuestGuideControllerProvider.notifier)
-                  .generateForQuest(widget.quest),
-              icon: const Icon(Icons.auto_awesome_outlined),
-              label: Text(
-                widget.missions.isEmpty ? 'Arcガイドを生成' : 'AIで残りの航路を作る',
+            if (clarificationQuestions.isEmpty) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: cooldownActive
+                    ? null
+                    : () => ref
+                          .read(arcQuestGuideControllerProvider.notifier)
+                          .generateForQuest(widget.quest),
+                icon: const Icon(Icons.auto_awesome_outlined),
+                label: Text(
+                  cooldownActive
+                      ? '時間をおいて再試行'
+                      : widget.missions.isEmpty
+                      ? 'Arcガイドを生成'
+                      : 'AIで残りの航路を作る',
+                ),
               ),
-            ),
+            ],
           ] else ...[
+            if (error != null) ...[
+              Text(
+                error,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
             ArcWidget(
               emotion: ArcEmotion.support,
               size: 70,
@@ -2623,11 +2741,13 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
               const Text('Missionを保存しました。必要になったら、別の航路も描き直せます。'),
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: () => ref
-                    .read(arcQuestGuideControllerProvider.notifier)
-                    .generateForQuest(widget.quest),
+                onPressed: cooldownActive
+                    ? null
+                    : () => ref
+                          .read(arcQuestGuideControllerProvider.notifier)
+                          .generateForQuest(widget.quest),
                 icon: const Icon(Icons.refresh_outlined),
-                label: const Text('Mission候補を描き直す'),
+                label: Text(cooldownActive ? '時間をおいて再試行' : 'Mission候補を描き直す'),
               ),
             ] else ...[
               if (guide.replacesExistingRoute) ...[
@@ -2713,17 +2833,35 @@ class _ArcQuestGuidePanelState extends ConsumerState<_ArcQuestGuidePanel> {
                     label: const Text('候補を追加'),
                   ),
                   OutlinedButton.icon(
-                    onPressed: () => ref
-                        .read(arcQuestGuideControllerProvider.notifier)
-                        .generateForQuest(widget.quest),
+                    onPressed: cooldownActive || _discardingPlan
+                        ? null
+                        : () => unawaited(_discardPlan(regenerate: true)),
                     icon: const Icon(Icons.refresh_outlined),
-                    label: const Text('全体構成を見直す'),
+                    label: Text(cooldownActive ? '時間をおいて再試行' : '全体構成を見直す'),
+                  ),
+                  TextButton.icon(
+                    onPressed: _discardingPlan
+                        ? null
+                        : () => unawaited(_discardPlan()),
+                    icon: const Icon(Icons.close),
+                    label: const Text('この案を見送る'),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
+              if (guide.previewId == null || guide.approvalToken == null) ...[
+                const Text('この航路案は承認情報を確認できません。Missionは保存せず、全体構成を見直してください。'),
+                const SizedBox(height: 12),
+              ],
               FilledButton.icon(
-                onPressed: draft.validCandidates.isEmpty ? null : _confirmPlan,
+                onPressed:
+                    draft.validCandidates.isEmpty ||
+                        _discardingPlan ||
+                        _approvingPlan ||
+                        guide.previewId == null ||
+                        guide.approvalToken == null
+                    ? null
+                    : _confirmPlan,
                 icon: const Icon(Icons.check_circle_outline),
                 label: Text('${draft.validCandidates.length}件のMissionを確定する'),
               ),

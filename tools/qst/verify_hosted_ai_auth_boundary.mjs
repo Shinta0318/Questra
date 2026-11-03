@@ -75,6 +75,20 @@ export async function verifyHostedMissingConsentDenial({
     } : {}),
   };
   await verifySignedInUser(project, publishableKey, userAccessToken, fetchImpl);
+  const consentGuard = await fetchImpl(`${project.origin}/functions/v1/arc-chat`, {
+    method: 'POST',
+    headers: {
+      apikey: publishableKey,
+      Authorization: `Bearer ${userAccessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: '{',
+    signal: AbortSignal.timeout(10000),
+  });
+  const guardPayload = await consentGuard.json().catch(() => null);
+  if (consentGuard.status !== 403 || guardPayload?.error !== 'consent_required') {
+    throw new Error('Missing consent was not proven before valid AI denial probes.');
+  }
   const results = [];
   for (const [name, body] of Object.entries(probeBodies)) {
     const response = await fetchImpl(`${project.origin}/functions/v1/${name}`, {

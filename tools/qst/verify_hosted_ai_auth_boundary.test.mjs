@@ -123,10 +123,11 @@ test('missing-consent probe sends synthetic valid inputs and requires the exact 
       return Response.json({ error: 'consent_required' }, { status: 403 });
     },
   });
-  assert.equal(calls.length, 9);
+  assert.equal(calls.length, 10);
   assert.equal(results.length, 8);
   assert.equal(hasExpectedMissingConsentDenialStatuses(results), true);
-  assert.ok(calls.slice(1).every(({ options }) => {
+  assert.equal(calls[1].options.body, '{');
+  assert.ok(calls.slice(2).every(({ options }) => {
     const payload = JSON.parse(options.body);
     return options.headers.Authorization === `Bearer ${testUserToken}`
       && typeof payload === 'object' && payload !== null;
@@ -142,9 +143,9 @@ test('missing-consent probe sends synthetic valid inputs and requires the exact 
   assert.equal(hasExpectedMissingConsentDenialStatuses(results.slice(1)), false);
 });
 
-test('missing-consent probe stops before other AI calls on the first unexpected response', async () => {
+test('missing-consent probe stops before any valid AI call when consent is not proven', async () => {
   const calls = [];
-  const results = await verifyHostedMissingConsentDenial({
+  await assert.rejects(verifyHostedMissingConsentDenial({
     ...config,
     userAccessToken: 'header.payload.signature',
     fetchImpl: async (url) => {
@@ -153,10 +154,8 @@ test('missing-consent probe stops before other AI calls on the first unexpected 
         ? Response.json({ id: 'test-user' })
         : Response.json({ message: 'unexpected AI result' });
     },
-  });
+  }), /Missing consent was not proven/);
   assert.equal(calls.length, 2);
-  assert.equal(results.length, 1);
-  assert.equal(hasExpectedMissingConsentDenialStatuses(results), false);
 });
 
 test('owned disposable fixtures extend the denial probe to planning and research', async () => {
@@ -173,7 +172,7 @@ test('owned disposable fixtures extend the denial probe to planning and research
         : Response.json({ error: 'consent_required' }, { status: 403 });
     },
   });
-  assert.equal(calls.length, 11);
+  assert.equal(calls.length, 12);
   assert.equal(results.length, 10);
   assert.equal(hasExpectedMissingConsentDenialStatuses(results, true), true);
   assert.equal(hasExpectedMissingConsentDenialStatuses(results), false);

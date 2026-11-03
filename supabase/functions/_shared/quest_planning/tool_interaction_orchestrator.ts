@@ -11,7 +11,7 @@ import {
   startAiToolContinuationAttribution,
   type AiToolContinuationAttribution,
 } from "./ai_budget_admission.ts";
-import { QUESTRA_TOOLS } from "./tool_registry.ts";
+import { isQuestScopedReadTool, QUESTRA_TOOLS } from "./tool_registry.ts";
 import {
   executeQuestraTool,
   type ToolExecutionContext,
@@ -40,7 +40,7 @@ export type ToolInteractionDependencies = {
 
 export async function callGeminiInteractionWithTools(
   request: ProviderRequest,
-  context: { userId: string; approved?: boolean },
+  context: { userId: string; questId?: string; approved?: boolean },
   options: ToolInteractionOptions = {},
   dependencies: ToolInteractionDependencies = {},
 ): Promise<ProviderResponse> {
@@ -49,6 +49,10 @@ export async function callGeminiInteractionWithTools(
   }
   const callProvider = dependencies.callProvider ?? callGeminiInteraction;
   const executeTool = dependencies.executeTool ?? executeQuestraTool;
+  const offeredToolNames = new Set(
+    request.tools?.filter((tool) => tool.type === "function" && tool.name)
+      .map((tool) => tool.name) ?? [],
+  );
   const now = dependencies.now ?? Date.now;
   const maxTurns = bounded(options.maxTurns, 3, 1, 5);
   const maxToolCalls = bounded(options.maxToolCalls, 8, 1, 12);
@@ -102,6 +106,13 @@ export async function callGeminiInteractionWithTools(
 
     const results: unknown[] = [];
     for (const call of response.toolCalls) {
+      if (!offeredToolNames.has(call.name)) {
+        return await attributedToolFailure(
+          attribution,
+          response,
+          "Provider requested a tool not offered for this planning pass",
+        );
+      }
       const definition = QUESTRA_TOOLS[call.name];
       if (!definition || definition.access !== "read") {
         return await attributedToolFailure(
@@ -110,7 +121,10 @@ export async function callGeminiInteractionWithTools(
           "A write or unknown tool requires an explicit user approval flow",
         );
       }
-      const fingerprint = toolFingerprint(call);
+      const argumentsForTool = context.questId && isQuestScopedReadTool(call.name)
+        ? { ...call.arguments, questId: context.questId }
+        : call.arguments;
+      const fingerprint = toolFingerprint(call.name, argumentsForTool);
       if (seenCalls.has(fingerprint)) {
         return await attributedToolFailure(
           attribution,
@@ -119,8 +133,9 @@ export async function callGeminiInteractionWithTools(
         );
       }
       seenCalls.add(fingerprint);
-      const result = await executeTool(call.name, call.arguments, {
+      const result = await executeTool(call.name, argumentsForTool, {
         userId: context.userId,
+        expectedQuestId: context.questId,
         traceId: request.traceId,
         approved: context.approved === true,
       });
@@ -251,8 +266,8 @@ function functionResult(call: ProviderToolCall, data: unknown) {
   };
 }
 
-function toolFingerprint(call: ProviderToolCall) {
-  return `${call.name}:${stableJson(call.arguments)}`;
+function toolFingerprint(name: string, args: Record<string, unknown>) {
+  return `${name}:${stableJson(args)}`;
 }
 
 function stableJson(value: unknown): string {

@@ -1,4 +1,8 @@
-import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show FunctionException, SupabaseClient;
 
 import '../../core/config/supabase_config.dart';
 import '../../core/safety/ai_legal_failure.dart';
@@ -9,8 +13,200 @@ import 'quest_evaluation.dart';
 import 'quest_dna.dart';
 import 'quest_model.dart';
 import 'planning_context.dart';
+import 'planning_attempt_repository.dart';
 import 'quest_understanding.dart';
 import 'mission_plan_quality.dart';
+
+String? planningFailureMessageFromException(Object error) {
+  if (error is! FunctionException) return null;
+  if (error.status == 546 || error.status == 504) {
+    return '航路づくりが途中で中断されました。Questと入力は残っています。今はMissionを手動で追加できます。';
+  }
+  if (error.details is! Map) return null;
+  if (error.status == 400 &&
+      (error.details as Map)['error'] == 'quest_wish_too_long') {
+    return '航路に送る文章が長すぎます。Questの説明か追加回答を短くしてください。';
+  }
+  if (error.status == 400 &&
+      (error.details as Map)['error'] == 'invalid_planning_context') {
+    return '航路に使う条件を確認できません。入力を短くするか、設定を確認してから再試行してください。';
+  }
+  if (error.status == 400 &&
+      (error.details as Map)['error'] == 'invalid_target_date') {
+    return '希望達成日を確認できません。Questの期限を設定し直してから再試行してください。';
+  }
+  if (error.status == 403 &&
+      (error.details as Map)['error'] ==
+          'planning_preferences_consent_required') {
+    return '保存した計画条件の利用許可を確認できません。計画設定を確認してください。Questの入力は残っています。';
+  }
+  if (error.status != 422 && error.status != 429 && error.status != 503) {
+    return null;
+  }
+  final details = Map<String, dynamic>.from(error.details as Map);
+  if (details['status'] != 'retryable_error' &&
+      details['status'] != 'manual_path') {
+    return null;
+  }
+  return planningFailureMessage(details);
+}
+
+bool planningAttemptChanged(Object error) =>
+    error is FunctionException &&
+    error.status == 409 &&
+    error.details is Map &&
+    (error.details as Map)['error'] == 'planning_attempt_changed';
+
+bool planningCriticEvaluationInvalid(Object error) {
+  if (error is! FunctionException || error.details is! Map) return false;
+  final details = error.details as Map;
+  if (details['status'] != 'retryable_error' || details['passes'] is! List) {
+    return false;
+  }
+  return (details['passes'] as List).any((pass) {
+    if (pass is! Map ||
+        pass['name'] != 'mission_critic' && pass['name'] != 'task_critic') {
+      return false;
+    }
+    final provider = pass['provider'];
+    return provider is Map &&
+        provider['error'] is Map &&
+        (provider['error'] as Map)['code'] == 'semantic_invalid';
+  });
+}
+
+String? planningApprovalFailureMessage(Object error) {
+  if (error is! FunctionException || error.details is! Map) return null;
+  return switch ((error.details as Map)['error']) {
+    'consent_required' =>
+      '利用条件への同意を確認できません。設定を確認してください。航路案と入力は残っています。',
+    'original_planning_wish_missing' =>
+      'この航路案は作成時の相談内容を確認できません。案を見送って、航路を作り直してください。',
+    'original_planning_context_missing' =>
+      'この航路案は作成時の条件を確認できません。案を見送って、航路を作り直してください。',
+    'planning_context_changed' =>
+      '航路案を作った後にQuestや計画条件が変わりました。案を見送って、最新の条件で作り直してください。',
+    'planning_preferences_consent_required' =>
+      '保存した計画条件の利用許可を確認できません。計画設定を確認してください。Questの入力は残っています。',
+    'planning_context_unavailable' =>
+      '今は計画条件を確認できません。候補は残っています。少し待ってから再試行してください。',
+    'route_changed_since_preview' =>
+      '提案後にMissionが変更されました。最新の航路を読み直して、もう一度作成してください。',
+    'completed_mission_duplicate_in_plan' =>
+      '完了済みMissionと重なる候補がありました。完了内容を保ったまま、もう一度作成してください。',
+    'preview_already_approved_with_different_selection' =>
+      '別の航路案が先に確定されました。Questを開き直して現在のMissionを確認してください。',
+    'preview_not_approvable' => 'この航路案は期限切れか、すでに見送られています。新しい案を作成してください。',
+    'approved_selection_not_found' ||
+    'preview_stage_failed' => '編集した航路案を確認できませんでした。候補は残っています。少し待ってから再試行してください。',
+    'approval_failed' => 'Missionを保存できたか確認できません。候補は残っています。少し待ってから再試行してください。',
+    _ => null,
+  };
+}
+
+String planningFailureMessage(Map<String, dynamic> data) {
+  final codes = <Object?>[];
+  final issues = data['issues'];
+  if (issues is List) {
+    for (final issue in issues.reversed) {
+      if (issue is Map) codes.add(issue['code']);
+    }
+  }
+  final passes = data['passes'];
+  if (passes is List) {
+    for (final pass in passes.reversed) {
+      if (pass is! Map || pass['provider'] is! Map) continue;
+      final provider = pass['provider'] as Map;
+      if (provider['error'] is Map) {
+        codes.add((provider['error'] as Map)['code']);
+      }
+    }
+  }
+  for (final code in codes) {
+    switch (code) {
+      case 'rate_limited':
+        return 'Geminiの利用枠に達しました。入力は残っています。回復時刻は確認できないため、時間をおいて再試行するか、Missionを手動で追加できます。';
+      case 'budget_exhausted':
+        return '今月の航路づくり枠を使い切りました。入力は残っています。時間をおくか、Missionを手動で追加できます。';
+      case 'ai_disabled':
+        return '航路づくりを一時停止しています。入力は残っています。時間をおいて再試行してください。';
+      case 'budget_unavailable':
+        return '航路づくりの利用状況を確認できませんでした。入力を保ったまま再試行できます。';
+      case 'timeout':
+        return '航路づくりに時間がかかっています。入力は残っています。少し待ってから再試行してください。';
+      case 'grounding_failed':
+        return '最新情報を確認できなかったため、航路はまだ作成していません。入力を保ったまま再試行できます。';
+      case 'semantic_invalid':
+        return 'Arcの評価結果を確認できませんでした。航路は保存していません。入力を保ったまま再試行できます。';
+      case 'critic_rejected':
+        return 'Arcが作ったMission案は品質基準を満たしませんでした。航路は保存していません。Questの条件を見直して再試行するか、Missionを手動で追加できます。';
+      case 'task_critic_rejected':
+        return '最初のTask案が品質基準を満たしませんでした。航路は保存していません。条件を見直して再試行できます。';
+    }
+  }
+  return 'Mission候補の品質確認を完了できませんでした。入力を保ったまま再試行できます。';
+}
+
+class PlanningRateLimitException implements Exception {
+  const PlanningRateLimitException(this.message, this.retryAfter);
+
+  final String message;
+  final Duration retryAfter;
+
+  @override
+  String toString() => message;
+}
+
+class PlanningClarificationException implements Exception {
+  const PlanningClarificationException(this.questions);
+
+  final List<String> questions;
+}
+
+String planningWishWithAnswers(
+  Quest quest,
+  Map<String, String> clarificationAnswers,
+) {
+  final wish = [
+    quest.title,
+    quest.description,
+  ].where((value) => value.trim().isNotEmpty).join('\n');
+  final answers = clarificationAnswers.entries
+      .where(
+        (entry) => entry.key.trim().isNotEmpty && entry.value.trim().isNotEmpty,
+      )
+      .take(3)
+      .map((entry) => '${entry.key.trim()} ${entry.value.trim()}')
+      .toList();
+  final composed = answers.isEmpty
+      ? wish
+      : '$wish\nArcとの確認:\n${answers.join('\n')}';
+  if (composed.length > 1200) {
+    throw StateError('航路に送る文章が長すぎます。Questの説明か追加回答を短くしてください。');
+  }
+  return composed;
+}
+
+Duration? planningRateLimitWait(Map<String, dynamic> data) {
+  if (data['status'] != 'retryable_error') return null;
+  final seconds = data['retryAfterSeconds'];
+  if (seconds is! int || seconds < 1) return null;
+  return Duration(seconds: seconds.clamp(1, 3600));
+}
+
+Map<String, Object?> planningContextPayload(PlanningContext? context) {
+  if (context?.consentGranted != true) return const {};
+  return {
+    'budget': context!.budgetLabel,
+    'available_time': context.weeklyMinutes == null
+        ? null
+        : {'weekly_minutes': context.weeklyMinutes},
+    'experience': context.experience,
+    'location': context.location,
+    'constraints': [...context.preferences, ...context.setbackReasons],
+    'approved_context': context.toPlanningJson(),
+  };
+}
 
 class ArcMissionCandidate {
   const ArcMissionCandidate({
@@ -191,6 +387,8 @@ class ArcQuestGuide {
     this.previewId,
     this.approvalToken,
     this.draftId,
+    this.planningAttemptFingerprint,
+    this.planningAttemptKey,
     this.currentMissionClientId,
     this.currentTaskCandidates = const [],
     this.replacesExistingRoute = false,
@@ -214,6 +412,8 @@ class ArcQuestGuide {
   final String? previewId;
   final String? approvalToken;
   final String? draftId;
+  final String? planningAttemptFingerprint;
+  final String? planningAttemptKey;
   final String? currentMissionClientId;
   final List<ArcTaskCandidate> currentTaskCandidates;
   final bool replacesExistingRoute;
@@ -226,12 +426,15 @@ abstract interface class ArcQuestGuideService {
   Future<ArcQuestGuide> generate({
     required Quest quest,
     PlanningContext? planningContext,
+    Map<String, String> clarificationAnswers = const {},
   });
 
   Future<void> approve({
     required ArcQuestGuide guide,
     required List<ArcMissionCandidate> candidates,
   });
+
+  Future<void> reject(ArcQuestGuide guide);
 }
 
 class LocalArcQuestGuideService implements ArcQuestGuideService {
@@ -241,6 +444,7 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
   Future<ArcQuestGuide> generate({
     required Quest quest,
     PlanningContext? planningContext,
+    Map<String, String> clarificationAnswers = const {},
   }) async {
     throw StateError(
       'Gemini Planning APIを利用できません。入力内容は保持されています。接続を確認して再試行してください。',
@@ -251,90 +455,123 @@ class LocalArcQuestGuideService implements ArcQuestGuideService {
   Future<void> approve({
     required ArcQuestGuide guide,
     required List<ArcMissionCandidate> candidates,
-  }) async {}
+  }) async {
+    throw StateError('航路を確定できません。Gemini Planning APIの接続を確認して、もう一度試してください。');
+  }
+
+  @override
+  Future<void> reject(ArcQuestGuide guide) async {}
 }
 
 class SupabaseArcQuestGuideService implements ArcQuestGuideService {
-  const SupabaseArcQuestGuideService({required this.client});
+  SupabaseArcQuestGuideService({
+    required this.client,
+    PlanningAttemptRepository? attemptRepository,
+  }) : _attempts = attemptRepository ?? SecurePlanningAttemptRepository();
 
   final SupabaseClient client;
+  final PlanningAttemptRepository _attempts;
 
   @override
   Future<ArcQuestGuide> generate({
     required Quest quest,
     PlanningContext? planningContext,
+    Map<String, String> clarificationAnswers = const {},
   }) async {
     if (!SupabaseConfig.isConfigured) {
       throw StateError('Gemini Planning APIを利用できません。接続設定を確認してください。');
     }
+    if (clarificationAnswers.isNotEmpty &&
+        planningContext?.consentGranted != true) {
+      throw StateError('追加回答はまだ送信していません。Arcの航路設計に使う条件を確認してください。');
+    }
 
     try {
-      final response = await client.functions.invoke(
-        'quest-planning-v2',
-        body: {
-          'mode': 'plan',
-          'quest_id': quest.id,
-          'wish': [
-            quest.title,
-            quest.description,
-          ].where((value) => value.trim().isNotEmpty).join('\n'),
-          'target_date': quest.targetDate?.toIso8601String(),
-          'budget': planningContext?.budgetLabel,
-          'available_time': planningContext?.weeklyMinutes == null
-              ? null
-              : {'weekly_minutes': planningContext!.weeklyMinutes},
-          'experience': planningContext?.experience,
-          'location': planningContext?.location,
-          'constraints': [
-            ...?planningContext?.preferences,
-            ...?planningContext?.setbackReasons,
-          ],
-          'approved_context': planningContext?.consentGranted == true
-              ? planningContext!.toPlanningJson()
-              : null,
-          'idempotency_key':
-              'flutter-${quest.id}-${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        },
+      final ownerId = client.auth.currentUser?.id;
+      final body = <String, Object?>{
+        'mode': 'plan',
+        'quest_id': quest.id,
+        'wish': planningWishWithAnswers(quest, clarificationAnswers),
+        'target_date': quest.targetDate?.toIso8601String(),
+        ...planningContextPayload(planningContext),
+      };
+      final fingerprint = sha256
+          .convert(utf8.encode(jsonEncode(body)))
+          .toString();
+      final attemptKey = await _attempts.loadOrCreate(
+        ownerId,
+        quest.id,
+        fingerprint,
       );
-      final data = Map<String, dynamic>.from(response.data as Map);
+      body['idempotency_key'] = attemptKey;
+      Map<String, dynamic>? data;
+      for (var step = 0; step < 24; step++) {
+        try {
+          final response = await client.functions.invoke(
+            'quest-planning-v2',
+            body: body,
+          );
+          data = Map<String, dynamic>.from(response.data as Map);
+        } on FunctionException catch (error) {
+          if (planningAttemptChanged(error)) {
+            await _attempts.clear(ownerId, quest.id, fingerprint, attemptKey);
+            throw StateError('Questの状態が変わりました。入力は残っています。もう一度航路づくりを試してください。');
+          }
+          if (planningCriticEvaluationInvalid(error)) {
+            await _attempts.clear(ownerId, quest.id, fingerprint, attemptKey);
+          }
+          rethrow;
+        }
+        if (data['status'] != 'processing') break;
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+      }
+      if (data == null || data['status'] == 'processing') {
+        throw StateError('航路づくりはまだ完了していません。Questと入力は残っています。少し待ってから再試行してください。');
+      }
       if (data['status'] == 'needs_clarification') {
         final questions = _clarificationQuestions(data);
-        throw StateError(
-          questions.isEmpty
-              ? 'Arcが航路を描くために、Questの条件をもう少し確認したがっています。'
-              : questions.join('\n'),
-        );
+        if (questions.isNotEmpty) {
+          throw PlanningClarificationException(questions);
+        }
+        throw StateError('Arcが航路を描くために、Questの条件をもう少し確認したがっています。');
       }
       if (data['status'] != 'preview_ready' || data['preview'] is! Map) {
-        throw StateError(_planningFailureMessage(data));
+        final retryAfter = planningRateLimitWait(data);
+        if (retryAfter != null) {
+          throw PlanningRateLimitException(
+            planningFailureMessage(data),
+            retryAfter,
+          );
+        }
+        throw StateError(planningFailureMessage(data));
       }
-      return _guideFromPlanningPreview(quest, data);
+      return _guideFromPlanningPreview(
+        quest,
+        data,
+        planningAttemptFingerprint: fingerprint,
+        planningAttemptKey: attemptKey,
+      );
     } catch (error) {
-      if (error is StateError) rethrow;
+      if (error is StateError ||
+          error is PlanningRateLimitException ||
+          error is PlanningClarificationException) {
+        rethrow;
+      }
       final legalMessage = aiLegalFailureMessage(error);
       if (legalMessage != null) throw StateError(legalMessage);
+      final planningMessage = planningFailureMessageFromException(error);
+      if (planningMessage != null) {
+        if (error is FunctionException && error.details is Map) {
+          final details = Map<String, dynamic>.from(error.details as Map);
+          final retryAfter = planningRateLimitWait(details);
+          if (retryAfter != null) {
+            throw PlanningRateLimitException(planningMessage, retryAfter);
+          }
+        }
+        throw StateError(planningMessage);
+      }
       throw StateError('ArcがMission構造を確認できませんでした。固定候補には置き換えず、もう一度試せます。');
     }
-  }
-
-  String _planningFailureMessage(Map<String, dynamic> data) {
-    final passes = data['passes'] as List? ?? const [];
-    for (final rawPass in passes.reversed) {
-      if (rawPass is! Map) continue;
-      final provider = rawPass['provider'];
-      if (provider is! Map) continue;
-      final error = provider['error'];
-      if (error is! Map) continue;
-      switch (error['code']) {
-        case 'budget_exhausted':
-          return '今月の航路づくり枠を使い切りました。入力は残っています。時間をおくか、Missionを手動で追加できます。';
-        case 'ai_disabled':
-          return '航路づくりを一時停止しています。入力は残っています。時間をおいて再試行してください。';
-        case 'budget_unavailable':
-          return '航路づくりの利用状況を確認できませんでした。入力を保ったまま再試行できます。';
-      }
-    }
-    return 'Mission候補の品質確認を完了できませんでした。入力を保ったまま再試行できます。';
   }
 
   @override
@@ -345,28 +582,100 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
     if (guide.previewId == null || guide.approvalToken == null) {
       throw StateError('承認できるMission draftがありません。');
     }
-    await _recordApprovalFeedback(guide, candidates);
-    final response = await client.functions.invoke(
-      'quest-planning-v2',
-      body: {
-        'mode': 'approve',
-        'preview_id': guide.previewId,
-        'approval_token': guide.approvalToken,
+    final selectionChanged = approvalSelectionChanged(
+      guide.missionCandidates,
+      candidates,
+    );
+    final body = {
+      'mode': 'approve',
+      'preview_id': guide.previewId,
+      'approval_token': guide.approvalToken,
+      if (selectionChanged)
         'approved_missions': [
           for (final candidate in candidates) _candidateToApproval(candidate),
         ],
-      },
-    );
-    final data = Map<String, dynamic>.from(response.data as Map);
+    };
+    Map<String, dynamic>? data;
+    for (var step = 0; step < 16; step++) {
+      try {
+        final response = await client.functions.invoke(
+          'quest-planning-v2',
+          body: body,
+        );
+        data = Map<String, dynamic>.from(response.data as Map);
+      } on FunctionException catch (error) {
+        final message = planningApprovalFailureMessage(error);
+        if (message != null) throw StateError(message);
+        rethrow;
+      }
+      if (data['status'] != 'processing') break;
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+    if (data == null || data['status'] == 'processing') {
+      throw StateError('承認内容の確認がまだ完了していません。候補は残っています。少し待ってから再試行してください。');
+    }
     if (data['error'] == 'route_changed_since_preview') {
       throw StateError('提案後にMissionが変更されました。最新の航路を読み直して、もう一度作成してください。');
     }
     if (data['error'] == 'completed_mission_duplicate_in_plan') {
       throw StateError('完了済みMissionと重なる候補がありました。完了内容を保ったまま、もう一度作成してください。');
     }
+    if (data['error'] == 'original_planning_wish_missing') {
+      throw StateError('この航路案は作成時の相談内容を確認できません。案を見送って、航路を作り直してください。');
+    }
+    if (data['error'] == 'original_planning_context_missing' ||
+        data['error'] == 'planning_context_changed') {
+      throw StateError(
+        data['error'] == 'planning_context_changed'
+            ? '航路案を作った後にQuestや計画条件が変わりました。案を見送って、最新の条件で作り直してください。'
+            : 'この航路案は作成時の条件を確認できません。案を見送って、航路を作り直してください。',
+      );
+    }
     if (data['status'] != 'approved') {
       throw StateError('Missionを確定できませんでした。候補は失われていません。');
     }
+    await _recordApprovalFeedback(guide, candidates);
+    await _clearPlanningAttempt(guide);
+  }
+
+  @override
+  Future<void> reject(ArcQuestGuide guide) async {
+    if (guide.previewId == null && guide.approvalToken == null) return;
+    if (guide.previewId == null || guide.approvalToken == null) {
+      throw StateError('この航路案を確認できませんでした。画面を開き直してください。');
+    }
+    try {
+      final response = await client.functions.invoke(
+        'quest-planning-v2',
+        body: {
+          'mode': 'reject',
+          'preview_id': guide.previewId,
+          'approval_token': guide.approvalToken,
+        },
+      );
+      final data = Map<String, dynamic>.from(response.data as Map);
+      if (data['status'] != 'rejected') {
+        throw StateError('航路案を見送れませんでした。もう一度お試しください。');
+      }
+    } on FunctionException catch (error) {
+      if (error.status == 409) {
+        throw StateError('この航路案はすでに確定または見送り済みです。画面を開き直してください。');
+      }
+      throw StateError('航路案を見送れませんでした。通信状態を確認して再試行してください。');
+    }
+    await _clearPlanningAttempt(guide);
+  }
+
+  Future<void> _clearPlanningAttempt(ArcQuestGuide guide) async {
+    final fingerprint = guide.planningAttemptFingerprint;
+    final attemptKey = guide.planningAttemptKey;
+    if (fingerprint == null || attemptKey == null) return;
+    await _attempts.clear(
+      client.auth.currentUser?.id,
+      guide.questId,
+      fingerprint,
+      attemptKey,
+    );
   }
 
   Future<void> _recordApprovalFeedback(
@@ -403,8 +712,10 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
 
   ArcQuestGuide _guideFromPlanningPreview(
     Quest quest,
-    Map<String, dynamic> data,
-  ) {
+    Map<String, dynamic> data, {
+    String? planningAttemptFingerprint,
+    String? planningAttemptKey,
+  }) {
     final preview = Map<String, dynamic>.from(data['preview'] as Map);
     final understanding = Map<String, dynamic>.from(
       preview['questUnderstanding'] as Map? ?? const {},
@@ -510,6 +821,8 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
       previewId: data['preview_id'] as String?,
       approvalToken: data['approval_token'] as String?,
       draftId: data['draft_id'] as String?,
+      planningAttemptFingerprint: planningAttemptFingerprint,
+      planningAttemptKey: planningAttemptKey,
       currentMissionClientId: taskPlan['missionClientId'] as String?,
       currentTaskCandidates: taskCandidates,
       replacesExistingRoute:
@@ -611,27 +924,6 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
     );
   }
 
-  Map<String, Object?> _candidateToApproval(ArcMissionCandidate candidate) => {
-    'clientId': candidate.planKey,
-    'title': candidate.title.trim(),
-    'objective': candidate.purpose.trim().isEmpty
-        ? candidate.description.trim()
-        : candidate.purpose.trim(),
-    'successCondition': candidate.doneCondition.trim(),
-    'expectedOutcome': candidate.expectedOutput.trim(),
-    'reasonRequired': candidate.reasonRequired.trim(),
-    'coveredSuccessConditions': candidate.coveredSuccessConditions,
-    'groundedFactRefs': candidate.referenceHints,
-    'requiresCurrentFacts': candidate.sourceRequirement == 'grounded',
-    'calendarDurationDays': candidate.estimatedDurationDays ?? 0,
-    'dependencies': candidate.dependencyPlanKeys,
-    'required': !candidate.isOptional,
-    'parallelizable': candidate.parallelizable,
-    'childTaskEstimate': candidate.childTaskEstimate,
-    'weight': 1,
-    'confidence': candidate.confidence,
-  };
-
   List<String> _clarificationQuestions(Map<String, dynamic> data) {
     final passes = data['passes'] as List? ?? const [];
     for (final pass in passes.reversed) {
@@ -659,3 +951,38 @@ class SupabaseArcQuestGuideService implements ArcQuestGuideService {
         const [];
   }
 }
+
+bool approvalSelectionChanged(
+  List<ArcMissionCandidate> original,
+  List<ArcMissionCandidate> selected,
+) {
+  if (original.length != selected.length) return true;
+  for (var index = 0; index < original.length; index++) {
+    if (jsonEncode(_candidateToApproval(original[index])) !=
+        jsonEncode(_candidateToApproval(selected[index]))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+Map<String, Object?> _candidateToApproval(ArcMissionCandidate candidate) => {
+  'clientId': candidate.planKey,
+  'title': candidate.title.trim(),
+  'objective': candidate.purpose.trim().isEmpty
+      ? candidate.description.trim()
+      : candidate.purpose.trim(),
+  'successCondition': candidate.doneCondition.trim(),
+  'expectedOutcome': candidate.expectedOutput.trim(),
+  'reasonRequired': candidate.reasonRequired.trim(),
+  'coveredSuccessConditions': candidate.coveredSuccessConditions,
+  'groundedFactRefs': candidate.referenceHints,
+  'requiresCurrentFacts': candidate.sourceRequirement == 'grounded',
+  'calendarDurationDays': candidate.estimatedDurationDays ?? 0,
+  'dependencies': candidate.dependencyPlanKeys,
+  'required': !candidate.isOptional,
+  'parallelizable': candidate.parallelizable,
+  'childTaskEstimate': candidate.childTaskEstimate,
+  'weight': 1,
+  'confidence': candidate.confidence,
+};

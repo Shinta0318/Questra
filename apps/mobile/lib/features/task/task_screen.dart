@@ -4,10 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../widgets/arc/arc_empty_state.dart';
+import '../../widgets/feedback/questra_notification.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/layout/questra_journey_scaffold.dart';
 import '../../widgets/questra_card.dart';
+import '../mission/mission_controller.dart';
 import '../quest/quest_controller.dart';
+import '../quest/quest_model.dart';
+import '../quest_journey/quest_journey_contract.dart';
 import 'task_availability_service.dart';
 import 'task_achievement_flow.dart';
 import 'task_controller.dart';
@@ -25,10 +29,41 @@ class TaskScreen extends ConsumerWidget {
     final mutation = ref.watch(taskMutationControllerProvider);
     final loadState = ref.watch(taskLoadStateProvider);
     final quests = ref.watch(questControllerProvider);
-    final today = ref.read(taskControllerProvider.notifier).todaysTask;
+    final missions = ref.watch(missionControllerProvider);
+    final activeQuestIds = quests
+        .where((quest) => quest.status == QuestStatus.active)
+        .map((quest) => quest.id)
+        .toSet();
+    final currentTasks = tasks
+        .where((task) {
+          return activeQuestIds.contains(task.questId) &&
+              const TaskRouteAvailabilityService().canAct(
+                task,
+                quests: quests,
+                missions: missions,
+              );
+        })
+        .toList(growable: false);
+    final today = const QuestFocusSelectionService()
+        .selectTodayFocus(
+          tasks: currentTasks,
+          missions: missions,
+          eligibleQuestIds: activeQuestIds,
+        )
+        .primaryTask;
+    final actionableTasks = currentTasks.where((task) {
+      final missionTasks = currentTasks.where(
+        (item) => item.missionId == task.missionId,
+      );
+      final availability = const TaskAvailabilityService().evaluate(
+        task,
+        missionTasks,
+      );
+      return availability.canStart || availability.canComplete;
+    });
     final ordered = [
       ?today,
-      ...tasks.where((task) => task.id != today?.id && task.isOpen),
+      ...actionableTasks.where((task) => task.id != today?.id),
     ];
     return QuestraJourneyScaffold(
       title: 'Task',
@@ -104,6 +139,7 @@ class _TaskCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final mutation = ref.watch(taskMutationControllerProvider);
     final missionTasks = ref
         .watch(taskControllerProvider)
         .where((item) => item.missionId == task.missionId);
@@ -145,12 +181,24 @@ class _TaskCard extends ConsumerWidget {
                 Text('目安 ${task.estimatedEffortMinutes}分'),
               const Spacer(),
               FilledButton.icon(
-                onPressed: availability.canComplete
+                onPressed: mutation.needsRouteRefresh
+                    ? null
+                    : availability.canComplete
                     ? () => _completeAndCelebrate(context, ref)
                     : availability.canStart
-                    ? () => ref
-                          .read(taskControllerProvider.notifier)
-                          .start(task.id)
+                    ? () async {
+                        final started = await ref
+                            .read(taskControllerProvider.notifier)
+                            .start(task.id);
+                        if (!started && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            QuestraSnackBars.message(
+                              'Taskを開始できませんでした。通信とTaskの状態を確認して、もう一度お試しください。',
+                              type: QuestraNotificationType.error,
+                            ),
+                          );
+                        }
+                      }
                     : null,
                 icon: Icon(
                   availability.canComplete ? Icons.check : Icons.play_arrow,
@@ -191,6 +239,8 @@ class _TaskCard extends ConsumerWidget {
       context: context,
       completedTask: savedTask,
       allTasks: tasks,
+      quests: ref.read(questControllerProvider),
+      missions: ref.read(missionControllerProvider),
       onUndo: () => controller.reopen(savedTask.id),
     );
   }

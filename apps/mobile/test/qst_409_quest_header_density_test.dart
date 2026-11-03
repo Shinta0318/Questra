@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:questra/features/auth/auth_controller.dart';
+import 'package:questra/features/auth/auth_state.dart';
+import 'package:questra/features/quest/planning_cooldown_repository.dart';
 import 'package:questra/features/quest/quest_controller.dart';
 import 'package:questra/features/quest/quest_detail_screen.dart';
 import 'package:questra/features/quest/quest_evaluation.dart';
@@ -135,6 +138,52 @@ void main() {
     expect(tester.getBottomLeft(journeyEntry).dy, lessThan(844));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('再起動後のQuest詳細は保存済みの再試行待機を表示する', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final quest = _quest();
+    final cooldowns = InMemoryPlanningCooldownRepository();
+    await cooldowns.save(
+      'owner-a',
+      quest.id,
+      DateTime.now().add(const Duration(minutes: 2)),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(_OwnerAuthController.new),
+          questControllerProvider.overrideWith(
+            () => _StaticQuestController([quest]),
+          ),
+          planningCooldownRepositoryProvider.overrideWithValue(cooldowns),
+        ],
+        child: MaterialApp(home: QuestDetailScreen(questId: quest.id)),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    final waiting = find.text('時間をおいて再試行');
+    await tester.scrollUntilVisible(
+      waiting,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(waiting, findsOneWidget);
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.ancestor(of: waiting, matching: find.byType(OutlinedButton)),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Quest _quest({
@@ -161,4 +210,15 @@ class _StaticQuestController extends QuestController {
 
   @override
   List<Quest> build() => quests;
+}
+
+class _OwnerAuthController extends AuthController {
+  @override
+  AuthState build() => const AuthState(
+    profile: UserProfile(
+      id: 'owner-a',
+      email: 'owner-a@example.invalid',
+      nickname: 'A',
+    ),
+  );
 }
