@@ -10,6 +10,8 @@ void main() {
     "if: github.event_name == 'workflow_dispatch'",
     'BETA_SUPABASE_URL',
     'BETA_SUPABASE_PUBLISHABLE_KEY',
+    'read_candidate_source_commit.dart',
+    'steps.source.outputs.sha',
     'run_connected_preview.ps1 -ConfigPath',
     '--dart-define-from-file=',
     'build_mode=disconnected_ci_only',

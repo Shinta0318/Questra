@@ -17,6 +17,16 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Resolve candidate source SHA
+        id: source
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            source_sha=$(dart run tools/qst/read_candidate_source_commit.dart)
+          else
+            source_sha="${{ github.sha }}"
+          fi
+          printf 'QUESTRA_SOURCE_SHA=%s\n' "$source_sha" >> "$GITHUB_ENV"
+          printf 'sha=%s\n' "$source_sha" >> "$GITHUB_OUTPUT"
       - name: Prepare connected release configuration
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
@@ -31,7 +41,7 @@ jobs:
             SUPABASE_ANON_KEY = $env:SUPABASE_ANON_KEY
             APP_ENVIRONMENT = 'production'
             ALLOW_MOCK_PERSISTENCE = $false
-            QUESTRA_BUILD_VERSION = $env:GITHUB_SHA
+            QUESTRA_BUILD_VERSION = $env:QUESTRA_SOURCE_SHA
           } | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $env:RUNNER_TEMP 'questra-release-defines.json') -Encoding UTF8
       - name: Candidate source preflight
         run: |
@@ -127,17 +137,17 @@ jobs:
             flutter build apk --release --no-pub
           fi
       - name: Package Web artifact
-        run: tar -czf questra-web-${{ github.sha }}.tar.gz -C apps/mobile/build/web .
+        run: tar -czf "questra-web-$QUESTRA_SOURCE_SHA.tar.gz" -C apps/mobile/build/web .
       - name: Record candidate and artifact checksums
         env:
           SUPABASE_URL: ${{ vars.BETA_SUPABASE_URL }}
         run: |
           sha256sum \
             apps/mobile/build/app/outputs/flutter-apk/app-release.apk \
-            questra-web-${{ github.sha }}.tar.gz \
+            "questra-web-$QUESTRA_SOURCE_SHA.tar.gz" \
             > artifact-checksums.sha256
           android_sha=$(sha256sum apps/mobile/build/app/outputs/flutter-apk/app-release.apk | cut -d ' ' -f1)
-          web_sha=$(sha256sum questra-web-${{ github.sha }}.tar.gz | cut -d ' ' -f1)
+          web_sha=$(sha256sum "questra-web-$QUESTRA_SOURCE_SHA.tar.gz" | cut -d ' ' -f1)
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             project_ref=$(printf '%s' "$SUPABASE_URL" | sed -E 's#^https://([a-z0-9]{20})\.supabase\.co/?$#\1#')
             build_mode=connected
@@ -146,17 +156,17 @@ jobs:
             build_mode=disconnected_ci_only
           fi
           printf 'candidate_sha=%s\nbuild_mode=%s\nproject_ref=%s\nweb_sha256=%s\nandroid_sha256=%s\nrun_id=%s\n' \
-            "${{ github.sha }}" "$build_mode" "$project_ref" "$web_sha" "$android_sha" "${{ github.run_id }}" \
+            "$QUESTRA_SOURCE_SHA" "$build_mode" "$project_ref" "$web_sha" "$android_sha" "${{ github.run_id }}" \
             > candidate-build.txt
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event_name == 'workflow_dispatch' && format('questra-release-{0}', github.sha) || format('questra-ci-preview-{0}', github.sha) }}
+          name: ${{ github.event_name == 'workflow_dispatch' && format('questra-release-{0}', steps.source.outputs.sha) || format('questra-ci-preview-{0}', steps.source.outputs.sha) }}
           if-no-files-found: error
           path: |
             apps/mobile/build/web
             apps/mobile/build/app/outputs/flutter-apk/app-release.apk
-            questra-web-${{ github.sha }}.tar.gz
+            questra-web-${{ steps.source.outputs.sha }}.tar.gz
             candidate-build.txt
             artifact-checksums.sha256
 
