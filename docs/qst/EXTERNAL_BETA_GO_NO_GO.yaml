@@ -2,8 +2,8 @@ version: 1
 qst: QST-367
 decision: no_go
 distribution_ready: false
-evaluated_at_utc: "2026-11-03T14:24:34.839635Z"
-candidate_source_commit: "dc6a057bb11e51bb0db42b1bfb77754f1969f1f7"
+evaluated_at_utc: "2026-11-03T14:31:25.759307Z"
+candidate_source_commit: "55fe1dfc7cd3e3975c58e47396a5f1fbe2c2940c"
 latest_local_migration: "202611010002_quest_mission_count_floor.sql"
 worktree_clean_at_evaluation: true
 summary:
