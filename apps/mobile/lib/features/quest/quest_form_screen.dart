@@ -49,6 +49,9 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
   QuestTemplate? _selectedTemplate;
   Quest? _loadedQuest;
   bool _didLoad = false;
+  bool _saving = false;
+  String? _saveError;
+  String? _pendingQuestId;
 
   bool get _isEditing => widget.questId != null;
 
@@ -240,9 +243,22 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
                       const SizedBox(height: 20),
                     ],
                     QuestraPrimaryButton(
-                      label: _isEditing ? '変更を保存' : '保存して航路を描く',
-                      onPressed: _save,
+                      label: _saving
+                          ? '保存中...'
+                          : _isEditing
+                          ? '変更を保存'
+                          : '保存して航路を描く',
+                      onPressed: _saving ? null : _save,
                     ),
+                    if (_saveError != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _saveError!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
                     if (!_isEditing) ...[
                       const SizedBox(height: 8),
                       const Text('保存後、Arcが道筋と最初のMission候補を描きます。'),
@@ -307,8 +323,25 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
     }
   }
 
-  void _save() {
+  Future<void> _save() async {
+    if (_saving) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() {
+      _saving = true;
+      _saveError = null;
+    });
+    try {
+      await _saveValidated();
+    } catch (_) {
+      if (mounted) {
+        setState(() => _saveError = '保存を確認できませんでした。入力は残っています。もう一度お試しください。');
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _saveValidated() async {
     final title = _titleController.text.trim();
     final category = _categoryController.text.trim().isEmpty
         ? _selectedTemplate?.category ?? '冒険'
@@ -328,7 +361,7 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
         context.go(AppRoutes.quest);
         return;
       }
-      controller.update(
+      final saved = await controller.updateAndWait(
         current.copyWith(
           title: title,
           description: _descriptionController.text.trim(),
@@ -344,11 +377,17 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
           clearTargetDate: _targetDate == null,
         ),
       );
+      if (!mounted) return;
+      if (!saved) {
+        setState(() => _saveError = '変更を保存できませんでした。入力は残っています。もう一度お試しください。');
+        return;
+      }
       context.go('${AppRoutes.quest}/${current.id}');
       return;
     }
 
     final quest = Quest(
+      id: _pendingQuestId,
       title: title,
       description: _descriptionController.text.trim(),
       difficulty: _difficulty,
@@ -359,7 +398,13 @@ class _QuestFormScreenState extends ConsumerState<QuestFormScreen> {
       effortEstimate: estimate,
       understanding: _questUnderstanding(),
     );
-    controller.add(quest);
+    _pendingQuestId = quest.id;
+    final saved = await controller.addAndWait(quest);
+    if (!mounted) return;
+    if (!saved) {
+      setState(() => _saveError = 'Questを保存できませんでした。入力は残っています。もう一度お試しください。');
+      return;
+    }
     ref.read(questGuideControllerProvider.notifier).generateForQuest(quest);
     unawaited(
       ref

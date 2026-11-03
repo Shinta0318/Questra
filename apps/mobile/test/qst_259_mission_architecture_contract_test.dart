@@ -29,7 +29,12 @@ void main() {
     expect(coverage, lessThan(critic));
     expect(pipeline, contains('repairPass <= 1'));
     expect(pipeline, contains('maxRepairPasses: 1'));
-    expect(pipeline, contains('belowMissionThreshold'));
+    expect(pipeline, contains('passesMissionDimensionScores'));
+    final criticScores = read(
+      'supabase/functions/_shared/quest_planning/critic_score.ts',
+    );
+    expect(criticScores, contains('questRelevance: 90'));
+    expect(criticScores, contains('taskSeparation: 95'));
   });
 
   test('Mission output contract separates outcomes from Tasks', () {

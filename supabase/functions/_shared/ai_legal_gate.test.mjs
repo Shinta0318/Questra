@@ -111,8 +111,20 @@ test('AI entrypoints retain the server consent guard', () => {
     assert.ok(provider.every((index) => guard < index), `${name} must guard before AI work`);
   }
   const planning = readFileSync(new URL('../quest-planning-v2/index.ts', import.meta.url), 'utf8');
-  assert.equal(planning.match(/await aiLegalFailureResponse\(/g)?.length, 2);
+  assert.equal(planning.match(/await aiLegalFailureResponse\(/g)?.length, 3);
   assert.ok(planning.indexOf('if (payload.mode === "approve")') < planning.indexOf('await aiLegalFailureResponse('));
+  const taskExpansion = planning.slice(
+    planning.indexOf('async function expandTasks('),
+    planning.indexOf('async function approvePreview('),
+  );
+  assert.match(taskExpansion, /await aiLegalFailureResponse\(/);
+  assert.ok(taskExpansion.indexOf('await aiLegalFailureResponse(') < taskExpansion.indexOf('await Promise.all('));
+  const approval = planning.slice(
+    planning.indexOf('async function approvePreview('),
+    planning.indexOf('async function prepareApprovedPreview('),
+  );
+  assert.match(approval, /await aiLegalFailureResponse\(/);
+  assert.ok(approval.indexOf('await aiLegalFailureResponse(') < approval.indexOf('const rpc = '));
   const research = readFileSync(new URL('../research-mission-resources/index.ts', import.meta.url), 'utf8');
   assert.ok(research.indexOf('loadCachedResearch(user.id, mission.id)') < research.indexOf('await aiLegalFailureResponse('));
   assert.ok(research.indexOf('await aiLegalFailureResponse(') < research.indexOf('withinRateLimit(user.id)'));

@@ -16,6 +16,8 @@ void main() {
       ),
     );
     expect(runner, contains('quest-planning-v2'));
+    expect(runner, contains('Invoke-PlanningEvalPreview'));
+    expect(runner, contains('planning_eval_abort:'));
     expect(runner, contains('moderate-quest-intent'));
     expect(runner, contains('candidate_source_commit'));
     expect(runner, contains('input_tokens'));
@@ -23,13 +25,18 @@ void main() {
     expect(runner, contains('estimated_cost_usd'));
     expect(runner, contains('InputUsdPerMillionTokens'));
     expect(runner, contains('OutputUsdPerMillionTokens'));
+    expect(runner, contains('Measure-PlanningEvalLedgerCost'));
+    expect(runner, contains('Assert-PlanningEvalQuotaCapacity'));
+    expect(runner, contains('MaxEstimatedPlanningListCostUsd'));
+    expect(runner, contains('SyntheticAccountConsentApproved'));
+    expect(runner, contains('ProviderUsageApproved'));
     expect(runner, contains('PricingVersion'));
     expect(runner, contains('thinking_levels'));
     expect(runner, contains('provider_trace_ids'));
     expect(runner, contains('non_fallback_source'));
-    expect(runner, contains('AccountShardCount = 8'));
+    expect(runner, contains(r'$accounts.Count -ne 1'));
     expect(runner, contains('DelayMilliseconds = 2100'));
-    expect(runner, contains(r'$caseIndex % $accounts.Count'));
+    expect(runner, isNot(contains('AccountShardCount')));
     expect(
       runner,
       contains(
@@ -53,6 +60,9 @@ void main() {
         'critical_safety_violation',
         'safety_expected_action_rate',
         'version_configuration_count',
+        'prompt_version_conflict_count',
+        'missing_version_evidence_count',
+        'Get-PlanningEvalVersionPolicy',
         'safety_non_fallback_rate',
         'HumanReviewPath',
         'planning_review_count',

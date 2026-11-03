@@ -51,6 +51,13 @@ void main(List<String> arguments) {
     '[switch]\$Execute',
     'ConfirmProjectRef',
     'Candidate SHA does not match the verified candidate source.',
+    'Candidate branch does not match the reviewed manifests.',
+    'read_candidate_branch.dart',
+    'BackupEvidencePath',
+    'PgRestorePath',
+    'hosted_backup_attestation.ps1',
+    'Assert-HostedBackupAttestation',
+    'Assert-HostedBackupArchive',
     'Hosted migration deployment requires a clean worktree.',
     'Linked Supabase project does not match the requested project.',
     "'db', 'push', '--linked', '--dry-run'",
@@ -93,6 +100,22 @@ void main(List<String> arguments) {
     for (final field in ['executed_at_utc', 'cli_version']) {
       if (_scalar(evidence, field) == null) {
         failures.add('Verified deployment field is missing: $field');
+      }
+    }
+    final applied = int.tryParse(
+      _scalar(evidence, 'applied_during_run', indent: 2) ?? '',
+    );
+    if (applied == null) {
+      failures.add('Verified deployment requires an applied migration count.');
+    } else if (applied > 0) {
+      for (final field in ['attestation_sha256', 'encrypted_archive_sha256']) {
+        final hash = _scalar(evidence, field, indent: 2);
+        if (hash == null || !RegExp(r'^[a-f0-9]{64}$').hasMatch(hash)) {
+          failures.add('Verified deployment requires backup evidence: $field');
+        }
+      }
+      if (_scalar(evidence, 'restore_tested_at_utc', indent: 2) == null) {
+        failures.add('Verified deployment requires an isolated restore time.');
       }
     }
   }

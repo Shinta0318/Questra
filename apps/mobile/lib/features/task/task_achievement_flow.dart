@@ -6,6 +6,8 @@ import '../../widgets/arc/arc_widget.dart';
 import '../../widgets/forms/questra_modal_sheet.dart';
 import '../../widgets/questra_card.dart';
 import '../arc/arc_celebration_service.dart';
+import '../mission/mission_model.dart';
+import '../quest/quest_model.dart';
 import 'task_availability_service.dart';
 import 'task_model.dart';
 
@@ -37,6 +39,8 @@ class TaskAchievementService {
   TaskAchievementPlan build({
     required QuestraTask completedTask,
     required Iterable<QuestraTask> allTasks,
+    Iterable<Quest> quests = const [],
+    Iterable<Mission> missions = const [],
   }) {
     final questTasks = allTasks
         .where((task) => task.questId == completedTask.questId)
@@ -52,7 +56,16 @@ class TaskAchievementService {
         );
     final candidates =
         questTasks
-            .where((task) => task.id != completedTask.id && task.isOpen)
+            .where(
+              (task) =>
+                  task.id != completedTask.id &&
+                  task.isOpen &&
+                  const TaskRouteAvailabilityService().canAct(
+                    task,
+                    quests: quests,
+                    missions: missions,
+                  ),
+            )
             .toList()
           ..sort((a, b) {
             final aSameMission = a.missionId == completedTask.missionId;
@@ -173,10 +186,14 @@ Future<void> showTaskAchievementJourney({
   required QuestraTask completedTask,
   required Iterable<QuestraTask> allTasks,
   required Future<bool> Function() onUndo,
+  Iterable<Quest> quests = const [],
+  Iterable<Mission> missions = const [],
 }) async {
   final plan = const TaskAchievementService().build(
     completedTask: completedTask,
     allTasks: allTasks,
+    quests: quests,
+    missions: missions,
   );
   final action = await showQuestraModalSheet<TaskAchievementAction>(
     context: context,

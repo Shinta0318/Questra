@@ -62,6 +62,8 @@ Deno.test("operational identifiers never enter the model payload", () => {
       wish: "Learn piano",
       idempotencyKey: "private-attempt",
       approvedContext: { userId, answer: "30 minutes" },
+      passBudget: { limit: 1, used: 0 },
+      toolContextFingerprint: "private-context-digest",
       nested: [{ abuseKeyHash: "private-hash", goal: "play a song" }],
     }),
     {
@@ -90,6 +92,29 @@ Deno.test("fingerprint follows content and execution settings, not retry key", a
       ...request(),
       promptVersion: "quest_understanding.v3",
     }),
+  );
+});
+
+Deno.test("a sliced plan isolates every pass from a rejected attempt", async () => {
+  const first = await planningCheckpointFingerprint(
+    request("attempt-1"),
+    true,
+  );
+  assertEquals(
+    first,
+    await planningCheckpointFingerprint(request("attempt-1"), true),
+  );
+  assertNotEquals(
+    first,
+    await planningCheckpointFingerprint(request("attempt-2"), true),
+  );
+  const withTools: ProviderRequest = {
+    ...request("attempt-1"),
+    tools: [{ type: "function", name: "get_quest_context" }],
+  };
+  assertEquals(
+    await planningCheckpointFingerprint(withTools),
+    await planningCheckpointFingerprint(withTools, true),
   );
 });
 
@@ -282,6 +307,286 @@ Deno.test("Mission candidates are not reused before domain validation", async ()
   await runCheckpointedPlanningPass(questId, missionRequest, invoke, deps);
   await runCheckpointedPlanningPass(questId, missionRequest, invoke, deps);
   assertEquals(calls, 2);
+});
+
+Deno.test("sliced planning reuses one validated tool result only in the same attempt", async () => {
+  const originalUrl = Deno.env.get("SUPABASE_URL");
+  const originalKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  Deno.env.set("SUPABASE_URL", "https://example.supabase.co");
+  Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "test-service-key");
+  const stored = new Map<string, Record<string, unknown>>();
+  let providerCalls = 0;
+  const fetchImpl: typeof fetch = (raw, init) => {
+    const url = new URL(String(raw));
+    if (url.pathname.endsWith("/ai_operation_controls")) {
+      return Promise.resolve(Response.json([{ operation: "quest_planning" }]));
+    }
+    if (init?.method === "POST") {
+      const row = JSON.parse(String(init.body)) as Record<string, unknown>;
+      stored.set(String(row.input_fingerprint), row);
+      return Promise.resolve(new Response(null, { status: 201 }));
+    }
+    const row = stored.get(
+      String(url.searchParams.get("input_fingerprint")).replace(/^eq\./, ""),
+    );
+    return Promise.resolve(Response.json(row ? [row] : []));
+  };
+  const deps = { fetchImpl, legalGate: async () => "granted" as const };
+  const withTools = {
+    ...request("attempt-1"),
+    operation: "quest_planning.strategic_plan",
+    modelRole: "strategic_planner" as const,
+    tools: [{ type: "google_search" as const }],
+  };
+  const invoke = () => {
+    providerCalls++;
+    return Promise.resolve({
+      ...providerResponse(),
+      groundingMetadata: { sources: [{ uri: "https://example.com/official" }] },
+    });
+  };
+  try {
+    const first = await runCheckpointedPlanningPass(
+      questId,
+      withTools,
+      invoke,
+      deps,
+      true,
+    );
+    const second = await runCheckpointedPlanningPass(
+      questId,
+      withTools,
+      invoke,
+      deps,
+      true,
+    );
+    assertEquals(first.cacheHit, undefined);
+    assertEquals(second.cacheHit, true);
+    assertEquals(second.groundingMetadata, first.groundingMetadata);
+    assertEquals(providerCalls, 1);
+    await runCheckpointedPlanningPass(
+      questId,
+      { ...withTools, idempotencyKey: "attempt-2" },
+      invoke,
+      deps,
+      true,
+    );
+    assertEquals(providerCalls, 2);
+  } finally {
+    restore("SUPABASE_URL", originalUrl);
+    restore("SUPABASE_SERVICE_ROLE_KEY", originalKey);
+  }
+});
+
+Deno.test("sliced non-tool passes resume only within their original attempt", async () => {
+  const originalUrl = Deno.env.get("SUPABASE_URL");
+  const originalKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  Deno.env.set("SUPABASE_URL", "https://example.supabase.co");
+  Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "test-service-key");
+  const stored = new Map<string, Record<string, unknown>>();
+  let providerCalls = 0;
+  const fetchImpl: typeof fetch = (raw, init) => {
+    const url = new URL(String(raw));
+    if (url.pathname.endsWith("/ai_operation_controls")) {
+      return Promise.resolve(Response.json([{ operation: "quest_planning" }]));
+    }
+    if (init?.method === "POST") {
+      const row = JSON.parse(String(init.body)) as Record<string, unknown>;
+      stored.set(String(row.input_fingerprint), row);
+      return Promise.resolve(new Response(null, { status: 201 }));
+    }
+    const fingerprint = String(url.searchParams.get("input_fingerprint"))
+      .replace(/^eq\./, "");
+    const row = stored.get(fingerprint);
+    return Promise.resolve(Response.json(row ? [row] : []));
+  };
+  const deps = { fetchImpl, legalGate: async () => "granted" as const };
+  const invoke = () => {
+    providerCalls++;
+    return Promise.resolve(providerResponse());
+  };
+  try {
+    const first = await runCheckpointedPlanningPass(
+      questId,
+      request("attempt-1"),
+      invoke,
+      deps,
+      true,
+    );
+    const resumed = await runCheckpointedPlanningPass(
+      questId,
+      request("attempt-1"),
+      invoke,
+      deps,
+      true,
+    );
+    const replanned = await runCheckpointedPlanningPass(
+      questId,
+      request("attempt-2"),
+      invoke,
+      deps,
+      true,
+    );
+    assertEquals(first.cacheHit, undefined);
+    assertEquals(resumed.cacheHit, true);
+    assertEquals(replanned.cacheHit, undefined);
+    assertEquals(providerCalls, 2);
+  } finally {
+    restore("SUPABASE_URL", originalUrl);
+    restore("SUPABASE_SERVICE_ROLE_KEY", originalKey);
+  }
+});
+
+Deno.test("sliced planning fails closed when its checkpoint cannot be stored", async () => {
+  const originalUrl = Deno.env.get("SUPABASE_URL");
+  const originalKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  Deno.env.set("SUPABASE_URL", "https://example.supabase.co");
+  Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "test-service-key");
+  try {
+    const response = await runCheckpointedPlanningPass(
+      questId,
+      request(),
+      () => Promise.resolve(providerResponse()),
+      {
+        legalGate: async () => "granted" as const,
+        fetchImpl: (raw, init) => {
+          if (String(raw).includes("/ai_operation_controls?")) {
+            return Promise.resolve(
+              Response.json([{ operation: "quest_planning" }]),
+            );
+          }
+          if (init?.method === "POST") {
+            return Promise.resolve(
+              Response.json({ error: "unavailable" }, { status: 503 }),
+            );
+          }
+          return Promise.resolve(Response.json([]));
+        },
+      },
+      true,
+    );
+    assertEquals(response.output, null);
+    assertEquals(response.error?.code, "unavailable");
+    assertEquals(response.error?.retryable, true);
+  } finally {
+    restore("SUPABASE_URL", originalUrl);
+    restore("SUPABASE_SERVICE_ROLE_KEY", originalKey);
+  }
+});
+
+Deno.test("contradictory passing Critic output is not checkpointed", async () => {
+  const originalUrl = Deno.env.get("SUPABASE_URL");
+  const originalKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  Deno.env.set("SUPABASE_URL", "https://example.supabase.co");
+  Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "test-service-key");
+  let writes = 0;
+  const criticRequest = {
+    ...request(),
+    operation: "quest_planning.mission_critic",
+  };
+  try {
+    const response = await runCheckpointedPlanningPass(
+      questId,
+      criticRequest,
+      () =>
+        Promise.resolve(providerResponse({
+          passed: true,
+          overallScore: 5,
+          missionResults: [{
+            clientId: "m1",
+            passed: true,
+            verdict: "pass",
+            scores: {},
+          }],
+        })),
+      {
+        legalGate: async () => "granted" as const,
+        fetchImpl: (raw, init) => {
+          if (String(raw).includes("/ai_operation_controls?")) {
+            return Promise.resolve(
+              Response.json([{ operation: "quest_planning" }]),
+            );
+          }
+          if (init?.method === "POST") writes++;
+          return Promise.resolve(Response.json([]));
+        },
+      },
+      true,
+    );
+    assertEquals(response.output, null);
+    assertEquals(response.error?.code, "semantic_invalid");
+    assertEquals(response.error?.retryable, true);
+    assertEquals(writes, 0);
+  } finally {
+    restore("SUPABASE_URL", originalUrl);
+    restore("SUPABASE_SERVICE_ROLE_KEY", originalKey);
+  }
+});
+
+Deno.test("previously cached contradictory Critic output is rejected", async () => {
+  const originalUrl = Deno.env.get("SUPABASE_URL");
+  const originalKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  Deno.env.set("SUPABASE_URL", "https://example.supabase.co");
+  Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "test-service-key");
+  const criticRequest = {
+    ...request(),
+    operation: "quest_planning.mission_critic",
+    responseSchema: {
+      type: "object",
+      required: ["passed", "overallScore", "missionResults"],
+      properties: {
+        passed: { type: "boolean" },
+        overallScore: { type: "number" },
+        missionResults: { type: "array" },
+      },
+    },
+  };
+  let providerCalls = 0;
+  try {
+    const response = await runCheckpointedPlanningPass(
+      questId,
+      criticRequest,
+      () => {
+        providerCalls++;
+        return Promise.resolve(providerResponse());
+      },
+      {
+        legalGate: async () => "granted" as const,
+        fetchImpl: (raw) => {
+          if (String(raw).includes("/ai_operation_controls?")) {
+            return Promise.resolve(
+              Response.json([{ operation: "quest_planning" }]),
+            );
+          }
+          return Promise.resolve(Response.json([{
+            output: {
+              passed: true,
+              overallScore: 5,
+              missionResults: [{
+                clientId: "m1",
+                passed: true,
+                verdict: "pass",
+                scores: {},
+              }],
+            },
+            provider_metadata: {
+              provider: "gemini",
+              model: "gemini-3.6-flash",
+              modelVersion: "gemini-3.6-flash",
+              thinkingLevel: "medium",
+            },
+          }]));
+        },
+      },
+      true,
+    );
+    assertEquals(response.error?.code, "semantic_invalid");
+    assertEquals(response.output, null);
+    assertEquals(providerCalls, 0);
+  } finally {
+    restore("SUPABASE_URL", originalUrl);
+    restore("SUPABASE_SERVICE_ROLE_KEY", originalKey);
+  }
 });
 
 function restore(key: string, original: string | undefined) {

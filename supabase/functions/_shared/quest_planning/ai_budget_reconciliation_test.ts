@@ -37,11 +37,12 @@ test("lost settlement response reconciles from recorded provider receipt", async
     finalAssert(await settleAiBudget("reservation-1", response()), true);
     assert.equal(settlementAttempts, 2);
     assert.equal(reconciliationAttempts, 1);
-    assert.equal(receiptBody?.p_provider_interaction_id, "interaction-1");
-    assert.equal(receiptBody?.p_input_tokens, 123);
-    assert.equal(receiptBody?.p_output_tokens, 45);
-    assert.equal(receiptBody?.p_grounding_query_count, 0);
-    assert.equal(receiptBody?.p_thinking_level, "high");
+    const receipt = requireCapturedBody(() => receiptBody);
+    assert.equal(receipt.p_provider_interaction_id, "interaction-1");
+    assert.equal(receipt.p_input_tokens, 123);
+    assert.equal(receipt.p_output_tokens, 45);
+    assert.equal(receipt.p_grounding_query_count, 0);
+    assert.equal(receipt.p_thinking_level, "high");
   } finally {
     globalThis.fetch = originalFetch;
     restoreDeno(runtime, originalDeno);
@@ -148,8 +149,9 @@ test("enabled receipt binding uses a deterministic nonce and v4 receipt", async 
       "gemini-3.5-flash",
     ]);
     assert.equal(reservation.allowed, true);
-    assert.match(String(reserveBody?.p_receipt_nonce_hash), /^[0-9a-f]{64}$/);
-    assert.match(String(reserveBody?.p_model_route_digest), /^[0-9a-f]{64}$/);
+    const reserve = requireCapturedBody(() => reserveBody);
+    assert.match(String(reserve.p_receipt_nonce_hash), /^[0-9a-f]{64}$/);
+    assert.match(String(reserve.p_model_route_digest), /^[0-9a-f]{64}$/);
     assert.match(reservation.receiptBinding?.nonce ?? "", /^[0-9a-f]{64}$/);
     assert.equal(
       await settleAiBudget(
@@ -159,12 +161,13 @@ test("enabled receipt binding uses a deterministic nonce and v4 receipt", async 
       ),
       true,
     );
-    assert.equal(receiptBody?.p_operation, "quest_planning");
+    const receipt = requireCapturedBody(() => receiptBody);
+    assert.equal(receipt.p_operation, "quest_planning");
     assert.equal(
-      receiptBody?.p_model_route_digest,
-      reserveBody?.p_model_route_digest,
+      receipt.p_model_route_digest,
+      reserve.p_model_route_digest,
     );
-    assert.equal(receiptBody?.p_receipt_nonce, reservation.receiptBinding?.nonce);
+    assert.equal(receipt.p_receipt_nonce, reservation.receiptBinding?.nonce);
   } finally {
     globalThis.fetch = originalFetch;
     restoreDeno(runtime, originalDeno);
@@ -232,4 +235,12 @@ function jsonResponse(body: unknown, status = 200) {
 
 function finalAssert(actual: boolean, expected: boolean) {
   assert.equal(actual, expected);
+}
+
+function requireCapturedBody(
+  readBody: () => Record<string, unknown> | null,
+): Record<string, unknown> {
+  const body = readBody();
+  assert.ok(body, "Expected a captured RPC body");
+  return body;
 }

@@ -16,6 +16,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../widgets/arc/arc_emotion.dart';
 import '../../widgets/arc/arc_approved_portrait.dart';
 import '../../widgets/arc/arc_widget.dart';
+import '../../widgets/feedback/questra_notification.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/layout/questra_screen_surface.dart';
 import '../arc/arc_daily_greeting_service.dart';
@@ -59,7 +60,6 @@ class HomeScreen extends ConsumerWidget {
     final missions = ref.watch(missionControllerProvider);
     final tasks = ref.watch(taskControllerProvider);
     final taskLoadState = ref.watch(taskLoadStateProvider);
-    final todayTask = ref.read(taskControllerProvider.notifier).todaysTask;
     final planningPreferences = ref.watch(
       planningPreferencesControllerProvider,
     );
@@ -84,6 +84,13 @@ class HomeScreen extends ConsumerWidget {
     final activeQuests =
         quests.where((quest) => quest.status == QuestStatus.active).toList()
           ..sort((a, b) => b.progress.compareTo(a.progress));
+    final activeQuestIds = activeQuests.map((quest) => quest.id).toSet();
+    final activeTasks = tasks
+        .where((task) => activeQuestIds.contains(task.questId))
+        .toList(growable: false);
+    final activeMissions = missions
+        .where((mission) => activeQuestIds.contains(mission.questId))
+        .toList(growable: false);
     final today = WeekdayLabel.fromDateTime(DateTime.now());
     final todayMinutes = planningPreferences.context.consentGranted
         ? planningPreferences.availability.minutesFor(today)
@@ -95,7 +102,7 @@ class HomeScreen extends ConsumerWidget {
     final todayRecommendation = activeTodayPreference.isResting
         ? null
         : TodayBestNextMissionService.recommend(
-            missions,
+            activeMissions,
             availableMinutes: todayMinutes,
             excludedMissionIds: activeTodayPreference.excludedMissionIds,
             fiveMinuteMissionId: activeTodayPreference.fiveMinuteMissionId,
@@ -104,16 +111,17 @@ class HomeScreen extends ConsumerWidget {
         ? const <Mission>[]
         : <Mission>[todayRecommendation.mission];
     final focusSelection = const QuestFocusSelectionService().selectTodayFocus(
-      tasks: tasks,
-      missions: missions,
+      tasks: activeTasks,
+      missions: activeMissions,
+      eligibleQuestIds: activeQuestIds,
       now: now,
     );
     final todayJourney = const HomeTodayTaskJourneyService().resolve(
-      tasks: tasks,
+      tasks: activeTasks,
       loadState: taskLoadState,
       now: now,
-      recommendedTask: focusSelection.primaryTask ?? todayTask,
-      hasActiveJourney: activeQuests.isNotEmpty || missions.isNotEmpty,
+      recommendedTask: focusSelection.primaryTask,
+      hasActiveJourney: activeQuests.isNotEmpty,
       isSignedIn: profile != null,
     );
     final additionalFocusTasks = focusSelection.secondaryTasks
@@ -124,7 +132,7 @@ class HomeScreen extends ConsumerWidget {
         : ref
               .watch(taskSignalServiceProvider)
               .generate(
-                tasks: tasks,
+                tasks: activeTasks,
                 now: now,
                 frequency: profile?.signalFrequency ?? SignalFrequency.balanced,
               );
@@ -142,7 +150,11 @@ class HomeScreen extends ConsumerWidget {
             ),
             nextMission: missionsByQuest
                 .valuesFor(quest.id)
-                .where((mission) => mission.status == MissionStatus.todo)
+                .where(
+                  (mission) =>
+                      mission.status == MissionStatus.todo &&
+                      mission.routeState == MissionRouteState.active,
+                )
                 .firstOrNull,
           ),
         )
@@ -160,9 +172,9 @@ class HomeScreen extends ConsumerWidget {
       quests: quests,
       tasks: tasks,
       taskLoadState: taskLoadState,
+      missions: missions,
     );
-    final hasJourneyContent =
-        activeQuests.isNotEmpty || missions.isNotEmpty || tasks.isNotEmpty;
+    final hasJourneyContent = activeQuests.isNotEmpty;
     final showTodayFocus =
         !nextStepEnabled || activation.isComplete || hasJourneyContent;
 
@@ -219,21 +231,7 @@ class HomeScreen extends ConsumerWidget {
                         context.go(AppRoutes.arc);
                         return;
                       }
-                      final started = await ref
-                          .read(taskControllerProvider.notifier)
-                          .start(task.id);
-                      if (context.mounted) {
-                        context.push(
-                          AppRoutes.questJourneyFocus(
-                            questId: task.questId,
-                            missionId: task.missionId,
-                            taskId: task.id,
-                          ),
-                        );
-                      }
-                      if (!started && context.mounted) {
-                        ref.read(taskControllerProvider.notifier).reload();
-                      }
+                      await _startTaskFromHome(context, ref, task);
                       return;
                     case ActivationJourneyStage.complete:
                       return;
@@ -259,20 +257,8 @@ class HomeScreen extends ConsumerWidget {
                     taskId: task.id,
                   ),
                 ),
-                onStartTask: (task) async {
-                  final started = await ref
-                      .read(taskControllerProvider.notifier)
-                      .start(task.id);
-                  if (started && context.mounted) {
-                    context.push(
-                      AppRoutes.questJourneyFocus(
-                        questId: task.questId,
-                        missionId: task.missionId,
-                        taskId: task.id,
-                      ),
-                    );
-                  }
-                },
+                onStartTask: (task) =>
+                    unawaited(_startTaskFromHome(context, ref, task)),
                 onOpenMission: (questId, missionId) =>
                     context.push(AppRoutes.missionDetail(questId, missionId)),
                 onOpenArc: () => context.go(AppRoutes.arc),
@@ -357,6 +343,33 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+Future<void> _startTaskFromHome(
+  BuildContext context,
+  WidgetRef ref,
+  QuestraTask task,
+) async {
+  final controller = ref.read(taskControllerProvider.notifier);
+  final started = await controller.start(task.id);
+  if (!context.mounted) return;
+  if (started) {
+    context.push(
+      AppRoutes.questJourneyFocus(
+        questId: task.questId,
+        missionId: task.missionId,
+        taskId: task.id,
+      ),
+    );
+    return;
+  }
+  ScaffoldMessenger.of(context).showSnackBar(
+    QuestraSnackBars.message(
+      'Taskを開始できませんでした。通信とTaskの状態を確認して、もう一度お試しください。',
+      type: QuestraNotificationType.error,
+    ),
+  );
+  unawaited(controller.reload());
 }
 
 // Kept for the post-simplification Signal phase.

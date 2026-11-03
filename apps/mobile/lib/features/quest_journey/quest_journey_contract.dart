@@ -88,14 +88,21 @@ class QuestFocusSelectionService {
   QuestFocusSelection selectTodayFocus({
     required Iterable<QuestraTask> tasks,
     required Iterable<Mission> missions,
+    Set<String>? eligibleQuestIds,
     DateTime? now,
   }) => QuestFocusSelection(
-    tasks: select(tasks: tasks, missions: missions, now: now),
+    tasks: select(
+      tasks: tasks,
+      missions: missions,
+      eligibleQuestIds: eligibleQuestIds,
+      now: now,
+    ),
   );
 
   List<QuestraTask> select({
     required Iterable<QuestraTask> tasks,
     required Iterable<Mission> missions,
+    Set<String>? eligibleQuestIds,
     int limit = 3,
     DateTime? now,
   }) {
@@ -104,12 +111,32 @@ class QuestFocusSelectionService {
     final missionOrder = {
       for (final mission in missions) mission.id: mission.orderIndex,
     };
-    final completedIds = tasks
-        .where((task) => task.status == TaskStatus.completed)
-        .map((task) => task.id)
-        .toSet();
+    final missionById = {for (final mission in missions) mission.id: mission};
+    final completedByMission = <String, Set<String>>{};
+    for (final task in tasks) {
+      if (task.status == TaskStatus.completed) {
+        completedByMission.putIfAbsent(task.missionId, () => {}).add(task.id);
+      }
+    }
     final candidates = tasks.where((task) {
-      if (!task.isOpen || task.status == TaskStatus.deferred) return false;
+      if (eligibleQuestIds != null &&
+          !eligibleQuestIds.contains(task.questId)) {
+        return false;
+      }
+      if (!task.isOpen ||
+          task.status == TaskStatus.deferred ||
+          task.status == TaskStatus.blocked) {
+        return false;
+      }
+      final mission = missionById[task.missionId];
+      if (mission != null &&
+          (mission.questId != task.questId ||
+              mission.status != MissionStatus.todo ||
+              mission.routeState != MissionRouteState.active)) {
+        return false;
+      }
+      final completedIds =
+          completedByMission[task.missionId] ?? const <String>{};
       return task.dependencyIds.every(completedIds.contains);
     }).toList();
     candidates.sort((a, b) {

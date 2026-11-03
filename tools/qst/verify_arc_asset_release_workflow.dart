@@ -23,6 +23,8 @@ void main(List<String> arguments) {
     _expect(decision, snippet, decisionPath, failures);
   }
   for (final snippet in const [
+    'read_candidate_branch.dart',
+    'Arc release branch does not match the reviewed candidate manifests.',
     'Arc release evidence must start from a clean worktree.',
     'Beta candidate manifest is not bound to candidate source.',
     'current_provenance',

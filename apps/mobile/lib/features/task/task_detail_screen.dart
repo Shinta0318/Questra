@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../core/feature_flags/journey_action_hierarchy_feature_flags.dart';
+import '../../widgets/feedback/questra_notification.dart';
 import '../../widgets/layout/questra_responsive_list_view.dart';
 import '../../widgets/questra_card.dart';
+import '../mission/mission_controller.dart';
+import '../quest/quest_controller.dart';
 import '../quest_journey/widgets/journey_hierarchy_breadcrumb.dart';
 import 'task_availability_service.dart';
 import 'task_achievement_flow.dart';
@@ -49,11 +52,29 @@ class TaskDetailScreen extends ConsumerWidget {
       task,
       missionTasks,
     );
+    final quests = ref.watch(questControllerProvider);
+    final missions = ref.watch(missionControllerProvider);
     final mutation = ref.watch(taskMutationControllerProvider);
+    final routeAvailable =
+        !mutation.needsRouteRefresh &&
+        const TaskRouteAvailabilityService().canAct(
+          task,
+          quests: quests,
+          missions: missions,
+        );
+    final canReopenOnRoute =
+        !mutation.needsRouteRefresh &&
+        const TaskRouteAvailabilityService().canReopen(
+          task,
+          quests: quests,
+          missions: missions,
+        );
     final achievementPlan = task.status == TaskStatus.completed
         ? const TaskAchievementService().build(
             completedTask: task,
             allTasks: ref.watch(taskControllerProvider),
+            quests: quests,
+            missions: missions,
           )
         : null;
     return Scaffold(
@@ -139,6 +160,10 @@ class TaskDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
           ],
+          if (!routeAvailable && task.status != TaskStatus.completed) ...[
+            const Text('このTaskは現在の航路では実行できません。QuestまたはMissionを確認してください。'),
+            const SizedBox(height: 10),
+          ],
           if (achievementPlan != null) ...[
             TaskAchievementCard(
               plan: achievementPlan,
@@ -170,17 +195,31 @@ class TaskDetailScreen extends ConsumerWidget {
                   AppRoutes.questJourneyFocus(questId: task.questId),
                 );
               },
-              onUndo: () =>
-                  ref.read(taskControllerProvider.notifier).reopen(task.id),
+              onUndo: canReopenOnRoute
+                  ? () => ref
+                        .read(taskControllerProvider.notifier)
+                        .reopen(task.id)
+                  : null,
             ),
             const SizedBox(height: 10),
           ] else
             FilledButton.icon(
-              onPressed: availability.canComplete
+              onPressed: routeAvailable && availability.canComplete
                   ? () => _completeAndCelebrate(context, ref, task)
-                  : availability.canStart
-                  ? () =>
-                        ref.read(taskControllerProvider.notifier).start(task.id)
+                  : routeAvailable && availability.canStart
+                  ? () async {
+                      final started = await ref
+                          .read(taskControllerProvider.notifier)
+                          .start(task.id);
+                      if (!started && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          QuestraSnackBars.message(
+                            'Taskを開始できませんでした。通信とTaskの状態を確認して、もう一度お試しください。',
+                            type: QuestraNotificationType.error,
+                          ),
+                        );
+                      }
+                    }
                   : null,
               icon: Icon(
                 availability.canComplete
@@ -217,7 +256,7 @@ class TaskDetailScreen extends ConsumerWidget {
             spacing: 8,
             children: [
               OutlinedButton.icon(
-                onPressed: availability.canReopen
+                onPressed: availability.canReopen && canReopenOnRoute
                     ? () => ref
                           .read(taskControllerProvider.notifier)
                           .reopen(task.id)
@@ -226,7 +265,8 @@ class TaskDetailScreen extends ConsumerWidget {
                 label: const Text('完了を取り消す'),
               ),
               OutlinedButton.icon(
-                onPressed: task.status == TaskStatus.completed
+                onPressed:
+                    task.status == TaskStatus.completed || !routeAvailable
                     ? null
                     : () => ref
                           .read(taskControllerProvider.notifier)
@@ -238,7 +278,8 @@ class TaskDetailScreen extends ConsumerWidget {
                 label: const Text('明日に延期'),
               ),
               TextButton(
-                onPressed: task.status == TaskStatus.completed
+                onPressed:
+                    task.status == TaskStatus.completed || !routeAvailable
                     ? null
                     : () => ref
                           .read(taskControllerProvider.notifier)
@@ -259,7 +300,16 @@ class TaskDetailScreen extends ConsumerWidget {
   ) async {
     final controller = ref.read(taskControllerProvider.notifier);
     final completed = await controller.complete(task.id);
-    if (!context.mounted || !completed) return;
+    if (!context.mounted) return;
+    if (!completed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        QuestraSnackBars.message(
+          'Taskを完了できませんでした。通信とTaskの状態を確認して、もう一度お試しください。',
+          type: QuestraNotificationType.error,
+        ),
+      );
+      return;
+    }
     final tasks = ref.read(taskControllerProvider);
     final savedTask = tasks.where((item) => item.id == task.id).firstOrNull;
     if (savedTask == null) return;
@@ -267,6 +317,8 @@ class TaskDetailScreen extends ConsumerWidget {
       context: context,
       completedTask: savedTask,
       allTasks: tasks,
+      quests: ref.read(questControllerProvider),
+      missions: ref.read(missionControllerProvider),
       onUndo: () => controller.reopen(savedTask.id),
     );
   }

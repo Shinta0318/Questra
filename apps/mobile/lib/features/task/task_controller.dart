@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/performance/performance_limits.dart';
+import '../../core/persistence/database_write_feedback.dart';
+import '../../core/persistence/persistence_sync_state.dart';
 import '../auth/auth_controller.dart';
 import '../arc/stardust_service.dart';
 import '../arc_memory/arc_memory_providers.dart';
@@ -11,7 +13,6 @@ import '../mission/mission_controller.dart';
 import '../mission/mission_model.dart';
 import '../mission/mission_providers.dart';
 import '../quest/quest_controller.dart';
-import '../quest/planning_preferences_controller.dart';
 import '../trust/consent_controller.dart';
 import '../trust/consent_purpose_registry_service.dart';
 import 'task_model.dart';
@@ -64,17 +65,6 @@ class TaskController extends Notifier<List<QuestraTask>> {
     return const [];
   }
 
-  QuestraTask? get todaysTask {
-    final minutes = ref
-        .read(planningPreferencesControllerProvider)
-        .availability
-        .totalMinutes;
-    return const TaskProgressService().recommendToday(
-      state,
-      availableMinutes: minutes > 0 ? minutes : null,
-    );
-  }
-
   List<QuestraTask> forMission(String missionId) =>
       state.where((task) => task.missionId == missionId).toList(growable: false)
         ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
@@ -88,10 +78,7 @@ class TaskController extends Notifier<List<QuestraTask>> {
       return;
     }
     final ownerId = ref.read(authControllerProvider).profile?.id;
-    final missionIds = state
-        .where((task) => questIds.contains(task.questId))
-        .map((task) => task.missionId)
-        .toSet();
+    final missionIds = <String>{};
     loadState.loading();
     try {
       final loaded = await ref
@@ -296,6 +283,7 @@ class TaskController extends Notifier<List<QuestraTask>> {
   }
 
   Future<bool> start(String taskId) => _runTaskIntent(taskId, (task) {
+    if (!_canActOnCurrentRoute(task)) return null;
     final canStart = const TaskAvailabilityService()
         .evaluate(task, forMission(task.missionId))
         .canStart;
@@ -303,6 +291,7 @@ class TaskController extends Notifier<List<QuestraTask>> {
   });
 
   Future<bool> complete(String taskId) => _runTaskIntent(taskId, (task) {
+    if (!_canActOnCurrentRoute(task)) return null;
     final canComplete = const TaskAvailabilityService()
         .evaluate(task, forMission(task.missionId))
         .canComplete;
@@ -319,6 +308,7 @@ class TaskController extends Notifier<List<QuestraTask>> {
   /// "start" tap before it can be checked off.
   Future<bool> completeFromWorkspace(String taskId) =>
       _runTaskIntent(taskId, (task) {
+        if (!_canActOnCurrentRoute(task)) return null;
         final availability = const TaskAvailabilityService().evaluate(
           task,
           forMission(task.missionId),
@@ -331,9 +321,23 @@ class TaskController extends Notifier<List<QuestraTask>> {
             : null;
       });
 
+  bool _canActOnCurrentRoute(QuestraTask task) =>
+      !ref.read(taskMutationControllerProvider).needsRouteRefresh &&
+      const TaskRouteAvailabilityService().canAct(
+        task,
+        quests: ref.read(questControllerProvider),
+        missions: ref.read(missionControllerProvider),
+      );
+
   Future<bool> reopen(String taskId) => _runTaskIntent(
     taskId,
-    (task) => task.status == TaskStatus.completed
+    (task) =>
+        task.status == TaskStatus.completed &&
+            const TaskRouteAvailabilityService().canReopen(
+              task,
+              quests: ref.read(questControllerProvider),
+              missions: ref.read(missionControllerProvider),
+            )
         ? task.copyWith(status: TaskStatus.pending, clearCompletedAt: true)
         : null,
   );
@@ -345,7 +349,8 @@ class TaskController extends Notifier<List<QuestraTask>> {
 
   Future<bool> reschedule(String taskId, DateTime date) => _runTaskIntent(
     taskId,
-    (task) => task.status == TaskStatus.completed
+    (task) =>
+        task.status == TaskStatus.completed || !_canActOnCurrentRoute(task)
         ? null
         : task.copyWith(scheduledDate: date, status: TaskStatus.pending),
   );
@@ -356,7 +361,8 @@ class TaskController extends Notifier<List<QuestraTask>> {
     DateTime? completedAt,
   }) => _runTaskIntent(
     taskId,
-    (task) => task.status == TaskStatus.completed
+    (task) =>
+        task.status == TaskStatus.completed || !_canActOnCurrentRoute(task)
         ? null
         : task.copyWith(
             status: status,
@@ -574,7 +580,15 @@ class TaskController extends Notifier<List<QuestraTask>> {
       if (!repository.supportsAtomicCompletion) {
         _syncMissions([...desired, ...previous]);
       }
-      if (error is TaskVersionConflictException) {
+      if (DatabaseWriteFeedback.isTaskRouteInactive(error)) {
+        try {
+          await _clearQueuedMutation(mutation.ownerId);
+        } catch (cleanupError) {
+          sync.failed(mutation, cleanupError);
+          rethrow;
+        }
+        if (isCurrentOwner()) sync.routeChanged();
+      } else if (error is TaskVersionConflictException) {
         try {
           await _clearQueuedMutation(mutation.ownerId);
         } catch (cleanupError) {
@@ -606,6 +620,9 @@ class TaskController extends Notifier<List<QuestraTask>> {
 
   Future<bool> refreshConflict() async {
     final mutation = ref.read(taskMutationControllerProvider);
+    if (mutation.needsRouteRefresh) {
+      return _refreshRouteAfterConflict(mutation);
+    }
     if (!mutation.needsConflictRefresh) return false;
     final ownerId =
         ref.read(authControllerProvider).profile?.id ?? 'local-preview';
@@ -621,6 +638,42 @@ class TaskController extends Notifier<List<QuestraTask>> {
       ref
           .read(taskMutationControllerProvider.notifier)
           .conflict(refreshed: true);
+    }
+    return refreshed;
+  }
+
+  Future<bool> _refreshRouteAfterConflict(TaskMutationState mutation) async {
+    final ownerId = ref.read(authControllerProvider).profile?.id;
+    final ownerGeneration = _ownerGeneration;
+    if (ownerId == null) return false;
+    final questSync = ref.read(questSyncControllerProvider);
+    if (questSync.status == PersistenceSyncStatus.failed &&
+        questSync.operation == PersistenceSyncOperation.load) {
+      ref.read(questSyncControllerProvider.notifier).clear();
+    }
+    await ref.read(questControllerProvider.notifier).loadForUser(ownerId);
+    if (!_isCurrentOwner(ownerId, ownerGeneration) ||
+        ref.read(questSyncControllerProvider).status ==
+            PersistenceSyncStatus.failed) {
+      return false;
+    }
+    final questIds = ref
+        .read(questControllerProvider)
+        .map((quest) => quest.id)
+        .toList(growable: false);
+    await ref.read(missionControllerProvider.notifier).loadForQuests(questIds);
+    if (!_isCurrentOwner(ownerId, ownerGeneration) ||
+        ref.read(missionSyncControllerProvider).status ==
+            PersistenceSyncStatus.failed) {
+      return false;
+    }
+    await loadForQuestIds(questIds);
+    final refreshed =
+        _isCurrentOwner(ownerId, ownerGeneration) &&
+        ref.read(taskLoadStateProvider).status == TaskLoadStatus.loaded;
+    if (refreshed &&
+        identical(ref.read(taskMutationControllerProvider), mutation)) {
+      ref.read(taskMutationControllerProvider.notifier).discard();
     }
     return refreshed;
   }
@@ -751,7 +804,8 @@ class TaskController extends Notifier<List<QuestraTask>> {
         throw StateError('Task owner changed during save');
       }
       if (!allowPending &&
-          (ref.read(taskMutationControllerProvider).canRetry ||
+          (ref.read(taskMutationControllerProvider).needsRouteRefresh ||
+              ref.read(taskMutationControllerProvider).canRetry ||
               ref.read(taskMutationControllerProvider).canCleanup ||
               ref.read(taskMutationControllerProvider).needsConflictRefresh)) {
         throw StateError('Resolve pending Task changes before saving again');

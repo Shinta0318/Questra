@@ -12,6 +12,7 @@ enum TaskMutationStatus {
   offlinePending,
   conflict,
   cleanupPending,
+  routeChanged,
 }
 
 enum TaskMutationKind { save, reorder }
@@ -68,6 +69,7 @@ class TaskMutationState {
       pending != null && status == TaskMutationStatus.cleanupPending;
   bool get needsConflictRefresh =>
       status == TaskMutationStatus.conflict && conflictMissionIds.isNotEmpty;
+  bool get needsRouteRefresh => status == TaskMutationStatus.routeChanged;
 }
 
 final taskMutationControllerProvider =
@@ -126,6 +128,13 @@ class TaskMutationStateController extends Notifier<TaskMutationState> {
     );
   }
 
+  void routeChanged() {
+    state = const TaskMutationState(
+      status: TaskMutationStatus.routeChanged,
+      message: '別の端末で航路が変わりました。最新のQuestとMissionを読み込んでください。',
+    );
+  }
+
   void cleanupPending(PendingTaskMutation mutation) {
     state = TaskMutationState(
       status: TaskMutationStatus.cleanupPending,
@@ -143,7 +152,10 @@ class TaskMutationStateController extends Notifier<TaskMutationState> {
   }
 
   void clear() {
-    if (state.canRetry || state.canCleanup || state.needsConflictRefresh) {
+    if (state.canRetry ||
+        state.canCleanup ||
+        state.needsConflictRefresh ||
+        state.needsRouteRefresh) {
       return;
     }
     state = const TaskMutationState();

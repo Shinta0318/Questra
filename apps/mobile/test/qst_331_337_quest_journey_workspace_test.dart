@@ -40,6 +40,51 @@ void main() {
 
       expect(selected.map((task) => task.id), ['doing', 'next', 'third']);
     });
+
+    test('excludes blocked Tasks and stopped Mission routes', () {
+      final selected = const QuestFocusSelectionService().select(
+        tasks: [
+          _task('blocked', 'active', status: TaskStatus.blocked),
+          _task('paused', 'paused'),
+          _task('finished', 'finished'),
+          _task('ready', 'active', status: TaskStatus.ready),
+        ],
+        missions: [
+          _mission('active'),
+          _mission('paused', routeState: MissionRouteState.paused),
+          _mission('finished', status: MissionStatus.completed),
+        ],
+        eligibleQuestIds: {'q1'},
+      );
+
+      expect(selected.map((task) => task.id), ['ready']);
+    });
+
+    test('excludes Tasks when their Quest is not eligible', () {
+      final selected = const QuestFocusSelectionService().select(
+        tasks: [_task('old', 'm1', status: TaskStatus.ready)],
+        missions: [_mission('m1')],
+        eligibleQuestIds: <String>{},
+      );
+
+      expect(selected, isEmpty);
+    });
+
+    test(
+      'does not treat a completed Task from another Mission as a prerequisite',
+      () {
+        final selected = const QuestFocusSelectionService().select(
+          tasks: [
+            _task('done', 'previous', status: TaskStatus.completed),
+            _task('dependent', 'current', dependencies: const ['done']),
+            _task('ready', 'current'),
+          ],
+          missions: [_mission('previous'), _mission('current')],
+        );
+
+        expect(selected.map((task) => task.id), ['ready']);
+      },
+    );
   });
 
   group('QST-345 unified Today Focus contract', () {
@@ -151,6 +196,7 @@ void main() {
 Mission _mission(
   String id, {
   MissionStatus status = MissionStatus.todo,
+  MissionRouteState routeState = MissionRouteState.active,
   int order = 0,
   double weight = 1,
 }) => Mission(
@@ -162,6 +208,7 @@ Mission _mission(
   guideType: GuideType.route,
   difficulty: MissionDifficulty.normal,
   status: status,
+  routeState: routeState,
   orderIndex: order,
   sortOrder: order,
   weight: weight,

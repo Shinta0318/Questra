@@ -7,6 +7,10 @@ import 'package:questra/features/auth/auth_state.dart';
 import 'package:questra/features/mission/mission_model.dart';
 import 'package:questra/features/mission/mission_providers.dart';
 import 'package:questra/features/mission/mission_repository.dart';
+import 'package:questra/features/quest/quest_controller.dart';
+import 'package:questra/features/quest/quest_model.dart';
+import 'package:questra/features/quest/quest_providers.dart';
+import 'package:questra/features/quest/quest_repository.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
 import 'package:questra/features/task/task_controller.dart';
 import 'package:questra/features/task/task_model.dart';
@@ -14,8 +18,94 @@ import 'package:questra/features/task/task_mutation_state.dart';
 import 'package:questra/features/task/task_offline_queue_repository.dart';
 import 'package:questra/features/task/task_providers.dart';
 import 'package:questra/features/task/task_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 void main() {
+  test('route change drops stale retry and requires route refresh', () async {
+    final repository = _VersionedTaskRepository();
+    final queue = InMemoryTaskOfflineQueueRepository();
+    final container = await _container(repository, queue);
+    addTearDown(container.dispose);
+    final controller = container.read(taskControllerProvider.notifier);
+    await Future<void>.delayed(Duration.zero);
+    final task = await controller.addTask(_task());
+    repository.rejectRoute = true;
+
+    expect(await controller.start(task.id), isFalse);
+    final mutation = container.read(taskMutationControllerProvider);
+    expect(mutation.status, TaskMutationStatus.routeChanged);
+    expect(mutation.message, contains('航路が変わりました'));
+    expect(mutation.canRetry, isFalse);
+    expect(mutation.needsRouteRefresh, isTrue);
+    expect(await queue.load('owner-a'), isNull);
+    expect(await controller.start(task.id), isFalse);
+    expect(
+      container.read(taskControllerProvider).single.status,
+      TaskStatus.pending,
+    );
+  });
+
+  test(
+    'route refresh loads archived Quest and keeps its Task stopped',
+    () async {
+      final repository = _VersionedTaskRepository();
+      final queue = InMemoryTaskOfflineQueueRepository();
+      final quests = InMemoryQuestRepository();
+      await quests.save(ownerId: 'owner-a', quest: _quest(QuestStatus.active));
+      final container = await _container(repository, queue, quests: quests);
+      addTearDown(container.dispose);
+      final controller = container.read(taskControllerProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+      final task = await controller.addTask(_task());
+      await quests.save(
+        ownerId: 'owner-a',
+        quest: _quest(QuestStatus.archived),
+      );
+      repository.rejectRoute = true;
+
+      expect(await controller.start(task.id), isFalse);
+      expect(await controller.refreshConflict(), isTrue);
+      expect(
+        container.read(taskMutationControllerProvider).status,
+        TaskMutationStatus.idle,
+      );
+      expect(
+        container.read(questControllerProvider).single.status,
+        QuestStatus.archived,
+      );
+      expect(await controller.start(task.id), isFalse);
+    },
+  );
+
+  test('failed route refresh keeps the stale route blocked', () async {
+    final repository = _VersionedTaskRepository();
+    final queue = InMemoryTaskOfflineQueueRepository();
+    final quests = _FailingQuestRepository();
+    await quests.save(ownerId: 'owner-a', quest: _quest(QuestStatus.active));
+    final container = await _container(repository, queue, quests: quests);
+    addTearDown(container.dispose);
+    final controller = container.read(taskControllerProvider.notifier);
+    await Future<void>.delayed(Duration.zero);
+    final task = await controller.addTask(_task());
+    repository.rejectRoute = true;
+    expect(await controller.start(task.id), isFalse);
+    quests.failReads = true;
+
+    expect(await controller.refreshConflict(), isFalse);
+    expect(
+      container.read(taskMutationControllerProvider).needsRouteRefresh,
+      isTrue,
+    );
+    expect(await controller.start(task.id), isFalse);
+    expect(await queue.load('owner-a'), isNull);
+    quests.failReads = false;
+    expect(await controller.refreshConflict(), isTrue);
+    expect(
+      container.read(taskMutationControllerProvider).status,
+      TaskMutationStatus.idle,
+    );
+  });
+
   test(
     'CAS conflict replaces stale Task with the remote Mission state',
     () async {
@@ -150,8 +240,9 @@ void main() {
 
 Future<ProviderContainer> _container(
   TaskRepository repository,
-  TaskOfflineQueueRepository queue,
-) async {
+  TaskOfflineQueueRepository queue, {
+  QuestRepository? quests,
+}) async {
   final missions = InMemoryMissionRepository();
   for (final id in ['mission', 'other-mission']) {
     await missions.save(
@@ -170,12 +261,22 @@ Future<ProviderContainer> _container(
   return ProviderContainer(
     overrides: [
       authControllerProvider.overrideWith(_OwnerFixture.new),
+      if (quests != null) questRepositoryProvider.overrideWithValue(quests),
       missionRepositoryProvider.overrideWithValue(missions),
       taskRepositoryProvider.overrideWithValue(repository),
       taskOfflineQueueRepositoryProvider.overrideWithValue(queue),
     ],
   );
 }
+
+Quest _quest(QuestStatus status) => Quest(
+  id: 'quest',
+  title: '準備のQuest',
+  description: '準備する',
+  difficulty: QuestDifficulty.normal,
+  status: status,
+  visibility: QuestVisibility.private,
+);
 
 QuestraTask _task({String id = 'first', String missionId = 'mission'}) =>
     QuestraTask(
@@ -207,11 +308,26 @@ class _OwnerFixture extends AuthController {
 class _VersionedTaskRepository extends InMemoryTaskRepository {
   bool failReads = false;
   bool delayReads = false;
+  bool rejectRoute = false;
   final readStarted = Completer<void>();
   final _releaseRead = Completer<void>();
 
   @override
   bool get supportsAtomicCompletion => true;
+
+  @override
+  Future<QuestraTask> updateWithVersion(
+    QuestraTask task, {
+    required String operationId,
+  }) async {
+    if (rejectRoute) {
+      throw const PostgrestException(
+        message: 'task_route_inactive',
+        code: 'P0001',
+      );
+    }
+    return super.updateWithVersion(task, operationId: operationId);
+  }
 
   @override
   Future<List<QuestraTask>> findByMission(
@@ -239,5 +355,15 @@ class _FailClearQueue extends InMemoryTaskOfflineQueueRepository {
       throw StateError('local journal unavailable');
     }
     await super.clear(ownerId);
+  }
+}
+
+class _FailingQuestRepository extends InMemoryQuestRepository {
+  bool failReads = false;
+
+  @override
+  Future<List<Quest>> findByUser(String userId, {int limit = 100}) {
+    if (failReads) throw StateError('quest refresh unavailable');
+    return super.findByUser(userId, limit: limit);
   }
 }

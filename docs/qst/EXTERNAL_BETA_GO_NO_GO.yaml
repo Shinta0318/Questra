@@ -2,9 +2,9 @@ version: 1
 qst: QST-367
 decision: no_go
 distribution_ready: false
-evaluated_at_utc: "2026-10-25T13:57:19.514650Z"
-candidate_source_commit: "b8946d97586470c13158ae70b9260035154a16ec"
-latest_local_migration: "202610270001_schedule_planning_checkpoint_cleanup.sql"
+evaluated_at_utc: "2026-11-03T09:15:28.060422Z"
+candidate_source_commit: "156f300b3129f00d72de4527a1ebe7324f1650d5"
+latest_local_migration: "202611010002_quest_mission_count_floor.sql"
 worktree_clean_at_evaluation: false
 summary:
   passed: 0

@@ -93,6 +93,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
       if (!response.ok) {
         lastError = classifyProviderError(response.status);
         if (response.status === 429) {
+          const rateLimitKind = await geminiRateLimitKind(response);
           return await releaseAndFail(
             request,
             startedAt,
@@ -104,6 +105,7 @@ export async function callGeminiInteraction(request: ProviderRequest): Promise<P
             thinkingLevel,
             attemptedModels,
             retryAfterSeconds(response.headers.get("Retry-After")),
+            rateLimitKind,
           );
         }
         const providerMessage = await safeProviderErrorMessage(response);
@@ -279,8 +281,9 @@ async function releaseAndFail(
   thinkingLevel?: ProviderResponse["thinkingLevel"],
   attemptedModels: string[] = [],
   retryAfterSeconds?: number,
+  rateLimitKind?: "daily" | "short_term" | "unknown",
 ) {
-  console.warn(`Gemini interaction failed: ${code}; HTTP ${status ?? "unavailable"}; model ${model}`);
+  console.warn(`Gemini interaction failed: ${code}; HTTP ${status ?? "unavailable"}; model ${model}${rateLimitKind ? `; rate limit ${rateLimitKind}` : ""}`);
   await releaseAiBudget(reservationId, code);
   return failure(
     request,
@@ -292,6 +295,7 @@ async function releaseAndFail(
     thinkingLevel,
     attemptedModels,
     retryAfterSeconds,
+    rateLimitKind,
   );
 }
 
@@ -313,6 +317,7 @@ function failure(
   thinkingLevel?: ProviderResponse["thinkingLevel"],
   attemptedModels: string[] = [],
   retryAfterSeconds?: number,
+  rateLimitKind?: "daily" | "short_term" | "unknown",
 ): ProviderResponse {
   return {
     provider: "gemini",
@@ -337,6 +342,7 @@ function failure(
       ].includes(code),
       status,
       retryAfterSeconds,
+      ...(rateLimitKind ? { rateLimitKind } : {}),
       message,
     },
     attemptedModels: [...attemptedModels],
@@ -351,6 +357,40 @@ function retryAfterSeconds(header: string | null): number {
   return Number.isFinite(seconds)
     ? Math.min(3_600, Math.max(1, Math.ceil(seconds)))
     : 60;
+}
+
+export function classifyGeminiRateLimitCode(code: unknown): "daily" | "short_term" | "unknown" {
+  if (code === "quota_exceeded") return "daily";
+  if (code === "rate_limit_exceeded" || code === "too_many_requests") return "short_term";
+  return "unknown";
+}
+
+async function geminiRateLimitKind(response: Response): Promise<"daily" | "short_term" | "unknown"> {
+  try {
+    const body = await response.json() as Record<string, unknown>;
+    const error = isRecord(body.error) ? body.error : {};
+    const direct = classifyGeminiRateLimitCode(error.code);
+    if (direct !== "unknown") return direct;
+    if (!Array.isArray(error.details)) return "unknown";
+    const quotaNames: string[] = [];
+    for (const detail of error.details) {
+      if (!isRecord(detail) ||
+        detail["@type"] !== "type.googleapis.com/google.rpc.QuotaFailure" ||
+        !Array.isArray(detail.violations)) continue;
+      for (const violation of detail.violations) {
+        if (!isRecord(violation)) continue;
+        for (const field of ["quotaId", "quotaMetric"]) {
+          if (typeof violation[field] === "string") quotaNames.push(violation[field]);
+        }
+      }
+    }
+    const names = quotaNames.join(" ");
+    if (/(?:per[_-]?day|requests[_-]?per[_-]?day|tokens[_-]?per[_-]?day)/i.test(names)) return "daily";
+    if (/(?:per[_-]?(?:minute|second)|requests[_-]?per[_-]?(?:minute|second)|tokens[_-]?per[_-]?(?:minute|second))/i.test(names)) return "short_term";
+    return "unknown";
+  } catch (_) {
+    return "unknown";
+  }
 }
 
 function extractText(data: Record<string, unknown>) {

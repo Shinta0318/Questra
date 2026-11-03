@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
   const result = await executeQuestraTool(payload.tool, payload.arguments, {
     userId,
     traceId: uuid(payload.trace_id) ?? crypto.randomUUID(),
-    // Write approval is verified only by approve_quest_plan_preview RPC.
+    // Plan writes are gated by the consent-checked approval wrappers.
     approved: false,
   });
   return jsonResponse(result, { status: result.ok ? 200 : result.error === "target_not_owned" ? 404 : 403 });

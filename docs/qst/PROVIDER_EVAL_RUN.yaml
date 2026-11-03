@@ -20,6 +20,7 @@ human_gate_passed: false
 guardrails:
   clean_candidate_required: true
   one_run_id_required: true
+  # The configured routing/thinking policy is fixed; observed paths may vary by case.
   fixed_model_prompt_schema_thinking_required: true
   zero_price_assumption_allowed: false
   local_fallback_is_provider_evidence: false

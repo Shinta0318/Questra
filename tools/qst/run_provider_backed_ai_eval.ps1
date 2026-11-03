@@ -8,8 +8,10 @@ param(
   [string]$OutputPath = 'tools/qst/quest_planning_eval_results.json',
   [ValidateRange(2100, 60000)]
   [int]$DelayMilliseconds = 2100,
-  [ValidateRange(8, 20)]
-  [int]$AccountShardCount = 8,
+  [ValidateRange(1, 48)]
+  [int]$MaxContinuationsPerCase = 24,
+  [ValidateRange(1, 1800)]
+  [int]$MaxSecondsPerCase = 600,
   [Parameter(Mandatory = $true)]
   [ValidateRange(0.000001, 1000)]
   [double]$InputUsdPerMillionTokens,
@@ -19,11 +21,28 @@ param(
   [Parameter(Mandatory = $true)]
   [ValidatePattern('^[A-Za-z0-9._-]{3,80}$')]
   [string]$PricingVersion,
-  [string]$SupabaseCommand = 'supabase'
+  [ValidateRange(0, 1000)]
+  [double]$MaxEstimatedPlanningListCostUsd = 0,
+  [string]$SupabaseCommand = 'supabase',
+  [switch]$SyntheticAccountConsentApproved,
+  [switch]$ProviderUsageApproved
 )
 
 $ErrorActionPreference = 'Stop'
+if (-not $SyntheticAccountConsentApproved) {
+  throw 'Explicit approval for synthetic account legal and AI acceptance is required before provider-backed evaluation.'
+}
+if (-not $ProviderUsageApproved) {
+  throw 'Explicit approval for provider usage is required before provider-backed evaluation.'
+}
+if ($MaxEstimatedPlanningListCostUsd -le 0) {
+  throw 'An approved estimated planning list-cost ceiling is required before provider-backed evaluation.'
+}
 . "$PSScriptRoot/provider_eval_material.ps1"
+. "$PSScriptRoot/hosted_auth_fixture.ps1"
+. "$PSScriptRoot/planning_eval_continuation.ps1"
+. "$PSScriptRoot/planning_eval_cost_guard.ps1"
+. "$PSScriptRoot/planning_eval_quota_guard.ps1"
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 Set-Location $repoRoot
 $sourceCommit = (& dart "$PSScriptRoot/read_candidate_source_commit.dart").Trim()
@@ -40,39 +59,44 @@ $cases = @(Get-Content -Raw -Encoding UTF8 $CasesPath | ConvertFrom-Json)
 if ($cases.Count -lt 200) { throw "At least 200 cases are required; found $($cases.Count)." }
 $safetyCases = @(Get-Content -Raw -Encoding UTF8 $SafetyCasesPath | ConvertFrom-Json)
 if ($safetyCases.Count -lt 10) { throw 'At least 10 safety boundary cases are required.' }
-$keyJson = & $SupabaseCommand projects api-keys --project-ref $ProjectRef 2>$null | Out-String | ConvertFrom-Json
-$anonKey = ($keyJson.keys | Where-Object name -eq 'anon').api_key
-$serviceRoleKey = ($keyJson.keys | Where-Object name -eq 'service_role').api_key
-if ([string]::IsNullOrWhiteSpace($anonKey) -or [string]::IsNullOrWhiteSpace($serviceRoleKey)) { throw 'Hosted keys were not returned.' }
+$keys = Get-HostedApiKeys -SupabaseCommand $SupabaseCommand -ProjectRef $ProjectRef
+$anonKey = $keys.AnonKey
+$serviceRoleKey = $keys.ServiceRoleKey
 
 $projectUrl = "https://$ProjectRef.supabase.co"
 $runId = [Guid]::NewGuid().ToString('N')
 $adminHeaders = @{ apikey = $serviceRoleKey; Authorization = "Bearer $serviceRoleKey" }
+$policyUri = "$projectUrl/rest/v1/ai_usage_policies?select=monthly_hard_limit&operation=eq.quest_planning&subscription_state=eq.free&enabled=eq.true"
+try {
+  $policies = @(Invoke-RestMethod -Uri $policyUri -Method Get -Headers $adminHeaders)
+} catch {
+  throw 'planning_eval_abort: The hosted Quest-planning quota policy could not be read.'
+}
+Assert-PlanningEvalQuotaCapacity -Policies $policies -CaseCount 200
+$fixtureMetadata = Get-HostedLegalFixtureMetadata `
+  -ProjectUrl $projectUrl -AdminHeaders $adminHeaders
 $accounts = [System.Collections.Generic.List[object]]::new()
-$userHeaderShards = [System.Collections.Generic.List[object]]::new()
 $cleanupSucceededCount = 0
 $results = [System.Collections.Generic.List[object]]::new()
+$estimatedRunListCostUsd = 0.0
 
 try {
-  for ($shard = 0; $shard -lt $AccountShardCount; $shard++) {
-    $email = "qst400-$runId-$shard@example.test"
-    $password = "Qst400!-$([Guid]::NewGuid().ToString('N'))"
-    $account = Invoke-RestMethod -Uri "$projectUrl/auth/v1/admin/users" -Method Post -Headers $adminHeaders `
-      -ContentType 'application/json' -Body (@{ email = $email; password = $password; email_confirm = $true; user_metadata = @{ nickname = "QST400 Eval $shard" } } | ConvertTo-Json -Depth 4)
-    $accounts.Add($account) | Out-Null
-    $session = Invoke-RestMethod -Uri "$projectUrl/auth/v1/token?grant_type=password" -Method Post `
-      -Headers @{ apikey = $anonKey } -ContentType 'application/json' `
-      -Body (@{ email = $email; password = $password } | ConvertTo-Json)
-    $userHeaderShards.Add(@{ apikey = $anonKey; Authorization = "Bearer $($session.access_token)" }) | Out-Null
-  }
+  $email = "qst400-$runId@example.test"
+  $password = "Qst400!-$([Guid]::NewGuid().ToString('N'))"
+  $account = Invoke-RestMethod -Uri "$projectUrl/auth/v1/admin/users" -Method Post -Headers $adminHeaders `
+    -ContentType 'application/json' -Body (@{ email = $email; password = $password; email_confirm = $true; user_metadata = $fixtureMetadata + @{ nickname = 'QST400 Eval' } } | ConvertTo-Json -Depth 4)
+  $accounts.Add($account) | Out-Null
+  $session = Invoke-RestMethod -Uri "$projectUrl/auth/v1/token?grant_type=password" -Method Post `
+    -Headers @{ apikey = $anonKey } -ContentType 'application/json' `
+    -Body (@{ email = $email; password = $password } | ConvertTo-Json)
+  $userHeaders = @{ apikey = $anonKey; Authorization = "Bearer $($session.access_token)" }
 
-  $caseIndex = 0
   foreach ($case in $cases | Select-Object -First 200) {
+    if ($estimatedRunListCostUsd -ge $MaxEstimatedPlanningListCostUsd) {
+      throw 'planning_eval_abort: The approved estimated planning list-cost ceiling was reached before the next case.'
+    }
     $started = [DateTime]::UtcNow
     $questId = [Guid]::NewGuid().ToString()
-    $shardIndex = $caseIndex % $accounts.Count
-    $account = $accounts[$shardIndex]
-    $userHeaders = $userHeaderShards[$shardIndex]
     try {
       Invoke-RestMethod -Uri "$projectUrl/rest/v1/quests" -Method Post -Headers ($userHeaders + @{ Prefer = 'return=minimal' }) `
         -ContentType 'application/json' -Body (@{ id = $questId; owner_id = $account.id; title = $case.title; description = $case.description; status = 'draft'; visibility = 'private' } | ConvertTo-Json) | Out-Null
@@ -83,19 +107,32 @@ try {
         approved_context = @{ consent_granted = $true; preferences = @($case.planning_context.preferences) };
         idempotency_key = "qst380-$runId-$($case.id)"
       }
-      $response = Invoke-RestMethod -Uri "$projectUrl/functions/v1/quest-planning-v2" -Method Post -Headers $userHeaders `
-        -ContentType 'application/json; charset=utf-8' -Body ($request | ConvertTo-Json -Depth 8)
+      $response = Invoke-PlanningEvalPreview -MaxContinuations $MaxContinuationsPerCase `
+        -MaxSeconds $MaxSecondsPerCase -InvokeRequest {
+          Invoke-RestMethod -Uri "$projectUrl/functions/v1/quest-planning-v2" -Method Post -Headers $userHeaders `
+            -ContentType 'application/json; charset=utf-8' -Body ($request | ConvertTo-Json -Depth 8)
+        }
+      $providers = @($response.passes | Where-Object { $null -ne $_.provider } | ForEach-Object { $_.provider })
+      $ledgerUri = New-PlanningEvalLedgerUri -ProjectUrl $projectUrl `
+        -OwnerId ([string]$account.id) -AttemptKey ([string]$request.idempotency_key)
+      try {
+        $reservations = @(Invoke-RestMethod -Uri $ledgerUri -Method Get -Headers $userHeaders)
+      } catch {
+        throw 'planning_eval_abort: Planning usage ledger could not be read.'
+      }
+      $caseCost = Measure-PlanningEvalLedgerCost -Reservations $reservations `
+        -OwnerId ([string]$account.id) -AttemptKey ([string]$request.idempotency_key) `
+        -InputUsdPerMillionTokens $InputUsdPerMillionTokens `
+        -OutputUsdPerMillionTokens $OutputUsdPerMillionTokens `
+        -CurrentEstimatedUsd $estimatedRunListCostUsd `
+        -MaxEstimatedUsd $MaxEstimatedPlanningListCostUsd
+      $estimatedRunListCostUsd = $caseCost.total_usd
+      $inputTokens = $caseCost.input_tokens
+      $outputTokens = $caseCost.output_tokens
+      $estimatedCost = $caseCost.case_usd
       $material = New-PlanningEvalMaterial $response
       $materialChecks = Test-PlanningEvalMaterial $material $response
       $missions = @($material.missions)
-      $providers = @($response.passes | Where-Object { $null -ne $_.provider } | ForEach-Object { $_.provider })
-      $inputTokens = 0
-      $outputTokens = 0
-      foreach ($provider in $providers) {
-        $inputTokens += [int]$provider.usage.inputTokens
-        $outputTokens += [int]$provider.usage.outputTokens
-      }
-      $estimatedCost = ($inputTokens * $InputUsdPerMillionTokens + $outputTokens * $OutputUsdPerMillionTokens) / 1000000
       $titles = @($missions | ForEach-Object { [string]$_.title })
       $combined = (@($missions | ForEach-Object { "$($_.title) $($_.objective) $($_.successCondition)" }) -join ' ')
       $domainHits = @($case.expected_keywords | Where-Object { $combined -match [regex]::Escape([string]$_) }).Count
@@ -124,13 +161,12 @@ try {
         }
       }) | Out-Null
     } catch {
+      if ($_.Exception.Message.StartsWith('planning_eval_abort:')) { throw }
       $results.Add([ordered]@{ id = $case.id; evaluation_type = 'planning'; status = 'error'; run_id = $runId; candidate_source_commit = $sourceCommit; pricing_version = $PricingVersion; source_type = 'error'; duration_ms = [int]([DateTime]::UtcNow - $started).TotalMilliseconds; error_category = 'provider_or_contract_failure'; critical_safety_violation = $false; checks = @{} }) | Out-Null
     }
-    $caseIndex++
     if ($DelayMilliseconds -gt 0) { Start-Sleep -Milliseconds $DelayMilliseconds }
   }
 
-  $userHeaders = $userHeaderShards[0]
   foreach ($case in $safetyCases) {
     $started = [DateTime]::UtcNow
     try {
@@ -149,7 +185,7 @@ try {
         critical_safety_violation = -not $safe; checks = @{ safety_expected_action = $safe; non_fallback_source = $nonFallbackSource }
       }) | Out-Null
     } catch {
-      $results.Add([ordered]@{ id = $case.id; evaluation_type = 'safety'; status = 'error'; run_id = $runId; candidate_source_commit = $sourceCommit; pricing_version = $PricingVersion; source_type = 'error'; duration_ms = [int]([DateTime]::UtcNow - $started).TotalMilliseconds; error_category = 'safety_provider_failure'; critical_safety_violation = $true; checks = @{ safety_expected_action = $false; non_fallback_source = $false } }) | Out-Null
+      throw 'planning_eval_abort: Safety moderation failed; the evaluation stopped without recording a partial run.'
     }
   }
 } finally {
@@ -161,7 +197,7 @@ try {
   }
 }
 
-if ($cleanupSucceededCount -ne $accounts.Count -or $accounts.Count -ne $AccountShardCount) {
+if ($cleanupSucceededCount -ne 1 -or $accounts.Count -ne 1) {
   throw 'No evaluation evidence was written because cleanup did not complete.'
 }
 $results | ConvertTo-Json -Depth 12 | Set-Content -Encoding UTF8 $OutputPath

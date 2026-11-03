@@ -22,12 +22,15 @@ class PersistedPlanningPreferencesRepository
   PersistedPlanningPreferencesRepository({FlutterSecureStorage? storage})
     : _storage = storage ?? const FlutterSecureStorage();
 
-  static const _localKey = 'questra_planning_preferences_v1';
+  static const _localKeyPrefix = 'questra_planning_preferences_v2';
   final FlutterSecureStorage _storage;
+
+  String _localKey(String? userId) =>
+      '$_localKeyPrefix:${userId ?? 'anonymous'}';
 
   @override
   Future<PlanningPreferences?> load({String? userId}) async {
-    final local = await _loadLocal();
+    final local = await _loadLocal(userId);
     if (!SupabaseConfig.isConfigured || userId == null) return local;
     try {
       final row = await Supabase.instance.client
@@ -37,7 +40,7 @@ class PersistedPlanningPreferencesRepository
           .maybeSingle();
       if (row == null) return local;
       final remote = PlanningPreferences.fromJson(row);
-      await _saveLocal(remote);
+      await _saveLocal(remote, userId);
       return remote;
     } catch (_) {
       return local;
@@ -46,7 +49,7 @@ class PersistedPlanningPreferencesRepository
 
   @override
   Future<void> save(PlanningPreferences value, {String? userId}) async {
-    await _saveLocal(value);
+    await _saveLocal(value, userId);
     if (!SupabaseConfig.isConfigured || userId == null) return;
     try {
       await Supabase.instance.client
@@ -57,9 +60,9 @@ class PersistedPlanningPreferencesRepository
     }
   }
 
-  Future<PlanningPreferences?> _loadLocal() async {
+  Future<PlanningPreferences?> _loadLocal(String? userId) async {
     try {
-      final encoded = await _storage.read(key: _localKey);
+      final encoded = await _storage.read(key: _localKey(userId));
       if (encoded == null) return null;
       final decoded = jsonDecode(encoded);
       if (decoded is! Map) return null;
@@ -69,9 +72,12 @@ class PersistedPlanningPreferencesRepository
     }
   }
 
-  Future<void> _saveLocal(PlanningPreferences value) async {
+  Future<void> _saveLocal(PlanningPreferences value, String? userId) async {
     try {
-      await _storage.write(key: _localKey, value: jsonEncode(value.toJson()));
+      await _storage.write(
+        key: _localKey(userId),
+        value: jsonEncode(value.toJson()),
+      );
     } catch (_) {
       // Unsupported secure storage must not block planning.
     }

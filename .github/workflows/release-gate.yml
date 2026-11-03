@@ -41,8 +41,10 @@ jobs:
         run: flutter test test/qst_269_core_journey_test.dart --no-pub
       - name: Supabase release contracts
         run: |
+          dart run tools/qst/verify_migration_drift_test.dart
           dart run tools/qst/verify_migration_drift.dart
           dart run tools/qst/verify_hosted_migration_deployment.dart
+          pwsh -NoProfile -File tools/qst/test_hosted_backup_toc.ps1
           pwsh -NoProfile -File tools/qst/test_hosted_migration_dry_run.ps1
           pwsh -NoProfile -File tools/qst/test_commit_hosted_evidence.ps1
           pwsh -NoProfile -File tools/qst/test_hosted_auth_fixture.ps1
@@ -58,8 +60,15 @@ jobs:
           dart run tools/qst/verify_incident_tabletop.dart
           dart run tools/qst/verify_incident_live_drill.dart
           dart tools/qst/test_candidate_git_state.dart
+          dart tools/qst/test_read_candidate_branch.dart
           pwsh -NoProfile -File tools/qst/test_incident_control_guard.ps1
           pwsh -NoProfile -File tools/qst/test_provider_eval_material.ps1
+          pwsh -NoProfile -File tools/qst/test_provider_backed_ai_eval_preflight.ps1
+          pwsh -NoProfile -File tools/qst/test_planning_eval_cost_guard.ps1
+          pwsh -NoProfile -File tools/qst/test_planning_eval_quota_guard.ps1
+          pwsh -NoProfile -File tools/qst/test_planning_eval_continuation.ps1
+          pwsh -NoProfile -File tools/qst/test_planning_eval_version_policy.ps1
+          pwsh -NoProfile -File tools/qst/test_planning_smoke_retry.ps1
           dart tools/qst/test_provider_review_contract.dart
           dart run tools/qst/verify_provider_eval_corpus.dart
           dart run tools/qst/verify_provider_eval_run.dart

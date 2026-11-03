@@ -9,8 +9,17 @@ import { callGeminiInteraction } from "./interactions_adapter.ts";
 import { estimateProviderInputTokens } from "./ai_budget_admission.ts";
 import { callGeminiInteractionWithTools } from "./tool_interaction_orchestrator.ts";
 import { executeQuestraTool } from "./tool_server.ts";
+import { planningTools } from "./tool_registry.ts";
 
 const testUserId = "00000000-0000-4000-8000-000000000001";
+
+test("planning tools omit the server-bound Quest ID from model arguments", () => {
+  const [context, memory] = planningTools(["get_quest_context", "get_relevant_arc_memory"], true);
+  assert.equal("questId" in (context.parameters?.properties as object), false);
+  assert.equal("questId" in (memory.parameters?.properties as object), false);
+  assert.equal("limit" in (memory.parameters?.properties as object), true);
+  assert.deepEqual(planningTools(["get_quest_context"])[0].parameters?.required, ["questId"]);
+});
 
 test("rejects mismatched provider and tool identities before any side effect", async () => {
   let calls = 0;
@@ -39,8 +48,6 @@ test("rejects mismatched provider and tool identities before any side effect", a
 });
 
 test("adapter sends stateless history and preserves continuation steps", async () => {
-  const runtime = globalThis as unknown as Record<string, unknown>;
-  const originalDeno = runtime.Deno;
   const originalFetch = globalThis.fetch;
   const providerInputs: unknown[] = [];
   let receiptBody: Record<string, unknown> | null = null;
@@ -49,8 +56,8 @@ test("adapter sends stateless history and preserves continuation steps", async (
     SUPABASE_URL: "https://example.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "service-role",
   };
+  const restoreEnv = setTestEnv(env);
   try {
-    runtime.Deno = { env: { get: (key: string) => env[key] } };
     globalThis.fetch = (async (input, init) => {
       const url = String(input);
       if (url.endsWith("/rpc/has_current_ai_legal_acceptance")) {
@@ -99,8 +106,9 @@ test("adapter sends stateless history and preserves continuation steps", async (
     assert.deepEqual(providerInputs[0], value.interactionHistory);
     assert.equal(result.finishReason, "requires_action");
     assert.equal(result.toolCalls[0].name, "get_quest_context");
-    assert.equal(receiptBody?.p_grounding_query_count, 0);
-    assert.equal(receiptBody?.p_thinking_level, "high");
+    const receipt = requireCapturedBody(() => receiptBody);
+    assert.equal(receipt.p_grounding_query_count, 0);
+    assert.equal(receipt.p_thinking_level, "high");
     assert.deepEqual(result.continuation?.steps, [{
       type: "function_call",
       id: "call-1",
@@ -110,8 +118,7 @@ test("adapter sends stateless history and preserves continuation steps", async (
     }]);
   } finally {
     globalThis.fetch = originalFetch;
-    if (originalDeno === undefined) delete runtime.Deno;
-    else runtime.Deno = originalDeno;
+    restoreEnv();
   }
 });
 
@@ -141,8 +148,6 @@ test("budget estimate includes stateless continuation history", () => {
 });
 
 test("provider-backed multi-turn fallback finalizes exact aggregate cost attribution", async () => {
-  const runtime = globalThis as unknown as Record<string, unknown>;
-  const originalDeno = runtime.Deno;
   const originalFetch = globalThis.fetch;
   const attributionBodies: Record<string, unknown>[] = [];
   const providerModels: string[] = [];
@@ -156,8 +161,8 @@ test("provider-backed multi-turn fallback finalizes exact aggregate cost attribu
     AI_TOOL_CONTINUATION_ATTRIBUTION_ENABLED: "true",
     AI_RECEIPT_BINDING_ENABLED: "false",
   };
+  const restoreEnv = setTestEnv(env);
   try {
-    runtime.Deno = { env: { get: (key: string) => env[key] } };
     globalThis.fetch = (async (input, init) => {
       const url = String(input);
       const body = init?.body
@@ -302,24 +307,18 @@ test("provider-backed multi-turn fallback finalizes exact aggregate cost attribu
     );
   } finally {
     globalThis.fetch = originalFetch;
-    if (originalDeno === undefined) delete runtime.Deno;
-    else runtime.Deno = originalDeno;
+    restoreEnv();
   }
 });
 
 test("tool server rejects arguments outside the registered schema", async () => {
-  const runtime = globalThis as unknown as Record<string, unknown>;
-  const originalDeno = runtime.Deno;
   const originalFetch = globalThis.fetch;
   let ownershipReads = 0;
+  const restoreEnv = setTestEnv({
+    SUPABASE_URL: "https://example.supabase.co",
+    SUPABASE_SERVICE_ROLE_KEY: "service-role",
+  });
   try {
-    runtime.Deno = {
-      env: {
-        get: (key: string) => key === "SUPABASE_URL"
-          ? "https://example.supabase.co"
-          : "service-role",
-      },
-    };
     globalThis.fetch = (async (input) => {
       if (String(input).includes("/rest/v1/quests?")) ownershipReads++;
       return jsonResponse({ logged: true });
@@ -335,8 +334,7 @@ test("tool server rejects arguments outside the registered schema", async () => 
     assert.equal(ownershipReads, 0);
   } finally {
     globalThis.fetch = originalFetch;
-    if (originalDeno === undefined) delete runtime.Deno;
-    else runtime.Deno = originalDeno;
+    restoreEnv();
   }
 });
 
@@ -349,14 +347,14 @@ test("executes owner-scoped read tool and continues stateless interaction", asyn
       toolCalls: [{
         id: "call-1",
         name: "get_quest_context",
-        arguments: { questId: "quest-1" },
+        arguments: {},
       }],
       continuation: {
         steps: [{
           type: "function_call",
           id: "call-1",
           name: "get_quest_context",
-          arguments: { questId: "quest-1" },
+          arguments: {},
           signature: "provider-signature",
         }],
       },
@@ -379,7 +377,7 @@ test("executes owner-scoped read tool and continues stateless interaction", asyn
 
   const result = await callGeminiInteractionWithTools(
     request(),
-    { userId: testUserId },
+    { userId: testUserId, questId: "quest-1" },
     {},
     {
       callProvider: async (value) => {
@@ -389,6 +387,7 @@ test("executes owner-scoped read tool and continues stateless interaction", asyn
       executeTool: async (name, args, context) => {
         executed.push(name);
         assert.equal(context.approved, false);
+        assert.equal(context.expectedQuestId, "quest-1");
         assert.equal(args.questId, "quest-1");
         return { ok: true, data: [{ id: "quest-1", title: "Singapore" }] };
       },
@@ -416,8 +415,13 @@ test("executes owner-scoped read tool and continues stateless interaction", asyn
 
 test("blocks write tools before execution", async () => {
   let executions = 0;
+  const offeredWriteRequest = request();
+  offeredWriteRequest.tools = [
+    ...offeredWriteRequest.tools ?? [],
+    { type: "function", name: "approve_plan_transaction", parameters: { type: "object" } },
+  ];
   const result = await callGeminiInteractionWithTools(
-    request(),
+    offeredWriteRequest,
     { userId: testUserId, approved: true },
     {},
     {
@@ -440,6 +444,34 @@ test("blocks write tools before execution", async () => {
   assert.equal(executions, 0);
   assert.equal(result.error?.code, "tool_failed");
   assert.match(result.error?.message ?? "", /explicit user approval flow/);
+});
+
+test("rejects read tools that were not offered in this planning pass", async () => {
+  let executions = 0;
+  const result = await callGeminiInteractionWithTools(
+    request(),
+    { userId: testUserId },
+    {},
+    {
+      callProvider: async () => response({
+        finishReason: "requires_action",
+        toolCalls: [{
+          id: "call-unoffered",
+          name: "get_user_planning_preferences",
+          arguments: {},
+        }],
+        continuation: { steps: [{ type: "function_call" }] },
+      }),
+      executeTool: async () => {
+        executions++;
+        return { ok: true, data: [] };
+      },
+    },
+  );
+
+  assert.equal(executions, 0);
+  assert.equal(result.error?.code, "tool_failed");
+  assert.match(result.error?.message ?? "", /not offered/);
 });
 
 test("stops repeated tool-call cycles", async () => {
@@ -523,6 +555,24 @@ function request(): ProviderRequest {
   };
 }
 
+function setTestEnv(values: Record<string, string>): () => void {
+  const runtime = globalThis as unknown as Record<string, unknown>;
+  if (typeof Deno === "undefined") {
+    runtime.Deno = { env: { get: (key: string) => values[key] } };
+    return () => { delete runtime.Deno; };
+  }
+  const previous = new Map(
+    Object.keys(values).map((key) => [key, Deno.env.get(key)]),
+  );
+  for (const [key, value] of Object.entries(values)) Deno.env.set(key, value);
+  return () => {
+    for (const [key, value] of previous) {
+      if (value === undefined) Deno.env.delete(key);
+      else Deno.env.set(key, value);
+    }
+  };
+}
+
 function response(overrides: Partial<ProviderResponse>): ProviderResponse {
   return {
     provider: "gemini",
@@ -547,4 +597,12 @@ function jsonResponse(body: unknown, status = 200) {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+function requireCapturedBody(
+  readBody: () => Record<string, unknown> | null,
+): Record<string, unknown> {
+  const body = readBody();
+  assert.ok(body, "Expected a captured RPC body");
+  return body;
 }

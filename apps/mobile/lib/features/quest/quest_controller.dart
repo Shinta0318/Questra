@@ -28,6 +28,31 @@ final questSyncControllerProvider =
 
 class QuestController extends Notifier<List<Quest>> {
   final PersistenceRetrySlot _retrySlot = PersistenceRetrySlot();
+  final Set<String> _recordedQuestCreations = {};
+  final Map<String, int> _mutationVersions = {};
+  final Map<String, int> _pendingMutations = {};
+  final Set<String> _failedMutations = {};
+  int _mutationVersion = 0;
+
+  void _beginMutation(String questId) {
+    _mutationVersions[questId] = ++_mutationVersion;
+    _pendingMutations.update(questId, (count) => count + 1, ifAbsent: () => 1);
+  }
+
+  void _finishMutation(String questId, {required bool failed}) {
+    _mutationVersions[questId] = ++_mutationVersion;
+    final pending = _pendingMutations[questId] ?? 0;
+    if (pending <= 1) {
+      _pendingMutations.remove(questId);
+    } else {
+      _pendingMutations[questId] = pending - 1;
+    }
+    if (failed) {
+      _failedMutations.add(questId);
+    } else {
+      _failedMutations.remove(questId);
+    }
+  }
 
   @override
   List<Quest> build() {
@@ -38,6 +63,11 @@ class QuestController extends Notifier<List<Quest>> {
     ) {
       if (next == previous) return;
       _retrySlot.clear();
+      _recordedQuestCreations.clear();
+      _mutationVersions.clear();
+      _pendingMutations.clear();
+      _failedMutations.clear();
+      _mutationVersion = 0;
       ref.read(questSyncControllerProvider.notifier).clear();
       state = const [];
       if (next != null) unawaited(loadForUser(next));
@@ -61,46 +91,85 @@ class QuestController extends Notifier<List<Quest>> {
 
   Future<void> loadForUser(String userId) async {
     if (ref.read(authControllerProvider).profile?.id != userId) return;
+    final loadStartedAtVersion = _mutationVersion;
     final sync = ref.read(questSyncControllerProvider.notifier);
-    sync.loading('Questを読み込んでいます...', operation: PersistenceSyncOperation.load);
+    final currentSync = ref.read(questSyncControllerProvider);
+    final announceLoad = _pendingMutations.isEmpty && !currentSync.isFailed;
+    if (announceLoad) {
+      sync.loading(
+        'Questを読み込んでいます...',
+        operation: PersistenceSyncOperation.load,
+      );
+    }
     try {
       final quests = await ref.read(questRepositoryProvider).findByUser(userId);
       if (ref.read(authControllerProvider).profile?.id != userId) return;
-      state = quests;
-      sync.clear();
+      final locallyChangedIds = {
+        for (final entry in _mutationVersions.entries)
+          if (entry.value > loadStartedAtVersion) entry.key,
+        ..._pendingMutations.keys,
+        ..._failedMutations,
+      };
+      final localById = {for (final quest in state) quest.id: quest};
+      final loadedIds = {for (final quest in quests) quest.id};
+      state = [
+        for (final quest in quests)
+          if (!locallyChangedIds.contains(quest.id))
+            quest
+          else
+            ?localById[quest.id],
+        for (final quest in state)
+          if (locallyChangedIds.contains(quest.id) &&
+              !loadedIds.contains(quest.id))
+            quest,
+      ];
+      final latestSync = ref.read(questSyncControllerProvider);
+      if (announceLoad &&
+          latestSync.status == PersistenceSyncStatus.loading &&
+          latestSync.operation == PersistenceSyncOperation.load) {
+        sync.clear();
+      }
     } catch (error) {
       if (ref.read(authControllerProvider).profile?.id != userId) return;
-      sync.failed(
-        'Questの読み込み',
-        error,
-        retryAvailable: true,
-        inputPreserved: false,
-      );
+      final latestSync = ref.read(questSyncControllerProvider);
+      if (announceLoad &&
+          latestSync.status == PersistenceSyncStatus.loading &&
+          latestSync.operation == PersistenceSyncOperation.load) {
+        sync.failed(
+          'Questの読み込み',
+          error,
+          retryAvailable: true,
+          inputPreserved: false,
+        );
+      }
     }
   }
 
   Future<bool> retryPending() => _retrySlot.retry();
 
   void add(Quest quest) {
-    state = [...state, quest];
-    _recordQuestAction(ArcActionTrigger.questCreated, quest);
-    unawaited(
-      ref
-          .read(analyticsServiceProvider)
-          .questCreated(
-            userId: ref.read(authControllerProvider).profile?.id,
-            questId: quest.id,
-            category: quest.category,
-            difficulty: quest.difficulty.storageKey,
-            visibility: quest.visibility.storageKey,
-          ),
-    );
-    unawaited(
-      _persistQuest(quest, sourceType: ArcMemorySourceType.questCreated),
+    unawaited(addAndWait(quest));
+  }
+
+  Future<bool> addAndWait(Quest quest) async {
+    final existing = state.any((current) => current.id == quest.id);
+    state = [
+      for (final current in state)
+        if (current.id == quest.id) quest else current,
+      if (!existing) quest,
+    ];
+    return _persistQuest(
+      quest,
+      sourceType: ArcMemorySourceType.questCreated,
+      insertIfMissing: true,
     );
   }
 
   void update(Quest updatedQuest) {
+    unawaited(updateAndWait(updatedQuest));
+  }
+
+  Future<bool> updateAndWait(Quest updatedQuest) {
     state = [
       for (final quest in state)
         if (quest.id == updatedQuest.id) updatedQuest else quest,
@@ -119,8 +188,9 @@ class QuestController extends Notifier<List<Quest>> {
             },
           ),
     );
-    unawaited(
-      _persistQuest(updatedQuest, sourceType: ArcMemorySourceType.questUpdated),
+    return _persistQuest(
+      updatedQuest,
+      sourceType: ArcMemorySourceType.questUpdated,
     );
   }
 
@@ -191,7 +261,9 @@ class QuestController extends Notifier<List<Quest>> {
     Quest quest, {
     required ArcMemorySourceType sourceType,
     bool recordJourney = true,
+    bool insertIfMissing = false,
   }) async {
+    _beginMutation(quest.id);
     final mutationSerial = _retrySlot.begin();
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
@@ -205,6 +277,7 @@ class QuestController extends Notifier<List<Quest>> {
           surface: 'Quest保存',
         );
       }
+      _finishMutation(quest.id, failed: true);
       return false;
     }
 
@@ -215,25 +288,50 @@ class QuestController extends Notifier<List<Quest>> {
           .read(questRepositoryProvider)
           .save(ownerId: userId, quest: quest);
       if (ref.read(authControllerProvider).profile?.id != userId) return false;
+      final existsInState = state.any((current) => current.id == quest.id);
       state = [
         for (final current in state)
           if (current.id == quest.id) savedQuest else current,
+        if (insertIfMissing && !existsInState) savedQuest,
       ];
+      _retrySlot.resolve(mutationSerial);
+      _finishMutation(quest.id, failed: false);
+      sync.saved('Questを保存しました。');
       if (recordJourney) {
+        if (sourceType == ArcMemorySourceType.questCreated &&
+            _recordedQuestCreations.add(savedQuest.id)) {
+          _afterSaveBestEffort(
+            () => unawaited(
+              ref
+                  .read(analyticsServiceProvider)
+                  .questCreated(
+                    userId: userId,
+                    questId: savedQuest.id,
+                    category: savedQuest.category,
+                    difficulty: savedQuest.difficulty.storageKey,
+                    visibility: savedQuest.visibility.storageKey,
+                  ),
+            ),
+          );
+          _afterSaveBestEffort(
+            () => _recordQuestAction(ArcActionTrigger.questCreated, savedQuest),
+          );
+        }
         unawaited(_tagQuest(userId, savedQuest));
-        _growBond(sourceType, savedQuest);
+        _afterSaveBestEffort(() => _growBond(sourceType, savedQuest));
         unawaited(_rememberQuest(userId, savedQuest, sourceType));
       }
-      _retrySlot.resolve(mutationSerial);
-      sync.saved('Questを保存しました。');
       return true;
     } catch (error) {
+      if (ref.read(authControllerProvider).profile?.id != userId) return false;
+      _finishMutation(quest.id, failed: true);
       _retrySlot.remember(
         mutationSerial,
         () => _persistQuest(
           quest,
           sourceType: sourceType,
           recordJourney: recordJourney,
+          insertIfMissing: insertIfMissing,
         ),
       );
       sync.failed(
@@ -250,6 +348,14 @@ class QuestController extends Notifier<List<Quest>> {
         );
       }
       return false;
+    }
+  }
+
+  void _afterSaveBestEffort(void Function() effect) {
+    try {
+      effect();
+    } catch (_) {
+      // One enrichment failure must not hide the saved Quest or skip the rest.
     }
   }
 
@@ -325,9 +431,11 @@ class QuestController extends Notifier<List<Quest>> {
   }
 
   Future<void> _deleteQuest(String questId, Quest? removedQuest) async {
+    _beginMutation(questId);
     final mutationSerial = _retrySlot.begin();
     final userId = ref.read(authControllerProvider).profile?.id;
     if (userId == null) {
+      _finishMutation(questId, failed: true);
       ref
           .read(questSyncControllerProvider.notifier)
           .failed('Questの削除', 'ログインが必要です。', inputPreserved: true);
@@ -343,9 +451,13 @@ class QuestController extends Notifier<List<Quest>> {
       await ref
           .read(questRepositoryProvider)
           .delete(ownerId: userId, questId: questId);
+      if (ref.read(authControllerProvider).profile?.id != userId) return;
       _retrySlot.resolve(mutationSerial);
+      _finishMutation(questId, failed: false);
       sync.saved('Questを削除しました。');
     } catch (error) {
+      if (ref.read(authControllerProvider).profile?.id != userId) return;
+      _finishMutation(questId, failed: true);
       if (removedQuest != null) {
         state = [removedQuest, ...state];
       }

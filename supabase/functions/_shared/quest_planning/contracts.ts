@@ -106,6 +106,7 @@ export type ProviderError = {
   retryable: boolean;
   status?: number;
   retryAfterSeconds?: number;
+  rateLimitKind?: "daily" | "short_term" | "unknown";
   message: string;
 };
 

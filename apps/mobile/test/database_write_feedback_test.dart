@@ -38,6 +38,19 @@ void main() {
     expect(DatabaseWriteFeedback.from(StateError('not a DB error')), isNull);
   });
 
+  test('recognizes only the route guard failure', () {
+    expect(
+      DatabaseWriteFeedback.isTaskRouteInactive(
+        const PostgrestException(message: 'task_route_inactive', code: 'P0001'),
+      ),
+      isTrue,
+    );
+    expect(
+      DatabaseWriteFeedback.isTaskRouteInactive(databaseError('23505')),
+      isFalse,
+    );
+  });
+
   test('Quest and Mission saves show actionable constraint feedback', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);

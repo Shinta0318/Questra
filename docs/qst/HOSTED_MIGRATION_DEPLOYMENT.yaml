@@ -8,8 +8,8 @@ executed_at_utc: null
 cli_version: null
 migrations:
   remote_head_before: "202608080006_route_proposal_stale_conflict_guard.sql"
-  latest_local: "202610270001_schedule_planning_checkpoint_cleanup.sql"
-  pending_at_plan: 54
+  latest_local: "202611010002_quest_mission_count_floor.sql"
+  pending_at_plan: 57
   pending_at_execution: null
   applied_during_run: null
   remote_head_after: null
@@ -69,6 +69,13 @@ migrations:
     - "202610260003_quest_planning_pass_checkpoints.sql"
     - "202610260004_checkpoint_quest_owner_guard.sql"
     - "202610270001_schedule_planning_checkpoint_cleanup.sql"
+    - "202610290001_atomic_edited_plan_approval.sql"
+    - "202611010001_task_current_route_progress_guard.sql"
+    - "202611010002_quest_mission_count_floor.sql"
+backup:
+  attestation_sha256: null
+  encrypted_archive_sha256: null
+  restore_tested_at_utc: null
 execution:
   runner: tools/qst/run_hosted_migration_deployment.ps1
   requires:
@@ -79,6 +86,7 @@ execution:
     - successful_db_push_dry_run
     - exact_dry_run_migration_plan
     - expected_remote_head_or_already_current
+    - matching_backup_and_isolated_restore_attestation_when_migrations_pending
 guardrails:
   destructive_repair_allowed: false
   dashboard_only_change_allowed: false

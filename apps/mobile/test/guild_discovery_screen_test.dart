@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:questra/features/auth/auth_controller.dart';
+import 'package:questra/features/auth/auth_state.dart';
 import 'package:questra/features/guild/guild_discovery_detail_screen.dart';
 import 'package:questra/features/guild/guild_discovery_model.dart';
 import 'package:questra/features/guild/guild_discovery_providers.dart';
@@ -230,6 +232,181 @@ void main() {
     expect(repository.publishedSummary, '個人情報を含まない公開用の概要です。');
     expect(repository.publishedVisibility, GuildDiscoveryVisibility.public);
   });
+
+  testWidgets('copy retry reuses its key when saved Quest is not yet visible', (
+    tester,
+  ) async {
+    final repository = _CopyGuildRepository();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(_CopyAuthController.new),
+          questControllerProvider.overrideWith(
+            _InvisibleCopyQuestController.new,
+          ),
+          guildPilotStatusProvider.overrideWith(
+            (ref) async =>
+                const GuildPilotStatus(configured: true, enabled: true),
+          ),
+          guildDiscoveryFeedProvider.overrideWith((ref) async => [_quest()]),
+          guildDiscoveryRepositoryProvider.overrideWith((ref) => repository),
+        ],
+        child: const MaterialApp(home: GuildDiscoveryScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('富士山に登る'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('自分のQuestに取り入れる'),
+      260,
+      scrollable: find.byType(Scrollable).last,
+    );
+
+    Future<void> tryCopy() async {
+      await tester.tap(find.text('自分のQuestに取り入れる'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('取り込む'));
+      await tester.pumpAndSettle();
+    }
+
+    await tryCopy();
+    expect(repository.copyKeys, hasLength(1));
+    expect(find.byType(GuildDiscoveryDetailScreen), findsOneWidget);
+    expect(find.textContaining('Questは保存されましたが'), findsOneWidget);
+
+    await tryCopy();
+    expect(repository.copyKeys, hasLength(2));
+    expect(repository.copyKeys[1], repository.copyKeys[0]);
+    expect(find.byType(GuildDiscoveryDetailScreen), findsOneWidget);
+  });
+
+  testWidgets('loads older approved Quests using the server cursor', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 6000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final firstPage = List<GuildDiscoveryQuest>.generate(
+      20,
+      (index) => _pagedQuest(index),
+    );
+    final repository = _PagingGuildRepository();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          guildPilotStatusProvider.overrideWith(
+            (ref) async =>
+                const GuildPilotStatus(configured: true, enabled: true),
+          ),
+          guildDiscoveryFeedProvider.overrideWith((ref) async => firstPage),
+          guildDiscoveryRepositoryProvider.overrideWith((ref) => repository),
+        ],
+        child: const MaterialApp(home: GuildDiscoveryScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('古いQuest'), findsNothing);
+    expect(find.text('挑戦 0', skipOffstage: false), findsOneWidget);
+    await tester.tap(find.text('さらにQuestを見る'));
+    await tester.pumpAndSettle();
+
+    expect(repository.requestedBeforeId, firstPage.last.id);
+    expect(repository.requestedBeforePublishedAt, firstPage.last.publishedAt);
+    expect(find.text('古いQuest'), findsOneWidget);
+    expect(find.text('さらにQuestを見る'), findsNothing);
+  });
+}
+
+GuildDiscoveryQuest _pagedQuest(int index) => GuildDiscoveryQuest(
+  id: 'page-$index',
+  title: '挑戦 $index',
+  summary: '公開されている挑戦です',
+  authorDisplayName: 'Navigator',
+  tags: const [],
+  difficultyScore: 2,
+  visibility: GuildDiscoveryVisibility.public,
+  moderationStatus: GuildDiscoveryModerationStatus.approved,
+  publishedAt: DateTime.utc(2026, 7, 25 - index),
+);
+
+class _PagingGuildRepository implements GuildDiscoveryRepository {
+  String? requestedBeforeId;
+  DateTime? requestedBeforePublishedAt;
+
+  @override
+  Future<List<GuildDiscoveryQuest>> findApprovedPublic({
+    int limit = 20,
+    DateTime? beforePublishedAt,
+    String? beforeId,
+  }) async {
+    requestedBeforeId = beforeId;
+    requestedBeforePublishedAt = beforePublishedAt;
+    return [
+      GuildDiscoveryQuest(
+        id: 'older',
+        title: '古いQuest',
+        summary: '後から見つけられるQuestです',
+        authorDisplayName: 'Navigator',
+        tags: const [],
+        difficultyScore: 2,
+        visibility: GuildDiscoveryVisibility.public,
+        moderationStatus: GuildDiscoveryModerationStatus.approved,
+        publishedAt: DateTime.utc(2026, 6, 1),
+      ),
+    ];
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _CopyAuthController extends AuthController {
+  @override
+  AuthState build() => const AuthState(
+    profile: UserProfile(
+      id: 'copy-user',
+      email: 'copy@example.invalid',
+      nickname: 'テスト',
+    ),
+  );
+}
+
+class _InvisibleCopyQuestController extends QuestController {
+  @override
+  List<Quest> build() => const [];
+
+  @override
+  Future<void> loadForUser(String userId) async {}
+}
+
+class _CopyGuildRepository implements GuildDiscoveryRepository {
+  final List<String> copyKeys = [];
+
+  @override
+  Future<GuildQuestCopyResult> copyToPrivate({
+    required String publicationId,
+    required GuildQuestCopyOptions options,
+    required String idempotencyKey,
+  }) async {
+    copyKeys.add(idempotencyKey);
+    return GuildQuestCopyResult(
+      questId: 'copied-quest',
+      missionCount: 0,
+      firstTaskCreated: false,
+      alreadyApplied: copyKeys.length > 1,
+    );
+  }
+
+  @override
+  Future<void> recordDiscoveryOpened({
+    required String publicationId,
+    required String eventKey,
+  }) async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _TestQuestController extends QuestController {

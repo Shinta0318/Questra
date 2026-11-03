@@ -18,6 +18,7 @@ import '../quest/quest_model.dart';
 import 'guild_discovery_detail_screen.dart';
 import 'guild_discovery_model.dart';
 import 'guild_discovery_providers.dart';
+import 'guild_discovery_repository.dart';
 
 class GuildDiscoveryScreen extends ConsumerStatefulWidget {
   const GuildDiscoveryScreen({super.key});
@@ -35,6 +36,10 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
   String? _copyingPublicationId;
   bool _publishing = false;
   bool _copyDialogOpen = false;
+  bool _loadingMore = false;
+  bool _hasMore = true;
+  int _feedGeneration = 0;
+  final List<GuildDiscoveryQuest> _additionalCandidates = [];
   final Map<String, String> _copyRequestKeys = {};
 
   @override
@@ -85,6 +90,12 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
     GuildPilotStatus status,
   ) {
     final discoveryRepository = ref.watch(guildDiscoveryRepositoryProvider);
+    final loadedCandidates = <GuildDiscoveryQuest>[
+      ...candidates,
+      ..._additionalCandidates.where(
+        (candidate) => !candidates.any((first) => first.id == candidate.id),
+      ),
+    ];
     final ownQuests = ref
         .watch(questControllerProvider)
         .where((quest) => quest.status == QuestStatus.active)
@@ -105,16 +116,21 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
     final results = ref
         .watch(guildDiscoveryRankingServiceProvider)
         .rank(
-          candidates: candidates,
+          candidates: loadedCandidates,
           profile: profile,
           section: _section,
           query: _query,
-          limit: 20,
+          limit: loadedCandidates.length,
         );
 
     return QuestraResponsiveListView(
       showScrollbar: true,
       onRefresh: () async {
+        setState(() {
+          _feedGeneration++;
+          _additionalCandidates.clear();
+          _hasMore = true;
+        });
         ref.invalidate(guildDiscoveryFeedProvider);
         await ref.read(guildDiscoveryFeedProvider.future);
       },
@@ -228,8 +244,51 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
               ),
             ),
           ),
+        if (discoveryRepository != null &&
+            candidates.length == 20 &&
+            _hasMore) ...[
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: _loadingMore
+                ? null
+                : () => _loadMore(discoveryRepository, loadedCandidates),
+            child: Text(_loadingMore ? '読み込み中...' : 'さらにQuestを見る'),
+          ),
+        ],
       ],
     );
+  }
+
+  Future<void> _loadMore(
+    GuildDiscoveryRepository repository,
+    List<GuildDiscoveryQuest> loadedCandidates,
+  ) async {
+    if (_loadingMore || !_hasMore || loadedCandidates.isEmpty) return;
+    final generation = _feedGeneration;
+    setState(() => _loadingMore = true);
+    try {
+      final last = loadedCandidates.last;
+      final page = await repository.findApprovedPublic(
+        limit: 20,
+        beforePublishedAt: last.publishedAt,
+        beforeId: last.id,
+      );
+      if (!mounted || generation != _feedGeneration) return;
+      setState(() {
+        final seenIds = loadedCandidates.map((quest) => quest.id).toSet();
+        _additionalCandidates.addAll(
+          page.where((quest) => seenIds.add(quest.id)),
+        );
+        _hasMore = page.length == 20;
+      });
+    } catch (_) {
+      if (!mounted || generation != _feedGeneration) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('次のQuestを読み込めませんでした。もう一度お試しください。')),
+      );
+    } finally {
+      if (mounted) setState(() => _loadingMore = false);
+    }
   }
 
   void _openQuest(GuildDiscoveryResult result, {required bool copyEnabled}) {
@@ -283,15 +342,26 @@ class _GuildDiscoveryScreenState extends ConsumerState<GuildDiscoveryScreen> {
           () => 'guild-copy-${const Uuid().v4()}',
         ),
       );
-      _copyRequestKeys.remove(quest.id);
       await ref.read(questControllerProvider.notifier).loadForUser(profile.id);
       if (!mounted) return;
+      if (ref.read(questControllerProvider.notifier).findById(result.questId) ==
+          null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Questは保存されましたが、まだ表示を更新できません。もう一度取り込むと同じQuestを開きます。'),
+          ),
+        );
+        return;
+      }
+      _copyRequestKeys.remove(quest.id);
       Navigator.of(context).pop();
       context.go('${AppRoutes.quest}/${result.questId}');
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Questを取り込めませんでした。内容は変更されていません。')),
+        const SnackBar(
+          content: Text('取り込み状況を確認できませんでした。もう一度お試しください。再試行してもQuestは重複しません。'),
+        ),
       );
     } finally {
       _copyingPublicationId = null;

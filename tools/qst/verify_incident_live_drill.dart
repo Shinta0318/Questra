@@ -23,6 +23,8 @@ void main(List<String> arguments) {
     _expect(evidence, snippet, evidencePath, failures);
   }
   for (final snippet in const [
+    'read_candidate_branch.dart',
+    'Incident drill branch does not match the reviewed candidate manifests.',
     'Incident live drill requires a clean candidate worktree.',
     'ProjectRef does not match the reviewed Beta project.',
     'Invoke-GuardedPlanningPause',

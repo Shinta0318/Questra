@@ -9,7 +9,7 @@ abstract final class QuestEvaluationService {
   }) {
     final text = '${quest.title} ${quest.description}';
     final complex = RegExp(r'(海外移住|起業|転職|資格|留学|登頂)').hasMatch(text);
-    final count = missionCount.clamp(3, 30);
+    final count = missionCount.clamp(1, 30);
     final difficulty = complex ? 4 : (count >= 10 ? 3 : 2);
     final duration = missionDurationDays.fold<int>(
       0,

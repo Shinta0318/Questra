@@ -5,6 +5,10 @@ class DatabaseWriteFeedback {
 
   final String message;
 
+  static bool isTaskRouteInactive(Object error) =>
+      error is PostgrestException &&
+      error.message.trim() == 'task_route_inactive';
+
   static DatabaseWriteFeedback? from(Object error) {
     if (error is! PostgrestException) return null;
     return switch (error.code) {

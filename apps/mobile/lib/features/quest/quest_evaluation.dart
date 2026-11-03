@@ -63,7 +63,7 @@ class QuestEvaluation {
     return QuestEvaluation(
       difficultyScore: difficulty.clamp(1, 5),
       estimatedDurationDays: duration.clamp(1, 36500),
-      estimatedMissionCount: count.clamp(3, 30),
+      estimatedMissionCount: count.clamp(1, 30),
       estimatedCostLabel: json['estimated_cost'] as String?,
       riskSummary: json['risk_summary'] as String? ?? '',
       successLikelihood: (json['estimated_success_rate'] as num?)

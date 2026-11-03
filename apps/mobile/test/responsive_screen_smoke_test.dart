@@ -12,6 +12,7 @@ import 'package:questra/features/onboarding/onboarding_screen.dart';
 import 'package:questra/features/quest/quest_controller.dart';
 import 'package:questra/features/quest/quest_detail_screen.dart';
 import 'package:questra/features/quest/quest_guide_model.dart';
+import 'package:questra/features/quest/quest_model.dart';
 import 'package:questra/features/profile/profile_screen.dart';
 import 'package:questra/features/quest/quest_screen.dart';
 import 'package:questra/features/settings/settings_screen.dart';
@@ -128,6 +129,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          questControllerProvider.overrideWith(_HomeQuestFixtureController.new),
           missionControllerProvider.overrideWith(
             _HomeMissionFixtureController.new,
           ),
@@ -375,4 +377,18 @@ class _HomeMissionFixtureController extends MissionController {
       ),
     ];
   }
+}
+
+class _HomeQuestFixtureController extends QuestController {
+  @override
+  List<Quest> build() => [
+    Quest(
+      id: 'quest-home',
+      title: 'Questraを整える',
+      description: 'スマホ操作を確かめる',
+      difficulty: QuestDifficulty.easy,
+      status: QuestStatus.active,
+      visibility: QuestVisibility.private,
+    ),
+  ];
 }

@@ -27,7 +27,8 @@ class TaskMutationBanner extends StatelessWidget {
     }
     final failed = state.canRetry;
     final saving = state.status == TaskMutationStatus.saving;
-    final conflict = state.status == TaskMutationStatus.conflict;
+    final conflict =
+        state.status == TaskMutationStatus.conflict || state.needsRouteRefresh;
     final cleanup = state.canCleanup;
     final color = failed
         ? Colors.redAccent
@@ -67,11 +68,13 @@ class TaskMutationBanner extends StatelessWidget {
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
           ),
-          if (state.needsConflictRefresh)
+          if (state.needsConflictRefresh || state.needsRouteRefresh)
             IconButton(
               onPressed: () => onRefreshConflict(),
               icon: const Icon(Icons.refresh),
-              tooltip: '最新のTaskを再読み込み',
+              tooltip: state.needsRouteRefresh
+                  ? '最新の航路を再読み込み'
+                  : '最新のTaskを再読み込み',
             )
           else if (state.canRetry || cleanup) ...[
             if (state.canRetry)

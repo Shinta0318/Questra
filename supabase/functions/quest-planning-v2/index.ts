@@ -1,13 +1,19 @@
 import { jsonResponse, preflightResponse, readJson } from "../_shared/http.ts";
-import { revalidateApprovedMissionPlan, runQuestPlanningPipeline, runTaskExpansionPipeline } from "../_shared/quest_planning/pipeline.ts";
+import { PlanningContinuationNeeded, revalidateApprovedMissionPlan, runQuestPlanningPipeline, runTaskExpansionPipeline } from "../_shared/quest_planning/pipeline.ts";
 import { validateRouteMissionPlan } from "../_shared/quest_planning/validators.ts";
 import { deterministicSafetyAssessment } from "../_shared/safety_guard.ts";
 import { buildExistingRouteContext } from "../_shared/quest_planning/existing_route_context.ts";
 import { aiLegalFailureResponse } from "../_shared/ai_legal_http.ts";
 import { planningHttpStatus } from "../_shared/quest_planning/http_status.ts";
+import { approvalSelectionState, claimPlanningRun, loadReadyPlanningAttempt, markPlanningRunReady, planningInputFingerprint, rejectPlanningPreview, savePreviewOnce, stageApprovedPreviewPlan } from "../_shared/quest_planning/preview_persistence.ts";
+import { planningToolContextSnapshot } from "../_shared/quest_planning/context_snapshot.ts";
+import { approvalPlanningWish, previewWithPlanningWish } from "../_shared/quest_planning/approval_wish.ts";
+import { approvalInputSnapshot, hasPersonalPlanningContext, readApprovalInputSnapshot } from "../_shared/quest_planning/approval_input.ts";
+import { planningTargetDate } from "../_shared/quest_planning/target_date.ts";
+import { approvalRpcFailure } from "../_shared/quest_planning/approval_rpc_error.ts";
 
 type RequestBody = {
-  mode?: "plan" | "approve" | "expand_tasks";
+  mode?: "plan" | "approve" | "reject" | "expand_tasks";
   quest_id?: string;
   mission_id?: string;
   wish?: string;
@@ -35,12 +41,16 @@ Deno.serve(async (req) => {
   const payload = await readJson<RequestBody>(req);
   if (!payload) return jsonResponse({ error: "invalid_json" }, { status: 400 });
   if (payload.mode === "approve") return approvePreview(auth, userId, payload);
+  if (payload.mode === "reject") return rejectPreview(userId, payload);
   if (payload.mode === "expand_tasks") return expandTasks(auth, userId, abuseKeyHash, payload);
 
   const questId = uuid(payload.quest_id);
-  const wish = text(payload.wish, 1_200);
+  const wish = typeof payload.wish === "string" ? payload.wish.trim() : null;
   const idempotencyKey = text(payload.idempotency_key, 160);
   if (!questId || !wish || !idempotencyKey) return jsonResponse({ error: "quest_wish_and_idempotency_required" }, { status: 400 });
+  if (wish.length > 1_200) return jsonResponse({ error: "quest_wish_too_long" }, { status: 400 });
+  const targetDate = planningTargetDate(payload.target_date);
+  if (targetDate === undefined) return jsonResponse({ error: "invalid_target_date" }, { status: 400 });
   const safety = deterministicSafetyAssessment(wish);
   if (safety) return jsonResponse({ error: "unsafe_intent", safety }, { status: 422 });
   if (!await ownsQuest(auth, userId, questId)) return jsonResponse({ error: "quest_not_found" }, { status: 404 });
@@ -50,29 +60,73 @@ Deno.serve(async (req) => {
   if (!existingRoute) {
     return jsonResponse({ error: "planning_context_unavailable" }, { status: 503 });
   }
+  const contextSnapshot = await planningToolContextSnapshot(serviceFetch, userId, questId);
+  if (!contextSnapshot) {
+    return jsonResponse({ error: "planning_context_unavailable" }, { status: 503 });
+  }
+  const toolContextFingerprint = contextSnapshot.fingerprint;
 
-  const pipeline = await runQuestPlanningPipeline({
+  const planningInput = {
     questId,
     wish,
-    targetDate: text(payload.target_date, 20),
-    budget: text(payload.budget, 120),
+    targetDate,
+    budget: payload.budget ?? null,
     availableTime: payload.available_time,
-    experience: text(payload.experience, 300),
-    location: text(payload.location, 200),
-    constraints: Array.isArray(payload.constraints) ? payload.constraints.filter((item): item is string => typeof item === "string").slice(0, 12) : [],
+    experience: payload.experience ?? null,
+    location: payload.location ?? null,
+    constraints: payload.constraints ?? [],
     approvedContext: payload.approved_context,
     existingRoute,
-    userId,
-    abuseKeyHash,
-    idempotencyKey,
-  });
+    toolContextFingerprint,
+  };
+  const approvalInput = approvalInputSnapshot(planningInput);
+  if (!approvalInput) return jsonResponse({ error: "invalid_planning_context" }, { status: 400 });
+  if (hasPersonalPlanningContext(approvalInput) && !contextSnapshot.planningConsentGranted) {
+    return jsonResponse({ error: "planning_preferences_consent_required" }, { status: 403 });
+  }
+  const inputFingerprint = await planningInputFingerprint(planningInput);
+  const previous = await loadReadyPlanningAttempt(serviceFetch, userId, questId, idempotencyKey, inputFingerprint);
+  if (previous.state === "unavailable") return jsonResponse({ error: "planning_attempt_unavailable" }, { status: 503 });
+  if (previous.state === "conflict") return jsonResponse({ error: "planning_attempt_changed" }, { status: 409 });
+  if (previous.state === "ready") {
+    return jsonResponse({
+      status: "preview_ready",
+      preview: previous.preview.plan_payload,
+      preview_id: previous.preview.id,
+      approval_token: previous.preview.approval_token,
+      draft_id: previous.draftId,
+    });
+  }
+  let pipeline: Awaited<ReturnType<typeof runQuestPlanningPipeline>>;
+  try {
+    pipeline = await runQuestPlanningPipeline({
+      ...planningInput,
+      userId,
+      abuseKeyHash,
+      idempotencyKey,
+      passBudget: { limit: 1, used: 0 },
+    });
+  } catch (error) {
+    if (error instanceof PlanningContinuationNeeded) {
+      return jsonResponse({ status: "processing", retry_after_ms: 250 }, { status: 202 });
+    }
+    throw error;
+  }
   if (pipeline.status !== "preview_ready" || !pipeline.preview) {
-    await recordRun(userId, questId, idempotencyKey, pipeline, null);
+    await recordRun(userId, questId, idempotencyKey, inputFingerprint, pipeline, null);
     return planningFailureResponse(pipeline);
   }
-  const stored = await recordRun(userId, questId, idempotencyKey, pipeline, pipeline.preview);
+  const previewWithWish = previewWithPlanningWish(pipeline.preview, wish);
+  if (!previewWithWish) {
+    return jsonResponse({ error: "planning_preview_invalid" }, { status: 503 });
+  }
+  const stored = await recordRun(userId, questId, idempotencyKey, inputFingerprint, pipeline, {
+    ...previewWithWish,
+    planningInputSnapshot: approvalInput,
+    planningToolContextFingerprint: toolContextFingerprint,
+  });
   if (!stored) return jsonResponse({ ...pipeline, status: "retryable_error", preview: null, error: "preview_store_failed" }, { status: 503 });
-  return jsonResponse({ ...pipeline, preview_id: stored.id, approval_token: stored.approvalToken, draft_id: stored.draftId });
+  return jsonResponse({ ...pipeline, preview: stored.preview, preview_id: stored.id, approval_token: stored.approvalToken, draft_id: stored.draftId });
 });
 
 async function expandTasks(
@@ -186,37 +240,23 @@ async function ownsQuest(auth: string, userId: string, questId: string) {
   return rows.length === 1;
 }
 
-async function recordRun(userId: string, questId: string, idempotencyKey: string, pipeline: Awaited<ReturnType<typeof runQuestPlanningPipeline>>, preview: unknown) {
-  const runResponse = await serviceFetch("/rest/v1/quest_planning_runs?on_conflict=owner_id,idempotency_key", {
-    method: "POST",
-    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
-    body: JSON.stringify({
-      owner_id: userId,
-      quest_id: questId,
+async function recordRun(userId: string, questId: string, idempotencyKey: string, inputFingerprint: string, pipeline: Awaited<ReturnType<typeof runQuestPlanningPipeline>>, preview: unknown) {
+  const runId = await claimPlanningRun(serviceFetch, userId, questId, idempotencyKey, inputFingerprint, {
       trace_id: pipeline.traceId,
-      idempotency_key: idempotencyKey,
-      status: pipeline.status === "preview_ready" ? "preview_ready" : pipeline.status === "needs_clarification" ? "needs_clarification" : "failed",
+      status: pipeline.status === "preview_ready" ? "running" : pipeline.status === "needs_clarification" ? "needs_clarification" : "failed",
       pipeline_version: pipeline.versions.pipeline,
       schema_version: pipeline.versions.schema,
       execution_versions: pipeline.versions,
       error_category: pipeline.issues[0]?.code ?? null,
       completed_at: new Date().toISOString(),
-    }),
   });
-  if (!runResponse?.ok) return null;
-  const runs = await runResponse.json() as Array<Record<string, unknown>>;
-  if (!preview || !runs[0]?.id) return null;
-  const previewResponse = await serviceFetch("/rest/v1/quest_plan_previews", {
-    method: "POST",
-    headers: { Prefer: "return=representation" },
-    body: JSON.stringify({ owner_id: userId, quest_id: questId, planning_run_id: runs[0].id, plan_payload: preview }),
-  });
-  if (!previewResponse?.ok) return null;
-  const previews = await previewResponse.json() as Array<Record<string, unknown>>;
-  if (!previews[0]?.id || !previews[0]?.approval_token) return null;
-  const draftStored = await recordMissionDraft(userId, questId, runs[0].id as string, previews[0], pipeline, preview);
+  if (!runId || !preview || typeof preview !== "object" || Array.isArray(preview)) return null;
+  const storedPreview = await savePreviewOnce(serviceFetch, userId, questId, runId, preview as Record<string, unknown>);
+  if (!storedPreview) return null;
+  const draftStored = await recordMissionDraft(userId, questId, runId, storedPreview, pipeline, storedPreview.plan_payload);
   if (!draftStored) return null;
-  return { id: previews[0].id, approvalToken: previews[0].approval_token, draftId: draftStored };
+  if (!await markPlanningRunReady(serviceFetch, userId, runId)) return null;
+  return { id: storedPreview.id, approvalToken: storedPreview.approval_token, draftId: draftStored, preview: storedPreview.plan_payload };
 }
 
 async function recordMissionDraft(userId: string, questId: string, runId: string, previewRow: Record<string, unknown>, pipeline: Awaited<ReturnType<typeof runQuestPlanningPipeline>>, preview: unknown) {
@@ -234,8 +274,8 @@ async function recordMissionDraft(userId: string, questId: string, runId: string
     return !review || review.passed !== true || review.verdict !== "pass";
   })) return null;
   const providerPass = [...pipeline.passes].reverse().find((item) => item.name === "mission_critic" && item.provider)?.provider;
-  const draftResponse = await serviceFetch("/rest/v1/mission_plan_drafts", {
-    method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({
+  const draftResponse = await serviceFetch("/rest/v1/mission_plan_drafts?on_conflict=preview_id", {
+    method: "POST", headers: { Prefer: "resolution=ignore-duplicates,return=minimal" }, body: JSON.stringify({
       owner_id: userId, quest_id: questId, planning_run_id: runId, preview_id: previewRow.id,
       status: "reviewing", prompt_versions: pipeline.versions.prompts, schema_version: pipeline.versions.schema,
       model_name: providerPass?.model ?? "gemini", model_version: providerPass?.modelVersion ?? "",
@@ -244,7 +284,9 @@ async function recordMissionDraft(userId: string, questId: string, runId: string
     }),
   });
   if (!draftResponse?.ok) return null;
-  const rows = await draftResponse.json() as Array<Record<string, unknown>>;
+  const lookup = await serviceFetch(`/rest/v1/mission_plan_drafts?preview_id=eq.${previewRow.id}&owner_id=eq.${userId}&quest_id=eq.${questId}&select=id&limit=1`);
+  if (!lookup?.ok) return null;
+  const rows = await lookup.json() as Array<Record<string, unknown>>;
   const draftId = rows[0]?.id;
   if (typeof draftId !== "string") return null;
   const candidates = plan.missions.map((raw, index) => {
@@ -259,44 +301,97 @@ async function recordMissionDraft(userId: string, questId: string, runId: string
       confidence: mission.confidence, critic_scores: review.scores ?? {}, verdict: review.verdict, order_index: index, original_payload: mission,
     };
   });
-  const candidateResponse = await serviceFetch("/rest/v1/mission_candidates", { method: "POST", body: JSON.stringify(candidates) });
+  const candidateResponse = await serviceFetch("/rest/v1/mission_candidates?on_conflict=draft_id,client_id", {
+    method: "POST",
+    headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
+    body: JSON.stringify(candidates),
+  });
   return candidateResponse?.ok ? draftId : null;
+}
+
+async function rejectPreview(userId: string, payload: RequestBody) {
+  const previewId = uuid(payload.preview_id);
+  const approvalToken = uuid(payload.approval_token);
+  if (!previewId || !approvalToken) {
+    return jsonResponse({ error: "preview_and_approval_required" }, { status: 400 });
+  }
+  const result = await rejectPlanningPreview(serviceFetch, userId, previewId, approvalToken);
+  if (result === "unavailable") {
+    return jsonResponse({ error: "preview_rejection_unavailable" }, { status: 503 });
+  }
+  if (result === "conflict") {
+    return jsonResponse({ error: "preview_not_pending" }, { status: 409 });
+  }
+  return jsonResponse({ status: "rejected", preview_id: previewId });
 }
 
 async function approvePreview(auth: string, userId: string, payload: RequestBody) {
   const previewId = uuid(payload.preview_id);
   const approvalToken = uuid(payload.approval_token);
   if (!previewId || !approvalToken) return jsonResponse({ error: "preview_and_approval_required" }, { status: 400 });
+  const legalFailure = await aiLegalFailureResponse(userId);
+  if (legalFailure) return legalFailure;
+  let selectionId: string | null = null;
   if (Array.isArray(payload.approved_missions)) {
-    const prepared = await prepareApprovedPreview(userId, previewId, approvalToken, payload.approved_missions);
-    if (!prepared.ok) return jsonResponse({ error: prepared.error }, { status: 409 });
+    let prepared: Awaited<ReturnType<typeof prepareApprovedPreview>>;
+    try {
+      prepared = await prepareApprovedPreview(userId, previewId, approvalToken, payload.approved_missions);
+    } catch (error) {
+      if (error instanceof PlanningContinuationNeeded) {
+        return jsonResponse({ status: "processing", retry_after_ms: 250 }, { status: 202 });
+      }
+      throw error;
+    }
+    if (!prepared.ok) return jsonResponse({ error: prepared.error }, {
+      status: "status" in prepared && typeof prepared.status === "number" ? prepared.status : 409,
+    });
+    if ("alreadyApproved" in prepared && prepared.alreadyApproved === true) {
+      return jsonResponse({ status: "approved", preview_id: previewId, idempotent: true });
+    }
+    selectionId = "selectionId" in prepared && typeof prepared.selectionId === "string"
+      ? prepared.selectionId
+      : null;
   }
   const url = Deno.env.get("SUPABASE_URL");
   const anon = Deno.env.get("SUPABASE_ANON_KEY");
   if (!url || !anon) return jsonResponse({ error: "service_unavailable" }, { status: 503 });
-  const response = await fetch(`${url}/rest/v1/rpc/approve_quest_plan_preview`, {
+  const rpc = selectionId ? "approve_quest_plan_preview_with_selection" : "approve_quest_plan_preview_unedited";
+  const response = await fetch(`${url}/rest/v1/rpc/${rpc}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: anon, Authorization: auth },
-    body: JSON.stringify({ p_preview_id: previewId, p_approval_token: approvalToken }),
+    body: JSON.stringify({
+      p_preview_id: previewId,
+      p_approval_token: approvalToken,
+      ...(selectionId ? { p_selection_id: selectionId } : {}),
+    }),
   });
   if (!response.ok) {
-    const detail = await response.text();
-    const error = detail.includes("route_changed_since_preview")
-      ? "route_changed_since_preview"
-      : detail.includes("completed_mission_duplicate_in_plan")
-      ? "completed_mission_duplicate_in_plan"
-      : "approval_failed";
-    return jsonResponse({ status: "conflict", error });
+    const detail = await response.json().catch(() => null);
+    const failure = approvalRpcFailure(detail);
+    return jsonResponse({ status: failure.state, error: failure.error }, { status: failure.status });
   }
   return jsonResponse(await response.json());
 }
 
 async function prepareApprovedPreview(userId: string, previewId: string, approvalToken: string, missions: unknown[]) {
-  const response = await serviceFetch(`/rest/v1/quest_plan_previews?id=eq.${previewId}&owner_id=eq.${userId}&approval_token=eq.${approvalToken}&status=eq.pending&select=id,quest_id,plan_payload&limit=1`);
+  const selectionFingerprint = await planningInputFingerprint(missions);
+  const previewQuery = new URLSearchParams({
+    id: `eq.${previewId}`,
+    owner_id: `eq.${userId}`,
+    approval_token: `eq.${approvalToken}`,
+    select: "id,quest_id,plan_payload,status,expires_at,approved_selection_fingerprint",
+    limit: "1",
+  });
+  const response = await serviceFetch(`/rest/v1/quest_plan_previews?${previewQuery}`);
   if (!response?.ok) return { ok: false, error: "preview_load_failed" };
   const rows = await response.json() as Array<Record<string, unknown>>;
   const row = rows[0];
-  if (!row || typeof row.quest_id !== "string" || !row.plan_payload || typeof row.plan_payload !== "object") return { ok: false, error: "preview_not_approvable" };
+  const selectionState = approvalSelectionState(row, selectionFingerprint);
+  if (selectionState === "already_approved") return { ok: true, alreadyApproved: true };
+  if (selectionState === "conflict") {
+    return { ok: false, error: row?.status === "approved" ? "preview_already_approved_with_different_selection" : "preview_not_approvable" };
+  }
+  if (typeof row?.quest_id !== "string" || !row.plan_payload || typeof row.plan_payload !== "object") return { ok: false, error: "preview_not_approvable" };
   const payload = row.plan_payload as Record<string, unknown>;
   const originalPlan = payload.routeMissionPlan && typeof payload.routeMissionPlan === "object" ? payload.routeMissionPlan as Record<string, unknown> : null;
   if (!originalPlan) return { ok: false, error: "route_plan_missing" };
@@ -312,14 +407,28 @@ async function prepareApprovedPreview(userId: string, previewId: string, approva
   const quests = await questResponse.json() as Array<Record<string, unknown>>;
   const quest = quests[0];
   if (!quest) return { ok: false, error: "quest_context_unavailable" };
-  const wish = [quest.title, quest.description].filter((item): item is string => typeof item === "string" && item.trim().length > 0).join("\n");
+  const originalInput = readApprovalInputSnapshot(payload.planningInputSnapshot);
+  if (!originalInput || approvalPlanningWish(payload) !== originalInput.wish) {
+    return { ok: false, error: "original_planning_context_missing" };
+  }
+  const currentContext = await planningToolContextSnapshot(serviceFetch, userId, row.quest_id);
+  if (!currentContext) {
+    return { ok: false, error: "planning_context_unavailable", status: 503 };
+  }
+  if (hasPersonalPlanningContext(originalInput) && !currentContext.planningConsentGranted) {
+    return { ok: false, error: "planning_preferences_consent_required", status: 403 };
+  }
+  if (currentContext.fingerprint !== payload.planningToolContextFingerprint) {
+    return { ok: false, error: "planning_context_changed" };
+  }
   const revalidation = await revalidateApprovedMissionPlan(
     {
       questId: row.quest_id,
-      wish,
-      targetDate: typeof quest.target_date === "string" ? quest.target_date : null,
+      ...originalInput,
+      approvedContext: originalInput.approvedContext ?? undefined,
       userId,
       idempotencyKey: `approval:${previewId}`,
+      passBudget: { limit: 1, used: 0 },
     },
     routeMissionPlan,
     payload.successContract,
@@ -331,22 +440,26 @@ async function prepareApprovedPreview(userId: string, previewId: string, approva
     return { ok: false, error: revalidation.issues[0]?.code ?? "approved_selection_quality_gate_failed" };
   }
   const validated = revalidation.preview as Record<string, unknown>;
-  const update = await serviceFetch(`/rest/v1/quest_plan_previews?id=eq.${previewId}&owner_id=eq.${userId}&status=eq.pending`, {
-    method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({
-      plan_payload: {
-        ...payload,
-        routeMissionPlan: validated.routeMissionPlan,
-        granularityClassification: validated.granularityClassification,
-        coverageAnalysis: validated.coverageAnalysis,
-        missionCritic: validated.missionCritic,
-        currentTaskPlan: validated.currentTaskPlan,
-        currentTaskCritic: validated.currentTaskCritic,
-        qualityGate: validated.qualityGate,
-        selectionRevalidationTraceId: revalidation.traceId,
-      },
-    }),
-  });
-  return update?.ok ? { ok: true } : { ok: false, error: "preview_update_failed" };
+  const selectionId = await stageApprovedPreviewPlan(
+    serviceFetch,
+    userId,
+    previewId,
+    selectionFingerprint,
+    {
+      ...payload,
+      routeMissionPlan: validated.routeMissionPlan,
+      granularityClassification: validated.granularityClassification,
+      coverageAnalysis: validated.coverageAnalysis,
+      missionCritic: validated.missionCritic,
+      currentTaskPlan: validated.currentTaskPlan,
+      currentTaskCritic: validated.currentTaskCritic,
+      qualityGate: validated.qualityGate,
+      selectionRevalidationTraceId: revalidation.traceId,
+    },
+  );
+  return selectionId
+    ? { ok: true, selectionId }
+    : { ok: false, error: "preview_stage_failed", status: 503 };
 }
 
 async function serviceFetch(path: string, init: RequestInit = {}) {
